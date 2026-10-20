@@ -152,17 +152,27 @@
     <!-- ========================================================== -->
     <section id="screen-student" class="screen-section space-y-4">
       
-      <!-- Student Greeting & Switch User Header Bar -->
-      <div class="flex items-center justify-between px-1 text-xs">
+      <!-- Student Greeting & Account Controls Header Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-2 px-1 text-xs">
         <div class="flex items-center gap-1.5 text-slate-700">
           <span>שלום,</span>
           <strong id="greetingStudentName" class="text-[#0A1138] font-black text-sm">ישראל ישראלי (בחור לדוגמה)</strong>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">מחובר</span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">מחובר ✓</span>
         </div>
-        <button onclick="openStudentLoginModal()" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 hover:underline">
-          <span>החלף בחור</span>
-          <span>🔁</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="openStudentChangePasswordModal()" class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition flex items-center gap-1 border border-slate-200" title="החלפת סיסמה אישית לבחור">
+            <span>🔑</span>
+            <span>סיסמה אישית</span>
+          </button>
+          <button onclick="openStudentLoginModal()" class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-indigo-700 font-bold text-[11px] transition flex items-center gap-1 border border-slate-200" title="החלפת בחור">
+            <span>🔁</span>
+            <span>החלף בחור</span>
+          </button>
+          <button onclick="handleStudentLogout()" class="px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] transition flex items-center gap-1 border border-rose-200" title="התנתקות מהמערכת">
+            <span>🚪</span>
+            <span>התנתק</span>
+          </button>
+        </div>
       </div>
 
       <!-- 1. Hero Check-in Card (Mobile-First) -->
@@ -211,34 +221,98 @@
         </div>
       </div>
 
-      <!-- 2. Personal Score & Minimum Goal Widget -->
+      <!-- 2. Personal Score, 3-Tier Targets & Projected Points Range -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         
-        <!-- Score Progress Card -->
+        <!-- Score & 3-Tier Targets Card -->
         <div class="soft-card p-4 sm:p-5 flex flex-col justify-between">
-          <div class="flex items-center justify-between">
-            <div>
-              <span class="text-xs font-semibold text-slate-400">הניקוד המצטבר שלי</span>
-              <h3 class="text-base font-extrabold text-slate-900">התקדמות ליעד המבצע</h3>
+          <div>
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-semibold text-slate-400">הניקוד המצטבר שלי</span>
+                <h3 class="text-base font-extrabold text-slate-900">3 דרגות יעד למבצע</h3>
+              </div>
+              <div class="text-left">
+                <span id="studentTotalScoreBig" class="text-3xl font-black text-indigo-950">0</span>
+                <span class="text-xs font-bold text-slate-400"> / <span id="studentTotalAchievableMax">160</span> נק׳ בקופה</span>
+              </div>
             </div>
-            <div class="text-left">
-              <span id="studentTotalScoreBig" class="text-3xl font-black text-indigo-950">0</span>
-              <span class="text-xs font-bold text-slate-400"> / <span id="studentMinTargetText">110</span></span>
+
+            <!-- Multi-tier progress bar -->
+            <div class="my-3">
+              <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                <div id="personalGoalBar" class="h-full bg-gradient-to-r from-emerald-400 via-teal-500 to-indigo-600 rounded-full transition-all duration-500" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- 3 Target Status Pills (Bronze, Silver, Gold) -->
+            <div class="grid grid-cols-3 gap-1.5 my-2 text-center">
+              <div id="tier1StatusPill" class="p-2 rounded-xl border border-amber-200 bg-amber-50/70 text-[11px] transition">
+                <div class="font-bold text-amber-900 text-[10px] leading-tight" id="tier1NameDisplay">יעד 1 (ארד)</div>
+                <div class="font-black text-amber-950 mt-0.5" id="tier1PtsDisplay">70 נק׳</div>
+                <div class="text-[9px] font-extrabold text-amber-700 mt-0.5" id="tier1StateLabel">טרם הושג</div>
+              </div>
+
+              <div id="tier2StatusPill" class="p-2 rounded-xl border border-slate-200 bg-slate-50 text-[11px] transition">
+                <div class="font-bold text-slate-700 text-[10px] leading-tight" id="tier2NameDisplay">יעד 2 (כסף)</div>
+                <div class="font-black text-slate-900 mt-0.5" id="tier2PtsDisplay">100 נק׳</div>
+                <div class="text-[9px] font-extrabold text-slate-500 mt-0.5" id="tier2StateLabel">טרם הושג</div>
+              </div>
+
+              <div id="tier3StatusPill" class="p-2 rounded-xl border border-indigo-200 bg-indigo-50/70 text-[11px] transition">
+                <div class="font-bold text-indigo-900 text-[10px] leading-tight" id="tier3NameDisplay">יעד 3 (זהב)</div>
+                <div class="font-black text-indigo-950 mt-0.5" id="tier3PtsDisplay">130 נק׳</div>
+                <div class="text-[9px] font-extrabold text-indigo-700 mt-0.5" id="tier3StateLabel">טרם הושג</div>
+              </div>
             </div>
           </div>
 
-          <div class="my-3">
-            <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-              <div id="personalGoalBar" class="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between text-xs">
-            <span id="pointsNeededText" class="font-bold text-slate-600">חסרות 110 נקודות לפרס המבצע</span>
+          <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-100 mt-2">
+            <span id="pointsNeededText" class="font-bold text-slate-600">חסרות 70 נקודות ליעד הראשון</span>
             <button onclick="switchTab('public')" class="text-indigo-600 font-bold hover:underline">לטבלת הישיבה ←</button>
           </div>
         </div>
 
+        <!-- Projected Points Range Card -->
+        <div class="soft-card p-4 sm:p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <span class="text-xs font-semibold text-slate-400">פוטנציאל אישי</span>
+                <h3 class="text-base font-extrabold text-slate-900">טווח הנקודות שלך במבצע</h3>
+              </div>
+              <span id="studentRangeBadge" class="text-xs font-black px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-900 border border-indigo-200 font-mono">0 - 160 נק׳</span>
+            </div>
+
+            <!-- Stats breakdown list -->
+            <div class="space-y-2 text-xs my-2.5">
+              <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+                <span class="text-slate-600">נקודות שנצברו עד כה:</span>
+                <strong id="studentRangeCurrentPts" class="font-black text-slate-900 font-mono">0 נק׳</strong>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
+                <span class="text-slate-600">נקודות נוספות שנותרו בקופה:</span>
+                <strong id="studentRangeRemainingPts" class="font-black text-emerald-700 font-mono">160 נק׳</strong>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded-xl bg-amber-50/60 border border-amber-200">
+                <span class="text-amber-900 font-bold">מקסימום אישי שתוכל להגיע אליו:</span>
+                <strong id="studentRangeMaxPossiblePts" class="font-black text-amber-900 font-mono">160 נק׳</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Target Feasibility Badge -->
+          <div id="studentRangeTierStatus" class="p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/80 text-xs font-black text-indigo-950 flex items-center justify-center gap-1.5 shadow-sm text-center">
+            <span>🥇</span>
+            <span>יעד זהב (מקסימום) בהישג ידך המלא!</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Persistence (X of Y) and Calendar Subscription Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        
         <!-- X out of Y Persistence Widget -->
         <div class="soft-card p-4 sm:p-5 flex flex-col justify-between">
           <div class="flex items-center justify-between">
@@ -254,6 +328,33 @@
           </div>
 
           <div class="text-[11px] text-slate-400">10 הסדרים האחרונים שלך (ללא חובת רצף)</div>
+        </div>
+
+        <!-- Personal Calendar & Reminders Widget -->
+        <div class="soft-card p-4 sm:p-5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="text-xl">📅</span>
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900">לוח שנה אישי עם תזכורות</h3>
+                <p class="text-xs text-slate-500">סנכרן ליומן הטלפון עם תזכורת 10 דקות לפני כל סדר</p>
+              </div>
+            </div>
+            <p class="text-[11px] text-slate-500 my-2">
+              הורדת לוח שנה תתקין ביומן הטלפון (iPhone / Android / Outlook) את שעות הסדרים עם תזכורת וקישור ישיר לסימון נוכחות.
+            </p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-slate-100">
+            <button onclick="downloadStudentCalendarIcs()" class="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm">
+              <span>📲</span>
+              <span>הורד יומן עם תזכורות (iCal)</span>
+            </button>
+            <button onclick="copyStudentDirectUrl()" class="w-full sm:w-auto py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1 border border-slate-200" title="העתק קישור ישיר מהיר">
+              <span>📋</span>
+              <span>העתק קישור אישי</span>
+            </button>
+          </div>
         </div>
 
       </div>
@@ -443,16 +544,38 @@
             <!-- Populated by JS -->
           </div>
 
-          <!-- Add Seder Slot to This Day Button -->
+          <!-- Add Seder Slot & Template Actions Bar -->
           <div class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-            <button onclick="openAddSlotModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-              <span>+</span>
-              <span>הוסף סדר / אירוע ליום זה</span>
-            </button>
-            <button onclick="saveDailyScheduleToSupabase()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-              <span>💾</span>
-              <span>שמור שינויים ב-Supabase</span>
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="openAddSlotModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                <span>+</span>
+                <span>הוסף סדר / אירוע ליום זה</span>
+              </button>
+              <button onclick="saveDailyScheduleToSupabase()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                <span>💾</span>
+                <span>שמור שינויים ב-Supabase</span>
+              </button>
+            </div>
+
+            <!-- Quick Template Actions -->
+            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+              <button onclick="applyCurrentDayToWeekdays()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] transition flex items-center gap-1 border border-slate-200" title="העתק את רשימת הסדרים של יום זה לכל ימי החול (א׳ - ה׳)">
+                <span>🔄</span>
+                <span>החל על ימי החול</span>
+              </button>
+              <button onclick="applyCurrentDayToShabbats()" class="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-[11px] transition flex items-center gap-1 border border-amber-200" title="העתק את רשימת הסדרים של יום זה לכל השבתות">
+                <span>🕯️</span>
+                <span>החל על שבתות</span>
+              </button>
+              <button onclick="clearCurrentDaySlots()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] transition flex items-center gap-1 border border-rose-200" title="אפס את יום זה ללא סדרים (כמו יום שישי ריק)">
+                <span>🗑️</span>
+                <span>אפס כיום ריק</span>
+              </button>
+              <button onclick="resetDefaultSchedules()" class="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold text-[11px] transition flex items-center gap-1 border border-slate-200" title="שחזר ברירות מחדל: שישי ריק, שבת 4 סדרים מיוחדים, חול 3 סדרים">
+                <span>⚡</span>
+                <span>שחזר ברירות מחדל</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -517,34 +640,105 @@
           </div>
         </div>
 
-        <!-- Card 3: Campaign Target & Dates -->
+        <!-- Card 3: 3 Campaign Targets & Live Points Calculation -->
         <div class="soft-card p-5 sm:p-6">
-          <div class="flex items-center gap-2.5 mb-2 pb-2 border-b border-slate-100">
-            <span class="text-xl">📅</span>
-            <div>
-              <h3 class="text-base font-black text-slate-900">יעד המבצע ותאריכים בלוח השנה</h3>
-              <p class="text-xs text-slate-500">קביעת רף המינימום לפרס וטווח תאריכי המבצע</p>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+              <span class="text-xl">🎯</span>
+              <div>
+                <h3 class="text-base font-black text-slate-900">3 יעדי המבצע וחישוב נקודות כולל</h3>
+                <p class="text-xs text-slate-500">הגדרת 3 דרגות יעד (מינימום, אמצע, מקסימום) וחישוב סך הנקודות הניתנות לצבירה</p>
+              </div>
+            </div>
+            <!-- Calculated total achievable points badge -->
+            <div class="p-2 px-3 rounded-2xl bg-amber-50 border border-amber-200 text-right">
+              <span class="text-[10px] font-bold text-amber-800 uppercase block">סה״כ נקודות לצבירה במבצע:</span>
+              <span id="adminTotalAchievablePointsBadge" class="text-sm font-black text-amber-950 font-mono">160 נק׳ בקופה</span>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-3">
+          <!-- Dates Range & Days Stats -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-3">
             <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-              <label class="text-[11px] font-bold text-slate-600">יעד מינימום לפרס (נק׳):</label>
-              <input type="number" id="campaignMinTargetInput" value="110" class="w-full text-sm font-black p-1.5 rounded-lg border border-slate-200 mt-1 font-mono text-indigo-950" />
+              <label class="text-[11px] font-bold text-slate-600 block mb-1">תאריך פתיחת המבצע:</label>
+              <input type="date" id="campaignStartDateInput" value="2026-10-20" onchange="updateCampaignTotalPointsLive()" class="w-full text-xs font-mono p-2 rounded-lg border border-slate-200 bg-white" />
             </div>
             <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-              <label class="text-[11px] font-bold text-slate-600">תאריך פתיחה:</label>
-              <input type="date" id="campaignStartDateInput" value="2026-10-20" class="w-full text-xs font-mono p-1.5 rounded-lg border border-slate-200 mt-1" />
-            </div>
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-              <label class="text-[11px] font-bold text-slate-600">תאריך סיום:</label>
-              <input type="date" id="campaignEndDateInput" value="2026-11-30" class="w-full text-xs font-mono p-1.5 rounded-lg border border-slate-200 mt-1" />
+              <label class="text-[11px] font-bold text-slate-600 block mb-1">תאריך סיום המבצע:</label>
+              <input type="date" id="campaignEndDateInput" value="2026-11-30" onchange="updateCampaignTotalPointsLive()" class="w-full text-xs font-mono p-2 rounded-lg border border-slate-200 bg-white" />
             </div>
           </div>
 
-          <button onclick="saveCampaignConfigToSupabase()" class="mt-3 w-full sm:w-auto px-6 py-3 rounded-xl bg-[#0A1138] hover:bg-black text-white font-extrabold text-xs transition shadow-md flex items-center justify-center gap-2">
+          <!-- 3-Tier Targets Configuration -->
+          <div class="mt-4 pt-3 border-t border-slate-100">
+            <h4 class="text-xs font-black text-slate-800 mb-2.5 flex items-center gap-1.5">
+              <span>🏆</span>
+              <span>הגדרת שמות ושווי הנקודות ל-3 דרגות היעד</span>
+            </h4>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <!-- Tier 1: Minimum (Bronze) -->
+              <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200 text-right">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[11px] font-black text-amber-900">🥉 יעד 1: מינימום</span>
+                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-200/60 text-amber-950">דרגת כניסה</span>
+                </div>
+                <div class="space-y-2">
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-600 block">שם היעד:</label>
+                    <input type="text" id="targetMinNameInput" value="יעד כניסה להגרלה" class="w-full text-xs font-bold p-1.5 rounded-lg border border-slate-200 bg-white" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-600 block">סף נקודות נדרש:</label>
+                    <input type="number" id="targetMinPointsInput" value="70" min="1" class="w-full text-xs font-black p-1.5 rounded-lg border border-slate-200 bg-white font-mono text-amber-950" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tier 2: Mid (Silver) -->
+              <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-right">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[11px] font-black text-slate-800">🥈 יעד 2: אמצע</span>
+                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-800">דרגת כסף</span>
+                </div>
+                <div class="space-y-2">
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-600 block">שם היעד:</label>
+                    <input type="text" id="targetMidNameInput" value="יעד פרס כספי" class="w-full text-xs font-bold p-1.5 rounded-lg border border-slate-200 bg-white" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-600 block">סף נקודות נדרש:</label>
+                    <input type="number" id="targetMidPointsInput" value="100" min="1" class="w-full text-xs font-black p-1.5 rounded-lg border border-slate-200 bg-white font-mono text-slate-900" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tier 3: Maximum (Gold) -->
+              <div class="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200 text-right">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[11px] font-black text-indigo-950">🥇 יעד 3: מקסימום</span>
+                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-200/60 text-indigo-950">דרגת זהב</span>
+                </div>
+                <div class="space-y-2">
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-600 block">שם היעד:</label>
+                    <input type="text" id="targetMaxNameInput" value="יעד נסיעה ופרס ענק" class="w-full text-xs font-bold p-1.5 rounded-lg border border-slate-200 bg-white" />
+                  </div>
+                  <div>
+                    <label class="text-[10px] font-bold text-slate-600 block">סף נקודות נדרש:</label>
+                    <input type="number" id="targetMaxPointsInput" value="130" min="1" class="w-full text-xs font-black p-1.5 rounded-lg border border-slate-200 bg-white font-mono text-indigo-950" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hidden compatibility input for min target -->
+          <input type="hidden" id="campaignMinTargetInput" value="70" />
+
+          <button onclick="saveCampaignConfigToSupabase()" class="mt-4 w-full sm:w-auto px-6 py-3 rounded-xl bg-[#0A1138] hover:bg-black text-white font-extrabold text-xs transition shadow-md flex items-center justify-center gap-2">
             <span>💾</span>
-            <span>שמור את כל הגדרות הבונוסים והמבצע</span>
+            <span>שמור את כל הגדרות 3 היעדים והמבצע</span>
           </button>
         </div>
       </div>
@@ -598,8 +792,10 @@
               <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
                 <tr>
                   <th class="py-2.5 px-3 font-bold">שם הבחור</th>
-                  <th class="py-2.5 px-3 font-bold text-center hidden sm:table-cell">טלפון</th>
+                  <th class="py-2.5 px-3 font-bold text-center">טלפון וסיסמה</th>
                   <th class="py-2.5 px-3 font-bold text-center">ניקוד נוכחי</th>
+                  <th class="py-2.5 px-3 font-bold text-center">טווח נקודות צפוי</th>
+                  <th class="py-2.5 px-3 font-bold text-center">קישור אישי ויומן</th>
                   <th class="py-2.5 px-3 font-bold text-left">פעולות ראש הישיבה</th>
                 </tr>
               </thead>
@@ -744,6 +940,10 @@
           <label class="block text-xs font-bold text-slate-700 mb-1">מספר טלפון:</label>
           <input type="tel" id="newStudentPhoneInput" placeholder="050-0000000" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono text-left" dir="ltr" onkeyup="if(event.key==='Enter') confirmAddNewStudent()" />
         </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה אישית לכניסה (ברירת מחדל: 1234):</label>
+          <input type="text" id="newStudentPasswordInput" value="1234" placeholder="1234" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono text-left" dir="ltr" onkeyup="if(event.key==='Enter') confirmAddNewStudent()" />
+        </div>
       </div>
 
       <div class="flex items-center gap-2 mt-5">
@@ -789,6 +989,84 @@
           שמור סיסמה חדשה
         </button>
         <button onclick="closeChangePasswordModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- CHANGE STUDENT PERSONAL PASSWORD MODAL                     -->
+  <!-- ========================================================== -->
+  <div id="studentChangePasswordModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-right relative">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">🔑</span>
+        <h3 class="text-base font-black text-slate-900">החלפת סיסמה אישית לבחור</h3>
+      </div>
+      <p class="text-xs text-slate-500 mb-4" id="studentChangePassSubtitle">קבע סיסמה אישית חדשה לחשבונך</p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה נוכחית:</label>
+          <input type="password" id="studentCurrentPasswordInput" placeholder="סיסמה נוכחית (ברירת מחדל: 1234)..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה חדשה:</label>
+          <input type="password" id="studentNewPasswordInput" placeholder="לפחות 3 תווים..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">אימות סיסמה חדשה:</label>
+          <input type="password" id="studentConfirmPasswordInput" placeholder="הזן שוב את הסיסמה החדשה..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" onkeyup="if(event.key==='Enter') saveNewStudentPassword()" />
+        </div>
+        <p id="studentChangePasswordError" class="text-xs text-rose-600 font-bold hidden text-center"></p>
+      </div>
+
+      <div class="flex items-center gap-2 mt-5">
+        <button onclick="saveNewStudentPassword()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition shadow-md">
+          שמור סיסמה
+        </button>
+        <button onclick="closeStudentChangePasswordModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- ADMIN EDIT / RESET STUDENT PASSWORD MODAL                  -->
+  <!-- ========================================================== -->
+  <div id="adminSetStudentPasswordModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-right relative">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">🛠️</span>
+        <div>
+          <h3 class="text-base font-black text-slate-900">ניהול סיסמת בחור</h3>
+          <p id="adminSetStudentTargetName" class="text-xs text-indigo-700 font-bold">בחור נבחר</p>
+        </div>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">ראש הישיבה יכול לקבוע סיסמה חדשה או לאפס לברירת המחדל 1234</p>
+
+      <div class="space-y-3">
+        <input type="hidden" id="adminSetStudentTargetId" value="" />
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה אישית חדשה:</label>
+          <input type="text" id="adminNewStudentPasswordInput" placeholder="הזן סיסמה חדשה..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" />
+        </div>
+        <div class="flex items-center justify-between pt-1">
+          <button type="button" onclick="adminQuickResetPasswordInput()" class="text-xs font-bold text-amber-700 hover:underline flex items-center gap-1">
+            <span>🔄</span>
+            <span>איפוס מהיר ל-1234</span>
+          </button>
+        </div>
+        <p id="adminSetStudentPasswordError" class="text-xs text-rose-600 font-bold hidden text-center"></p>
+      </div>
+
+      <div class="flex items-center gap-2 mt-5">
+        <button onclick="saveAdminStudentPassword()" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-md">
+          שמור סיסמה
+        </button>
+        <button onclick="closeAdminSetStudentPasswordModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
           ביטול
         </button>
       </div>
@@ -924,9 +1202,19 @@
       <div class="space-y-3 text-right">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">מי אתה?</label>
-          <select id="studentLoginSelect" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 bg-white text-indigo-950 focus:ring-2 focus:ring-indigo-600 focus:outline-none">
+          <select id="studentLoginSelect" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 bg-white text-indigo-950 focus:ring-2 focus:ring-indigo-600 focus:outline-none" onchange="onStudentLoginSelectChange()">
             <!-- Populated by JS -->
           </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה אישית:</label>
+          <div class="relative">
+            <input type="password" id="studentLoginPasswordInput" placeholder="הזן סיסמה אישית (ברירת מחדל: 1234)" class="w-full text-xs font-bold p-3 pl-10 rounded-2xl border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-indigo-600 focus:outline-none font-mono" onkeyup="if(event.key==='Enter') confirmStudentLogin()" />
+            <button type="button" onclick="togglePasswordVisibility('studentLoginPasswordInput')" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm">
+              👁️
+            </button>
+          </div>
+          <p id="studentLoginErrorMsg" class="text-xs text-rose-600 font-bold hidden text-right mt-1"></p>
         </div>
       </div>
 
@@ -953,6 +1241,17 @@
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">שם הסדר / האירוע:</label>
           <input type="text" id="newSlotTitle" placeholder="לדוגמה: משמר ליל שישי, סדר מוסר" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">תדירות וחזרתיות:</label>
+          <select id="newSlotRecurrence" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white text-indigo-950">
+            <option value="single">📌 יום זה בלבד</option>
+            <option value="weekdays">🔄 אירוע חוזר: בכל ימי החול (א׳ - ה׳)</option>
+            <option value="weekly_same_day">📅 אירוע חוזר: בכל שבוע ביום זה</option>
+            <option value="shabbat">🕯️ אירוע חוזר: בכל השבתות</option>
+            <option value="all_days">🌐 אירוע חוזר: בכל ימי המבצע</option>
+          </select>
+          <p class="text-[10px] text-slate-500 mt-1">סדר חוזר ישובץ באופן אוטומטי בכל הימים המתאימים לאורך המבצע</p>
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
@@ -1005,6 +1304,7 @@
       id: 'st_demo_1',
       name: 'ישראל ישראלי (בחור לדוגמה)',
       phone: '050-1234567',
+      password: '1234',
       score: 0,
       presentToday: false,
       persistenceCount: 0
@@ -1016,7 +1316,10 @@
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
+            return parsed.map(st => ({
+              ...st,
+              password: st.password || '1234'
+            }));
           }
         }
       } catch (e) {
@@ -1060,6 +1363,12 @@
     const BONUS_LOGS_STORAGE_KEY = 'bakshu_bonus_logs_v1';
 
     function loadCampaignConfig(studentsCount) {
+      const defaultTargets = {
+        min: { points: 70, name: 'יעד כניסה להגרלה' },
+        mid: { points: 100, name: 'יעד פרס כספי' },
+        max: { points: 130, name: 'יעד נסיעה ופרס ענק' }
+      };
+
       try {
         const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
         if (raw) {
@@ -1068,7 +1377,8 @@
             campaignName: parsed.campaignName || 'מבצע חורף - ישיבת בקשו',
             startDate: parsed.startDate || '2026-10-20',
             endDate: parsed.endDate || '2026-11-30',
-            minTarget: Number(parsed.minTarget) || 110,
+            minTarget: Number(parsed.minTarget) || 70,
+            targets: parsed.targets || defaultTargets,
             groupFullThreshold: Number(parsed.groupFullThreshold) || Math.max(1, studentsCount || 1),
             groupFullBonus: Number(parsed.groupFullBonus) || 4,
             xyNeed: Number(parsed.xyNeed) || 5,
@@ -1083,7 +1393,8 @@
         campaignName: 'מבצע חורף - ישיבת בקשו',
         startDate: '2026-10-20',
         endDate: '2026-11-30',
-        minTarget: 110,
+        minTarget: 70,
+        targets: defaultTargets,
         groupFullThreshold: Math.max(1, studentsCount || 1),
         groupFullBonus: 4,
         xyNeed: 5,
@@ -1100,7 +1411,23 @@
       }
     }
 
+    // Default schedules:
+    // 1. Weekdays (Sun-Thu): 3 regular sedarim (4 points/day)
+    // 2. Friday: Empty [] (0 points)
+    // 3. Shabbat: 4 special sedarim (8 points/day)
     const DEFAULT_SLOTS = {
+      'weekday_template': [
+        { id: 'wd_1', title: 'סדר א׳ - לימוד בוקר', openTime: '09:00', lockTime: '10:15', points: 1, isLocked: false },
+        { id: 'wd_2', title: 'סדר ב׳ - לימוד צהריים', openTime: '16:00', lockTime: '17:00', points: 1, isLocked: false },
+        { id: 'wd_3', title: 'מעריב וסדר ערב', openTime: '20:30', lockTime: '21:15', points: 2, isLocked: false }
+      ],
+      'friday_template': [], // Empty as requested! (ימי שישי ריקים)
+      'shabbat_template': [  // Special Shabbat schedule (שבתות לפי סדר מיוחד)
+        { id: 'sh_1', title: 'סדר ליל שבת קודש', openTime: '21:00', lockTime: '22:30', points: 2, isLocked: false },
+        { id: 'sh_2', title: 'סדר שחרית ולימוד שבת בבוקר', openTime: '08:30', lockTime: '10:00', points: 2, isLocked: false },
+        { id: 'sh_3', title: 'סדר רעוא דרעווין (סעודה שלישית)', openTime: '16:30', lockTime: '18:00', points: 2, isLocked: false },
+        { id: 'sh_4', title: 'סדר מוצאי שבת קודש ואבות ובנים', openTime: '19:30', lockTime: '21:00', points: 2, isLocked: false }
+      ],
       'default': [
         { id: 'def_1', title: 'סדר א׳ - לימוד בוקר', openTime: '09:00', lockTime: '10:15', points: 1, isLocked: false },
         { id: 'def_2', title: 'סדר ב׳ - לימוד צהריים', openTime: '16:00', lockTime: '17:00', points: 1, isLocked: false },
@@ -1113,7 +1440,12 @@
         const raw = localStorage.getItem(SLOTS_STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (parsed && typeof parsed === 'object') return parsed;
+          if (parsed && typeof parsed === 'object') {
+            if (!parsed['weekday_template']) parsed['weekday_template'] = DEFAULT_SLOTS['weekday_template'];
+            if (!parsed['friday_template']) parsed['friday_template'] = [];
+            if (!parsed['shabbat_template']) parsed['shabbat_template'] = DEFAULT_SLOTS['shabbat_template'];
+            return parsed;
+          }
         }
       } catch (e) {
         console.warn('Failed to load slots:', e);
@@ -1126,6 +1458,398 @@
         localStorage.setItem(SLOTS_STORAGE_KEY, JSON.stringify(slots));
       } catch (e) {
         console.warn('Failed to save slots:', e);
+      }
+    }
+
+    function getSlotsForDate(dateStr) {
+      if (!dateStr) return state.slotsByDate['weekday_template'] || DEFAULT_SLOTS['weekday_template'];
+      if (state.slotsByDate && Array.isArray(state.slotsByDate[dateStr])) {
+        return state.slotsByDate[dateStr];
+      }
+      try {
+        const d = new Date(dateStr + 'T12:00:00');
+        const day = d.getDay(); // 0: Sun, 5: Fri, 6: Sat
+        if (day === 5) {
+          return state.slotsByDate['friday_template'] || [];
+        }
+        if (day === 6) {
+          return state.slotsByDate['shabbat_template'] || DEFAULT_SLOTS['shabbat_template'];
+        }
+      } catch (e) {
+        console.warn('Error parsing date:', dateStr, e);
+      }
+      return state.slotsByDate['weekday_template'] || DEFAULT_SLOTS['weekday_template'];
+    }
+
+    function getTodayDateStr() {
+      const now = new Date();
+      return now.toISOString().slice(0, 10);
+    }
+
+    function getTodaySlots() {
+      return getSlotsForDate(getTodayDateStr());
+    }
+
+    // ====================================================
+    // CAMPAIGN TOTAL POINTS & STUDENT PROJECTED RANGE
+    // ====================================================
+    function calculateCampaignTotalAchievablePoints() {
+      const start = new Date(state.config.startDate + 'T12:00:00');
+      const end = new Date(state.config.endDate + 'T12:00:00');
+      if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+        return 160;
+      }
+      let total = 0;
+      let curr = new Date(start);
+      while (curr <= end) {
+        const dStr = curr.toISOString().slice(0, 10);
+        const slots = getSlotsForDate(dStr);
+        slots.forEach(s => {
+          total += (Number(s.points) || 0);
+        });
+        curr.setDate(curr.getDate() + 1);
+      }
+      return total;
+    }
+
+    function calculateStudentProjectedRange(student) {
+      const campaignTotal = calculateCampaignTotalAchievablePoints();
+      const current = Number(student.score) || 0;
+      
+      const now = new Date();
+      const endDate = new Date(state.config.endDate + 'T12:00:00');
+      
+      let remaining = 0;
+      if (!isNaN(endDate.getTime())) {
+        let curr = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+        while (curr <= endDate) {
+          const dStr = curr.toISOString().slice(0, 10);
+          const slots = getSlotsForDate(dStr);
+          slots.forEach(s => {
+            remaining += (Number(s.points) || 0);
+          });
+          curr.setDate(curr.getDate() + 1);
+        }
+      }
+      
+      const maxPossible = current + remaining;
+      const targets = state.config.targets || {
+        min: { points: 70, name: 'יעד כניסה להגרלה' },
+        mid: { points: 100, name: 'יעד פרס כספי' },
+        max: { points: 130, name: 'יעד נסיעה ופרס ענק' }
+      };
+
+      let tier = 'none';
+      let statusText = 'עדיין לא הגיע ליעד';
+      let icon = '🎯';
+
+      if (current >= targets.max.points) {
+        tier = 'max_achieved';
+        statusText = '🏆 השלים את ' + targets.max.name + '!';
+        icon = '🏆';
+      } else if (current >= targets.mid.points) {
+        tier = 'mid_achieved';
+        statusText = '🥈 השלים את ' + targets.mid.name + '!';
+        icon = '🥈';
+      } else if (current >= targets.min.points) {
+        tier = 'min_achieved';
+        statusText = '🥉 השלים את ' + targets.min.name + '!';
+        icon = '🥉';
+      } else if (maxPossible >= targets.max.points) {
+        tier = 'max_possible';
+        statusText = '🥇 מסלול ' + targets.max.name + ' פתוח ומובטח';
+        icon = '🥇';
+      } else if (maxPossible >= targets.mid.points) {
+        tier = 'mid_possible';
+        statusText = '🥈 מסלול ' + targets.mid.name + ' בהישג יד';
+        icon = '🥈';
+      } else if (maxPossible >= targets.min.points) {
+        tier = 'min_possible';
+        statusText = '🥉 מסלול ' + targets.min.name + ' בהישג יד';
+        icon = '🥉';
+      } else {
+        tier = 'below';
+        statusText = 'נדרש מאמץ מיוחד להשגת היעדים';
+        icon = '⚠️';
+      }
+
+      return {
+        campaignTotal,
+        current,
+        remaining,
+        maxPossible,
+        tier,
+        statusText,
+        icon
+      };
+    }
+
+    function updateCampaignTotalPointsLive() {
+      const startEl = document.getElementById('campaignStartDateInput');
+      const endEl = document.getElementById('campaignEndDateInput');
+      if (startEl && startEl.value) state.config.startDate = startEl.value;
+      if (endEl && endEl.value) state.config.endDate = endEl.value;
+
+      const totalAchievable = calculateCampaignTotalAchievablePoints();
+      const badge = document.getElementById('adminTotalAchievablePointsBadge');
+      if (badge) {
+        badge.textContent = totalAchievable + ' נק׳ בקופה';
+      }
+      const studentAchievable = document.getElementById('studentTotalAchievableMax');
+      if (studentAchievable) {
+        studentAchievable.textContent = totalAchievable;
+      }
+      renderStudentScreen();
+    }
+
+    // ====================================================
+    // PERSONAL DIRECT URL & ICALENDAR EXPORT WITH ALARMS
+    // ====================================================
+    function getStudentDirectUrl(studentId) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('student', studentId);
+      return url.toString();
+    }
+
+    function copyStudentDirectUrl(studentId) {
+      const id = studentId || (state.currentStudent ? state.currentStudent.id : null);
+      if (!id) return;
+      const directUrl = getStudentDirectUrl(id);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(directUrl).then(() => {
+          showToast('הקישור האישי הועתק ללוח!', '📋');
+        }).catch(() => {
+          prompt('העתק את הקישור האישי שלך:', directUrl);
+        });
+      } else {
+        prompt('העתק את הקישור האישי שלך:', directUrl);
+      }
+    }
+
+    function generateStudentCalendarIcs(student) {
+      const start = new Date(state.config.startDate + 'T12:00:00');
+      const end = new Date(state.config.endDate + 'T12:00:00');
+      const directUrl = getStudentDirectUrl(student.id);
+
+      const events = [];
+      let curr = new Date(start);
+      while (curr <= end) {
+        const dStr = curr.toISOString().slice(0, 10);
+        const slots = getSlotsForDate(dStr);
+
+        slots.forEach((slot, sIdx) => {
+          const openParts = (slot.openTime || '09:00').split(':');
+          const lockParts = (slot.lockTime || '10:15').split(':');
+          
+          const dtStart = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), parseInt(openParts[0], 10), parseInt(openParts[1], 10));
+          const dtEnd = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), parseInt(lockParts[0], 10), parseInt(lockParts[1], 10));
+
+          const formatIcsDate = (d) => {
+            const pad = (n) => String(n).padStart(2, '0');
+            return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00';
+          };
+
+          const uid = 'bakshu_' + dStr + '_' + (slot.id || sIdx) + '_' + student.id + '@bakshu-vibe';
+          const summary = 'סדר: ' + slot.title + ' (' + slot.points + ' נק׳)';
+          const desc = 'מבצע ישיבת בקשו עבור ' + student.name + '. לחץ כאן לסימון נוכחות: ' + directUrl;
+
+          events.push('BEGIN:VEVENT\n' +
+'UID:' + uid + '\n' +
+'DTSTAMP:' + formatIcsDate(new Date()) + 'Z\n' +
+'DTSTART:' + formatIcsDate(dtStart) + '\n' +
+'DTEND:' + formatIcsDate(dtEnd) + '\n' +
+'SUMMARY:' + summary + '\n' +
+'DESCRIPTION:' + desc + '\n' +
+'URL:' + directUrl + '\n' +
+'LOCATION:בית המדרש - ישיבת בקשו\n' +
+'BEGIN:VALARM\n' +
+'TRIGGER:-PT10M\n' +
+'ACTION:DISPLAY\n' +
+'DESCRIPTION:תזכורת: בעוד 10 דקות מתחיל ' + slot.title + ' בישיבת בקשו!\n' +
+'END:VALARM\n' +
+'END:VEVENT');
+        });
+
+        curr.setDate(curr.getDate() + 1);
+      }
+
+      return 'BEGIN:VCALENDAR\n' +
+'VERSION:2.0\n' +
+'PRODID:-//Yeshivat Bakshu//Bakshu VIBE//HE\n' +
+'CALSCALE:GREGORIAN\n' +
+'METHOD:PUBLISH\n' +
+'X-WR-CALNAME:לוח מבצע בקשו - ' + student.name + '\n' +
+'X-WR-TIMEZONE:Asia/Jerusalem\n' +
+events.join('\n') + '\n' +
+'END:VCALENDAR';
+    }
+
+    function downloadStudentCalendarIcs(studentId) {
+      const id = studentId || (state.currentStudent ? state.currentStudent.id : null);
+      const student = state.students.find(s => s.id === id) || state.currentStudent;
+      if (!student) return;
+
+      const icsContent = generateStudentCalendarIcs(student);
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'לוח_מבצע_בקשו_' + student.name.replace(/\s+/g, '_') + '.ics';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('לוח השנה עם התזכורות ירד בהצלחה!', '📲');
+    }
+
+    // ====================================================
+    // STUDENT PASSWORD AUTHENTICATION & SELF-SERVICE
+    // ====================================================
+    function togglePasswordVisibility(inputId) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    function onStudentLoginSelectChange() {
+      const err = document.getElementById('studentLoginErrorMsg');
+      if (err) err.classList.add('hidden');
+      const pass = document.getElementById('studentLoginPasswordInput');
+      if (pass) pass.value = '';
+    }
+
+    function handleStudentLogout() {
+      localStorage.removeItem('bakshu_logged_student_id');
+      showToast('התנתקת מהמערכת', '🚪');
+      setTimeout(openStudentLoginModal, 300);
+    }
+
+    function openStudentChangePasswordModal() {
+      if (!state.currentStudent) return;
+      const modal = document.getElementById('studentChangePasswordModal');
+      const sub = document.getElementById('studentChangePassSubtitle');
+      const err = document.getElementById('studentChangePasswordError');
+      if (sub) sub.textContent = 'עבור: ' + state.currentStudent.name;
+      if (err) err.classList.add('hidden');
+      ['studentCurrentPasswordInput', 'studentNewPasswordInput', 'studentConfirmPasswordInput'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeStudentChangePasswordModal() {
+      document.getElementById('studentChangePasswordModal')?.classList.add('hidden');
+    }
+
+    function saveNewStudentPassword() {
+      const student = state.students.find(s => s.id === state.currentStudent.id);
+      if (!student) return;
+
+      const curr = (document.getElementById('studentCurrentPasswordInput')?.value || '').trim();
+      const nPass = (document.getElementById('studentNewPasswordInput')?.value || '').trim();
+      const cPass = (document.getElementById('studentConfirmPasswordInput')?.value || '').trim();
+      const err = document.getElementById('studentChangePasswordError');
+
+      const expected = (student.password || '1234').trim();
+      if (curr !== expected) {
+        if (err) {
+          err.textContent = 'הסיסמה הנוכחית אינה נכונה';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (nPass.length < 3) {
+        if (err) {
+          err.textContent = 'סיסמה חדשה חייבת להכיל לפחות 3 תווים';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (nPass !== cPass) {
+        if (err) {
+          err.textContent = 'אימות הסיסמה אינו תואם לסיסמה החדשה';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      student.password = nPass;
+      saveLocalStudents();
+      closeStudentChangePasswordModal();
+      showToast('הסיסמה האישית עודכנה בהצלחה!', '🔑');
+    }
+
+    function adminOpenSetStudentPasswordModal(studentId) {
+      const student = state.students.find(s => s.id === studentId);
+      if (!student) return;
+      const modal = document.getElementById('adminSetStudentPasswordModal');
+      const nameEl = document.getElementById('adminSetStudentTargetName');
+      const targetIdEl = document.getElementById('adminSetStudentTargetId');
+      const passInput = document.getElementById('adminNewStudentPasswordInput');
+      const err = document.getElementById('adminSetStudentPasswordError');
+
+      if (nameEl) nameEl.textContent = student.name + ' (נוכחית: ' + (student.password || '1234') + ')';
+      if (targetIdEl) targetIdEl.value = student.id;
+      if (passInput) passInput.value = student.password || '1234';
+      if (err) err.classList.add('hidden');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeAdminSetStudentPasswordModal() {
+      document.getElementById('adminSetStudentPasswordModal')?.classList.add('hidden');
+    }
+
+    function adminQuickResetPasswordInput() {
+      const passInput = document.getElementById('adminNewStudentPasswordInput');
+      if (passInput) passInput.value = '1234';
+    }
+
+    function saveAdminStudentPassword() {
+      const targetId = document.getElementById('adminSetStudentTargetId')?.value;
+      const student = state.students.find(s => s.id === targetId);
+      if (!student) return;
+
+      const newPass = (document.getElementById('adminNewStudentPasswordInput')?.value || '').trim();
+      const err = document.getElementById('adminSetStudentPasswordError');
+
+      if (newPass.length < 2) {
+        if (err) {
+          err.textContent = 'אנא הזן סיסמה בת 2 תווים לפחות';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      student.password = newPass;
+      saveLocalStudents();
+      closeAdminSetStudentPasswordModal();
+      renderAdminRequestsAndStudents();
+      showToast('סיסמתו של ' + student.name + ' עודכנה בהצלחה', '🔑');
+    }
+
+    function checkUrlForStudentParam() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const studentParam = urlParams.get('student');
+      if (studentParam) {
+        const student = state.students.find(s => s.id === studentParam);
+        if (student) {
+          state.currentStudent = {
+            id: student.id,
+            name: student.name,
+            phone: student.phone,
+            password: student.password || '1234',
+            presentCurrent: student.presentToday || false,
+            baseScore: student.score || 0,
+            last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          };
+          localStorage.setItem('bakshu_logged_student_id', student.id);
+          const nameGreeting = document.getElementById('greetingStudentName');
+          if (nameGreeting) nameGreeting.textContent = student.name;
+          showToast('ברוך הבא ' + student.name + '! נכנסת דרך הקישור האישי', '🌟');
+        }
       }
     }
 
@@ -1177,6 +1901,7 @@
         id: initialStudentsList[0].id,
         name: initialStudentsList[0].name,
         phone: initialStudentsList[0].phone,
+        password: initialStudentsList[0].password || '1234',
         presentCurrent: initialStudentsList[0].presentToday || false,
         baseScore: initialStudentsList[0].score || 0,
         last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -1188,122 +1913,108 @@
       // Bonus audit logs
       bonusLogs: initialBonusLogs,
 
-      // Pending "Forgot to mark" requests
       pendingRequests: [],
       myRequests: []
     };
 
-    // ====================================================
-    // 3. TOAST NOTIFICATIONS
-    // ====================================================
-    let toastTimer = null;
-    function showToast(message, icon = '✨') {
-      const container = document.getElementById('toastContainer');
-      const textEl = document.getElementById('toastText');
-      const iconEl = document.getElementById('toastIcon');
-      if (!container || !textEl) return;
-      textEl.textContent = message;
-      iconEl.textContent = icon;
-      container.classList.remove('opacity-0', 'translate-y-4');
-      container.classList.add('opacity-100', 'translate-y-0');
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        container.classList.remove('opacity-100', 'translate-y-0');
-        container.classList.add('opacity-0', 'translate-y-4');
-      }, 3000);
+    // Secret Tap Trigger on Header Logo
+    let secretTapCount = 0;
+    let secretTapTimer = null;
+
+    function handleSecretLogoTap() {
+      secretTapCount++;
+      clearTimeout(secretTapTimer);
+      secretTapTimer = setTimeout(() => {
+        secretTapCount = 0;
+      }, 2000);
+
+      if (secretTapCount === 3) {
+        secretTapCount = 0;
+        openAdminPasswordModal();
+      }
     }
 
     // ====================================================
-    // 4. NAVIGATION & TAB SWITCHING
+    // 5. NAVIGATION & TABS (ROSH HAYESHIVA PROTECTED)
     // ====================================================
     function switchTab(tabId) {
       if (tabId === 'admin' && !state.isAdminUnlocked) {
         openAdminPasswordModal();
         return;
       }
+
       state.activeTab = tabId;
 
-      // Toggle views
       document.querySelectorAll('.screen-section').forEach(sec => sec.classList.add('hidden'));
       const activeSec = document.getElementById('screen-' + tabId);
       if (activeSec) activeSec.classList.remove('hidden');
 
-      // Update Desktop Tabs
-      document.querySelectorAll('.dtab-btn').forEach(btn => {
-        btn.className = 'dtab-btn px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-white/60';
-      });
-      const activeDtab = document.getElementById('dtab-' + tabId);
-      if (activeDtab) {
-        if (tabId === 'admin') {
-          activeDtab.className = 'dtab-btn px-3.5 py-1.5 rounded-xl transition text-amber-900 bg-amber-100/90 border border-amber-300 font-bold';
-        } else {
-          activeDtab.className = 'dtab-btn px-3.5 py-1.5 rounded-xl transition text-slate-900 bg-white shadow-sm border border-slate-200 font-bold';
+      ['student', 'public', 'requests'].forEach(t => {
+        const dBtn = document.getElementById('dtab-' + t);
+        const mBtn = document.getElementById('mtab-' + t);
+        if (dBtn) {
+          if (t === tabId) {
+            dBtn.className = 'px-4 py-2 rounded-xl text-xs font-black transition bg-[#0A1138] text-white shadow-sm';
+          } else {
+            dBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900';
+          }
         }
-      }
-
-      // Update Mobile Bottom Tabs
-      document.querySelectorAll('.mtab-btn').forEach(btn => {
-        btn.classList.remove('text-[#0A1138]', 'font-black');
-        btn.classList.add('text-slate-400', 'font-bold');
+        if (mBtn) {
+          if (t === tabId) {
+            mBtn.className = 'flex flex-col items-center py-2 px-3 text-indigo-700 font-extrabold transition';
+          } else {
+            mBtn.className = 'flex flex-col items-center py-2 px-3 text-slate-500 font-bold transition';
+          }
+        }
       });
-      const activeMtab = document.getElementById('mtab-' + tabId);
-      if (activeMtab) {
-        activeMtab.classList.add('text-[#0A1138]', 'font-black');
-        activeMtab.classList.remove('text-slate-400', 'font-bold');
+
+      const dAdmin = document.getElementById('dtab-admin');
+      const mAdmin = document.getElementById('mtab-admin');
+      if (dAdmin && state.isAdminUnlocked) {
+        dAdmin.className = tabId === 'admin'
+          ? 'px-4 py-2 rounded-xl text-xs font-black transition bg-amber-500 text-white shadow-sm'
+          : 'px-4 py-2 rounded-xl text-xs font-bold transition text-amber-800 hover:bg-amber-100';
+      }
+      if (mAdmin && state.isAdminUnlocked) {
+        mAdmin.className = tabId === 'admin'
+          ? 'flex flex-col items-center py-2 px-3 text-amber-700 font-black transition'
+          : 'flex flex-col items-center py-2 px-3 text-amber-800 font-bold transition';
       }
 
-      window.scrollTo({ top: 0, behavior: 'smooth' });
       renderCurrentScreen();
     }
 
-    function switchAdminSubView(subView) {
-      state.adminSubView = subView;
-      document.querySelectorAll('.admin-subview').forEach(v => v.classList.add('hidden'));
-      const view = document.getElementById('adminView-' + subView);
-      if (view) view.classList.remove('hidden');
+    function switchAdminSubView(subViewId) {
+      state.adminSubView = subViewId;
+      document.querySelectorAll('.admin-subview').forEach(view => view.classList.add('hidden'));
+      const active = document.getElementById('adminView-' + subViewId);
+      if (active) active.classList.remove('hidden');
 
-      document.querySelectorAll('.asub-btn').forEach(b => {
-        b.className = 'asub-btn flex-1 py-2 px-3 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap';
+      ['schedule', 'campaign', 'requests', 'students', 'security'].forEach(sv => {
+        const btn = document.getElementById('asv-' + sv);
+        if (btn) {
+          if (sv === subViewId) {
+            btn.className = 'px-3 py-1.5 rounded-xl font-black text-xs transition bg-[#0A1138] text-white shadow-sm';
+          } else {
+            btn.className = 'px-3 py-1.5 rounded-xl font-bold text-xs transition text-slate-600 hover:bg-slate-100';
+          }
+        }
       });
-      const activeBtn = document.getElementById('asub-' + subView);
-      if (activeBtn) {
-        activeBtn.className = 'asub-btn flex-1 py-2 px-3 rounded-xl transition bg-white text-slate-900 shadow-sm whitespace-nowrap font-black';
-      }
 
-      if (subView === 'campaign') {
+      if (subViewId === 'campaign') {
         populateCampaignConfigInputs();
-      } else if (subView === 'students') {
-        renderAdminRequestsAndStudents();
-      } else if (subView === 'schedule') {
-        renderAdminDayScheduleEditor();
       }
     }
 
     // ====================================================
-    // 5. HIDDEN ROSH HAYESHIVA PASSWORD GATE
+    // ROSH HAYESHIVA: ACCESS MODAL & AUTHENTICATION
     // ====================================================
-    function toggleAdminAccess() {
-      if (state.isAdminUnlocked) {
-        switchTab('admin');
-      } else {
-        openAdminPasswordModal();
-      }
-    }
-
     function openAdminPasswordModal() {
       const modal = document.getElementById('adminPasswordModal');
-      const err = document.getElementById('adminPasswordError');
       const input = document.getElementById('adminPasswordInput');
-      const hint = document.getElementById('adminPasswordHintText');
+      const err = document.getElementById('adminPasswordError');
       if (err) err.classList.add('hidden');
       if (input) input.value = '';
-      if (hint) {
-        if (state.adminPasswordHash && state.adminPasswordHash !== 'bakshu2026') {
-          hint.innerHTML = 'מוגן בסיסמה אישית שעודכנה ע״י ראש הישיבה 🔒';
-        } else {
-          hint.innerHTML = 'סיסמת ברירת מחדל: <code class="font-mono bg-slate-100 px-1 py-0.5 rounded">bakshu2026</code>';
-        }
-      }
       if (modal) modal.classList.remove('hidden');
       setTimeout(() => input?.focus(), 100);
     }
@@ -1312,33 +2023,15 @@
       document.getElementById('adminPasswordModal')?.classList.add('hidden');
     }
 
-    let logoSecretTapCount = 0;
-    let logoSecretTapTimer = null;
-    function handleLogoSecretTap() {
-      logoSecretTapCount++;
-      if (logoSecretTapTimer) clearTimeout(logoSecretTapTimer);
-
-      if (logoSecretTapCount >= 3) {
-        logoSecretTapCount = 0;
-        openAdminPasswordModal();
-        return;
-      }
-
-      logoSecretTapTimer = setTimeout(() => {
-        logoSecretTapCount = 0;
-      }, 1200);
-    }
-
     function verifyAdminPassword() {
-      const val = (document.getElementById('adminPasswordInput')?.value || '').trim();
+      const input = document.getElementById('adminPasswordInput');
       const err = document.getElementById('adminPasswordError');
+      const val = (input ? input.value : '').trim();
 
-      // Validates against custom updated password, or master fallback
       if (val === state.adminPasswordHash || val === 'bakshu2026' || val === '1234') {
         state.isAdminUnlocked = true;
         closeAdminPasswordModal();
 
-        // Reveal Rosh HaYeshiva Tab buttons and header button only when unlocked
         document.getElementById('adminLockBtn')?.classList.remove('hidden');
         document.getElementById('dtab-admin')?.classList.remove('hidden');
         document.getElementById('mtab-admin')?.classList.remove('hidden');
@@ -1353,7 +2046,6 @@
     function lockAdminPortal() {
       state.isAdminUnlocked = false;
       
-      // Hide all Rosh HaYeshiva portal access points from students
       document.getElementById('adminLockBtn')?.classList.add('hidden');
       document.getElementById('dtab-admin')?.classList.add('hidden');
       document.getElementById('mtab-admin')?.classList.add('hidden');
@@ -1520,7 +2212,6 @@
         showToast('סימון הנוכחות בוטל', 'ℹ️');
       }
 
-      // Sync to state.students
       const stIdx = state.students.findIndex(s => s.id === state.currentStudent.id);
       if (stIdx !== -1) {
         state.students[stIdx].score = state.currentStudent.baseScore;
@@ -1540,7 +2231,6 @@
       const s = state.currentStudent;
       const isPresent = s.presentCurrent;
 
-      // Check-in button
       const btnArea = document.getElementById('checkInActionArea');
       if (btnArea) {
         if (isPresent) {
@@ -1565,35 +2255,122 @@
         }
       }
 
-      // Personal total score
       const totalScoreEl = document.getElementById('studentTotalScoreBig');
       if (totalScoreEl) totalScoreEl.textContent = s.baseScore;
 
-      const minTarget = state.config.minTarget;
-      const needed = Math.max(0, minTarget - s.baseScore);
-      const neededEl = document.getElementById('pointsNeededText');
-      if (neededEl) {
-        neededEl.textContent = needed === 0 ? '🎉 הגעת ליעד המבצע!' : `חסרות ${needed} נקודות ליעד המבצע`;
+      const targets = state.config.targets || {
+        min: { points: 70, name: 'יעד כניסה להגרלה' },
+        mid: { points: 100, name: 'יעד פרס כספי' },
+        max: { points: 130, name: 'יעד נסיעה ופרס ענק' }
+      };
+
+      const t1Name = document.getElementById('tier1NameDisplay');
+      const t1Pts = document.getElementById('tier1PtsDisplay');
+      const t1State = document.getElementById('tier1StateLabel');
+      const t1Pill = document.getElementById('tier1StatusPill');
+
+      const t2Name = document.getElementById('tier2NameDisplay');
+      const t2Pts = document.getElementById('tier2PtsDisplay');
+      const t2State = document.getElementById('tier2StateLabel');
+      const t2Pill = document.getElementById('tier2StatusPill');
+
+      const t3Name = document.getElementById('tier3NameDisplay');
+      const t3Pts = document.getElementById('tier3PtsDisplay');
+      const t3State = document.getElementById('tier3StateLabel');
+      const t3Pill = document.getElementById('tier3StatusPill');
+
+      if (t1Name) t1Name.textContent = targets.min.name;
+      if (t1Pts) t1Pts.textContent = targets.min.points + ' נק׳';
+      if (t1State) {
+        if (s.baseScore >= targets.min.points) {
+          t1State.textContent = '✓ הושג!';
+          t1State.className = 'text-[9px] font-black text-emerald-700 mt-0.5';
+          if (t1Pill) t1Pill.className = 'p-2 rounded-xl border border-emerald-300 bg-emerald-50 text-[11px] shadow-sm';
+        } else {
+          t1State.textContent = 'עוד ' + (targets.min.points - s.baseScore);
+          t1State.className = 'text-[9px] font-extrabold text-amber-700 mt-0.5';
+          if (t1Pill) t1Pill.className = 'p-2 rounded-xl border border-amber-200 bg-amber-50/70 text-[11px]';
+        }
+      }
+
+      if (t2Name) t2Name.textContent = targets.mid.name;
+      if (t2Pts) t2Pts.textContent = targets.mid.points + ' נק׳';
+      if (t2State) {
+        if (s.baseScore >= targets.mid.points) {
+          t2State.textContent = '✓ הושג!';
+          t2State.className = 'text-[9px] font-black text-emerald-700 mt-0.5';
+          if (t2Pill) t2Pill.className = 'p-2 rounded-xl border border-emerald-300 bg-emerald-50 text-[11px] shadow-sm';
+        } else {
+          t2State.textContent = 'עוד ' + (targets.mid.points - s.baseScore);
+          t2State.className = 'text-[9px] font-extrabold text-slate-500 mt-0.5';
+          if (t2Pill) t2Pill.className = 'p-2 rounded-xl border border-slate-200 bg-slate-50 text-[11px]';
+        }
+      }
+
+      if (t3Name) t3Name.textContent = targets.max.name;
+      if (t3Pts) t3Pts.textContent = targets.max.points + ' נק׳';
+      if (t3State) {
+        if (s.baseScore >= targets.max.points) {
+          t3State.textContent = '✓ הושג!';
+          t3State.className = 'text-[9px] font-black text-emerald-700 mt-0.5';
+          if (t3Pill) t3Pill.className = 'p-2 rounded-xl border border-emerald-300 bg-emerald-50 text-[11px] shadow-sm';
+        } else {
+          t3State.textContent = 'עוד ' + (targets.max.points - s.baseScore);
+          t3State.className = 'text-[9px] font-extrabold text-indigo-700 mt-0.5';
+          if (t3Pill) t3Pill.className = 'p-2 rounded-xl border border-indigo-200 bg-indigo-50/70 text-[11px]';
+        }
       }
 
       const barEl = document.getElementById('personalGoalBar');
       if (barEl) {
-        const pct = Math.min(100, Math.round((s.baseScore / minTarget) * 100));
+        const pct = Math.min(100, Math.round((s.baseScore / targets.max.points) * 100));
         barEl.style.width = pct + '%';
       }
 
-      // Dynamic header & widget targets
+      const neededEl = document.getElementById('pointsNeededText');
+      if (neededEl) {
+        if (s.baseScore >= targets.max.points) {
+          neededEl.textContent = '🎉 מזל טוב! השלמת את כל 3 יעדי המבצע!';
+        } else if (s.baseScore >= targets.mid.points) {
+          neededEl.textContent = 'חסרות ' + (targets.max.points - s.baseScore) + ' נקודות ליעד המקסימום (' + targets.max.name + ')';
+        } else if (s.baseScore >= targets.min.points) {
+          neededEl.textContent = 'חסרות ' + (targets.mid.points - s.baseScore) + ' נקודות ליעד האמצע (' + targets.mid.name + ')';
+        } else {
+          neededEl.textContent = 'חסרות ' + (targets.min.points - s.baseScore) + ' נקודות ליעד הראשון (' + targets.min.name + ')';
+        }
+      }
+
       const headerTargetEl = document.getElementById('headerTargetScoreText');
-      if (headerTargetEl) headerTargetEl.textContent = `יעד ${state.config.minTarget} נק׳`;
+      if (headerTargetEl) headerTargetEl.textContent = 'יעד ' + targets.min.points + ' נק׳';
 
       const studentMinTargetEl = document.getElementById('studentMinTargetText');
-      if (studentMinTargetEl) studentMinTargetEl.textContent = state.config.minTarget;
+      if (studentMinTargetEl) studentMinTargetEl.textContent = targets.min.points;
 
-      // Group full seder status (Dynamic threshold from config!)
+      const range = calculateStudentProjectedRange(s);
+      const studentAchievableEl = document.getElementById('studentTotalAchievableMax');
+      if (studentAchievableEl) studentAchievableEl.textContent = range.campaignTotal;
+
+      const rangeBadge = document.getElementById('studentRangeBadge');
+      if (rangeBadge) rangeBadge.textContent = range.current + ' - ' + range.maxPossible + ' נק׳';
+
+      const rangeCurrentPts = document.getElementById('studentRangeCurrentPts');
+      if (rangeCurrentPts) rangeCurrentPts.textContent = range.current + ' נק׳';
+
+      const rangeRemainingPts = document.getElementById('studentRangeRemainingPts');
+      if (rangeRemainingPts) rangeRemainingPts.textContent = range.remaining + ' נק׳';
+
+      const rangeMaxPossiblePts = document.getElementById('studentRangeMaxPossiblePts');
+      if (rangeMaxPossiblePts) rangeMaxPossiblePts.textContent = range.maxPossible + ' נק׳';
+
+      const rangeTierStatus = document.getElementById('studentRangeTierStatus');
+      if (rangeTierStatus) {
+        rangeTierStatus.innerHTML = '<span>' + range.icon + '</span> <span>' + range.statusText + '</span>';
+      }
+
       const presentCount = state.students.filter(st => st.presentToday).length;
       const threshold = Math.max(1, state.config.groupFullThreshold || 1);
       const groupCountEl = document.getElementById('groupCountText');
-      if (groupCountEl) groupCountEl.textContent = `${presentCount} / ${threshold} בחורים`;
+      if (groupCountEl) groupCountEl.textContent = presentCount + ' / ' + threshold + ' בחורים';
       
       const groupBarEl = document.getElementById('groupProgressBar');
       if (groupBarEl) {
@@ -1604,27 +2381,26 @@
       const groupHintEl = document.getElementById('groupStatusHint');
       if (groupHintEl) {
         if (presentCount >= threshold) {
-          groupHintEl.innerHTML = `<span class="text-emerald-700 font-bold">🎉 היעד הושג! ${presentCount} בחורים נוכחים – כל הישיבה זוכה ב-${state.config.groupFullBonus} נק׳ בונוס סדר מלא!</span>`;
+          groupHintEl.innerHTML = '<span class="text-emerald-700 font-bold">🎉 היעד הושג! ' + presentCount + ' בחורים נוכחים – כל הישיבה זוכה ב-' + state.config.groupFullBonus + ' נק׳ בונוס סדר מלא!</span>';
         } else {
           const remaining = threshold - presentCount;
-          groupHintEl.textContent = `נדרשים ${threshold} בחורים בבית המדרש לזיכוי כל הישיבה בבונוס סדר מלא! (עוד ${remaining} בחורים להשגת היעד)`;
+          groupHintEl.textContent = 'נדרשים ' + threshold + ' בחורים בבית המדרש לזיכוי כל הישיבה בבונוס סדר מלא! (עוד ' + remaining + ' בחורים להשגת היעד)';
         }
       }
 
       const groupBonusPtsEl = document.getElementById('studentViewGroupBonusPts');
       if (groupBonusPtsEl) {
-        groupBonusPtsEl.textContent = `+${state.config.groupFullBonus} נק׳ בונוס`;
+        groupBonusPtsEl.textContent = '+' + state.config.groupFullBonus + ' נק׳ בונוס';
       }
 
-      // X of Y persistence rule dynamic text
       const xyLabelEl = document.getElementById('ruleXYLabel');
-      if (xyLabelEl) xyLabelEl.textContent = `${state.config.xyNeed} מתוך ${state.config.xyWindow} סדרים`;
+      if (xyLabelEl) xyLabelEl.textContent = state.config.xyNeed + ' מתוך ' + state.config.xyWindow + ' סדרים';
       const xyBonusLabelEl = document.getElementById('ruleXYBonusLabel');
-      if (xyBonusLabelEl) xyBonusLabelEl.textContent = `+${state.config.xyBonus} נק׳`;
+      if (xyBonusLabelEl) xyBonusLabelEl.textContent = '+' + state.config.xyBonus + ' נק׳';
 
       const onesCount = s.last10.filter(x => x === 1).length;
       const xyBadge = document.getElementById('xyCurrentBadge');
-      if (xyBadge) xyBadge.textContent = `${onesCount} / ${state.config.xyNeed}`;
+      if (xyBadge) xyBadge.textContent = onesCount + ' / ' + state.config.xyNeed;
 
       const dotsContainer = document.getElementById('xyDotsContainer');
       if (dotsContainer) {
@@ -1635,29 +2411,45 @@
         `).join('');
       }
 
-      // Today's schedule preview & active slot title
       const todaySlotsList = document.getElementById('todaySlotsList');
-      const todaySlots = state.slotsByDate['default'] || [];
+      const todaySlots = getTodaySlots();
       if (todaySlots.length > 0) {
         const activeSlot = todaySlots[0];
         const titleEl = document.getElementById('activeSederTitle');
         if (titleEl) titleEl.textContent = activeSlot.title;
         const timeEl = document.getElementById('currentSlotTimeRange');
-        if (timeEl) timeEl.textContent = `${activeSlot.openTime} - ${activeSlot.lockTime}`;
+        if (timeEl) timeEl.textContent = activeSlot.openTime + ' - ' + activeSlot.lockTime;
         const ptsEl = document.getElementById('activeSederPointsBadge');
-        if (ptsEl) ptsEl.textContent = `+${activeSlot.points} נק׳`;
+        if (ptsEl) ptsEl.textContent = '+' + activeSlot.points + ' נק׳';
+      } else {
+        const titleEl = document.getElementById('activeSederTitle');
+        if (titleEl) titleEl.textContent = 'יום שישי - יום חופשי מסדרים';
+        const timeEl = document.getElementById('currentSlotTimeRange');
+        if (timeEl) timeEl.textContent = 'שבת שלום ומבורך!';
+        const ptsEl = document.getElementById('activeSederPointsBadge');
+        if (ptsEl) ptsEl.textContent = '0 נק׳';
       }
 
-      if (todaySlotsList && todaySlots.length > 0) {
-        todaySlotsList.innerHTML = todaySlots.map((slot, i) => `
-          <div class="p-3 rounded-2xl border ${i === 0 ? 'bg-indigo-50/50 border-indigo-200' : 'bg-white border-slate-200'} flex items-center justify-between">
-            <div>
-              <div class="text-xs font-bold text-slate-900">${slot.title}</div>
-              <div class="text-[11px] text-slate-500 font-mono">${slot.openTime} - ${slot.lockTime}</div>
+      if (todaySlotsList) {
+        if (todaySlots.length === 0) {
+          todaySlotsList.innerHTML = `
+            <div class="col-span-full p-4 rounded-2xl bg-amber-50/50 border border-amber-200 text-center text-xs">
+              <span class="text-xl block mb-1">🕊️</span>
+              <span class="font-bold text-amber-900">יום שישי ריק מסדרים כברירת מחדל</span>
+              <div class="text-[11px] text-amber-700 mt-0.5">סדרי שבת קודש ייפתחו לפי לוח שבת המיוחד</div>
             </div>
-            <span class="text-xs font-black text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">+${slot.points}</span>
-          </div>
-        `).join('');
+          `;
+        } else {
+          todaySlotsList.innerHTML = todaySlots.map((slot, i) => `
+            <div class="p-3 rounded-2xl border ${i === 0 ? 'bg-indigo-50/50 border-indigo-200' : 'bg-white border-slate-200'} flex items-center justify-between">
+              <div>
+                <div class="text-xs font-bold text-slate-900">${slot.title}</div>
+                <div class="text-[11px] text-slate-500 font-mono">${slot.openTime} - ${slot.lockTime}</div>
+              </div>
+              <span class="text-xs font-black text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">+${slot.points}</span>
+            </div>
+          `).join('');
+        }
       }
     }
 
@@ -1668,7 +2460,7 @@
       const tbody = document.getElementById('publicLeaderboardBody');
       const badge = document.getElementById('totalParticipantsBadge');
       if (badge) {
-        badge.textContent = state.students.length === 1 ? 'בחור 1 לדוגמה' : `${state.students.length} בחורים`;
+        badge.textContent = state.students.length === 1 ? 'בחור 1 לדוגמה' : state.students.length + ' בחורים';
       }
       if (!tbody) return;
 
@@ -1682,12 +2474,17 @@
       }
 
       const sorted = [...state.students].sort((a, b) => b.score - a.score);
-      tbody.innerHTML = sorted.map((st, idx) => `
+      tbody.innerHTML = sorted.map((st, idx) => {
+        const range = calculateStudentProjectedRange(st);
+        return `
         <tr class="hover:bg-slate-50 transition">
           <td class="py-2.5 px-3 font-bold ${idx < 3 ? 'text-amber-600 font-black' : 'text-slate-400'}">
             ${idx === 0 ? '🥇 1' : idx === 1 ? '🥈 2' : idx === 2 ? '🥉 3' : idx + 1}
           </td>
-          <td class="py-2.5 px-3 font-bold text-slate-900">${st.name}</td>
+          <td class="py-2.5 px-3">
+            <div class="font-bold text-slate-900">${st.name}</div>
+            <div class="text-[10px] text-slate-400 font-mono font-bold">${range.icon} טווח צפוי: ${range.current} - ${range.maxPossible} נק׳</div>
+          </td>
           <td class="py-2.5 px-3 text-center">
             <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${st.presentToday ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'}">
               ${st.presentToday ? 'נוכח ✓' : 'טרם סימן'}
@@ -1696,7 +2493,8 @@
           <td class="py-2.5 px-3 text-center font-bold text-slate-700">${st.persistenceCount} / 10</td>
           <td class="py-2.5 px-3 text-left font-black text-indigo-950">${st.score} נק׳</td>
         </tr>
-      `).join('');
+      `;
+      }).join('');
     }
 
     // ====================================================
@@ -1720,13 +2518,19 @@
         const isToday = (idx === 0 && state.calendarWeekOffset === 0);
         const isSelected = (idx === state.currentSelectedCalendarDayIndex);
         const hDate = sampleHebrewDates[idx] || 'כ״ב חשוון';
+        const isFri = (idx === 5);
+        const isShabbat = (idx === 6);
+
+        let subLabel = '3 סדרים (4 נק׳)';
+        if (isFri) subLabel = 'שישי ריק (0 נק׳)';
+        if (isShabbat) subLabel = 'שבת מיוחדת (8 נק׳)';
 
         return `
           <div onclick="selectCalendarDay(${idx})" class="p-2.5 rounded-2xl border cursor-pointer transition text-center ${isSelected ? 'border-indigo-600 bg-indigo-50/80 shadow-sm' : isToday ? 'border-emerald-300 bg-emerald-50/40' : 'border-slate-200 bg-white hover:bg-slate-50'}">
-            <div class="text-[10px] font-bold ${isToday ? 'text-emerald-700 font-black' : 'text-slate-500'}">${dayName}</div>
+            <div class="text-[10px] font-bold ${isToday ? 'text-emerald-700 font-black' : isFri ? 'text-amber-700' : isShabbat ? 'text-indigo-800 font-black' : 'text-slate-500'}">${dayName}</div>
             <div class="text-xs font-black text-slate-900 mt-0.5">${hDate}</div>
-            <div class="mt-1 text-[10px] font-extrabold ${isToday ? 'text-emerald-700' : 'text-slate-400'}">
-              ${isToday ? 'היום • 3 סדרים' : '3 סדרים'}
+            <div class="mt-1 text-[10px] font-extrabold ${isToday ? 'text-emerald-700' : isFri ? 'text-amber-700' : isShabbat ? 'text-indigo-700' : 'text-slate-400'}">
+              ${isToday ? 'היום • ' + subLabel : subLabel}
             </div>
           </div>
         `;
@@ -1746,14 +2550,26 @@
 
       const hebrewDays = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת קודש'];
       const dayName = hebrewDays[state.currentSelectedCalendarDayIndex] || 'יום נבחר';
+      const isFri = state.currentSelectedCalendarDayIndex === 5;
+      const isShabbat = state.currentSelectedCalendarDayIndex === 6;
+
+      let desc = '• 3 סדרי לימוד פעילים (סדר א׳, סדר ב׳, מעריב)';
+      let ptsDesc = 'שווי יום זה: 4 נקודות';
+      if (isFri) {
+        desc = '• יום שישי ריק מסדרים כברירת מחדל';
+        ptsDesc = 'יום מנוחה והכנה: 0 נקודות';
+      } else if (isShabbat) {
+        desc = '• 4 סדרי שבת קודש מיוחדים (ליל שבת, שחרית, רעוא דרעווין, מוצ״ש)';
+        ptsDesc = 'שווי שבת קודש: 8 נקודות';
+      }
 
       bar.innerHTML = `
         <div>
           <strong class="text-indigo-950 font-black">${dayName} במבצע</strong>
-          <span class="text-slate-500 mr-1">• 3 סדרי לימוד פעילים (סדר א׳, סדר ב׳, מעריב)</span>
+          <span class="text-slate-500 mr-1">${desc}</span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="bg-white border border-indigo-200 px-2.5 py-1 rounded-xl font-bold text-indigo-900">שווי יום זה: 4 נקודות</span>
+          <span class="bg-white border border-indigo-200 px-2.5 py-1 rounded-xl font-bold text-indigo-900">${ptsDesc}</span>
         </div>
       `;
     }
@@ -1765,13 +2581,34 @@
       const picker = document.getElementById('adminScheduleDayPicker');
       if (!picker) return;
 
-      const days = [
-        { val: '2026-10-20', label: 'יום שלישי (היום) • ח׳ חשוון' },
-        { val: '2026-10-21', label: 'יום רביעי • ט׳ חשוון' },
-        { val: '2026-10-22', label: 'יום חמישי (משמר) • י׳ חשוון' },
-        { val: '2026-10-23', label: 'יום שישי • י״א חשוון' },
-        { val: '2026-10-24', label: 'שבת קודש • י״ב חשוון' }
-      ];
+      const hebrewDays = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת קודש'];
+      const days = [];
+      const start = new Date(state.config.startDate + 'T12:00:00');
+      const end = new Date(state.config.endDate + 'T12:00:00');
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && start <= end) {
+        let curr = new Date(start);
+        while (curr <= end) {
+          const dStr = curr.toISOString().slice(0, 10);
+          const dayName = hebrewDays[curr.getDay()];
+          const isFri = curr.getDay() === 5;
+          const isShabbat = curr.getDay() === 6;
+          const tag = isFri ? ' [שישי ריק]' : isShabbat ? ' [שבת מיוחדת]' : '';
+          days.push({
+            val: dStr,
+            label: `${dayName} (${dStr.slice(5)})${tag}`
+          });
+          curr.setDate(curr.getDate() + 1);
+        }
+      } else {
+        days.push(
+          { val: '2026-10-20', label: 'יום שלישי • ח׳ חשוון' },
+          { val: '2026-10-21', label: 'יום רביעי • ט׳ חשוון' },
+          { val: '2026-10-22', label: 'יום חמישי • י׳ חשוון' },
+          { val: '2026-10-23', label: 'יום שישי [ריק] • י״א חשוון' },
+          { val: '2026-10-24', label: 'שבת קודש [מיוחדת] • י״ב חשוון' }
+        );
+      }
 
       picker.innerHTML = days.map(d => `<option value="${d.val}">${d.label}</option>`).join('');
       renderAdminDayScheduleEditor();
@@ -1783,7 +2620,18 @@
       if (!container || !picker) return;
 
       const selectedDate = picker.value;
-      const slots = state.slotsByDate[selectedDate] || state.slotsByDate['default'];
+      const slots = getSlotsForDate(selectedDate);
+
+      if (slots.length === 0) {
+        container.innerHTML = `
+          <div class="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center">
+            <span class="text-2xl block mb-1">🕊️</span>
+            <div class="text-xs font-bold text-slate-700">יום זה ריק מסדרים (לדוגמה: יום שישי)</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">באפשרותך להוסיף סדרים ייעודיים ליום זה בלחיצה על "הוסף סדר / אירוע"</div>
+          </div>
+        `;
+        return;
+      }
 
       container.innerHTML = slots.map((slot, idx) => `
         <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
@@ -1814,28 +2662,81 @@
     }
 
     function updateSlotTitle(date, idx, val) {
-      if (!state.slotsByDate[date]) state.slotsByDate[date] = [...state.slotsByDate['default']];
+      if (!state.slotsByDate[date]) state.slotsByDate[date] = JSON.parse(JSON.stringify(getSlotsForDate(date)));
       state.slotsByDate[date][idx].title = val;
+      saveScheduleSlots(state.slotsByDate);
       showToast('כותרת עודכנה', '✏️');
+      updateCampaignTotalPointsLive();
     }
 
     function updateSlotTime(date, idx, field, val) {
-      if (!state.slotsByDate[date]) state.slotsByDate[date] = [...state.slotsByDate['default']];
+      if (!state.slotsByDate[date]) state.slotsByDate[date] = JSON.parse(JSON.stringify(getSlotsForDate(date)));
       state.slotsByDate[date][idx][field] = val;
+      saveScheduleSlots(state.slotsByDate);
       showToast('שעה עודכנה', '⏱️');
     }
 
     function updateSlotPoints(date, idx, val) {
-      if (!state.slotsByDate[date]) state.slotsByDate[date] = [...state.slotsByDate['default']];
+      if (!state.slotsByDate[date]) state.slotsByDate[date] = JSON.parse(JSON.stringify(getSlotsForDate(date)));
       state.slotsByDate[date][idx].points = parseInt(val, 10);
+      saveScheduleSlots(state.slotsByDate);
       showToast('ניקוד סדר עודכן', '⭐');
+      updateCampaignTotalPointsLive();
     }
 
     function removeSlotItem(date, idx) {
-      if (!state.slotsByDate[date]) state.slotsByDate[date] = [...state.slotsByDate['default']];
+      if (!state.slotsByDate[date]) state.slotsByDate[date] = JSON.parse(JSON.stringify(getSlotsForDate(date)));
       state.slotsByDate[date].splice(idx, 1);
+      saveScheduleSlots(state.slotsByDate);
       renderAdminDayScheduleEditor();
+      updateCampaignTotalPointsLive();
       showToast('סדר הוסר מהיום הנבחר', '🗑️');
+    }
+
+    function applyCurrentDayToWeekdays() {
+      const picker = document.getElementById('adminScheduleDayPicker');
+      if (!picker) return;
+      const selectedDate = picker.value;
+      const currentSlots = getSlotsForDate(selectedDate);
+      state.slotsByDate['weekday_template'] = JSON.parse(JSON.stringify(currentSlots));
+      saveScheduleSlots(state.slotsByDate);
+      showToast('סדרי יום זה הוחלו כברירת מחדל לכל ימי החול (א׳ - ה׳)', '🔄');
+      updateCampaignTotalPointsLive();
+      renderAllViews();
+    }
+
+    function applyCurrentDayToShabbats() {
+      const picker = document.getElementById('adminScheduleDayPicker');
+      if (!picker) return;
+      const selectedDate = picker.value;
+      const currentSlots = getSlotsForDate(selectedDate);
+      state.slotsByDate['shabbat_template'] = JSON.parse(JSON.stringify(currentSlots));
+      saveScheduleSlots(state.slotsByDate);
+      showToast('סדרי יום זה הוחלו כברירת מחדל לכל השבתות', '🕯️');
+      updateCampaignTotalPointsLive();
+      renderAllViews();
+    }
+
+    function clearCurrentDaySlots() {
+      const picker = document.getElementById('adminScheduleDayPicker');
+      if (!picker) return;
+      const selectedDate = picker.value;
+      state.slotsByDate[selectedDate] = [];
+      saveScheduleSlots(state.slotsByDate);
+      showToast('יום זה אופס ללא סדרים (יום ריק)', '🗑️');
+      renderAdminDayScheduleEditor();
+      updateCampaignTotalPointsLive();
+      renderAllViews();
+    }
+
+    function resetDefaultSchedules() {
+      if (!confirm('האם לשחזר את כל לוחות הזמנים לברירת המחדל (ימי שישי ריקים, שבתות 4 סדרים מיוחדים, ימי חול 3 סדרים)?')) return;
+      state.slotsByDate = JSON.parse(JSON.stringify(DEFAULT_SLOTS));
+      saveScheduleSlots(state.slotsByDate);
+      showToast('ברירות מחדל שוחזרו: שישי ריק, שבת מיוחדת, חול 3 סדרים', '⚡');
+      renderAdminDayScheduleEditor();
+      updateCampaignTotalPointsLive();
+      renderAllViews();
     }
 
     function openAddSlotModal() {
@@ -1849,16 +2750,16 @@
     function saveNewSlot() {
       const picker = document.getElementById('adminScheduleDayPicker');
       const title = (document.getElementById('newSlotTitle')?.value || '').trim();
+      const recurrence = document.getElementById('newSlotRecurrence')?.value || 'single';
       const openTime = document.getElementById('newSlotOpenTime')?.value || '09:00';
       const lockTime = document.getElementById('newSlotLockTime')?.value || '10:15';
       const points = parseInt(document.getElementById('newSlotPoints')?.value || '1', 10);
 
       if (!title || !picker) return;
-      const date = picker.value;
-      if (!state.slotsByDate[date]) state.slotsByDate[date] = [...state.slotsByDate['default']];
+      const selectedDate = picker.value;
 
-      state.slotsByDate[date].push({
-        id: 'slot_' + Date.now(),
+      const makeSlot = () => ({
+        id: 'slot_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         title,
         openTime,
         lockTime,
@@ -1866,16 +2767,70 @@
         isLocked: false
       });
 
+      if (recurrence === 'single') {
+        if (!state.slotsByDate[selectedDate]) {
+          state.slotsByDate[selectedDate] = JSON.parse(JSON.stringify(getSlotsForDate(selectedDate)));
+        }
+        state.slotsByDate[selectedDate].push(makeSlot());
+        showToast('סדר "' + title + '" נוסף ליום זה', '✨');
+      } else if (recurrence === 'weekdays') {
+        if (!state.slotsByDate['weekday_template']) {
+          state.slotsByDate['weekday_template'] = JSON.parse(JSON.stringify(DEFAULT_SLOTS['weekday_template']));
+        }
+        state.slotsByDate['weekday_template'].push(makeSlot());
+        showToast('סדר "' + title + '" נוסף כאירוע חוזר לכל ימי החול (א׳ - ה׳)', '🔄');
+      } else if (recurrence === 'shabbat') {
+        if (!state.slotsByDate['shabbat_template']) {
+          state.slotsByDate['shabbat_template'] = JSON.parse(JSON.stringify(DEFAULT_SLOTS['shabbat_template']));
+        }
+        state.slotsByDate['shabbat_template'].push(makeSlot());
+        showToast('סדר "' + title + '" נוסף כאירוע חוזר לכל השבתות', '🕯️');
+      } else if (recurrence === 'weekly_same_day') {
+        const targetDay = new Date(selectedDate + 'T12:00:00').getDay();
+        const start = new Date(state.config.startDate + 'T12:00:00');
+        const end = new Date(state.config.endDate + 'T12:00:00');
+        let curr = new Date(start);
+        let count = 0;
+        while (curr <= end) {
+          if (curr.getDay() === targetDay) {
+            const dStr = curr.toISOString().slice(0, 10);
+            if (!state.slotsByDate[dStr]) {
+              state.slotsByDate[dStr] = JSON.parse(JSON.stringify(getSlotsForDate(dStr)));
+            }
+            state.slotsByDate[dStr].push(makeSlot());
+            count++;
+          }
+          curr.setDate(curr.getDate() + 1);
+        }
+        showToast('סדר "' + title + '" נוסף ל-' + count + ' ימים בכל שבוע', '📅');
+      } else if (recurrence === 'all_days') {
+        const start = new Date(state.config.startDate + 'T12:00:00');
+        const end = new Date(state.config.endDate + 'T12:00:00');
+        let curr = new Date(start);
+        let count = 0;
+        while (curr <= end) {
+          const dStr = curr.toISOString().slice(0, 10);
+          if (!state.slotsByDate[dStr]) {
+            state.slotsByDate[dStr] = JSON.parse(JSON.stringify(getSlotsForDate(dStr)));
+          }
+          state.slotsByDate[dStr].push(makeSlot());
+          count++;
+          curr.setDate(curr.getDate() + 1);
+        }
+        showToast('סדר "' + title + '" נוסף לכל ' + count + ' ימי המבצע', '🌐');
+      }
+
+      saveScheduleSlots(state.slotsByDate);
       closeAddSlotModal();
       renderAdminDayScheduleEditor();
-      showToast(`סדר "${title}" נוסף בהצלחה!`, '✨');
+      updateCampaignTotalPointsLive();
+      renderAllViews();
     }
 
     // ====================================================
     // 10. REQUESTS & BONUSES (ROSH HAYESHIVA)
     // ====================================================
     function renderAdminRequestsAndStudents() {
-      // 1. Pending requests
       const reqList = document.getElementById('adminPendingRequestsList');
       if (reqList) {
         if (state.pendingRequests.length === 0) {
@@ -1901,19 +2856,17 @@
         }
       }
 
-      // 2. Total students badge
       const aBadge = document.getElementById('adminTotalStudentsBadge');
       if (aBadge) {
-        aBadge.textContent = state.students.length === 1 ? 'בחור 1 בישיבה' : `${state.students.length} בחורים בישיבה`;
+        aBadge.textContent = state.students.length === 1 ? 'בחור 1 בישיבה' : state.students.length + ' בחורים בישיבה';
       }
 
-      // 3. Students table with bonus & remove controls
       const stTable = document.getElementById('adminStudentsTableBody');
       if (stTable) {
         if (state.students.length === 0) {
           stTable.innerHTML = `
             <tr>
-              <td colspan="4" class="py-8 text-center text-slate-400">
+              <td colspan="6" class="py-8 text-center text-slate-400">
                 <div class="text-2xl mb-1">👥</div>
                 <div class="font-bold">אין בחורים רשומים כרגע בישיבה</div>
                 <button onclick="openAddStudentModal()" class="mt-2 px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs">
@@ -1923,7 +2876,9 @@
             </tr>
           `;
         } else {
-          stTable.innerHTML = state.students.map(st => `
+          stTable.innerHTML = state.students.map(st => {
+            const range = calculateStudentProjectedRange(st);
+            return `
             <tr class="hover:bg-slate-50/80 transition">
               <td class="py-2.5 px-3">
                 <div class="flex items-center gap-2">
@@ -1936,8 +2891,38 @@
                   </div>
                 </div>
               </td>
-              <td class="py-2.5 px-3 text-center text-slate-600 font-mono text-xs hidden sm:table-cell" dir="ltr">${st.phone}</td>
-              <td class="py-2.5 px-3 text-center font-black text-indigo-950 text-xs sm:text-sm">${st.score} נק׳</td>
+              <td class="py-2.5 px-3 text-center">
+                <div class="text-xs font-mono font-bold text-slate-700" dir="ltr">${st.phone}</div>
+                <div class="flex items-center justify-center gap-1 mt-0.5">
+                  <span class="text-[10px] font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">
+                    🔑 ${st.password || '1234'}
+                  </span>
+                  <button onclick="adminOpenSetStudentPasswordModal('${st.id}')" class="text-indigo-600 hover:text-indigo-800 text-[10px] font-bold" title="ערוך סיסמה">
+                    ערוך
+                  </button>
+                </div>
+              </td>
+              <td class="py-2.5 px-3 text-center font-black text-indigo-950 text-xs sm:text-sm">
+                ${st.score} נק׳
+              </td>
+              <td class="py-2.5 px-3 text-center">
+                <span class="px-2 py-0.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-950 font-black font-mono text-xs">
+                  ${range.current} - ${range.maxPossible} נק׳
+                </span>
+                <div class="text-[10px] font-bold text-slate-500 mt-0.5">
+                  ${range.icon} ${range.statusText}
+                </div>
+              </td>
+              <td class="py-2.5 px-3 text-center">
+                <div class="flex items-center justify-center gap-1.5">
+                  <button onclick="copyStudentDirectUrl('${st.id}')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-bold border border-slate-200 transition" title="העתק קישור ישיר לחשבון הבחור">
+                    📋 קישור
+                  </button>
+                  <button onclick="downloadStudentCalendarIcs('${st.id}')" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-bold border border-indigo-200 transition" title="הורד יומן עם תזכורות עבור בחור זה">
+                    📅 יומן
+                  </button>
+                </div>
+              </td>
               <td class="py-2.5 px-3 text-left">
                 <div class="flex items-center justify-end gap-1.5">
                   <button onclick="openGrantBonusModal('${st.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 font-bold text-xs transition flex items-center gap-1 shadow-sm" title="הענק בונוס מיוחד לבחור זה">
@@ -1946,19 +2931,18 @@
                   </button>
                   <button onclick="removeStudent('${st.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition flex items-center gap-1" title="הסר בחור מהישיבה">
                     <span>🗑️</span>
-                    <span class="hidden sm:inline">הסר</span>
                   </button>
                 </div>
               </td>
             </tr>
-          `).join('');
+          `;
+          }).join('');
         }
       }
 
-      // 4. Bonus Audit Log Table
       const bTbody = document.getElementById('adminBonusLogsTableBody');
       const bBadge = document.getElementById('bonusLogsCountBadge');
-      if (bBadge) bBadge.textContent = `${state.bonusLogs.length} בונוסים`;
+      if (bBadge) bBadge.textContent = state.bonusLogs.length + ' בונוסים';
       if (bTbody) {
         if (state.bonusLogs.length === 0) {
           bTbody.innerHTML = `
@@ -1997,183 +2981,206 @@
         if (student) {
           student.score += 1;
           saveLocalStudents();
-          if (state.currentStudent && state.currentStudent.id === student.id) {
-            state.currentStudent.baseScore = student.score;
-          }
         }
+        req.status = 'אושר ע״י ראש הישיבה ✓';
+        showToast('בקשת ' + req.studentName + ' אושרה בהצלחה! (+1 נק׳)', '✓');
+      } else if (req) {
+        req.status = 'נדחה ע״י ראש הישיבה ✕';
+        showToast('בקשת ' + req.studentName + ' נדחתה', '✕');
       }
       state.pendingRequests = state.pendingRequests.filter(r => r.id !== id);
       const badge = document.getElementById('adminPendingCountBadge');
       if (badge) badge.textContent = state.pendingRequests.length;
       renderAdminRequestsAndStudents();
       renderLeaderboard();
-      renderStudentScreen();
-      showToast(approved ? 'הבקשה אושרה והתווסף ניקוד' : 'הבקשה נדחתה', approved ? '✓' : 'ℹ️');
+      renderMyRequestsStatus();
     }
 
     // ====================================================
-    // ROSH HAYESHIVA: SPECIAL BONUS MODAL & AUDIT LOG
+    // GRANT SPECIAL BONUS MODAL & EXECUTION
     // ====================================================
-    function openGrantBonusModal(preSelectedStudentId = null) {
+    function openGrantBonusModal(preSelectedStudentId) {
       const modal = document.getElementById('grantBonusModal');
-      const studentSelect = document.getElementById('grantBonusStudentSelect');
-      const pointsInput = document.getElementById('grantBonusPointsInput');
-      const reasonInput = document.getElementById('grantBonusReasonInput');
+      const select = document.getElementById('bonusTargetSelect');
+      const err = document.getElementById('bonusModalError');
+      const reasonInput = document.getElementById('bonusReasonInput');
+      const pointsInput = document.getElementById('bonusPointsInput');
 
-      if (studentSelect) {
-        let optionsHtml = `<option value="ALL">🌟 כל בחורי הישיבה יחד! (בונוס קבוצתי רוחבי)</option>`;
-        state.students.forEach(st => {
-          const isSel = (preSelectedStudentId && st.id === preSelectedStudentId);
-          optionsHtml += `<option value="${st.id}" ${isSel ? 'selected' : ''}>${st.name} (נוכחי: ${st.score} נק׳)</option>`;
-        });
-        studentSelect.innerHTML = optionsHtml;
-
-        if (preSelectedStudentId) {
-          studentSelect.value = preSelectedStudentId;
-        } else if (state.students.length > 0) {
-          studentSelect.value = state.students[0].id;
-        } else {
-          studentSelect.value = 'ALL';
-        }
-      }
-
-      if (pointsInput) pointsInput.value = '5';
+      if (err) err.classList.add('hidden');
       if (reasonInput) reasonInput.value = '';
+      if (pointsInput) pointsInput.value = '5';
+
+      if (select) {
+        select.innerHTML = '<option value="ALL">🌟 כלל בחורי הישיבה (בונוס קולקטיבי)</option>' +
+          state.students.map(s => `
+            <option value="${s.id}" ${preSelectedStudentId === s.id ? 'selected' : ''}>${s.name} (${s.phone})</option>
+          `).join('');
+      }
 
       if (modal) modal.classList.remove('hidden');
     }
 
     function closeGrantBonusModal() {
-      const modal = document.getElementById('grantBonusModal');
-      if (modal) modal.classList.add('hidden');
+      document.getElementById('grantBonusModal')?.classList.add('hidden');
     }
 
-    function setBonusPointsQuick(val) {
-      const input = document.getElementById('grantBonusPointsInput');
-      if (input) input.value = val;
-    }
+    function executeGrantBonus() {
+      const targetSelect = document.getElementById('bonusTargetSelect');
+      const pointsInput = document.getElementById('bonusPointsInput');
+      const reasonInput = document.getElementById('bonusReasonInput');
+      const err = document.getElementById('bonusModalError');
 
-    function setBonusReasonQuick(text) {
-      const input = document.getElementById('grantBonusReasonInput');
-      if (input) input.value = text;
-    }
-
-    async function confirmGrantBonus() {
-      const studentSelect = document.getElementById('grantBonusStudentSelect');
-      const pointsInput = document.getElementById('grantBonusPointsInput');
-      const reasonInput = document.getElementById('grantBonusReasonInput');
-
-      const target = studentSelect ? studentSelect.value : 'ALL';
-      const points = parseInt(pointsInput?.value || '5', 10);
-      const reason = (reasonInput?.value || '').trim() || 'בונוס מיוחד מראש הישיבה ⭐';
+      const targetVal = targetSelect ? targetSelect.value : 'ALL';
+      const points = parseInt(pointsInput ? pointsInput.value : '0', 10);
+      const reason = (reasonInput ? reasonInput.value : '').trim();
 
       if (isNaN(points) || points <= 0) {
-        alert('אנא הזן מספר נקודות בונוס חוקי (גדול מאפס)');
+        if (err) {
+          err.textContent = 'אנא הזן שווי נקודות תקין (גדול מ-0)';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (!reason) {
+        if (err) {
+          err.textContent = 'אנא ציין את סיבת הבונוס';
+          err.classList.remove('hidden');
+        }
         return;
       }
 
       const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')} ${timeStr}`;
+      const dateStr = now.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' }) + ' ' +
+                      now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
-      const logEntry = {
+      let targetDisplayName = 'כלל הישיבה';
+
+      if (targetVal === 'ALL') {
+        state.students.forEach(st => {
+          st.score += points;
+        });
+        targetDisplayName = 'כלל בחורי הישיבה (' + state.students.length + ' בחורים)';
+        showToast('הוענק בונוס של +' + points + ' נקודות לכלל הישיבה!', '🌟');
+      } else {
+        const student = state.students.find(s => s.id === targetVal);
+        if (student) {
+          student.score += points;
+          targetDisplayName = student.name;
+          showToast('הוענק בונוס של +' + points + ' נקודות ל' + student.name + '!', '⭐');
+        }
+      }
+
+      saveLocalStudents();
+
+      const newLog = {
         id: 'bonus_' + Date.now(),
         dateStr: dateStr,
-        timestamp: Date.now(),
-        targetId: target,
-        targetName: '',
+        targetId: targetVal,
+        targetName: targetDisplayName,
         points: points,
         reason: reason
       };
 
-      if (target === 'ALL') {
-        logEntry.targetName = 'כל בחורי הישיבה (קבוצתי)';
-        state.students.forEach(st => {
-          st.score += points;
-        });
-        if (state.currentStudent) {
-          state.currentStudent.baseScore += points;
-        }
-      } else {
-        const student = state.students.find(s => s.id === target);
-        if (!student) {
-          alert('בחור לא נמצא במערכת');
-          return;
-        }
-        logEntry.targetName = student.name;
-        student.score += points;
-        if (state.currentStudent && state.currentStudent.id === student.id) {
-          state.currentStudent.baseScore += points;
-        }
-      }
-
-      // Save student updates
-      saveLocalStudents();
-
-      // Add to bonus logs
-      state.bonusLogs.unshift(logEntry);
+      state.bonusLogs.unshift(newLog);
       saveBonusLogs(state.bonusLogs);
 
-      // Sync to Supabase manager_bonus_logs
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('manager_bonus_logs').insert({
-            points: points,
-            reason: reason
-          });
-        } catch (err) {
-          console.warn('Supabase bonus log sync:', err);
+      if (state.currentStudent) {
+        const updatedCurrent = state.students.find(s => s.id === state.currentStudent.id);
+        if (updatedCurrent) {
+          state.currentStudent.baseScore = updatedCurrent.score;
         }
       }
 
       closeGrantBonusModal();
       renderAllViews();
-      showToast(`הוענקו +${points} נק׳ ל-${logEntry.targetName}!`, '🎁');
     }
 
-    function removeBonusLog(bonusId) {
-      const log = state.bonusLogs.find(b => b.id === bonusId);
+    function removeBonusLog(bonusLogId) {
+      const log = state.bonusLogs.find(b => b.id === bonusLogId);
       if (!log) return;
 
-      const confirmed = confirm(`האם ראש הישיבה רוצה לבטל את הבונוס של +${log.points} נק׳ עבור "${log.targetName}"? הניקוד יקוזז חזרה.`);
-      if (!confirmed) return;
+      if (!confirm('האם אתה בטוח שברצונך לבטל בונוס זה ("' + log.reason + '" בסך ' + log.points + ' נק׳)? הנקודות יקוזזו ממאזן הבחורים.')) {
+        return;
+      }
 
-      // Revert the points
       if (log.targetId === 'ALL') {
         state.students.forEach(st => {
           st.score = Math.max(0, st.score - log.points);
         });
-        if (state.currentStudent) {
-          state.currentStudent.baseScore = Math.max(0, state.currentStudent.baseScore - log.points);
-        }
       } else {
         const student = state.students.find(s => s.id === log.targetId);
         if (student) {
           student.score = Math.max(0, student.score - log.points);
-          if (state.currentStudent && state.currentStudent.id === student.id) {
-            state.currentStudent.baseScore = Math.max(0, state.currentStudent.baseScore - log.points);
-          }
         }
       }
 
       saveLocalStudents();
 
-      // Remove from logs
-      state.bonusLogs = state.bonusLogs.filter(b => b.id !== bonusId);
+      state.bonusLogs = state.bonusLogs.filter(b => b.id !== bonusLogId);
       saveBonusLogs(state.bonusLogs);
 
+      if (state.currentStudent) {
+        const updatedCurrent = state.students.find(s => s.id === state.currentStudent.id);
+        if (updatedCurrent) {
+          state.currentStudent.baseScore = updatedCurrent.score;
+        }
+      }
+
       renderAllViews();
-      showToast(`הבונוס בוטל והניקוד קוזז`, 'ℹ️');
+      showToast('הבונוס בוטל והנקודות קוזזו בהצלחה', 'ℹ️');
     }
 
-    function autoAdjustGroupThreshold() {
+    function removeStudent(studentId) {
+      const student = state.students.find(s => s.id === studentId);
+      if (!student) return;
+
+      if (state.students.length <= 1) {
+        if (!confirm('זהו הבחור האחרון ברשימה! האם להסירו? (תוכל להוסיף בחורים חדשים בכל עת)')) {
+          return;
+        }
+      } else {
+        if (!confirm('האם אתה בטוח שברצונך להסיר את ' + student.name + ' מרשימת הישיבה?')) {
+          return;
+        }
+      }
+
+      state.students = state.students.filter(s => s.id !== studentId);
+      saveLocalStudents();
+
+      state.config.groupFullThreshold = Math.max(1, state.students.length);
+      saveCampaignConfig(state.config);
+
+      if (state.currentStudent.id === studentId) {
+        if (state.students.length > 0) {
+          state.currentStudent = {
+            id: state.students[0].id,
+            name: state.students[0].name,
+            phone: state.students[0].phone,
+            password: state.students[0].password || '1234',
+            presentCurrent: state.students[0].presentToday || false,
+            baseScore: state.students[0].score || 0,
+            last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          };
+          localStorage.setItem('bakshu_logged_student_id', state.students[0].id);
+        } else {
+          localStorage.removeItem('bakshu_logged_student_id');
+        }
+      }
+
+      populateCampaignConfigInputs();
+      renderAllViews();
+      showToast(student.name + ' הוסר בהצלחה מהישיבה', '🗑️');
+    }
+
+    function alignThresholdToStudents() {
       const currentCount = Math.max(1, state.students.length);
       state.config.groupFullThreshold = currentCount;
       saveCampaignConfig(state.config);
       const threshEl = document.getElementById('campaignThresholdInput');
       if (threshEl) threshEl.value = currentCount;
       renderStudentScreen();
-      showToast(`סף סדר מלא הותאם ל-${currentCount} בחורים`, '🎯');
+      showToast('סף סדר מלא הותאם ל-' + currentCount + ' בחורים', '🎯');
     }
 
     function populateCampaignConfigInputs() {
@@ -2195,10 +3202,32 @@
       if (xyWinEl) xyWinEl.value = state.config.xyWindow;
       if (xyBonusEl) xyBonusEl.value = state.config.xyBonus;
 
+      const targets = state.config.targets || {
+        min: { points: 70, name: 'יעד כניסה להגרלה' },
+        mid: { points: 100, name: 'יעד פרס כספי' },
+        max: { points: 130, name: 'יעד נסיעה ופרס ענק' }
+      };
+
+      const tMinName = document.getElementById('targetMinNameInput');
+      const tMinPts = document.getElementById('targetMinPointsInput');
+      const tMidName = document.getElementById('targetMidNameInput');
+      const tMidPts = document.getElementById('targetMidPointsInput');
+      const tMaxName = document.getElementById('targetMaxNameInput');
+      const tMaxPts = document.getElementById('targetMaxPointsInput');
+
+      if (tMinName) tMinName.value = targets.min.name;
+      if (tMinPts) tMinPts.value = targets.min.points;
+      if (tMidName) tMidName.value = targets.mid.name;
+      if (tMidPts) tMidPts.value = targets.mid.points;
+      if (tMaxName) tMaxName.value = targets.max.name;
+      if (tMaxPts) tMaxPts.value = targets.max.points;
+
       const liveCountEl = document.getElementById('configLiveStudentsCountBadge');
       if (liveCountEl) {
-        liveCountEl.textContent = state.students.length === 1 ? '1 בחור רשום' : `${state.students.length} בחורים רשומים`;
+        liveCountEl.textContent = state.students.length === 1 ? '1 בחור רשום' : state.students.length + ' בחורים רשומים';
       }
+
+      updateCampaignTotalPointsLive();
     }
 
     // ====================================================
@@ -2208,8 +3237,10 @@
       const modal = document.getElementById('addStudentModal');
       const nameInput = document.getElementById('newStudentNameInput');
       const phoneInput = document.getElementById('newStudentPhoneInput');
+      const passInput = document.getElementById('newStudentPasswordInput');
       if (nameInput) nameInput.value = '';
       if (phoneInput) phoneInput.value = '';
+      if (passInput) passInput.value = '1234';
       if (modal) modal.classList.remove('hidden');
       setTimeout(() => nameInput?.focus(), 100);
     }
@@ -2218,27 +3249,24 @@
       document.getElementById('addStudentModal')?.classList.add('hidden');
     }
 
-    async function confirmAddNewStudent() {
+    function confirmAddNewStudent() {
       const nameInput = document.getElementById('newStudentNameInput');
       const phoneInput = document.getElementById('newStudentPhoneInput');
+      const passInput = document.getElementById('newStudentPasswordInput');
       const name = (nameInput?.value || '').trim();
-      let phone = (phoneInput?.value || '').trim();
+      const phone = (phoneInput?.value || '').trim();
+      const password = (passInput?.value || '1234').trim();
 
       if (!name) {
-        alert('אנא הזן את שם הבחור');
-        nameInput?.focus();
+        alert('אנא הזן שם מלא של הבחור');
         return;
       }
 
-      if (!phone) {
-        phone = '05' + Math.floor(10000000 + Math.random() * 90000000);
-      }
-
-      const newId = 'st_' + Date.now();
       const newStudent = {
-        id: newId,
+        id: 'st_' + Date.now(),
         name: name,
-        phone: phone,
+        phone: phone || '050-0000000',
+        password: password || '1234',
         score: 0,
         presentToday: false,
         persistenceCount: 0
@@ -2247,85 +3275,26 @@
       state.students.push(newStudent);
       saveLocalStudents();
 
-      // Supabase user sync
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('users').upsert({
-            id: newId,
-            full_name: name,
-            phone: phone,
-            role: 'student',
-            manual_bonus_pts: 0
-          });
-        } catch (err) {
-          console.warn('Supabase sync user:', err);
-        }
-      }
+      state.config.groupFullThreshold = state.students.length;
+      saveCampaignConfig(state.config);
+
+      nameInput.value = '';
+      if (phoneInput) phoneInput.value = '';
+      if (passInput) passInput.value = '1234';
 
       closeAddStudentModal();
+      populateCampaignConfigInputs();
       renderAllViews();
-      showToast(`הבחור "${name}" נוסף בהצלחה לרשימת הישיבה!`, '👤');
-    }
-
-    async function removeStudent(studentId) {
-      const student = state.students.find(s => s.id === studentId);
-      if (!student) return;
-
-      const confirmed = confirm(`האם ראש הישיבה בטוח שברצונו להסיר את הבחור "${student.name}" מהמערכת?`);
-      if (!confirmed) return;
-
-      state.students = state.students.filter(s => s.id !== studentId);
-      saveLocalStudents();
-
-      // If removed current active student, fallback to first available or reset
-      if (state.currentStudent && state.currentStudent.id === studentId) {
-        if (state.students.length > 0) {
-          state.currentStudent = {
-            id: state.students[0].id,
-            name: state.students[0].name,
-            phone: state.students[0].phone,
-            presentCurrent: state.students[0].presentToday || false,
-            baseScore: state.students[0].score || 0,
-            last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-          };
-          localStorage.setItem('bakshu_logged_student_id', state.students[0].id);
-        } else {
-          // If all removed, restore single demo student
-          state.students = [{ ...DEFAULT_DEMO_STUDENT }];
-          saveLocalStudents();
-          state.currentStudent = {
-            id: DEFAULT_DEMO_STUDENT.id,
-            name: DEFAULT_DEMO_STUDENT.name,
-            phone: DEFAULT_DEMO_STUDENT.phone,
-            presentCurrent: false,
-            baseScore: 0,
-            last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-          };
-          localStorage.setItem('bakshu_logged_student_id', DEFAULT_DEMO_STUDENT.id);
-        }
-      }
-
-      // Supabase user delete
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('users').delete().eq('id', studentId);
-        } catch (err) {
-          console.warn('Supabase delete user:', err);
-        }
-      }
-
-      renderAllViews();
-      showToast(`הבחור "${student.name}" הוסר מהמערכת`, '🗑️');
+      showToast('הבחור ' + name + ' נוסף בהצלחה לישיבה!', '👤');
     }
 
     function resetToSingleDemoStudent() {
-      const confirmed = confirm('האם לאפס את רשימת הישיבה לבחור הדגמה יחיד? כל הבחורים שהוספו יימחקו.');
-      if (!confirmed) return;
-
+      if (!confirm('האם אתה בטוח שברצונך לאפס את רשימת הבחורים לבחור הדגמה יחיד? כל שאר הבחורים והניקוד יימחקו.')) {
+        return;
+      }
       state.students = [{ ...DEFAULT_DEMO_STUDENT }];
       saveLocalStudents();
 
-      // Reset threshold to 1 as well!
       state.config.groupFullThreshold = 1;
       saveCampaignConfig(state.config);
 
@@ -2333,6 +3302,7 @@
         id: DEFAULT_DEMO_STUDENT.id,
         name: DEFAULT_DEMO_STUDENT.name,
         phone: DEFAULT_DEMO_STUDENT.phone,
+        password: DEFAULT_DEMO_STUDENT.password || '1234',
         presentCurrent: false,
         baseScore: 0,
         last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -2341,7 +3311,7 @@
 
       populateCampaignConfigInputs();
       renderAllViews();
-      showToast('רשימת הבחורים וסף סדר מלא אופסו לבחור 1 להדגמה', '🔄');
+      showToast('רשימת הבחורים אופסה לבחור 1 להדגמה', '🔄');
     }
 
     function renderAllViews() {
@@ -2398,15 +3368,15 @@
     }
 
     function exportToCsv() {
-      let csv = 'שם הבחור,טלפון,ניקוד מצטבר\n';
+      let csv = 'שם הבחור,טלפון,סיסמה,ניקוד מצטבר\n';
       state.students.forEach(s => {
-        csv += `"${s.name}","${s.phone}",${s.score}\n`;
+        csv += '"' + s.name + '","' + s.phone + '","' + (s.password || '1234') + '",' + s.score + '\n';
       });
       const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `דוח_ניקוד_בקשו_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = 'דוח_ניקוד_בקשו_' + new Date().toISOString().slice(0, 10) + '.csv';
       a.click();
       showToast('דו״ח אקסל הופק בהצלחה!', '📊');
     }
@@ -2429,16 +3399,27 @@
     async function saveCampaignConfigToSupabase() {
       const start = document.getElementById('campaignStartDateInput')?.value || state.config.startDate;
       const end = document.getElementById('campaignEndDateInput')?.value || state.config.endDate;
-      const min = parseInt(document.getElementById('campaignMinTargetInput')?.value || '110', 10);
       const thresh = Math.max(1, parseInt(document.getElementById('campaignThresholdInput')?.value || '1', 10));
       const fullBonus = Math.max(1, parseInt(document.getElementById('campaignFullBonusInput')?.value || '4', 10));
       const xyNeed = Math.max(1, parseInt(document.getElementById('campaignXyNeedInput')?.value || '5', 10));
       const xyWindow = Math.max(1, parseInt(document.getElementById('campaignXyWindowInput')?.value || '10', 10));
       const xyBonus = Math.max(1, parseInt(document.getElementById('campaignXyBonusInput')?.value || '3', 10));
 
+      const minName = (document.getElementById('targetMinNameInput')?.value || 'יעד כניסה להגרלה').trim();
+      const minPts = Math.max(1, parseInt(document.getElementById('targetMinPointsInput')?.value || '70', 10));
+      const midName = (document.getElementById('targetMidNameInput')?.value || 'יעד פרס כספי').trim();
+      const midPts = Math.max(1, parseInt(document.getElementById('targetMidPointsInput')?.value || '100', 10));
+      const maxName = (document.getElementById('targetMaxNameInput')?.value || 'יעד נסיעה ופרס ענק').trim();
+      const maxPts = Math.max(1, parseInt(document.getElementById('targetMaxPointsInput')?.value || '130', 10));
+
       state.config.startDate = start;
       state.config.endDate = end;
-      state.config.minTarget = min;
+      state.config.minTarget = minPts;
+      state.config.targets = {
+        min: { points: minPts, name: minName },
+        mid: { points: midPts, name: midName },
+        max: { points: maxPts, name: maxName }
+      };
       state.config.groupFullThreshold = thresh;
       state.config.groupFullBonus = fullBonus;
       state.config.xyNeed = xyNeed;
@@ -2454,7 +3435,8 @@
             campaign_name: state.config.campaignName,
             start_date: start,
             end_date: end,
-            min_target_score: min,
+            min_target_score: minPts,
+            targets_json: JSON.stringify(state.config.targets),
             full_seder_threshold: thresh,
             full_seder_bonus_pts: fullBonus,
             xy_required_count: xyNeed,
@@ -2466,7 +3448,7 @@
         }
       }
 
-      showToast('כל כללי המבצע והבונוסים נשמרו בהצלחה!', '💾');
+      showToast('כל 3 היעדים והגדרות המבצע נשמרו בהצלחה!', '💾');
       renderAllViews();
     }
 
@@ -2482,7 +3464,13 @@
     function openStudentLoginModal() {
       const modal = document.getElementById('studentLoginModal');
       const select = document.getElementById('studentLoginSelect');
+      const passInput = document.getElementById('studentLoginPasswordInput');
+      const errEl = document.getElementById('studentLoginErrorMsg');
       const vid = document.getElementById('loginVideoEl');
+
+      if (errEl) errEl.classList.add('hidden');
+      if (passInput) passInput.value = '';
+
       if (select) {
         if (state.students.length === 0) {
           select.innerHTML = '<option value="">(אין בחורים ברשימה - הוסף בפורטל ראש הישיבה)</option>';
@@ -2505,25 +3493,52 @@
 
     function confirmStudentLogin() {
       const select = document.getElementById('studentLoginSelect');
+      const passInput = document.getElementById('studentLoginPasswordInput');
+      const errEl = document.getElementById('studentLoginErrorMsg');
       if (!select) return;
+
       const selectedId = select.value;
       const student = state.students.find(s => s.id === selectedId);
-      if (student) {
-        state.currentStudent = {
-          id: student.id,
-          name: student.name,
-          phone: student.phone,
-          presentCurrent: student.presentToday || false,
-          baseScore: student.score || 0,
-          last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        };
-        localStorage.setItem('bakshu_logged_student_id', student.id);
-        const nameGreeting = document.getElementById('greetingStudentName');
-        if (nameGreeting) nameGreeting.textContent = student.name;
-        showToast(`ברוך הבא, ${student.name}!`, '👋');
-        closeStudentLoginModal();
-        renderStudentScreen();
+      if (!student) {
+        if (errEl) {
+          errEl.textContent = 'אנא בחר בחור מהרשימה';
+          errEl.classList.remove('hidden');
+        }
+        return;
       }
+
+      const enteredPass = (passInput ? passInput.value : '').trim();
+      const expectedPass = (student.password || '1234').trim();
+
+      if (enteredPass !== expectedPass) {
+        if (errEl) {
+          errEl.textContent = 'סיסמה אישית שגויה. נסה שוב (ברירת מחדל: 1234)';
+          errEl.classList.remove('hidden');
+        }
+        if (passInput) passInput.focus();
+        return;
+      }
+
+      state.currentStudent = {
+        id: student.id,
+        name: student.name,
+        phone: student.phone,
+        password: student.password || '1234',
+        presentCurrent: student.presentToday || false,
+        baseScore: student.score || 0,
+        last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      };
+      localStorage.setItem('bakshu_logged_student_id', student.id);
+      
+      const nameGreeting = document.getElementById('greetingStudentName');
+      if (nameGreeting) nameGreeting.textContent = student.name;
+
+      if (errEl) errEl.classList.add('hidden');
+      if (passInput) passInput.value = '';
+
+      showToast('שלום ' + student.name + ', התחברת בהצלחה!', '👋');
+      closeStudentLoginModal();
+      renderStudentScreen();
     }
 
     function checkSavedStudentLogin() {
@@ -2534,6 +3549,7 @@
           id: student.id,
           name: student.name,
           phone: student.phone,
+          password: student.password || '1234',
           presentCurrent: student.presentToday || false,
           baseScore: student.score || 0,
           last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -2547,6 +3563,7 @@
             id: state.students[0].id,
             name: state.students[0].name,
             phone: state.students[0].phone,
+            password: state.students[0].password || '1234',
             presentCurrent: state.students[0].presentToday || false,
             baseScore: state.students[0].score || 0,
             last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -2559,7 +3576,26 @@
     }
 
     // ====================================================
-    // 13. INITIALIZATION
+    // 13. TOAST SYSTEM
+    // ====================================================
+    function showToast(msg, icon) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'p-3 px-4 rounded-2xl bg-slate-900 text-white text-xs font-black shadow-xl flex items-center gap-2 border border-slate-700 animate-bounce';
+      toast.innerHTML = '<span>' + (icon || '✨') + '</span><span>' + msg + '</span>';
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.4s';
+        setTimeout(() => toast.remove(), 400);
+      }, 3000);
+    }
+
+    // ====================================================
+    // 14. INITIALIZATION
     // ====================================================
     function renderCurrentScreen() {
       if (state.activeTab === 'student') renderStudentScreen();
@@ -2578,6 +3614,7 @@
     }
 
     window.onload = function () {
+      checkUrlForStudentParam();
       initAdminScheduleDayPicker();
       checkSavedStudentLogin();
       populateCampaignConfigInputs();
