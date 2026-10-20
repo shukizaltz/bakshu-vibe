@@ -14,13 +14,13 @@ CREATE TABLE IF NOT EXISTS campaign_config (
   xy_bonus_pts INT NOT NULL DEFAULT 3
 );
 
--- 2. רשימת המשתתפים (תלמידים ומנהל/אחראי)
+-- 2. רשימת המשתתפים (תלמידים וראש הישיבה)
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   full_name TEXT NOT NULL,
   phone TEXT UNIQUE NOT NULL,
   role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'admin')),
-  manual_bonus_pts INT NOT NULL DEFAULT 0, -- סך בונוסים חופשיים לפי דעת המנהל
+  manual_bonus_pts INT NOT NULL DEFAULT 0, -- סך בונוסים חופשיים לפי דעת ראש הישיבה
   is_active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS attendance_logs (
   UNIQUE(user_id, slot_id)
 );
 
--- 5. יומן בונוסים חופשיים לפי דעת המנהל
+-- 5. יומן בונוסים מיוחדים לפי דעת ראש הישיבה
 CREATE TABLE IF NOT EXISTS manager_bonus_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,

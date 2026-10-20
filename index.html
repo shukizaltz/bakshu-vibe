@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#0A1138" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#FFFFFF" />
   <title>בקשו VIBE | מערכת נוכחות, ניקוד ולוח מבצע - ישיבת בקשו ירושלים</title>
   
   <link rel="icon" type="image/png" href="logo-meyzam.png" />
   <link rel="apple-touch-icon" href="logo-yeshiva.jpeg" />
   
-  <!-- Tailwind & Fonts -->
+  <!-- Tailwind CSS & Google Fonts Heebo -->
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,26 +32,17 @@
     .text-navy-brand {
       color: #0A1138;
     }
-    .border-navy-brand {
-      border-color: #0A1138;
-    }
-    .lime-brand {
-      background-color: #D4E727;
-    }
-    .text-lime-brand {
-      color: #8C9B0E;
-    }
     .soft-card {
       background: #FFFFFF;
       border: 1px solid #E2E8F0;
       border-radius: 1.5rem;
-      box-shadow: 0 4px 15px -2px rgba(15, 23, 42, 0.04);
+      box-shadow: 0 4px 15px -2px rgba(15, 23, 42, 0.03);
     }
     .soft-card-elevated {
       background: #FFFFFF;
       border: 1px solid #E2E8F0;
       border-radius: 1.5rem;
-      box-shadow: 0 10px 30px -5px rgba(10, 17, 56, 0.08);
+      box-shadow: 0 10px 25px -5px rgba(10, 17, 56, 0.06);
     }
     .no-scrollbar::-webkit-scrollbar {
       display: none;
@@ -60,14 +51,13 @@
       -ms-overflow-style: none;
       scrollbar-width: none;
     }
-    @keyframes pulse-vibe {
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(212, 231, 39, 0)); }
-      50% { transform: scale(1.03); filter: drop-shadow(0 0 10px rgba(212, 231, 39, 0.5)); }
+    @keyframes pulse-gentle {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 2px 5px rgba(212, 231, 39, 0.2)); }
+      50% { transform: scale(1.03); filter: drop-shadow(0 4px 12px rgba(212, 231, 39, 0.5)); }
     }
     .animate-vibe {
-      animation: pulse-vibe 2.8s infinite ease-in-out;
+      animation: pulse-gentle 2.6s infinite ease-in-out;
     }
-    /* Safe padding for bottom navigation on mobile */
     .pb-safe-nav {
       padding-bottom: 5.5rem;
     }
@@ -76,67 +66,68 @@
 <body class="min-h-screen flex flex-col bg-slate-50 text-slate-900 pb-safe-nav">
 
   <!-- ========================================================== -->
-  <!-- TOP BRANDING HEADER: ELEGANT INTEGRATION OF BOTH LOGOS     -->
+  <!-- TOP BRANDING HEADER: BRIGHT, PLEASANT & LUXURIOUS          -->
   <!-- ========================================================== -->
-  <header class="bg-[#0A1138] text-white border-b border-indigo-950/80 sticky top-0 z-40 shadow-md">
+  <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-40 shadow-sm transition-colors">
     <div class="max-w-5xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-3">
       
-      <!-- Right: Official Yeshiva Crest & Name -->
+      <!-- Right: Official Yeshiva Crest & Name (High Contrast & Prestigious) -->
       <div class="flex items-center gap-2.5 sm:gap-3">
-        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/10 p-0.5 border border-white/20 overflow-hidden shadow-inner shrink-0 flex items-center justify-center">
+        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#0A1138] p-1 border border-indigo-950/20 overflow-hidden shadow-sm shrink-0 flex items-center justify-center">
           <img src="logo-yeshiva.jpeg" alt="לוגו ישיבת בקשו ירושלים" class="w-full h-full object-cover rounded-xl" />
         </div>
         <div>
           <div class="flex items-center gap-1.5">
-            <h1 class="text-sm sm:text-base font-black tracking-tight leading-none text-white">ישיבת בקשו</h1>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-white/15 text-indigo-200">ירושלים</span>
+            <h1 class="text-sm sm:text-base font-black tracking-tight leading-none text-[#0A1138]">ישיבת בקשו</h1>
+            <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-900 border border-indigo-100">ירושלים</span>
           </div>
-          <p class="text-[11px] text-slate-300 font-medium mt-0.5 leading-none">מערכת נוכחות, ניקוד ומבצע</p>
+          <p class="text-[11px] text-slate-500 font-medium mt-0.5 leading-none">מערכת נוכחות, ניקוד ומבצע</p>
         </div>
       </div>
 
       <!-- Center / Left: Energetic Campaign VIBE Logo & Action -->
       <div class="flex items-center gap-2 sm:gap-4">
-        <!-- Vibe Campaign Badge -->
-        <div class="flex items-center gap-2 bg-white/10 hover:bg-white/15 px-2.5 py-1 rounded-2xl border border-white/15 transition cursor-pointer" onclick="switchTab('public')" title="לוח מבצע וייב">
+        
+        <!-- Vibe Campaign Badge on Crisp Light Pill -->
+        <div class="flex items-center gap-2 bg-slate-50 hover:bg-slate-100 px-3 py-1 rounded-2xl border border-slate-200 shadow-sm transition cursor-pointer" onclick="switchTab('public')" title="לוח מבצע וייב">
           <img src="logo-meyzam.png" alt="בקשו VIBE" class="h-8 sm:h-9 w-auto object-contain animate-vibe" />
           <div class="hidden sm:block text-right">
-            <div class="text-[10px] text-amber-300 font-extrabold uppercase tracking-wider">מבצע חורף</div>
-            <div class="text-xs font-black text-white leading-none">יעד 110 נק׳</div>
+            <div class="text-[10px] text-amber-600 font-extrabold uppercase tracking-wider">מבצע חורף</div>
+            <div class="text-xs font-black text-slate-900 leading-none">יעד 110 נק׳</div>
           </div>
         </div>
 
-        <!-- Hidden Admin Lock Button (Discreet) -->
-        <button id="adminLockBtn" onclick="toggleAdminAccess()" class="p-2 sm:px-2.5 sm:py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-indigo-200 hover:text-white transition flex items-center gap-1.5 text-xs font-bold" title="כניסת מנהל (מוגן בסיסמה)">
+        <!-- Hidden Rosh HaYeshiva Lock Button (Discreet & Clean) -->
+        <button id="adminLockBtn" onclick="toggleAdminAccess()" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200/80 transition flex items-center gap-1.5 text-xs font-bold" title="כניסת ראש הישיבה (מוגן בסיסמה)">
           <span id="adminLockIcon">🔒</span>
-          <span id="adminLockText" class="hidden sm:inline">מנהל</span>
+          <span id="adminLockText" class="hidden sm:inline">ראש הישיבה</span>
         </button>
       </div>
 
     </div>
 
-    <!-- Desktop Navigation Bar (Only visible on screens >= md) -->
-    <nav class="hidden md:block bg-indigo-950/60 border-t border-white/10">
+    <!-- Desktop Sub Navigation Bar -->
+    <nav class="hidden md:block bg-slate-50/90 border-t border-slate-100">
       <div class="max-w-5xl mx-auto px-6 py-1.5 flex items-center justify-between text-xs font-bold">
-        <div class="flex items-center gap-1">
-          <button onclick="switchTab('student')" id="dtab-student" class="dtab-btn px-3 py-1.5 rounded-xl transition text-white bg-white/20">
-            ⏱️ סימון סדרים והניקוד שלי
+        <div class="flex items-center gap-1.5">
+          <button onclick="switchTab('student')" id="dtab-student" class="dtab-btn px-3.5 py-1.5 rounded-xl transition text-slate-900 bg-white shadow-sm border border-slate-200">
+            ⏱️ סדרים וסימון
           </button>
-          <button onclick="switchTab('public')" id="dtab-public" class="dtab-btn px-3 py-1.5 rounded-xl transition text-indigo-200 hover:text-white hover:bg-white/10">
-            🏆 טבלת המבצע ולוח שנה
+          <button onclick="switchTab('public')" id="dtab-public" class="dtab-btn px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-white/60">
+            🏆 לוח המבצע וטבלת הישיבה
           </button>
-          <button onclick="switchTab('shabbat')" id="dtab-shabbat" class="dtab-btn px-3 py-1.5 rounded-xl transition text-indigo-200 hover:text-white hover:bg-white/10">
-            🕯️ דיווח שבת ובקשות
+          <button onclick="switchTab('requests')" id="dtab-requests" class="dtab-btn px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-white/60">
+            ✍️ בקשות לאישור
           </button>
-          <!-- Admin tab (dynamically revealed when unlocked) -->
-          <button onclick="switchTab('admin')" id="dtab-admin" class="dtab-btn hidden px-3 py-1.5 rounded-xl transition text-amber-300 bg-amber-500/20 border border-amber-400/30">
-            ⚙️ פורטל ניהול (חנוך)
+          <!-- Rosh HaYeshiva Tab (Revealed only when unlocked) -->
+          <button onclick="switchTab('admin')" id="dtab-admin" class="dtab-btn hidden px-3.5 py-1.5 rounded-xl transition text-amber-900 bg-amber-100/80 border border-amber-300">
+            ⚙️ פורטל ראש הישיבה
           </button>
         </div>
 
         <!-- Connection status indicator -->
-        <div class="flex items-center gap-2 text-[11px] text-slate-300 font-mono" dir="ltr">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono" dir="ltr">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>Supabase: Live (eu-central-1)</span>
         </div>
       </div>
@@ -161,11 +152,11 @@
     <!-- ========================================================== -->
     <section id="screen-student" class="screen-section space-y-4">
       
-      <!-- User Greeting Bar & Switch User -->
+      <!-- Student Greeting & Switch User Header Bar -->
       <div class="flex items-center justify-between px-1 text-xs">
         <div class="flex items-center gap-1.5 text-slate-700">
           <span>שלום,</span>
-          <strong id="greetingStudentName" class="text-indigo-950 font-black text-sm">יהודה כהן (אתה)</strong>
+          <strong id="greetingStudentName" class="text-[#0A1138] font-black text-sm">יהודה כהן (אתה)</strong>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">מחובר</span>
         </div>
         <button onclick="openStudentLoginModal()" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 hover:underline">
@@ -174,34 +165,16 @@
         </button>
       </div>
 
-      <!-- High-Impact Campaign Promo Video Card -->
-      <div class="soft-card p-3.5 sm:p-4 bg-gradient-to-r from-[#0A1138] via-indigo-950 to-[#0A1138] text-white flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md border-indigo-900/60">
-        <div class="flex items-center gap-3 w-full sm:w-auto">
-          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#D4E727] to-amber-400 p-0.5 flex items-center justify-center shrink-0 shadow-lg cursor-pointer animate-vibe" onclick="openVideoModal()">
-            <div class="w-full h-full bg-[#0A1138] rounded-[14px] flex items-center justify-center text-amber-300 text-lg">
-              ▶
-            </div>
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h3 class="text-sm font-black text-white">סרטון השקת מבצע בקשו VIBE!</h3>
-              <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-[#D4E727] text-slate-950 shadow-sm">צפה עכשיו 🔥</span>
-            </div>
-            <p class="text-xs text-slate-300 mt-0.5">צפה בסרטון המרגש של הישיבה לקראת המבצע</p>
-          </div>
-        </div>
-        <button onclick="openVideoModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-2 active:scale-95">
-          <span>▶ נגן סרטון</span>
-        </button>
-      </div>
+      <!-- 1. Hero Check-in Card (Mobile-First) -->
+      <div class="soft-card-elevated p-5 sm:p-6 border-indigo-100/80 bg-gradient-to-b from-white to-slate-50/50">
         <div class="flex items-center justify-between gap-2 mb-3">
           <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm" id="activeSederStatusBadge">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
             <span>פתוח לסימון כעת</span>
           </div>
-          <div class="text-xs font-black text-indigo-950 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full flex items-center gap-1">
+          <div class="text-xs font-black text-slate-900 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full flex items-center gap-1">
             <span>שווי:</span>
-            <strong id="activeSederPointsBadge" class="text-amber-700">+1 נק׳</strong>
+            <strong id="activeSederPointsBadge" class="text-amber-800">+1 נק׳</strong>
           </div>
         </div>
 
@@ -214,7 +187,7 @@
 
         <!-- Big Touch-Friendly Action Button for Mobile -->
         <div id="checkInActionArea" class="mt-4 sm:mt-5">
-          <button onclick="handleStudentCheckIn()" id="mainCheckInBtn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-base sm:text-lg shadow-lg shadow-emerald-600/25 active:scale-[0.98] transition flex items-center justify-center gap-3">
+          <button onclick="handleStudentCheckIn()" id="mainCheckInBtn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-base sm:text-lg shadow-lg shadow-emerald-600/20 active:scale-[0.98] transition flex items-center justify-center gap-3">
             <span class="text-2xl">✓</span>
             <span>סמן נוכחות בסדר זה</span>
           </button>
@@ -227,13 +200,13 @@
               <span>🔥</span>
               <span>יעד "סדר מלא" ישיבתי (<strong id="studentViewGroupBonusPts" class="text-indigo-700">+4 נק׳ בונוס</strong> לכולם)</span>
             </span>
-            <span id="groupCountText" class="text-indigo-700 font-black">17 / 18 בחורים</span>
+            <span id="groupCountText" class="text-indigo-700 font-black">0 / 18 בחורים</span>
           </div>
           <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
-            <div id="groupProgressBar" class="h-full bg-gradient-to-r from-indigo-500 to-indigo-700 rounded-full transition-all duration-500" style="width: 94%"></div>
+            <div id="groupProgressBar" class="h-full bg-gradient-to-r from-indigo-500 to-indigo-700 rounded-full transition-all duration-500" style="width: 0%"></div>
           </div>
           <p id="groupStatusHint" class="text-[11px] text-slate-500 mt-1.5">
-            עוד בחור אחד בבית המדרש ומזכים את כל הישיבה בבונוס!
+            נדרשים 18 בחורים בבית המדרש לזיכוי כל הישיבה בבונוס סדר מלא!
           </p>
         </div>
       </div>
@@ -249,19 +222,19 @@
               <h3 class="text-base font-extrabold text-slate-900">התקדמות ליעד המבצע</h3>
             </div>
             <div class="text-left">
-              <span id="studentTotalScoreBig" class="text-3xl font-black text-indigo-950">96</span>
+              <span id="studentTotalScoreBig" class="text-3xl font-black text-indigo-950">0</span>
               <span class="text-xs font-bold text-slate-400"> / <span id="studentMinTargetText">110</span></span>
             </div>
           </div>
 
           <div class="my-3">
             <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
-              <div id="personalGoalBar" class="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-500" style="width: 87%"></div>
+              <div id="personalGoalBar" class="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
           </div>
 
           <div class="flex items-center justify-between text-xs">
-            <span id="pointsNeededText" class="font-bold text-emerald-700">חסרות 14 נקודות לפרס המבצע</span>
+            <span id="pointsNeededText" class="font-bold text-slate-600">חסרות 110 נקודות לפרס המבצע</span>
             <button onclick="switchTab('public')" class="text-indigo-600 font-bold hover:underline">לטבלת הישיבה ←</button>
           </div>
         </div>
@@ -273,7 +246,7 @@
               <span class="text-xs font-semibold text-slate-400">בונוס התמדה (<span id="ruleXYLabel">5 מתוך 10 סדרים</span>)</span>
               <h3 class="text-base font-extrabold text-slate-900">מזכה ב-<span id="ruleXYBonusLabel" class="text-amber-600 font-black">+3 נק׳</span></h3>
             </div>
-            <span id="xyCurrentBadge" class="text-xs font-extrabold px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 border border-amber-200">4 / 5</span>
+            <span id="xyCurrentBadge" class="text-xs font-extrabold px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 border border-slate-200">0 / 5</span>
           </div>
 
           <div id="xyDotsContainer" class="grid grid-cols-10 gap-1.5 my-3">
@@ -313,7 +286,7 @@
           <div class="flex items-center gap-2">
             <span class="text-xs font-bold text-slate-500">מעבר שבוע:</span>
             <button onclick="changeCalendarWeek(-1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700">‹</button>
-            <span id="currentWeekRangeLabel" class="text-xs font-bold text-indigo-950 font-mono">שבוע 2 מתוך 4</span>
+            <span id="currentWeekRangeLabel" class="text-xs font-bold text-indigo-950 font-mono">שבוע 1</span>
             <button onclick="changeCalendarWeek(1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700">›</button>
           </div>
         </div>
@@ -360,66 +333,17 @@
     </section>
 
     <!-- ========================================================== -->
-    <!-- SCREEN 3: SHABBAT REPORT & FORGOTTEN REQUESTS              -->
+    <!-- SCREEN 3: FORGOTTEN REQUESTS (NO SHABBAT REPORT)           -->
     <!-- ========================================================== -->
-    <section id="screen-shabbat" class="screen-section hidden space-y-4">
+    <section id="screen-requests" class="screen-section hidden space-y-4">
       
-      <!-- Shabbat Reporting Card -->
+      <!-- "Forgot to Mark" Request Card to Rosh HaYeshiva -->
       <div class="soft-card p-5 sm:p-6 border-indigo-100">
-        <div class="flex items-center justify-between gap-2 mb-3">
-          <div class="flex items-center gap-2">
-            <span class="text-2xl">🕯️</span>
-            <div>
-              <h2 class="text-lg font-black text-slate-900">דיווח סדרי ותפילות שבת קודש</h2>
-              <p class="text-xs text-slate-500">נפתח למילוי במוצאי שבת • שווי כולל: <strong class="text-amber-700">+8 נקודות</strong></p>
-            </div>
-          </div>
-          <span class="text-xs font-bold px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">מוצ״ש</span>
-        </div>
-
-        <div class="space-y-2.5 my-4">
-          <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
-            <div class="flex items-center gap-3">
-              <input type="checkbox" id="shCheck1" checked class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
-              <span class="text-xs font-bold text-slate-900">קבלת שבת ותפילת מעריב ליל שבת</span>
-            </div>
-            <span class="text-xs font-black text-amber-700">+2 נק׳</span>
-          </label>
-          <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
-            <div class="flex items-center gap-3">
-              <input type="checkbox" id="shCheck2" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
-              <span class="text-xs font-bold text-slate-900">סדר לימוד ליל שבת קודש</span>
-            </div>
-            <span class="text-xs font-black text-amber-700">+3 נק׳</span>
-          </label>
-          <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
-            <div class="flex items-center gap-3">
-              <input type="checkbox" id="shCheck3" checked class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
-              <span class="text-xs font-bold text-slate-900">שחרית ומוסף שבת בבוקר</span>
-            </div>
-            <span class="text-xs font-black text-amber-700">+2 נק׳</span>
-          </label>
-          <label class="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer">
-            <div class="flex items-center gap-3">
-              <input type="checkbox" id="shCheck4" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500" />
-              <span class="text-xs font-bold text-slate-900">סדר לימוד שבת אחה״צ</span>
-            </div>
-            <span class="text-xs font-black text-amber-700">+3 נק׳</span>
-          </label>
-        </div>
-
-        <button onclick="submitShabbatReport()" class="w-full py-3 rounded-xl bg-indigo-900 hover:bg-indigo-950 text-white font-bold text-xs transition">
-          שלח דיווח שבת ושמור נקודות
-        </button>
-      </div>
-
-      <!-- "Forgot to Mark" Request Card -->
-      <div class="soft-card p-5 sm:p-6">
         <div class="flex items-center gap-2 mb-2">
-          <span class="text-xl">✍️</span>
+          <span class="text-2xl">✍️</span>
           <div>
-            <h2 class="text-base font-black text-slate-900">בקשת "שכחתי לסמן" לאחראי</h2>
-            <p class="text-xs text-slate-500">היית בסדר וננעל החלון? שלח בקשה מסודרת לחנוך</p>
+            <h2 class="text-lg font-black text-slate-900">בקשת "שכחתי לסמן" לראש הישיבה</h2>
+            <p class="text-xs text-slate-500">היית בסדר וננעל החלון? שלח בקשה מסודרת לאישור ראש הישיבה</p>
           </div>
         </div>
 
@@ -427,38 +351,46 @@
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">לאיזה סדר מיועדת הבקשה?</label>
             <select id="reqSlotSelect" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-200 bg-white">
-              <option value="מעריב ולימוד רביעי בערב (אתמול)">מעריב ולימוד רביעי בערב (אתמול)</option>
-              <option value="סדר ב׳ צהריים (אתמול)">סדר ב׳ צהריים (אתמול)</option>
-              <option value="סדר א׳ בוקר (היום)">סדר א׳ בוקר (היום)</option>
+              <option value="סדר א׳ - לימוד בוקר (היום)">סדר א׳ - לימוד בוקר (היום)</option>
+              <option value="סדר ב׳ - לימוד צהריים (אתמול)">סדר ב׳ - לימוד צהריים (אתמול)</option>
+              <option value="מעריב וסדר ערב (אתמול)">מעריב וסדר ערב (אתמול)</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">סיבת הבקשה (קצרה):</label>
             <input type="text" id="reqNoteInput" placeholder="לדוגמה: הייתי בבית המדרש והטלפון היה בחדר" class="w-full text-xs p-2.5 rounded-xl border border-slate-200" />
           </div>
-          <button onclick="submitForgottenRequest()" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition">
-            שלח בקשה לאישור חנוך
+          <button onclick="submitForgottenRequest()" class="w-full py-3 rounded-xl bg-[#0A1138] hover:bg-black text-white text-xs font-bold transition shadow-sm">
+            שלח בקשה לאישור ראש הישיבה
           </button>
+        </div>
+      </div>
+
+      <!-- My Requests Status Log -->
+      <div class="soft-card p-5">
+        <h3 class="text-sm font-black text-slate-900 mb-2">סטטוס הבקשות שלי</h3>
+        <div id="myRequestsStatusContainer" class="space-y-2">
+          <div class="text-xs text-slate-400 py-3 text-center">טרם הגשת בקשות "שכחתי לסמן"</div>
         </div>
       </div>
 
     </section>
 
     <!-- ========================================================== -->
-    <!-- SCREEN 4: HIDDEN ADMIN PORTAL (PASSWORD PROTECTED)         -->
+    <!-- SCREEN 4: ROSH HAYESHIVA ADMIN PORTAL (PASSWORD PROTECTED) -->
     <!-- ========================================================== -->
     <section id="screen-admin" class="screen-section hidden space-y-4">
       
-      <!-- Admin Top Bar with Lockout -->
-      <div class="soft-card p-4 bg-amber-50/60 border-amber-200 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <span class="text-xl">⚙️</span>
+      <!-- Rosh HaYeshiva Top Bar with Lockout -->
+      <div class="soft-card p-4 bg-amber-50/80 border-amber-200 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">⚙️</span>
           <div>
-            <h2 class="text-base font-black text-slate-900">פורטל ניהול המבצע והסדרים (חנוך)</h2>
+            <h2 class="text-base font-black text-slate-900">פורטל ניהול המבצע (ראש הישיבה)</h2>
             <p class="text-xs text-slate-600">גישה מוגנת • שינוי סדרים בכל יום, אישור בקשות, בונוסים ויצוא</p>
           </div>
         </div>
-        <button onclick="lockAdminPortal()" class="px-3 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 font-bold text-xs hover:bg-amber-100 transition flex items-center gap-1">
+        <button onclick="lockAdminPortal()" class="px-3.5 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 font-bold text-xs hover:bg-amber-100 transition flex items-center gap-1 shadow-sm">
           <span>🔒</span>
           <span>נעל ויציאה מניהול</span>
         </button>
@@ -473,14 +405,14 @@
           📅 טווח ימי המבצע (לוח שנה)
         </button>
         <button onclick="switchAdminSubView('requests')" id="asub-requests" class="asub-btn flex-1 py-2 px-3 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">
-          📋 בקשות שכחתי (<span id="adminPendingCountBadge">2</span>)
+          📋 בקשות שכחתי (<span id="adminPendingCountBadge">0</span>)
         </button>
         <button onclick="switchAdminSubView('students')" id="asub-students" class="asub-btn flex-1 py-2 px-3 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">
           👥 בחורים ובונוסים
         </button>
       </div>
 
-      <!-- SUBVIEW 1: DAILY SCHEDULE & TIME EDITOR (CUSTOMIZE ANY DAY) -->
+      <!-- SUBVIEW 1: DAILY SCHEDULE & TIME EDITOR -->
       <div id="adminView-schedule" class="admin-subview space-y-4">
         <div class="soft-card p-4 sm:p-6">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
@@ -519,17 +451,17 @@
       <!-- SUBVIEW 2: DYNAMIC CAMPAIGN DURATION (CALENDAR PICKER) -->
       <div id="adminView-campaign" class="admin-subview hidden space-y-4">
         <div class="soft-card p-5 sm:p-6">
-          <h3 class="text-base font-black text-slate-900 mb-1">הגדרת טווח תאריכי המבצע</h3>
+          <h3 class="text-base font-black text-slate-900 mb-1">הגדרת טווח תאריכי המבצע בלוח השנה</h3>
           <p class="text-xs text-slate-500 mb-4">המבצע אינו מוגבל ל-28 יום – תוכל לבחור כל תאריך התחלה וסיום לפי לוח השנה</p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-3">
             <div class="p-3.5 rounded-2xl border border-slate-200 bg-white">
               <label class="block text-xs font-bold text-slate-700 mb-1">תאריך פתיחת המבצע:</label>
-              <input type="date" id="campaignStartDateInput" value="2026-10-10" class="w-full text-xs font-mono p-2.5 rounded-xl border border-slate-200" />
+              <input type="date" id="campaignStartDateInput" value="2026-10-20" class="w-full text-xs font-mono p-2.5 rounded-xl border border-slate-200" />
             </div>
             <div class="p-3.5 rounded-2xl border border-slate-200 bg-white">
               <label class="block text-xs font-bold text-slate-700 mb-1">תאריך סיום המבצע:</label>
-              <input type="date" id="campaignEndDateInput" value="2026-11-25" class="w-full text-xs font-mono p-2.5 rounded-xl border border-slate-200" />
+              <input type="date" id="campaignEndDateInput" value="2026-11-30" class="w-full text-xs font-mono p-2.5 rounded-xl border border-slate-200" />
             </div>
           </div>
 
@@ -548,7 +480,7 @@
             </div>
           </div>
 
-          <button onclick="saveCampaignConfigToSupabase()" class="mt-4 px-5 py-2.5 rounded-xl bg-indigo-900 text-white font-bold text-xs hover:bg-black transition">
+          <button onclick="saveCampaignConfigToSupabase()" class="mt-4 px-5 py-2.5 rounded-xl bg-[#0A1138] text-white font-bold text-xs hover:bg-black transition shadow-sm">
             שמור הגדרות מבצע חדשות
           </button>
         </div>
@@ -557,8 +489,8 @@
       <!-- SUBVIEW 3: PENDING FORGOTTEN REQUESTS -->
       <div id="adminView-requests" class="admin-subview hidden space-y-4">
         <div class="soft-card p-5 sm:p-6">
-          <h3 class="text-base font-black text-slate-900 mb-1">בקשות "שכחתי לסמן" הממתינות לאישור</h3>
-          <p class="text-xs text-slate-500 mb-4">אישור או דחייה מיידית בלחיצת כפתור אחת</p>
+          <h3 class="text-base font-black text-slate-900 mb-1">בקשות "שכחתי לסמן" הממתינות לאישור ראש הישיבה</h3>
+          <p class="text-xs text-slate-500 mb-4">אישור או דחייה מיידית בלחיצת כפתור</p>
 
           <div id="adminPendingRequestsList" class="space-y-2.5">
             <!-- Populated by JS -->
@@ -571,11 +503,11 @@
         <div class="soft-card p-5 sm:p-6">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div>
-              <h3 class="text-base font-black text-slate-900">ניהול בחורי הישיבה והענקת בונוסים חופשיים</h3>
-              <p class="text-xs text-slate-500">ניתן להעניק בונוס לפי שיקול דעת חנוך ולייצא דו״ח לאקסל</p>
+              <h3 class="text-base font-black text-slate-900">רשימת בחורי הישיבה והענקת בונוס מיוחד</h3>
+              <p class="text-xs text-slate-500">ניתן להעניק בונוס לפי שיקול דעת ראש הישיבה ולייצא דו״ח לאקסל</p>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="exportToCsv()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition flex items-center gap-1">
+              <button onclick="exportToCsv()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition flex items-center gap-1 border border-slate-200">
                 <span>📊</span>
                 <span>ייצא דו״ח לאקסל (CSV)</span>
               </button>
@@ -590,7 +522,7 @@
                   <th class="py-2.5 px-3 font-bold">שם הבחור</th>
                   <th class="py-2.5 px-3 font-bold text-center">טלפון</th>
                   <th class="py-2.5 px-3 font-bold text-center">ניקוד נוכחי</th>
-                  <th class="py-2.5 px-3 font-bold text-left">פעולות ובונוס חופשי</th>
+                  <th class="py-2.5 px-3 font-bold text-left">פעולות ובונוס ראש הישיבה</th>
                 </tr>
               </thead>
               <tbody id="adminStudentsTableBody" class="divide-y divide-slate-100">
@@ -608,10 +540,10 @@
   <!-- ========================================================== -->
   <!-- MOBILE BOTTOM NAVIGATION BAR (FIXED FOR THUMB NAVIGATION)  -->
   <!-- ========================================================== -->
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 shadow-lg px-2 py-1.5 flex items-center justify-around">
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg px-2 py-1.5 flex items-center justify-around">
     
     <!-- Tab 1: Today / Check-in -->
-    <button onclick="switchTab('student')" id="mtab-student" class="mtab-btn flex-1 py-1 px-2 flex flex-col items-center gap-0.5 rounded-xl text-indigo-950 font-black">
+    <button onclick="switchTab('student')" id="mtab-student" class="mtab-btn flex-1 py-1 px-2 flex flex-col items-center gap-0.5 rounded-xl text-[#0A1138] font-black">
       <span class="text-lg">⏱️</span>
       <span class="text-[10px] leading-none">היום וסימון</span>
     </button>
@@ -622,51 +554,93 @@
       <span class="text-[10px] leading-none">לוח המבצע</span>
     </button>
 
-    <!-- Tab 3: Shabbat & Requests -->
-    <button onclick="switchTab('shabbat')" id="mtab-shabbat" class="mtab-btn flex-1 py-1 px-2 flex flex-col items-center gap-0.5 rounded-xl text-slate-400 font-bold">
-      <span class="text-lg">🕯️</span>
-      <span class="text-[10px] leading-none">שבת ובקשות</span>
+    <!-- Tab 3: Requests -->
+    <button onclick="switchTab('requests')" id="mtab-requests" class="mtab-btn flex-1 py-1 px-2 flex flex-col items-center gap-0.5 rounded-xl text-slate-400 font-bold">
+      <span class="text-lg">✍️</span>
+      <span class="text-[10px] leading-none">בקשות</span>
     </button>
 
-    <!-- Tab 4: Admin (Revealed dynamically when unlocked) -->
-    <button onclick="switchTab('admin')" id="mtab-admin" class="mtab-btn hidden flex-1 py-1 px-2 flex flex-col items-center gap-0.5 rounded-xl text-amber-700 font-extrabold bg-amber-50">
+    <!-- Tab 4: Rosh HaYeshiva (Revealed dynamically when unlocked) -->
+    <button onclick="switchTab('admin')" id="mtab-admin" class="mtab-btn hidden flex-1 py-1 px-2 flex flex-col items-center gap-0.5 rounded-xl text-amber-800 font-extrabold bg-amber-50">
       <span class="text-lg">⚙️</span>
-      <span class="text-[10px] leading-none">ניהול</span>
+      <span class="text-[10px] leading-none">ראש הישיבה</span>
     </button>
 
   </nav>
 
   <!-- ========================================================== -->
-  <!-- ADMIN PASSWORD AUTHENTICATION MODAL                        -->
+  <!-- ROSH HAYESHIVA PASSWORD AUTHENTICATION MODAL               -->
   <!-- ========================================================== -->
   <div id="adminPasswordModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-center relative animate-vibe">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-center relative">
       
       <!-- Yeshiva Crest inside modal -->
       <div class="w-16 h-16 rounded-2xl bg-[#0A1138] p-1 mx-auto mb-3 shadow-md flex items-center justify-center">
         <img src="logo-yeshiva.jpeg" alt="לוגו ישיבה" class="w-full h-full object-cover rounded-xl" />
       </div>
 
-      <h3 class="text-lg font-black text-slate-900">כניסת מנהל המבצע</h3>
-      <p class="text-xs text-slate-500 mt-1 mb-4">הזן את סיסמת הניהול של חנוך לכניסה למערכת</p>
+      <h3 class="text-lg font-black text-slate-900">כניסת ראש הישיבה</h3>
+      <p class="text-xs text-slate-500 mt-1 mb-4">הזן את סיסמת הניהול של ראש הישיבה לכניסה למערכת</p>
 
       <div class="space-y-3 text-right">
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמת מנהל:</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמת ראש הישיבה:</label>
           <input type="password" id="adminPasswordInput" placeholder="הזן סיסמה..." class="w-full text-center text-sm font-bold p-3 rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono tracking-widest" onkeyup="if(event.key==='Enter') verifyAdminPassword()" />
         </div>
         <p id="adminPasswordError" class="text-xs text-rose-600 font-bold hidden text-center">סיסמה שגויה, נסה שוב</p>
       </div>
 
       <div class="flex items-center gap-2 mt-5">
-        <button onclick="verifyAdminPassword()" class="flex-1 py-3 rounded-xl bg-indigo-900 hover:bg-black text-white font-bold text-xs transition shadow-md">
-          כניסה לניהול
+        <button onclick="verifyAdminPassword()" class="flex-1 py-3 rounded-xl bg-[#0A1138] hover:bg-black text-white font-bold text-xs transition shadow-md">
+          כניסה לפורטל ראש הישיבה
         </button>
         <button onclick="closeAdminPasswordModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
           ביטול
         </button>
       </div>
-      <p class="text-[10px] text-slate-400 mt-3">סיסמת ברירת מחדל ראשונית: <code class="font-mono bg-slate-100 px-1 py-0.5 rounded">bakshu2026</code></p>
+      <p class="text-[10px] text-slate-400 mt-3">סיסמת ברירת מחדל: <code class="font-mono bg-slate-100 px-1 py-0.5 rounded">bakshu2026</code></p>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- STUDENT LOGIN / IDENTIFICATION MODAL WITH PROMO VIDEO      -->
+  <!-- ========================================================== -->
+  <div id="studentLoginModal" class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-center relative overflow-hidden">
+      
+      <!-- Video at Login (בפתיחה ובהתחברות בלבד) -->
+      <div class="relative rounded-2xl overflow-hidden mb-4 bg-slate-900 border border-slate-200 shadow-inner">
+        <video id="loginVideoEl" src="promo-video.mp4" controls autoplay muted loop playsinline class="w-full h-44 sm:h-52 object-cover"></video>
+        <div class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-slate-900/80 backdrop-blur text-[10px] text-amber-300 font-extrabold">
+          🎬 סרטון השקת המבצע
+        </div>
+      </div>
+
+      <div class="flex items-center justify-center gap-2 mb-2">
+        <div class="w-8 h-8 rounded-xl bg-[#0A1138] p-0.5 overflow-hidden shadow">
+          <img src="logo-yeshiva.jpeg" alt="לוגו" class="w-full h-full object-cover rounded-lg" />
+        </div>
+        <h3 class="text-lg font-black text-slate-900">כניסה למערכת בקשו VIBE</h3>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">בחר את שמך מרשימת בחורי הישיבה לכניסה מהירה</p>
+
+      <div class="space-y-3 text-right">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">מי אתה?</label>
+          <select id="studentLoginSelect" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 bg-white text-indigo-950 focus:ring-2 focus:ring-indigo-600 focus:outline-none">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 mt-5">
+        <button onclick="confirmStudentLogin()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs transition shadow-md">
+          היכנס למערכת
+        </button>
+        <button onclick="closeStudentLoginModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          סגור
+        </button>
+      </div>
     </div>
   </div>
 
@@ -675,7 +649,7 @@
   <!-- ========================================================== -->
   <div id="addSlotModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right">
-      <h3 class="text-base font-black text-slate-900 mb-1">הוספת סדר / אירוע חדש ליום זה</h3>
+      <h3 class="text-base font-black text-slate-900 mb-1">הוספת סדר / אירוע ליום זה</h3>
       <p class="text-xs text-slate-500 mb-4">קבע כותרת, זמני פתיחה ונעילה, ושווי נקודות</p>
 
       <div class="space-y-3">
@@ -717,76 +691,6 @@
   </div>
 
   <!-- ========================================================== -->
-  <!-- STUDENT LOGIN / IDENTIFICATION MODAL WITH PROMO VIDEO      -->
-  <!-- ========================================================== -->
-  <div id="studentLoginModal" class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-center relative overflow-hidden">
-      
-      <!-- Video at Login (פתיחה והתחברות) -->
-      <div class="relative rounded-2xl overflow-hidden mb-4 bg-slate-900 border border-slate-200 shadow-inner">
-        <video id="loginVideoEl" src="promo-video.mp4" controls autoplay muted loop playsinline class="w-full h-44 sm:h-52 object-cover"></video>
-        <div class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-slate-900/80 backdrop-blur text-[10px] text-amber-300 font-extrabold">
-          🎬 סרטון המבצע
-        </div>
-      </div>
-
-      <div class="flex items-center justify-center gap-2 mb-2">
-        <div class="w-8 h-8 rounded-xl bg-[#0A1138] p-0.5 overflow-hidden shadow">
-          <img src="logo-yeshiva.jpeg" alt="לוגו" class="w-full h-full object-cover rounded-lg" />
-        </div>
-        <h3 class="text-lg font-black text-slate-900">כניסה למערכת בקשו VIBE</h3>
-      </div>
-      <p class="text-xs text-slate-500 mb-4">בחר את שמך מרשימת בחורי הישיבה לכניסה מהירה</p>
-
-      <div class="space-y-3 text-right">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">מי אתה?</label>
-          <select id="studentLoginSelect" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 bg-white text-indigo-950 focus:ring-2 focus:ring-indigo-600 focus:outline-none">
-            <!-- Populated by JS -->
-          </select>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 mt-5">
-        <button onclick="confirmStudentLogin()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs transition shadow-md">
-          היכנס למערכת
-        </button>
-        <button onclick="closeStudentLoginModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
-          סגור
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================== -->
-  <!-- DEDICATED PROMO VIDEO PLAYER MODAL                         -->
-  <!-- ========================================================== -->
-  <div id="videoPlayerModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="bg-[#0A1138] rounded-3xl max-w-lg w-full p-4 sm:p-5 shadow-2xl border border-indigo-900 text-center relative">
-      <div class="flex items-center justify-between pb-3 mb-2 border-b border-white/10 text-white">
-        <div class="flex items-center gap-2">
-          <img src="logo-meyzam.png" alt="לוגו מיזם" class="h-6 w-auto" />
-          <h3 class="text-sm font-black">סרטון השקת מבצע בקשו VIBE</h3>
-        </div>
-        <button onclick="closeVideoModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs font-bold transition">
-          ✕
-        </button>
-      </div>
-
-      <div class="rounded-2xl overflow-hidden bg-black shadow-lg">
-        <video id="mainPromoVideoPlayer" src="promo-video.mp4" controls playsinline class="w-full max-h-[70vh] object-contain"></video>
-      </div>
-
-      <div class="mt-3 flex items-center justify-between text-xs text-indigo-200">
-        <span>ישיבת בקשו ירושלים • מבצע חורף</span>
-        <button onclick="closeVideoModal()" class="px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition">
-          סגור נגן
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================== -->
   <!-- JAVASCRIPT APPLICATION LOGIC                               -->
   <!-- ========================================================== -->
   <script>
@@ -798,21 +702,21 @@
     const supabaseClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
     // ====================================================
-    // 2. APPLICATION CENTRAL STATE
+    // 2. APPLICATION CENTRAL STATE (CLEAN RESET TO ZERO)
     // ====================================================
     const state = {
       activeTab: 'student',
       adminSubView: 'schedule',
       isAdminUnlocked: false,
-      adminPasswordHash: 'bakshu2026', // Can also be managed via Supabase
-      currentSelectedCalendarDayIndex: 3, // Defaults to current day in the active week
+      adminPasswordHash: 'bakshu2026', // Password for Rosh HaYeshiva
+      currentSelectedCalendarDayIndex: 0,
       calendarWeekOffset: 0,
       
-      // Dynamic Campaign Configuration (Read/Write to Supabase)
+      // Dynamic Campaign Configuration
       config: {
         campaignName: 'מבצע חורף - ישיבת בקשו',
-        startDate: '2026-10-10',
-        endDate: '2026-11-25',
+        startDate: '2026-10-20',
+        endDate: '2026-11-30',
         minTarget: 110,
         groupFullThreshold: 18,
         groupFullBonus: 4,
@@ -821,26 +725,18 @@
         xyBonus: 3
       },
 
-      // Current Student (default: Yehuda Cohen)
+      // Current Student (Clean slate - 0 score, 0 attendance)
       currentStudent: {
         id: '1',
         name: 'יהודה כהן (אתה)',
         phone: '054-7829104',
         presentCurrent: false,
-        baseScore: 96,
-        last10: [1, 0, 1, 1, 0, 0, 1, 0, 0, 0]
+        baseScore: 0,
+        last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       },
 
       // Daily customizable schedule slot items (Keyed by date / day)
-      // Stored in Supabase schedule_slots table
       slotsByDate: {
-        // Today's schedule
-        '2026-10-20': [
-          { id: 'slot_1', title: 'סדר א׳ - לימוד בוקר', openTime: '09:00', lockTime: '10:15', points: 1, isLocked: false },
-          { id: 'slot_2', title: 'סדר ב׳ - לימוד צהריים', openTime: '16:00', lockTime: '17:00', points: 1, isLocked: false },
-          { id: 'slot_3', title: 'מעריב ולימוד ערב', openTime: '20:30', lockTime: '21:15', points: 2, isLocked: true }
-        ],
-        // Default template for days
         'default': [
           { id: 'def_1', title: 'סדר א׳ - לימוד בוקר', openTime: '09:00', lockTime: '10:15', points: 1, isLocked: false },
           { id: 'def_2', title: 'סדר ב׳ - לימוד צהריים', openTime: '16:00', lockTime: '17:00', points: 1, isLocked: false },
@@ -848,35 +744,33 @@
         ]
       },
 
-      // Yeshiva Students List
+      // Yeshiva Students List - ALL INITIALIZED TO ZERO (0 POINTS)
       students: [
-        { id: '1', name: 'יהודה כהן (אתה)', phone: '054-7829104', score: 96, presentToday: false, persistenceCount: 4 },
-        { id: '2', name: 'משה אהרון לוי', phone: '052-4118902', score: 118, presentToday: true, persistenceCount: 9 },
-        { id: '3', name: 'דוד שפירא', phone: '053-8821904', score: 114, presentToday: true, persistenceCount: 8 },
-        { id: '4', name: 'נתנאל מזרחי', phone: '050-6721899', score: 109, presentToday: true, persistenceCount: 7 },
-        { id: '5', name: 'יוסף חיים רוזן', phone: '054-9012388', score: 106, presentToday: true, persistenceCount: 7 },
-        { id: '6', name: 'שמואל גרינברג', phone: '058-4412098', score: 103, presentToday: true, persistenceCount: 6 },
-        { id: '7', name: 'אליהו פרידמן', phone: '052-7612390', score: 101, presentToday: true, persistenceCount: 6 },
-        { id: '8', name: 'חיים ישראל כץ', phone: '054-3390112', score: 99, presentToday: true, persistenceCount: 6 },
-        { id: '9', name: 'בנימין שטרן', phone: '053-2198430', score: 97, presentToday: true, persistenceCount: 5 },
-        { id: '10', name: 'אריאל חדד', phone: '050-5541290', score: 95, presentToday: true, persistenceCount: 5 },
-        { id: '11', name: 'מנחם מנדל וייס', phone: '052-8910234', score: 94, presentToday: true, persistenceCount: 5 },
-        { id: '12', name: 'יצחק מאיר גולן', phone: '054-6120987', score: 92, presentToday: true, persistenceCount: 5 },
-        { id: '13', name: 'שלמה זלמן ברק', phone: '058-7123901', score: 90, presentToday: true, persistenceCount: 5 },
-        { id: '14', name: 'רפאל אוחיון', phone: '050-3981276', score: 89, presentToday: true, persistenceCount: 5 },
-        { id: '15', name: 'איתמר סויסה', phone: '052-6712340', score: 88, presentToday: true, persistenceCount: 5 },
-        { id: '16', name: 'נחמן ביטון', phone: '054-2289103', score: 86, presentToday: true, persistenceCount: 4 },
-        { id: '17', name: 'עקיבא הלפרין', phone: '053-5591023', score: 78, presentToday: true, persistenceCount: 3 },
-        { id: '18', name: 'גבריאל מלכה', phone: '050-8123490', score: 74, presentToday: true, persistenceCount: 3 },
-        { id: '19', name: 'יאיר נחמיאס', phone: '052-9081231', score: 71, presentToday: false, persistenceCount: 2 },
-        { id: '20', name: 'ינון אברהמי', phone: '054-7712093', score: 68, presentToday: false, persistenceCount: 2 }
+        { id: '1', name: 'יהודה כהן (אתה)', phone: '054-7829104', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '2', name: 'משה אהרון לוי', phone: '052-4118902', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '3', name: 'דוד שפירא', phone: '053-8821904', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '4', name: 'נתנאל מזרחי', phone: '050-6721899', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '5', name: 'יוסף חיים רוזן', phone: '054-9012388', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '6', name: 'שמואל גרינברג', phone: '058-4412098', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '7', name: 'אליהו פרידמן', phone: '052-7612390', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '8', name: 'חיים ישראל כץ', phone: '054-3390112', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '9', name: 'בנימין שטרן', phone: '053-2198430', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '10', name: 'אריאל חדד', phone: '050-5541290', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '11', name: 'מנחם מנדל וייס', phone: '052-8910234', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '12', name: 'יצחק מאיר גולן', phone: '054-6120987', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '13', name: 'שלמה זלמן ברק', phone: '058-7123901', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '14', name: 'רפאל אוחיון', phone: '050-3981276', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '15', name: 'איתמר סויסה', phone: '052-6712340', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '16', name: 'נחמן ביטון', phone: '054-2289103', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '17', name: 'עקיבא הלפרין', phone: '053-5591023', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '18', name: 'גבריאל מלכה', phone: '050-8123490', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '19', name: 'יאיר נחמיאס', phone: '052-9081231', score: 0, presentToday: false, persistenceCount: 0 },
+        { id: '20', name: 'ינון אברהמי', phone: '054-7712093', score: 0, presentToday: false, persistenceCount: 0 }
       ],
 
-      // Pending "Forgot to mark" requests
-      pendingRequests: [
-        { id: 'req_1', studentName: 'נתנאל מזרחי', slotTitle: 'מעריב ולימוד רביעי בערב (אתמול)', note: 'הייתי בבית המדרש והטלפון היה בחדר' },
-        { id: 'req_2', studentName: 'אליהו פרידמן', slotTitle: 'סדר ב׳ צהריים (אתמול)', note: 'שכחתי לסמן לפני נעילת החלון' }
-      ]
+      // Pending "Forgot to mark" requests (Clean slate - 0 requests)
+      pendingRequests: [],
+      myRequests: []
     };
 
     // ====================================================
@@ -916,23 +810,25 @@
 
       // Update Desktop Tabs
       document.querySelectorAll('.dtab-btn').forEach(btn => {
-        btn.classList.remove('bg-white/20', 'text-white');
-        btn.classList.add('text-indigo-200');
+        btn.className = 'dtab-btn px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-white/60';
       });
       const activeDtab = document.getElementById('dtab-' + tabId);
       if (activeDtab) {
-        activeDtab.classList.add('bg-white/20', 'text-white');
-        activeDtab.classList.remove('text-indigo-200');
+        if (tabId === 'admin') {
+          activeDtab.className = 'dtab-btn px-3.5 py-1.5 rounded-xl transition text-amber-900 bg-amber-100/90 border border-amber-300 font-bold';
+        } else {
+          activeDtab.className = 'dtab-btn px-3.5 py-1.5 rounded-xl transition text-slate-900 bg-white shadow-sm border border-slate-200 font-bold';
+        }
       }
 
       // Update Mobile Bottom Tabs
       document.querySelectorAll('.mtab-btn').forEach(btn => {
-        btn.classList.remove('text-indigo-950', 'font-black');
+        btn.classList.remove('text-[#0A1138]', 'font-black');
         btn.classList.add('text-slate-400', 'font-bold');
       });
       const activeMtab = document.getElementById('mtab-' + tabId);
       if (activeMtab) {
-        activeMtab.classList.add('text-indigo-950', 'font-black');
+        activeMtab.classList.add('text-[#0A1138]', 'font-black');
         activeMtab.classList.remove('text-slate-400', 'font-bold');
       }
 
@@ -951,12 +847,12 @@
       });
       const activeBtn = document.getElementById('asub-' + subView);
       if (activeBtn) {
-        activeBtn.className = 'asub-btn flex-1 py-2 px-3 rounded-xl transition bg-white text-slate-900 shadow-sm whitespace-nowrap';
+        activeBtn.className = 'asub-btn flex-1 py-2 px-3 rounded-xl transition bg-white text-slate-900 shadow-sm whitespace-nowrap font-black';
       }
     }
 
     // ====================================================
-    // 5. HIDDEN ADMIN PASSWORD PROTECTION GATE
+    // 5. HIDDEN ROSH HAYESHIVA PASSWORD GATE
     // ====================================================
     function toggleAdminAccess() {
       if (state.isAdminUnlocked) {
@@ -988,7 +884,7 @@
         state.isAdminUnlocked = true;
         closeAdminPasswordModal();
 
-        // Reveal Admin Tab buttons in both desktop & mobile navigation!
+        // Reveal Rosh HaYeshiva Tab buttons
         document.getElementById('dtab-admin')?.classList.remove('hidden');
         document.getElementById('mtab-admin')?.classList.remove('hidden');
 
@@ -996,9 +892,9 @@
         const lockIcon = document.getElementById('adminLockIcon');
         const lockText = document.getElementById('adminLockText');
         if (lockIcon) lockIcon.textContent = '🔓';
-        if (lockText) lockText.textContent = 'מנהל פעיל';
+        if (lockText) lockText.textContent = 'ראש הישיבה';
 
-        showToast('פורטל מנהל נפתח בהצלחה', '🔓');
+        showToast('פורטל ראש הישיבה נפתח בהצלחה', '🔓');
         switchTab('admin');
       } else {
         if (err) err.classList.remove('hidden');
@@ -1013,13 +909,12 @@
       const lockIcon = document.getElementById('adminLockIcon');
       const lockText = document.getElementById('adminLockText');
       if (lockIcon) lockIcon.textContent = '🔒';
-      if (lockText) lockText.textContent = 'מנהל';
+      if (lockText) lockText.textContent = 'ראש הישיבה';
 
-      showToast('פורטל הניהול ננעל', '🔒');
+      showToast('פורטל ראש הישיבה ננעל', '🔒');
       switchTab('student');
     }
 
-    // Check if ?admin is in URL query parameters on load
     function checkUrlForAdminParam() {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.has('admin') || window.location.hash === '#admin') {
@@ -1039,13 +934,12 @@
         state.currentStudent.last10.push(1);
         showToast('נוכחות סומנה בהצלחה! +1 נקודה', '🎉');
       } else {
-        state.currentStudent.baseScore -= 1;
+        state.currentStudent.baseScore = Math.max(0, state.currentStudent.baseScore - 1);
         state.currentStudent.last10.pop();
         state.currentStudent.last10.unshift(0);
         showToast('סימון הנוכחות בוטל', 'ℹ️');
       }
 
-      // Update in Supabase if live
       saveAttendanceLogToSupabase('slot_1', state.currentStudent.presentCurrent);
 
       renderStudentScreen();
@@ -1073,7 +967,7 @@
           `;
         } else {
           btnArea.innerHTML = `
-            <button onclick="handleStudentCheckIn()" id="mainCheckInBtn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-base sm:text-lg shadow-lg shadow-emerald-600/25 active:scale-[0.98] transition flex items-center justify-center gap-3">
+            <button onclick="handleStudentCheckIn()" id="mainCheckInBtn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-base sm:text-lg shadow-lg shadow-emerald-600/20 active:scale-[0.98] transition flex items-center justify-center gap-3">
               <span class="text-2xl">✓</span>
               <span>סמן נוכחות בסדר זה</span>
             </button>
@@ -1098,6 +992,16 @@
         barEl.style.width = pct + '%';
       }
 
+      // Group full seder status
+      const presentCount = state.students.filter(st => st.presentToday).length + (s.presentCurrent ? 1 : 0);
+      const groupCountEl = document.getElementById('groupCountText');
+      if (groupCountEl) groupCountEl.textContent = `${presentCount} / ${state.config.groupFullThreshold} בחורים`;
+      const groupBarEl = document.getElementById('groupProgressBar');
+      if (groupBarEl) {
+        const gPct = Math.min(100, Math.round((presentCount / state.config.groupFullThreshold) * 100));
+        groupBarEl.style.width = gPct + '%';
+      }
+
       // X of Y dots
       const onesCount = s.last10.filter(x => x === 1).length;
       const xyBadge = document.getElementById('xyCurrentBadge');
@@ -1114,7 +1018,7 @@
 
       // Today's schedule preview
       const todaySlotsList = document.getElementById('todaySlotsList');
-      const todaySlots = state.slotsByDate['2026-10-20'] || state.slotsByDate['default'];
+      const todaySlots = state.slotsByDate['default'];
       if (todaySlotsList && todaySlots) {
         todaySlotsList.innerHTML = todaySlots.map((slot, i) => `
           <div class="p-3 rounded-2xl border ${i === 0 ? 'bg-indigo-50/50 border-indigo-200' : 'bg-white border-slate-200'} flex items-center justify-between">
@@ -1122,14 +1026,14 @@
               <div class="text-xs font-bold text-slate-900">${slot.title}</div>
               <div class="text-[11px] text-slate-500 font-mono">${slot.openTime} - ${slot.lockTime}</div>
             </div>
-            <span class="text-xs font-black text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">+${slot.points}</span>
+            <span class="text-xs font-black text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">+${slot.points}</span>
           </div>
         `).join('');
       }
     }
 
     // ====================================================
-    // 7. LEADERBOARD & LEADERBOARD RENDERING
+    // 7. LEADERBOARD RENDERING (CLEAN SLATE)
     // ====================================================
     function renderLeaderboard() {
       const tbody = document.getElementById('publicLeaderboardBody');
@@ -1154,7 +1058,7 @@
     }
 
     // ====================================================
-    // 8. DYNAMIC CALENDAR GENERATION (ANY NUMBER OF DAYS)
+    // 8. DYNAMIC CALENDAR GENERATION
     // ====================================================
     function changeCalendarWeek(delta) {
       state.calendarWeekOffset = Math.max(0, state.calendarWeekOffset + delta);
@@ -1167,12 +1071,11 @@
 
       const hebrewDays = ['יום א׳', 'יום ב׳', 'יום ג׳', 'יום ד׳', 'יום ה׳', 'יום ו׳', 'שבת קודש'];
       const sampleHebrewDates = [
-        'ח׳ חשוון', 'ט׳ חשוון', 'י׳ חשוון', 'י״א חשוון', 'י״ב חשוון', 'י״ג חשוון', 'י״ד חשוון',
-        'ט״ו חשוון', 'ט״ז חשוון', 'י״ז חשוון', 'י״ח חשוון', 'י״ט חשוון', 'כ׳ חשוון', 'כ״א חשוון'
+        'ח׳ חשוון', 'ט׳ חשוון', 'י׳ חשוון', 'י״א חשוון', 'י״ב חשוון', 'י״ג חשוון', 'י״ד חשוון'
       ];
 
       grid.innerHTML = hebrewDays.map((dayName, idx) => {
-        const isToday = (idx === 2 && state.calendarWeekOffset === 0);
+        const isToday = (idx === 0 && state.calendarWeekOffset === 0);
         const isSelected = (idx === state.currentSelectedCalendarDayIndex);
         const hDate = sampleHebrewDates[idx] || 'כ״ב חשוון';
 
@@ -1181,7 +1084,7 @@
             <div class="text-[10px] font-bold ${isToday ? 'text-emerald-700 font-black' : 'text-slate-500'}">${dayName}</div>
             <div class="text-xs font-black text-slate-900 mt-0.5">${hDate}</div>
             <div class="mt-1 text-[10px] font-extrabold ${isToday ? 'text-emerald-700' : 'text-slate-400'}">
-              ${isToday ? 'היום • 3 סדרים' : idx === 6 ? 'שבת (8 נק׳)' : '3 סדרים'}
+              ${isToday ? 'היום • 3 סדרים' : '3 סדרים'}
             </div>
           </div>
         `;
@@ -1214,7 +1117,7 @@
     }
 
     // ====================================================
-    // 9. ADMIN: CUSTOMIZE DAILY SCHEDULES & HOURS
+    // 9. ROSH HAYESHIVA: DAILY SCHEDULES & HOURS
     // ====================================================
     function initAdminScheduleDayPicker() {
       const picker = document.getElementById('adminScheduleDayPicker');
@@ -1327,14 +1230,13 @@
     }
 
     // ====================================================
-    // 10. ADMIN: REQUESTS & STUDENT BONUSES
+    // 10. REQUESTS & BONUSES (ROSH HAYESHIVA)
     // ====================================================
     function renderAdminRequestsAndStudents() {
-      // Pending requests
       const reqList = document.getElementById('adminPendingRequestsList');
       if (reqList) {
         if (state.pendingRequests.length === 0) {
-          reqList.innerHTML = `<div class="text-xs text-slate-400 text-center py-4">אין בקשות ממתינות לאישור</div>`;
+          reqList.innerHTML = `<div class="text-xs text-slate-400 text-center py-5">אין בקשות הממתינות לאישור ראש הישיבה</div>`;
         } else {
           reqList.innerHTML = state.pendingRequests.map(r => `
             <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-sm">
@@ -1356,7 +1258,6 @@
         }
       }
 
-      // Students Table
       const stTable = document.getElementById('adminStudentsTableBody');
       if (stTable) {
         stTable.innerHTML = state.students.map(st => `
@@ -1366,7 +1267,7 @@
             <td class="py-2.5 px-3 text-center font-black text-indigo-950">${st.score} נק׳</td>
             <td class="py-2.5 px-3 text-left">
               <button onclick="grantAdminBonus('${st.id}')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-[11px]">
-                +5 בונוס חופשי
+                +5 בונוס מיוחד
               </button>
             </td>
           </tr>
@@ -1375,10 +1276,16 @@
     }
 
     function resolveRequest(id, approved) {
+      const req = state.pendingRequests.find(r => r.id === id);
+      if (req && approved) {
+        const student = state.students.find(s => s.name === req.studentName);
+        if (student) student.score += 1;
+      }
       state.pendingRequests = state.pendingRequests.filter(r => r.id !== id);
       const badge = document.getElementById('adminPendingCountBadge');
       if (badge) badge.textContent = state.pendingRequests.length;
       renderAdminRequestsAndStudents();
+      renderLeaderboard();
       showToast(approved ? 'הבקשה אושרה והתווסף ניקוד' : 'הבקשה נדחתה', approved ? '✓' : 'ℹ️');
     }
 
@@ -1388,7 +1295,7 @@
       student.score += 5;
       renderAdminRequestsAndStudents();
       renderLeaderboard();
-      showToast(`הוענקו +5 נקודות בונוס חופשי ל-${student.name}`, '🎁');
+      showToast(`הוענקו +5 נקודות בונוס ע״י ראש הישיבה ל-${student.name}`, '🎁');
     }
 
     function submitForgottenRequest() {
@@ -1398,20 +1305,38 @@
         alert('אנא הזן סיבה קצרה לבקשה');
         return;
       }
-      state.pendingRequests.push({
+      const newReq = {
         id: 'req_' + Date.now(),
         studentName: state.currentStudent.name,
         slotTitle: sel,
-        note: note
-      });
+        note: note,
+        status: 'ממתין לאישור ראש הישיבה ⏳'
+      };
+      state.pendingRequests.push(newReq);
+      state.myRequests.push(newReq);
       document.getElementById('reqNoteInput').value = '';
-      showToast('בקשתך נשלחה בהצלחה לחנוך', '📨');
+      showToast('בקשתך נשלחה בהצלחה לראש הישיבה', '📨');
       const badge = document.getElementById('adminPendingCountBadge');
       if (badge) badge.textContent = state.pendingRequests.length;
+      renderMyRequestsStatus();
     }
 
-    function submitShabbatReport() {
-      showToast('דיווח שבת נשמר בהצלחה! +8 נקודות', '🕯️');
+    function renderMyRequestsStatus() {
+      const container = document.getElementById('myRequestsStatusContainer');
+      if (!container) return;
+      if (state.myRequests.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 py-3 text-center">טרם הגשת בקשות "שכחתי לסמן"</div>`;
+      } else {
+        container.innerHTML = state.myRequests.map(r => `
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
+            <div>
+              <span class="font-bold text-slate-900">${r.slotTitle}</span>
+              <span class="text-slate-500 mr-1">("${r.note}")</span>
+            </div>
+            <span class="font-extrabold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">${r.status}</span>
+          </div>
+        `).join('');
+      }
     }
 
     function exportToCsv() {
@@ -1439,7 +1364,7 @@
           status: isPresent ? 'approved' : 'pending'
         });
       } catch (err) {
-        console.warn('Supabase offline or table schema syncing:', err);
+        console.warn('Supabase offline or syncing:', err);
       }
     }
 
@@ -1461,25 +1386,8 @@
     }
 
     // ====================================================
-    // 12. PROMO VIDEO & STUDENT LOGIN GATE
+    // 12. PROMO VIDEO & STUDENT LOGIN GATE (LOGIN ONLY)
     // ====================================================
-    function openVideoModal() {
-      const modal = document.getElementById('videoPlayerModal');
-      const player = document.getElementById('mainPromoVideoPlayer');
-      if (modal) modal.classList.remove('hidden');
-      if (player) {
-        player.currentTime = 0;
-        player.play().catch(e => console.log('Autoplay blocked:', e));
-      }
-    }
-
-    function closeVideoModal() {
-      const modal = document.getElementById('videoPlayerModal');
-      const player = document.getElementById('mainPromoVideoPlayer');
-      if (player) player.pause();
-      if (modal) modal.classList.add('hidden');
-    }
-
     function openStudentLoginModal() {
       const modal = document.getElementById('studentLoginModal');
       const select = document.getElementById('studentLoginSelect');
@@ -1512,7 +1420,7 @@
           phone: student.phone,
           presentCurrent: student.presentToday,
           baseScore: student.score,
-          last10: [1, 0, 1, 1, 0, 1, 1, 0, 0, 0]
+          last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         };
         localStorage.setItem('bakshu_logged_student_id', student.id);
         const nameGreeting = document.getElementById('greetingStudentName');
@@ -1534,14 +1442,13 @@
             phone: student.phone,
             presentCurrent: student.presentToday,
             baseScore: student.score,
-            last10: [1, 0, 1, 1, 0, 1, 1, 0, 0, 0]
+            last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           };
           const nameGreeting = document.getElementById('greetingStudentName');
           if (nameGreeting) nameGreeting.textContent = student.name;
         }
       } else {
-        // Show video & login gate on first visit!
-        setTimeout(openStudentLoginModal, 500);
+        setTimeout(openStudentLoginModal, 400);
       }
     }
 
@@ -1553,6 +1460,9 @@
       if (state.activeTab === 'public') {
         renderDynamicCalendar();
         renderLeaderboard();
+      }
+      if (state.activeTab === 'requests') {
+        renderMyRequestsStatus();
       }
       if (state.activeTab === 'admin') {
         renderAdminRequestsAndStudents();
