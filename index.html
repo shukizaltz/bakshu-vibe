@@ -156,7 +156,7 @@
       <div class="flex items-center justify-between px-1 text-xs">
         <div class="flex items-center gap-1.5 text-slate-700">
           <span>שלום,</span>
-          <strong id="greetingStudentName" class="text-[#0A1138] font-black text-sm">יהודה כהן (אתה)</strong>
+          <strong id="greetingStudentName" class="text-[#0A1138] font-black text-sm">ישראל ישראלי (בחור לדוגמה)</strong>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">מחובר</span>
         </div>
         <button onclick="openStudentLoginModal()" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 hover:underline">
@@ -309,7 +309,7 @@
             <h2 class="text-base sm:text-lg font-black text-slate-900">טבלת ניקוד בחורי הישיבה</h2>
             <p class="text-xs text-slate-500">מתעדכן בזמן אמת מול Supabase</p>
           </div>
-          <span class="text-xs font-bold px-3 py-1 rounded-xl bg-slate-100 text-slate-700" id="totalParticipantsBadge">20 בחורים</span>
+          <span class="text-xs font-bold px-3 py-1 rounded-xl bg-slate-100 text-slate-700" id="totalParticipantsBadge">בחור 1 לדוגמה</span>
         </div>
 
         <div class="overflow-x-auto no-scrollbar">
@@ -503,26 +503,37 @@
         <div class="soft-card p-5 sm:p-6">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div>
-              <h3 class="text-base font-black text-slate-900">רשימת בחורי הישיבה והענקת בונוס מיוחד</h3>
-              <p class="text-xs text-slate-500">ניתן להעניק בונוס לפי שיקול דעת ראש הישיבה ולייצא דו״ח לאקסל</p>
+              <div class="flex items-center gap-2">
+                <h3 class="text-base font-black text-slate-900">רשימת בחורי הישיבה והענקת בונוס</h3>
+                <span id="adminTotalStudentsBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-100">בחור 1 בישיבה</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">הוספה והורדה של בחורים, והענקת בונוס לפי שיקול דעת ראש הישיבה</p>
             </div>
             <div class="flex items-center gap-2">
+              <button onclick="openAddStudentModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
+                <span>➕</span>
+                <span>הוסף בחור חדש</span>
+              </button>
+              <button onclick="resetToSingleDemoStudent()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1 border border-slate-200" title="איפוס מהיר לבחור הדגמה יחיד">
+                <span>🔄</span>
+                <span>איפוס לדוגמה</span>
+              </button>
               <button onclick="exportToCsv()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition flex items-center gap-1 border border-slate-200">
                 <span>📊</span>
-                <span>ייצא דו״ח לאקסל (CSV)</span>
+                <span>ייצא CSV</span>
               </button>
             </div>
           </div>
 
-          <!-- Students Table with Quick Bonus Button -->
+          <!-- Students Table with Quick Bonus Button & Delete Button -->
           <div class="overflow-x-auto no-scrollbar">
             <table class="w-full text-right text-xs">
               <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
                 <tr>
                   <th class="py-2.5 px-3 font-bold">שם הבחור</th>
-                  <th class="py-2.5 px-3 font-bold text-center">טלפון</th>
+                  <th class="py-2.5 px-3 font-bold text-center hidden sm:table-cell">טלפון</th>
                   <th class="py-2.5 px-3 font-bold text-center">ניקוד נוכחי</th>
-                  <th class="py-2.5 px-3 font-bold text-left">פעולות ובונוס ראש הישיבה</th>
+                  <th class="py-2.5 px-3 font-bold text-left">פעולות ראש הישיבה</th>
                 </tr>
               </thead>
               <tbody id="adminStudentsTableBody" class="divide-y divide-slate-100">
@@ -565,8 +576,40 @@
       <span class="text-lg">⚙️</span>
       <span class="text-[10px] leading-none">ראש הישיבה</span>
     </button>
-
   </nav>
+
+  <!-- ========================================================== -->
+  <!-- ADD STUDENT MODAL (ROSH HAYESHIVA)                         -->
+  <!-- ========================================================== -->
+  <div id="addStudentModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-right">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">👤</span>
+        <h3 class="text-base font-black text-slate-900">הוספת בחור חדש לישיבה</h3>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">הזן שם מלא ומספר טלפון כדי לצרף את הבחור למבצע</p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">שם מלא:</label>
+          <input type="text" id="newStudentNameInput" placeholder="לדוגמה: יוסף חיים לוי" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-600" onkeyup="if(event.key==='Enter') confirmAddNewStudent()" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">מספר טלפון:</label>
+          <input type="tel" id="newStudentPhoneInput" placeholder="050-0000000" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono text-left" dir="ltr" onkeyup="if(event.key==='Enter') confirmAddNewStudent()" />
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 mt-5">
+        <button onclick="confirmAddNewStudent()" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-md">
+          הוסף לרשימה
+        </button>
+        <button onclick="closeAddStudentModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ========================================================== -->
   <!-- ROSH HAYESHIVA PASSWORD AUTHENTICATION MODAL               -->
@@ -702,8 +745,45 @@
     const supabaseClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
     // ====================================================
-    // 2. APPLICATION CENTRAL STATE (CLEAN RESET TO ZERO)
+    // 2. DEMO STUDENT DEFINITION & PERSISTENT STORAGE
     // ====================================================
+    const DEFAULT_DEMO_STUDENT = {
+      id: 'st_demo_1',
+      name: 'ישראל ישראלי (בחור לדוגמה)',
+      phone: '050-1234567',
+      score: 0,
+      presentToday: false,
+      persistenceCount: 0
+    };
+
+    function loadInitialStudents() {
+      try {
+        const saved = localStorage.getItem('bakshu_students_list_v3');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        }
+      } catch (e) {
+        console.warn('Could not read saved students list:', e);
+      }
+      return [{ ...DEFAULT_DEMO_STUDENT }];
+    }
+
+    function saveLocalStudents() {
+      try {
+        localStorage.setItem('bakshu_students_list_v3', JSON.stringify(state.students));
+      } catch (e) {
+        console.warn('Could not save students list:', e);
+      }
+    }
+
+    // ====================================================
+    // 3. APPLICATION CENTRAL STATE (CLEAN RESET TO ZERO)
+    // ====================================================
+    const initialStudentsList = loadInitialStudents();
+
     const state = {
       activeTab: 'student',
       adminSubView: 'schedule',
@@ -725,13 +805,16 @@
         xyBonus: 3
       },
 
+      // Yeshiva Students List - Initialized to 1 demonstration student
+      students: initialStudentsList,
+
       // Current Student (Clean slate - 0 score, 0 attendance)
       currentStudent: {
-        id: '1',
-        name: 'יהודה כהן (אתה)',
-        phone: '054-7829104',
-        presentCurrent: false,
-        baseScore: 0,
+        id: initialStudentsList[0].id,
+        name: initialStudentsList[0].name,
+        phone: initialStudentsList[0].phone,
+        presentCurrent: initialStudentsList[0].presentToday || false,
+        baseScore: initialStudentsList[0].score || 0,
         last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       },
 
@@ -743,30 +826,6 @@
           { id: 'def_3', title: 'מעריב וסדר ערב', openTime: '20:30', lockTime: '21:15', points: 2, isLocked: false }
         ]
       },
-
-      // Yeshiva Students List - ALL INITIALIZED TO ZERO (0 POINTS)
-      students: [
-        { id: '1', name: 'יהודה כהן (אתה)', phone: '054-7829104', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '2', name: 'משה אהרון לוי', phone: '052-4118902', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '3', name: 'דוד שפירא', phone: '053-8821904', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '4', name: 'נתנאל מזרחי', phone: '050-6721899', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '5', name: 'יוסף חיים רוזן', phone: '054-9012388', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '6', name: 'שמואל גרינברג', phone: '058-4412098', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '7', name: 'אליהו פרידמן', phone: '052-7612390', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '8', name: 'חיים ישראל כץ', phone: '054-3390112', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '9', name: 'בנימין שטרן', phone: '053-2198430', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '10', name: 'אריאל חדד', phone: '050-5541290', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '11', name: 'מנחם מנדל וייס', phone: '052-8910234', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '12', name: 'יצחק מאיר גולן', phone: '054-6120987', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '13', name: 'שלמה זלמן ברק', phone: '058-7123901', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '14', name: 'רפאל אוחיון', phone: '050-3981276', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '15', name: 'איתמר סויסה', phone: '052-6712340', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '16', name: 'נחמן ביטון', phone: '054-2289103', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '17', name: 'עקיבא הלפרין', phone: '053-5591023', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '18', name: 'גבריאל מלכה', phone: '050-8123490', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '19', name: 'יאיר נחמיאס', phone: '052-9081231', score: 0, presentToday: false, persistenceCount: 0 },
-        { id: '20', name: 'ינון אברהמי', phone: '054-7712093', score: 0, presentToday: false, persistenceCount: 0 }
-      ],
 
       // Pending "Forgot to mark" requests (Clean slate - 0 requests)
       pendingRequests: [],
@@ -1037,7 +1096,20 @@
     // ====================================================
     function renderLeaderboard() {
       const tbody = document.getElementById('publicLeaderboardBody');
+      const badge = document.getElementById('totalParticipantsBadge');
+      if (badge) {
+        badge.textContent = state.students.length === 1 ? 'בחור 1 לדוגמה' : `${state.students.length} בחורים`;
+      }
       if (!tbody) return;
+
+      if (state.students.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="py-8 text-center text-slate-400 font-medium">אין כרגע בחורים רשומים במבצע</td>
+          </tr>
+        `;
+        return;
+      }
 
       const sorted = [...state.students].sort((a, b) => b.score - a.score);
       tbody.innerHTML = sorted.map((st, idx) => `
@@ -1233,6 +1305,7 @@
     // 10. REQUESTS & BONUSES (ROSH HAYESHIVA)
     // ====================================================
     function renderAdminRequestsAndStudents() {
+      // 1. Pending requests
       const reqList = document.getElementById('adminPendingRequestsList');
       if (reqList) {
         if (state.pendingRequests.length === 0) {
@@ -1258,20 +1331,57 @@
         }
       }
 
+      // 2. Total students badge
+      const aBadge = document.getElementById('adminTotalStudentsBadge');
+      if (aBadge) {
+        aBadge.textContent = state.students.length === 1 ? 'בחור 1 בישיבה' : `${state.students.length} בחורים בישיבה`;
+      }
+
+      // 3. Students table with bonus & remove controls
       const stTable = document.getElementById('adminStudentsTableBody');
       if (stTable) {
-        stTable.innerHTML = state.students.map(st => `
-          <tr class="hover:bg-slate-50 transition">
-            <td class="py-2.5 px-3 font-bold text-slate-900">${st.name}</td>
-            <td class="py-2.5 px-3 text-center text-slate-500 font-mono" dir="ltr">${st.phone}</td>
-            <td class="py-2.5 px-3 text-center font-black text-indigo-950">${st.score} נק׳</td>
-            <td class="py-2.5 px-3 text-left">
-              <button onclick="grantAdminBonus('${st.id}')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-[11px]">
-                +5 בונוס מיוחד
-              </button>
-            </td>
-          </tr>
-        `).join('');
+        if (state.students.length === 0) {
+          stTable.innerHTML = `
+            <tr>
+              <td colspan="4" class="py-8 text-center text-slate-400">
+                <div class="text-2xl mb-1">👥</div>
+                <div class="font-bold">אין בחורים רשומים כרגע בישיבה</div>
+                <button onclick="openAddStudentModal()" class="mt-2 px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs">
+                  + הוסף בחור חדש
+                </button>
+              </td>
+            </tr>
+          `;
+        } else {
+          stTable.innerHTML = state.students.map(st => `
+            <tr class="hover:bg-slate-50/80 transition">
+              <td class="py-2.5 px-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-900 flex items-center justify-center font-bold text-xs shrink-0">
+                    👤
+                  </div>
+                  <div>
+                    <div class="font-black text-slate-900 text-xs sm:text-sm">${st.name}</div>
+                    <div class="text-[10px] text-slate-400 font-mono sm:hidden" dir="ltr">${st.phone}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="py-2.5 px-3 text-center text-slate-600 font-mono text-xs hidden sm:table-cell" dir="ltr">${st.phone}</td>
+              <td class="py-2.5 px-3 text-center font-black text-indigo-950 text-xs sm:text-sm">${st.score} נק׳</td>
+              <td class="py-2.5 px-3 text-left">
+                <div class="flex items-center justify-end gap-1.5">
+                  <button onclick="grantAdminBonus('${st.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-xs transition" title="הענק בונוס מיוחד לשיקול דעת ראש הישיבה">
+                    ⭐ +5 בונוס
+                  </button>
+                  <button onclick="removeStudent('${st.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition flex items-center gap-1" title="הסר בחור מהישיבה">
+                    <span>🗑️</span>
+                    <span class="hidden sm:inline">הסר</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `).join('');
+        }
       }
     }
 
@@ -1293,9 +1403,160 @@
       const student = state.students.find(s => s.id === studentId);
       if (!student) return;
       student.score += 5;
+      saveLocalStudents();
       renderAdminRequestsAndStudents();
       renderLeaderboard();
       showToast(`הוענקו +5 נקודות בונוס ע״י ראש הישיבה ל-${student.name}`, '🎁');
+    }
+
+    // ====================================================
+    // ROSH HAYESHIVA: ADD, REMOVE & RESET STUDENTS
+    // ====================================================
+    function openAddStudentModal() {
+      const modal = document.getElementById('addStudentModal');
+      const nameInput = document.getElementById('newStudentNameInput');
+      const phoneInput = document.getElementById('newStudentPhoneInput');
+      if (nameInput) nameInput.value = '';
+      if (phoneInput) phoneInput.value = '';
+      if (modal) modal.classList.remove('hidden');
+      setTimeout(() => nameInput?.focus(), 100);
+    }
+
+    function closeAddStudentModal() {
+      document.getElementById('addStudentModal')?.classList.add('hidden');
+    }
+
+    async function confirmAddNewStudent() {
+      const nameInput = document.getElementById('newStudentNameInput');
+      const phoneInput = document.getElementById('newStudentPhoneInput');
+      const name = (nameInput?.value || '').trim();
+      let phone = (phoneInput?.value || '').trim();
+
+      if (!name) {
+        alert('אנא הזן את שם הבחור');
+        nameInput?.focus();
+        return;
+      }
+
+      if (!phone) {
+        phone = '05' + Math.floor(10000000 + Math.random() * 90000000);
+      }
+
+      const newId = 'st_' + Date.now();
+      const newStudent = {
+        id: newId,
+        name: name,
+        phone: phone,
+        score: 0,
+        presentToday: false,
+        persistenceCount: 0
+      };
+
+      state.students.push(newStudent);
+      saveLocalStudents();
+
+      // Supabase user sync
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('users').upsert({
+            id: newId,
+            full_name: name,
+            phone: phone,
+            role: 'student',
+            manual_bonus_pts: 0
+          });
+        } catch (err) {
+          console.warn('Supabase sync user:', err);
+        }
+      }
+
+      closeAddStudentModal();
+      renderAllViews();
+      showToast(`הבחור "${name}" נוסף בהצלחה לרשימת הישיבה!`, '👤');
+    }
+
+    async function removeStudent(studentId) {
+      const student = state.students.find(s => s.id === studentId);
+      if (!student) return;
+
+      const confirmed = confirm(`האם ראש הישיבה בטוח שברצונו להסיר את הבחור "${student.name}" מהמערכת?`);
+      if (!confirmed) return;
+
+      state.students = state.students.filter(s => s.id !== studentId);
+      saveLocalStudents();
+
+      // If removed current active student, fallback to first available or reset
+      if (state.currentStudent && state.currentStudent.id === studentId) {
+        if (state.students.length > 0) {
+          state.currentStudent = {
+            id: state.students[0].id,
+            name: state.students[0].name,
+            phone: state.students[0].phone,
+            presentCurrent: state.students[0].presentToday || false,
+            baseScore: state.students[0].score || 0,
+            last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          };
+          localStorage.setItem('bakshu_logged_student_id', state.students[0].id);
+        } else {
+          // If all removed, restore single demo student
+          state.students = [{ ...DEFAULT_DEMO_STUDENT }];
+          saveLocalStudents();
+          state.currentStudent = {
+            id: DEFAULT_DEMO_STUDENT.id,
+            name: DEFAULT_DEMO_STUDENT.name,
+            phone: DEFAULT_DEMO_STUDENT.phone,
+            presentCurrent: false,
+            baseScore: 0,
+            last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+          };
+          localStorage.setItem('bakshu_logged_student_id', DEFAULT_DEMO_STUDENT.id);
+        }
+      }
+
+      // Supabase user delete
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('users').delete().eq('id', studentId);
+        } catch (err) {
+          console.warn('Supabase delete user:', err);
+        }
+      }
+
+      renderAllViews();
+      showToast(`הבחור "${student.name}" הוסר מהמערכת`, '🗑️');
+    }
+
+    function resetToSingleDemoStudent() {
+      const confirmed = confirm('האם לאפס את רשימת הישיבה לבחור הדגמה יחיד? כל הבחורים שהוספו יימחקו.');
+      if (!confirmed) return;
+
+      state.students = [{ ...DEFAULT_DEMO_STUDENT }];
+      saveLocalStudents();
+
+      state.currentStudent = {
+        id: DEFAULT_DEMO_STUDENT.id,
+        name: DEFAULT_DEMO_STUDENT.name,
+        phone: DEFAULT_DEMO_STUDENT.phone,
+        presentCurrent: false,
+        baseScore: 0,
+        last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      };
+      localStorage.setItem('bakshu_logged_student_id', DEFAULT_DEMO_STUDENT.id);
+
+      renderAllViews();
+      showToast('רשימת הבחורים אופסה לבחור 1 להדגמה', '🔄');
+    }
+
+    function renderAllViews() {
+      const nameGreeting = document.getElementById('greetingStudentName');
+      if (nameGreeting && state.currentStudent) {
+        nameGreeting.textContent = state.currentStudent.name;
+      }
+      renderStudentScreen();
+      renderDynamicCalendar();
+      renderLeaderboard();
+      renderAdminRequestsAndStudents();
+      renderMyRequestsStatus();
     }
 
     function submitForgottenRequest() {
@@ -1393,9 +1654,13 @@
       const select = document.getElementById('studentLoginSelect');
       const vid = document.getElementById('loginVideoEl');
       if (select) {
-        select.innerHTML = state.students.map(s => `
-          <option value="${s.id}" ${s.id === state.currentStudent.id ? 'selected' : ''}>${s.name} (${s.phone})</option>
-        `).join('');
+        if (state.students.length === 0) {
+          select.innerHTML = '<option value="">(אין בחורים ברשימה - הוסף בפורטל ראש הישיבה)</option>';
+        } else {
+          select.innerHTML = state.students.map(s => `
+            <option value="${s.id}" ${s.id === state.currentStudent.id ? 'selected' : ''}>${s.name} (${s.phone})</option>
+          `).join('');
+        }
       }
       if (modal) modal.classList.remove('hidden');
       if (vid) vid.play().catch(e => console.log('Autoplay blocked:', e));
@@ -1418,8 +1683,8 @@
           id: student.id,
           name: student.name,
           phone: student.phone,
-          presentCurrent: student.presentToday,
-          baseScore: student.score,
+          presentCurrent: student.presentToday || false,
+          baseScore: student.score || 0,
           last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         };
         localStorage.setItem('bakshu_logged_student_id', student.id);
@@ -1433,21 +1698,32 @@
 
     function checkSavedStudentLogin() {
       const savedId = localStorage.getItem('bakshu_logged_student_id');
-      if (savedId) {
-        const student = state.students.find(s => s.id === savedId);
-        if (student) {
+      const student = state.students.find(s => s.id === savedId);
+      if (student) {
+        state.currentStudent = {
+          id: student.id,
+          name: student.name,
+          phone: student.phone,
+          presentCurrent: student.presentToday || false,
+          baseScore: student.score || 0,
+          last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        };
+        const nameGreeting = document.getElementById('greetingStudentName');
+        if (nameGreeting) nameGreeting.textContent = student.name;
+      } else {
+        localStorage.removeItem('bakshu_logged_student_id');
+        if (state.students.length > 0) {
           state.currentStudent = {
-            id: student.id,
-            name: student.name,
-            phone: student.phone,
-            presentCurrent: student.presentToday,
-            baseScore: student.score,
+            id: state.students[0].id,
+            name: state.students[0].name,
+            phone: state.students[0].phone,
+            presentCurrent: state.students[0].presentToday || false,
+            baseScore: state.students[0].score || 0,
             last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
           };
           const nameGreeting = document.getElementById('greetingStudentName');
-          if (nameGreeting) nameGreeting.textContent = student.name;
+          if (nameGreeting) nameGreeting.textContent = state.students[0].name;
         }
-      } else {
         setTimeout(openStudentLoginModal, 400);
       }
     }

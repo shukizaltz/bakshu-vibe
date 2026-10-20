@@ -67,6 +67,10 @@ ALTER TABLE manager_bonus_logs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow public read for active campaign config" ON campaign_config FOR SELECT USING (true);
 CREATE POLICY "Allow public read for active users" ON users FOR SELECT USING (true);
+CREATE POLICY "Allow public insert for users" ON users FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update for users" ON users FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete for users" ON users FOR DELETE USING (true);
 CREATE POLICY "Allow public read for schedule slots" ON schedule_slots FOR SELECT USING (true);
 CREATE POLICY "Allow users to read their own attendance" ON attendance_logs FOR SELECT USING (true);
 CREATE POLICY "Allow users to insert their attendance" ON attendance_logs FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public read and insert for manager bonuses" ON manager_bonus_logs FOR ALL USING (true);
