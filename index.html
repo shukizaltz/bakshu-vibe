@@ -161,8 +161,39 @@
     <!-- ========================================================== -->
     <section id="screen-student" class="screen-section space-y-4">
       
-      <!-- 1. Hero Check-in Card (Mobile Optimized) -->
-      <div class="soft-card-elevated p-5 sm:p-6 border-indigo-100 bg-gradient-to-b from-white to-slate-50/60">
+      <!-- User Greeting Bar & Switch User -->
+      <div class="flex items-center justify-between px-1 text-xs">
+        <div class="flex items-center gap-1.5 text-slate-700">
+          <span>שלום,</span>
+          <strong id="greetingStudentName" class="text-indigo-950 font-black text-sm">יהודה כהן (אתה)</strong>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">מחובר</span>
+        </div>
+        <button onclick="openStudentLoginModal()" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 hover:underline">
+          <span>החלף בחור</span>
+          <span>🔁</span>
+        </button>
+      </div>
+
+      <!-- High-Impact Campaign Promo Video Card -->
+      <div class="soft-card p-3.5 sm:p-4 bg-gradient-to-r from-[#0A1138] via-indigo-950 to-[#0A1138] text-white flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md border-indigo-900/60">
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#D4E727] to-amber-400 p-0.5 flex items-center justify-center shrink-0 shadow-lg cursor-pointer animate-vibe" onclick="openVideoModal()">
+            <div class="w-full h-full bg-[#0A1138] rounded-[14px] flex items-center justify-center text-amber-300 text-lg">
+              ▶
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-black text-white">סרטון השקת מבצע בקשו VIBE!</h3>
+              <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-[#D4E727] text-slate-950 shadow-sm">צפה עכשיו 🔥</span>
+            </div>
+            <p class="text-xs text-slate-300 mt-0.5">צפה בסרטון המרגש של הישיבה לקראת המבצע</p>
+          </div>
+        </div>
+        <button onclick="openVideoModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-2 active:scale-95">
+          <span>▶ נגן סרטון</span>
+        </button>
+      </div>
         <div class="flex items-center justify-between gap-2 mb-3">
           <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-sm" id="activeSederStatusBadge">
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
@@ -680,6 +711,76 @@
         </button>
         <button onclick="closeAddSlotModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
           ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- STUDENT LOGIN / IDENTIFICATION MODAL WITH PROMO VIDEO      -->
+  <!-- ========================================================== -->
+  <div id="studentLoginModal" class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-center relative overflow-hidden">
+      
+      <!-- Video at Login (פתיחה והתחברות) -->
+      <div class="relative rounded-2xl overflow-hidden mb-4 bg-slate-900 border border-slate-200 shadow-inner">
+        <video id="loginVideoEl" src="promo-video.mp4" controls autoplay muted loop playsinline class="w-full h-44 sm:h-52 object-cover"></video>
+        <div class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-slate-900/80 backdrop-blur text-[10px] text-amber-300 font-extrabold">
+          🎬 סרטון המבצע
+        </div>
+      </div>
+
+      <div class="flex items-center justify-center gap-2 mb-2">
+        <div class="w-8 h-8 rounded-xl bg-[#0A1138] p-0.5 overflow-hidden shadow">
+          <img src="logo-yeshiva.jpeg" alt="לוגו" class="w-full h-full object-cover rounded-lg" />
+        </div>
+        <h3 class="text-lg font-black text-slate-900">כניסה למערכת בקשו VIBE</h3>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">בחר את שמך מרשימת בחורי הישיבה לכניסה מהירה</p>
+
+      <div class="space-y-3 text-right">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">מי אתה?</label>
+          <select id="studentLoginSelect" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 bg-white text-indigo-950 focus:ring-2 focus:ring-indigo-600 focus:outline-none">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 mt-5">
+        <button onclick="confirmStudentLogin()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs transition shadow-md">
+          היכנס למערכת
+        </button>
+        <button onclick="closeStudentLoginModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          סגור
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- DEDICATED PROMO VIDEO PLAYER MODAL                         -->
+  <!-- ========================================================== -->
+  <div id="videoPlayerModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-[#0A1138] rounded-3xl max-w-lg w-full p-4 sm:p-5 shadow-2xl border border-indigo-900 text-center relative">
+      <div class="flex items-center justify-between pb-3 mb-2 border-b border-white/10 text-white">
+        <div class="flex items-center gap-2">
+          <img src="logo-meyzam.png" alt="לוגו מיזם" class="h-6 w-auto" />
+          <h3 class="text-sm font-black">סרטון השקת מבצע בקשו VIBE</h3>
+        </div>
+        <button onclick="closeVideoModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs font-bold transition">
+          ✕
+        </button>
+      </div>
+
+      <div class="rounded-2xl overflow-hidden bg-black shadow-lg">
+        <video id="mainPromoVideoPlayer" src="promo-video.mp4" controls playsinline class="w-full max-h-[70vh] object-contain"></video>
+      </div>
+
+      <div class="mt-3 flex items-center justify-between text-xs text-indigo-200">
+        <span>ישיבת בקשו ירושלים • מבצע חורף</span>
+        <button onclick="closeVideoModal()" class="px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition">
+          סגור נגן
         </button>
       </div>
     </div>
@@ -1360,7 +1461,92 @@
     }
 
     // ====================================================
-    // 12. INITIALIZATION
+    // 12. PROMO VIDEO & STUDENT LOGIN GATE
+    // ====================================================
+    function openVideoModal() {
+      const modal = document.getElementById('videoPlayerModal');
+      const player = document.getElementById('mainPromoVideoPlayer');
+      if (modal) modal.classList.remove('hidden');
+      if (player) {
+        player.currentTime = 0;
+        player.play().catch(e => console.log('Autoplay blocked:', e));
+      }
+    }
+
+    function closeVideoModal() {
+      const modal = document.getElementById('videoPlayerModal');
+      const player = document.getElementById('mainPromoVideoPlayer');
+      if (player) player.pause();
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function openStudentLoginModal() {
+      const modal = document.getElementById('studentLoginModal');
+      const select = document.getElementById('studentLoginSelect');
+      const vid = document.getElementById('loginVideoEl');
+      if (select) {
+        select.innerHTML = state.students.map(s => `
+          <option value="${s.id}" ${s.id === state.currentStudent.id ? 'selected' : ''}>${s.name} (${s.phone})</option>
+        `).join('');
+      }
+      if (modal) modal.classList.remove('hidden');
+      if (vid) vid.play().catch(e => console.log('Autoplay blocked:', e));
+    }
+
+    function closeStudentLoginModal() {
+      const modal = document.getElementById('studentLoginModal');
+      const vid = document.getElementById('loginVideoEl');
+      if (vid) vid.pause();
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function confirmStudentLogin() {
+      const select = document.getElementById('studentLoginSelect');
+      if (!select) return;
+      const selectedId = select.value;
+      const student = state.students.find(s => s.id === selectedId);
+      if (student) {
+        state.currentStudent = {
+          id: student.id,
+          name: student.name,
+          phone: student.phone,
+          presentCurrent: student.presentToday,
+          baseScore: student.score,
+          last10: [1, 0, 1, 1, 0, 1, 1, 0, 0, 0]
+        };
+        localStorage.setItem('bakshu_logged_student_id', student.id);
+        const nameGreeting = document.getElementById('greetingStudentName');
+        if (nameGreeting) nameGreeting.textContent = student.name;
+        showToast(`ברוך הבא, ${student.name}!`, '👋');
+        closeStudentLoginModal();
+        renderStudentScreen();
+      }
+    }
+
+    function checkSavedStudentLogin() {
+      const savedId = localStorage.getItem('bakshu_logged_student_id');
+      if (savedId) {
+        const student = state.students.find(s => s.id === savedId);
+        if (student) {
+          state.currentStudent = {
+            id: student.id,
+            name: student.name,
+            phone: student.phone,
+            presentCurrent: student.presentToday,
+            baseScore: student.score,
+            last10: [1, 0, 1, 1, 0, 1, 1, 0, 0, 0]
+          };
+          const nameGreeting = document.getElementById('greetingStudentName');
+          if (nameGreeting) nameGreeting.textContent = student.name;
+        }
+      } else {
+        // Show video & login gate on first visit!
+        setTimeout(openStudentLoginModal, 500);
+      }
+    }
+
+    // ====================================================
+    // 13. INITIALIZATION
     // ====================================================
     function renderCurrentScreen() {
       if (state.activeTab === 'student') renderStudentScreen();
@@ -1376,6 +1562,7 @@
 
     window.onload = function () {
       initAdminScheduleDayPicker();
+      checkSavedStudentLogin();
       renderStudentScreen();
       renderDynamicCalendar();
       renderLeaderboard();
