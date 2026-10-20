@@ -120,10 +120,7 @@
             ✍️ בקשות לאישור
           </button>
           <!-- Rosh HaYeshiva Tab (Revealed only when unlocked) -->
-          <button onclick="switchTab('admin')" id="dtab-admin" class="dtab-btn hidden px-3.5 py-1.5 rounded-xl transition text-amber-900 bg-amber-100/80 border border-amber-300">
-            ⚙️ פורטל ראש הישיבה
-          </button>
-        </div>
+          </div>
 
         <!-- Connection status indicator -->
         <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono" dir="ltr">
@@ -163,10 +160,6 @@
           <button onclick="openStudentChangePasswordModal()" class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition flex items-center gap-1 border border-slate-200" title="החלפת סיסמה אישית לבחור">
             <span>🔑</span>
             <span>סיסמה אישית</span>
-          </button>
-          <button onclick="openStudentLoginModal()" class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-indigo-700 font-bold text-[11px] transition flex items-center gap-1 border border-slate-200" title="החלפת בחור">
-            <span>🔁</span>
-            <span>החלף בחור</span>
           </button>
           <button onclick="handleStudentLogout()" class="px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] transition flex items-center gap-1 border border-rose-200" title="התנתקות מהמערכת">
             <span>🚪</span>
@@ -376,33 +369,109 @@
     <!-- SCREEN 2: CAMPAIGN CALENDAR & FULL LEADERBOARD             -->
     <!-- ========================================================== -->
     <section id="screen-public" class="screen-section hidden space-y-4">
-      
-      <!-- Interactive Dynamic Campaign Calendar Card -->
-      <div class="soft-card p-4 sm:p-6">
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <!-- 1. Campaign Progress & Target Milestones Graph (גרף התקדמות המבצע) -->
+      <div class="soft-card p-4 sm:p-6 bg-gradient-to-br from-white via-indigo-50/20 to-white">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
           <div>
-            <h2 class="text-lg font-black text-slate-900">לוח שנה למבצע (כמה עבר וכמה נשאר)</h2>
-            <p id="campaignDurationSubtitle" class="text-xs text-slate-500">מבצע חורף • בחר יום לצפייה בפרטי הסדרים</p>
+            <div class="flex items-center gap-2">
+              <span class="text-xl">📈</span>
+              <h2 class="text-base sm:text-lg font-black text-slate-900">גרף התקדמות המבצע ויעדי הישיבה</h2>
+            </div>
+            <p class="text-xs text-slate-500">מעקב קצב צבירת הנקודות ועמידה ביעדי הפרסים (ארד, כסף, זהב)</p>
           </div>
           <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-slate-500">מעבר שבוע:</span>
-            <button onclick="changeCalendarWeek(-1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700">‹</button>
-            <span id="currentWeekRangeLabel" class="text-xs font-bold text-indigo-950 font-mono">שבוע 1</span>
-            <button onclick="changeCalendarWeek(1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700">›</button>
+            <span id="campaignPaceBadge" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm font-mono">
+              ⚡ קצב צבירה: מצוין
+            </span>
           </div>
         </div>
 
-        <!-- Dynamic Days Grid -->
-        <div id="dynamicCalendarGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 my-2">
-          <!-- Populated by JS -->
+        <!-- Visual Milestone Progress Bar -->
+        <div class="my-4">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-1.5">
+            <span>התקדמות הישיבה ליעדים</span>
+            <span id="campaignProgressPctText" class="font-mono font-black text-indigo-950">0%</span>
+          </div>
+          <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 relative">
+            <div id="campaignOverallProgressBar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 rounded-full transition-all duration-700" style="width: 25%"></div>
+          </div>
+          
+          <!-- 3 Milestone Markers on Scale -->
+          <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+            <div class="p-2.5 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs">
+              <div class="font-extrabold text-amber-900 text-[11px]" id="graphTier1Name">🥉 יעד ארד (כניסה להגרלה)</div>
+              <div class="font-black text-amber-950 font-mono text-sm mt-0.5" id="graphTier1Pts">70 נק׳</div>
+              <div class="text-[10px] text-amber-700 font-bold mt-0.5" id="graphTier1Status">נצברו 12 נק׳</div>
+            </div>
+
+            <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+              <div class="font-extrabold text-slate-800 text-[11px]" id="graphTier2Name">🥈 יעד כסף (פרס כספי)</div>
+              <div class="font-black text-slate-900 font-mono text-sm mt-0.5" id="graphTier2Pts">100 נק׳</div>
+              <div class="text-[10px] text-slate-500 font-bold mt-0.5" id="graphTier2Status">עוד 88 נק׳</div>
+            </div>
+
+            <div class="p-2.5 rounded-2xl bg-indigo-50/80 border border-indigo-200 text-xs">
+              <div class="font-extrabold text-indigo-950 text-[11px]" id="graphTier3Name">🥇 יעד זהב (נסיעה ענקית)</div>
+              <div class="font-black text-indigo-950 font-mono text-sm mt-0.5" id="graphTier3Pts">130 נק׳</div>
+              <div class="text-[10px] text-indigo-700 font-bold mt-0.5" id="graphTier3Status">עוד 118 נק׳</div>
+            </div>
+          </div>
         </div>
 
-        <!-- Selected Day Details Bar -->
-        <div id="selectedDayDetailsBar" class="mt-3 p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <!-- Populated by JS -->
+        <!-- SVG Visual Trajectory Curve -->
+        <div class="my-4 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+          <div class="flex items-center justify-between text-xs mb-2">
+            <span class="font-bold text-slate-600">עקומת קצב שבועי (בפועל מול יעד)</span>
+            <span class="text-[11px] text-indigo-600 font-bold">מתעדכן אוטומטית</span>
+          </div>
+          <svg viewBox="0 0 500 120" class="w-full h-24 sm:h-28 overflow-visible">
+            <defs>
+              <linearGradient id="curveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#4F46E5" stop-opacity="0.3" />
+                <stop offset="100%" stop-color="#4F46E5" stop-opacity="0.0" />
+              </linearGradient>
+            </defs>
+            <!-- Grid reference lines -->
+            <line x1="0" y1="30" x2="500" y2="30" stroke="#E2E8F0" stroke-dasharray="4,4" />
+            <line x1="0" y1="70" x2="500" y2="70" stroke="#E2E8F0" stroke-dasharray="4,4" />
+            <line x1="0" y1="110" x2="500" y2="110" stroke="#E2E8F0" />
+            <!-- Target line (dashed gold) -->
+            <path d="M 10 100 Q 150 70, 300 45 T 490 20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-dasharray="6,4" />
+            <!-- Actual line fill area -->
+            <path d="M 10 100 Q 120 80, 240 60 L 240 110 L 10 110 Z" fill="url(#curveGrad)" />
+            <!-- Actual line (indigo) -->
+            <path d="M 10 100 Q 120 80, 240 60" fill="none" stroke="#4F46E5" stroke-width="3.5" stroke-linecap="round" />
+            <!-- Current Point Node -->
+            <circle cx="240" cy="60" r="5" fill="#4F46E5" stroke="#FFFFFF" stroke-width="2" />
+            <circle cx="240" cy="60" r="9" fill="#4F46E5" fill-opacity="0.2" class="animate-ping" />
+            <!-- Labels -->
+            <text x="15" y="118" font-size="10" fill="#94A3B8" font-family="Heebo">שבוע 1</text>
+            <text x="120" y="118" font-size="10" fill="#94A3B8" font-family="Heebo">שבוע 2</text>
+            <text x="230" y="118" font-size="10" fill="#4F46E5" font-weight="bold" font-family="Heebo">היום</text>
+            <text x="360" y="118" font-size="10" fill="#94A3B8" font-family="Heebo">שבוע 4</text>
+            <text x="460" y="118" font-size="10" fill="#94A3B8" font-family="Heebo">יעד סיום</text>
+          </svg>
+        </div>
+
+        <!-- 3 Quick Live Metrics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+          <div class="p-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-between">
+            <span class="text-slate-500 font-bold">סך נקודות הישיבה בקופה:</span>
+            <strong id="graphTotalBankPts" class="font-black text-indigo-950 font-mono">160 נק׳</strong>
+          </div>
+          <div class="p-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-between">
+            <span class="text-slate-500 font-bold">אחוז התייצבות ממוצע:</span>
+            <strong id="graphAttendanceRate" class="font-black text-emerald-700 font-mono">100%</strong>
+          </div>
+          <div class="p-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-between">
+            <span class="text-slate-500 font-bold">ממוצע צבירה לבחור:</span>
+            <strong id="graphAvgScorePerStudent" class="font-black text-amber-700 font-mono">12 נק׳</strong>
+          </div>
         </div>
       </div>
 
+
+      
       <!-- Yeshiva Leaderboard (טבלת המובילים) -->
       <div class="soft-card p-4 sm:p-6">
         <div class="flex items-center justify-between mb-4">
@@ -431,7 +500,33 @@
         </div>
       </div>
 
-    </section>
+    
+<!-- Interactive Dynamic Campaign Calendar Card -->
+      <div class="soft-card p-4 sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 class="text-lg font-black text-slate-900">לוח שנה למבצע (כמה עבר וכמה נשאר)</h2>
+            <p id="campaignDurationSubtitle" class="text-xs text-slate-500">מבצע חורף • בחר יום לצפייה בפרטי הסדרים</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-500">מעבר שבוע:</span>
+            <button onclick="changeCalendarWeek(-1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700">‹</button>
+            <span id="currentWeekRangeLabel" class="text-xs font-bold text-indigo-950 font-mono">שבוע 1</span>
+            <button onclick="changeCalendarWeek(1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700">›</button>
+          </div>
+        </div>
+
+        <!-- Dynamic Days Grid -->
+        <div id="dynamicCalendarGrid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2 my-2">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Selected Day Details Bar -->
+        <div id="selectedDayDetailsBar" class="mt-3 p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+</section>
 
     <!-- ========================================================== -->
     <!-- SCREEN 3: FORGOTTEN REQUESTS (NO SHABBAT REPORT)           -->
@@ -480,413 +575,7 @@
     <!-- ========================================================== -->
     <!-- SCREEN 4: ROSH HAYESHIVA ADMIN PORTAL (PASSWORD PROTECTED) -->
     <!-- ========================================================== -->
-    <section id="screen-admin" class="screen-section hidden space-y-4">
-      
-      <!-- Rosh HaYeshiva Top Bar with Lockout -->
-      <div class="soft-card p-4 bg-amber-50/80 border-amber-200 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2.5">
-          <span class="text-2xl">⚙️</span>
-          <div>
-            <h2 class="text-base font-black text-slate-900">פורטל ניהול המבצע (ראש הישיבה)</h2>
-            <p class="text-xs text-slate-600">גישה מוגנת • שינוי סדרים בכל יום, אישור בקשות, בונוסים ויצוא</p>
-          </div>
-        </div>
-        <div class="flex items-center gap-2">
-          <button onclick="openChangePasswordModal()" class="px-3.5 py-1.5 rounded-xl bg-white border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100 transition flex items-center gap-1.5 shadow-sm" title="החלפת סיסמת ראש הישיבה">
-            <span>🔑</span>
-            <span>החלף סיסמה</span>
-          </button>
-          <button onclick="lockAdminPortal()" class="px-3.5 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 font-bold text-xs hover:bg-amber-100 transition flex items-center gap-1 shadow-sm">
-            <span>🔒</span>
-            <span>נעל ויציאה מניהול</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Admin Tabs Navigation -->
-      <div class="flex items-center gap-1 p-1 bg-slate-200/80 rounded-2xl text-xs font-extrabold overflow-x-auto no-scrollbar">
-        <button onclick="switchAdminSubView('schedule')" id="asub-schedule" class="asub-btn flex-1 py-2 px-3 rounded-xl transition bg-white text-slate-900 shadow-sm whitespace-nowrap">
-          ⏰ התאמת סדרים ושעות בכל יום
-        </button>
-        <button onclick="switchAdminSubView('campaign')" id="asub-campaign" class="asub-btn flex-1 py-2 px-3 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">
-          🎁 ניהול בונוסים ומבצע
-        </button>
-        <button onclick="switchAdminSubView('requests')" id="asub-requests" class="asub-btn flex-1 py-2 px-3 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">
-          📋 בקשות שכחתי (<span id="adminPendingCountBadge">0</span>)
-        </button>
-        <button onclick="switchAdminSubView('students')" id="asub-students" class="asub-btn flex-1 py-2 px-3 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">
-          👥 בחורים ובונוסים
-        </button>
-        <button onclick="switchAdminSubView('security')" id="asub-security" class="asub-btn flex-1 py-2 px-3 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">
-          🔐 אבטחה וסיסמה
-        </button>
-      </div>
-
-      <!-- SUBVIEW 1: DAILY SCHEDULE & TIME EDITOR -->
-      <div id="adminView-schedule" class="admin-subview space-y-4">
-        <div class="soft-card p-4 sm:p-6">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div>
-              <h3 class="text-base font-black text-slate-900">עריכת שעות וסדרים לפי יום נבחר</h3>
-              <p class="text-xs text-slate-500">אפשרות להתאים את שעות הסדרים ושווי הנקודות לכל יום בנפרד (ראש חודש, משמר, ימי צום וכו')</p>
-            </div>
-            <!-- Day Picker Selector -->
-            <div class="flex items-center gap-2">
-              <label class="text-xs font-bold text-slate-600">בחר יום:</label>
-              <select id="adminScheduleDayPicker" onchange="renderAdminDayScheduleEditor()" class="text-xs font-black px-3 py-2 rounded-xl border border-slate-300 bg-white text-indigo-950">
-                <!-- Populated by JS -->
-              </select>
-            </div>
-          </div>
-
-          <!-- Slots of Selected Day List -->
-          <div id="adminDaySlotsContainer" class="space-y-3">
-            <!-- Populated by JS -->
-          </div>
-
-          <!-- Add Seder Slot & Template Actions Bar -->
-          <div class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-            <div class="flex flex-wrap items-center gap-2">
-              <button onclick="openAddSlotModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                <span>+</span>
-                <span>הוסף סדר / אירוע ליום זה</span>
-              </button>
-              <button onclick="saveDailyScheduleToSupabase()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                <span>💾</span>
-                <span>שמור שינויים ב-Supabase</span>
-              </button>
-            </div>
-
-            <!-- Quick Template Actions -->
-            <div class="flex flex-wrap items-center gap-1.5 text-xs">
-              <button onclick="applyCurrentDayToWeekdays()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] transition flex items-center gap-1 border border-slate-200" title="העתק את רשימת הסדרים של יום זה לכל ימי החול (א׳ - ה׳)">
-                <span>🔄</span>
-                <span>החל על ימי החול</span>
-              </button>
-              <button onclick="applyCurrentDayToShabbats()" class="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-[11px] transition flex items-center gap-1 border border-amber-200" title="העתק את רשימת הסדרים של יום זה לכל השבתות">
-                <span>🕯️</span>
-                <span>החל על שבתות</span>
-              </button>
-              <button onclick="clearCurrentDaySlots()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] transition flex items-center gap-1 border border-rose-200" title="אפס את יום זה ללא סדרים (כמו יום שישי ריק)">
-                <span>🗑️</span>
-                <span>אפס כיום ריק</span>
-              </button>
-              <button onclick="resetDefaultSchedules()" class="px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold text-[11px] transition flex items-center gap-1 border border-slate-200" title="שחזר ברירות מחדל: שישי ריק, שבת 4 סדרים מיוחדים, חול 3 סדרים">
-                <span>⚡</span>
-                <span>שחזר ברירות מחדל</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUBVIEW 2: BONUS RULES & CAMPAIGN CONFIGURATION -->
-      <div id="adminView-campaign" class="admin-subview hidden space-y-4">
-        
-        <!-- Card 1: Full Seder Collective Goal -->
-        <div class="soft-card p-5 sm:p-6">
-          <div class="flex items-center gap-2.5 mb-2 pb-2 border-b border-slate-100">
-            <span class="text-xl">🔥</span>
-            <div>
-              <h3 class="text-base font-black text-slate-900">הגדרת בונוס "סדר מלא" ישיבתי</h3>
-              <p class="text-xs text-slate-500">קביעת סף הנוכחות הנדרש וגובה הבונוס המחולק לכלל הבחורים</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-3">
-            <div class="p-3.5 rounded-2xl border border-slate-200 bg-white">
-              <div class="flex items-center justify-between mb-1">
-                <label class="text-xs font-bold text-slate-700">כמה בחורים נדרשים ל"סדר מלא":</label>
-                <span id="configLiveStudentsCountBadge" class="text-[10px] font-extrabold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">1 בחורים רשומים</span>
-              </div>
-              <input type="number" id="campaignThresholdInput" value="1" min="1" class="w-full text-sm font-black p-2 rounded-xl border border-slate-300 font-mono mt-1" />
-              <button type="button" onclick="autoAdjustGroupThreshold()" class="mt-2 w-full py-1.5 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 text-xs font-bold transition flex items-center justify-center gap-1.5">
-                <span>⚡</span>
-                <span>התאם סף למספר הבחורים הרשומים כעת</span>
-              </button>
-            </div>
-
-            <div class="p-3.5 rounded-2xl border border-slate-200 bg-white">
-              <label class="block text-xs font-bold text-slate-700 mb-1">כמה נקודות בונוס יקבל כל בחור:</label>
-              <input type="number" id="campaignFullBonusInput" value="4" min="1" class="w-full text-sm font-black p-2 rounded-xl border border-slate-300 font-mono mt-1" />
-              <p class="text-[11px] text-slate-400 mt-2">כל בחור מקבל בונוס זה אם כמות הנוכחים בסדר עומדת ביעד שהוגדר.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 2: Persistence (X of Y) Bonus -->
-        <div class="soft-card p-5 sm:p-6">
-          <div class="flex items-center gap-2.5 mb-2 pb-2 border-b border-slate-100">
-            <span class="text-xl">🏆</span>
-            <div>
-              <h3 class="text-base font-black text-slate-900">הגדרת בונוס התמדה (סדרים אחרונים - X מתוך Y)</h3>
-              <p class="text-xs text-slate-500">מתן בונוס על עמידה בחלק ניכר מהסדרים האחרונים (גם ללא רצף מושלם)</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-3">
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-              <label class="text-[11px] font-bold text-slate-600">כמה סדרים נדרשים (X):</label>
-              <input type="number" id="campaignXyNeedInput" value="5" min="1" class="w-full text-sm font-black p-1.5 rounded-lg border border-slate-200 mt-1 font-mono" />
-            </div>
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-              <label class="text-[11px] font-bold text-slate-600">מתוך כמה סדרים אחרונים (Y):</label>
-              <input type="number" id="campaignXyWindowInput" value="10" min="1" class="w-full text-sm font-black p-1.5 rounded-lg border border-slate-200 mt-1 font-mono" />
-            </div>
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-              <label class="text-[11px] font-bold text-slate-600">שווי הבונוס בנקודות:</label>
-              <input type="number" id="campaignXyBonusInput" value="3" min="1" class="w-full text-sm font-black p-1.5 rounded-lg border border-slate-200 mt-1 font-mono text-amber-700" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 3: 3 Campaign Targets & Live Points Calculation -->
-        <div class="soft-card p-5 sm:p-6">
-          <div class="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-100">
-            <div class="flex items-center gap-2.5">
-              <span class="text-xl">🎯</span>
-              <div>
-                <h3 class="text-base font-black text-slate-900">3 יעדי המבצע וחישוב נקודות כולל</h3>
-                <p class="text-xs text-slate-500">הגדרת 3 דרגות יעד (מינימום, אמצע, מקסימום) וחישוב סך הנקודות הניתנות לצבירה</p>
-              </div>
-            </div>
-            <!-- Calculated total achievable points badge -->
-            <div class="p-2 px-3 rounded-2xl bg-amber-50 border border-amber-200 text-right">
-              <span class="text-[10px] font-bold text-amber-800 uppercase block">סה״כ נקודות לצבירה במבצע:</span>
-              <span id="adminTotalAchievablePointsBadge" class="text-sm font-black text-amber-950 font-mono">160 נק׳ בקופה</span>
-            </div>
-          </div>
-
-          <!-- Dates Range & Days Stats -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-3">
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-              <label class="text-[11px] font-bold text-slate-600 block mb-1">תאריך פתיחת המבצע:</label>
-              <input type="date" id="campaignStartDateInput" value="2026-10-20" onchange="updateCampaignTotalPointsLive()" class="w-full text-xs font-mono p-2 rounded-lg border border-slate-200 bg-white" />
-            </div>
-            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-              <label class="text-[11px] font-bold text-slate-600 block mb-1">תאריך סיום המבצע:</label>
-              <input type="date" id="campaignEndDateInput" value="2026-11-30" onchange="updateCampaignTotalPointsLive()" class="w-full text-xs font-mono p-2 rounded-lg border border-slate-200 bg-white" />
-            </div>
-          </div>
-
-          <!-- 3-Tier Targets Configuration -->
-          <div class="mt-4 pt-3 border-t border-slate-100">
-            <h4 class="text-xs font-black text-slate-800 mb-2.5 flex items-center gap-1.5">
-              <span>🏆</span>
-              <span>הגדרת שמות ושווי הנקודות ל-3 דרגות היעד</span>
-            </h4>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <!-- Tier 1: Minimum (Bronze) -->
-              <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200 text-right">
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-[11px] font-black text-amber-900">🥉 יעד 1: מינימום</span>
-                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-200/60 text-amber-950">דרגת כניסה</span>
-                </div>
-                <div class="space-y-2">
-                  <div>
-                    <label class="text-[10px] font-bold text-slate-600 block">שם היעד:</label>
-                    <input type="text" id="targetMinNameInput" value="יעד כניסה להגרלה" class="w-full text-xs font-bold p-1.5 rounded-lg border border-slate-200 bg-white" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-bold text-slate-600 block">סף נקודות נדרש:</label>
-                    <input type="number" id="targetMinPointsInput" value="70" min="1" class="w-full text-xs font-black p-1.5 rounded-lg border border-slate-200 bg-white font-mono text-amber-950" />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Tier 2: Mid (Silver) -->
-              <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-right">
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-[11px] font-black text-slate-800">🥈 יעד 2: אמצע</span>
-                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-800">דרגת כסף</span>
-                </div>
-                <div class="space-y-2">
-                  <div>
-                    <label class="text-[10px] font-bold text-slate-600 block">שם היעד:</label>
-                    <input type="text" id="targetMidNameInput" value="יעד פרס כספי" class="w-full text-xs font-bold p-1.5 rounded-lg border border-slate-200 bg-white" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-bold text-slate-600 block">סף נקודות נדרש:</label>
-                    <input type="number" id="targetMidPointsInput" value="100" min="1" class="w-full text-xs font-black p-1.5 rounded-lg border border-slate-200 bg-white font-mono text-slate-900" />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Tier 3: Maximum (Gold) -->
-              <div class="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200 text-right">
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-[11px] font-black text-indigo-950">🥇 יעד 3: מקסימום</span>
-                  <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-200/60 text-indigo-950">דרגת זהב</span>
-                </div>
-                <div class="space-y-2">
-                  <div>
-                    <label class="text-[10px] font-bold text-slate-600 block">שם היעד:</label>
-                    <input type="text" id="targetMaxNameInput" value="יעד נסיעה ופרס ענק" class="w-full text-xs font-bold p-1.5 rounded-lg border border-slate-200 bg-white" />
-                  </div>
-                  <div>
-                    <label class="text-[10px] font-bold text-slate-600 block">סף נקודות נדרש:</label>
-                    <input type="number" id="targetMaxPointsInput" value="130" min="1" class="w-full text-xs font-black p-1.5 rounded-lg border border-slate-200 bg-white font-mono text-indigo-950" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Hidden compatibility input for min target -->
-          <input type="hidden" id="campaignMinTargetInput" value="70" />
-
-          <button onclick="saveCampaignConfigToSupabase()" class="mt-4 w-full sm:w-auto px-6 py-3 rounded-xl bg-[#0A1138] hover:bg-black text-white font-extrabold text-xs transition shadow-md flex items-center justify-center gap-2">
-            <span>💾</span>
-            <span>שמור את כל הגדרות 3 היעדים והמבצע</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- SUBVIEW 3: PENDING FORGOTTEN REQUESTS -->
-      <div id="adminView-requests" class="admin-subview hidden space-y-4">
-        <div class="soft-card p-5 sm:p-6">
-          <h3 class="text-base font-black text-slate-900 mb-1">בקשות "שכחתי לסמן" הממתינות לאישור ראש הישיבה</h3>
-          <p class="text-xs text-slate-500 mb-4">אישור או דחייה מיידית בלחיצת כפתור</p>
-
-          <div id="adminPendingRequestsList" class="space-y-2.5">
-            <!-- Populated by JS -->
-          </div>
-        </div>
-      </div>
-
-      <!-- SUBVIEW 4: STUDENTS, BONUS LOGS & CSV EXPORT -->
-      <div id="adminView-students" class="admin-subview hidden space-y-4">
-        <div class="soft-card p-5 sm:p-6">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div>
-              <div class="flex items-center gap-2">
-                <h3 class="text-base font-black text-slate-900">רשימת בחורי הישיבה והענקת בונוס</h3>
-                <span id="adminTotalStudentsBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-100">בחור 1 בישיבה</span>
-              </div>
-              <p class="text-xs text-slate-500 mt-0.5">הוספה והורדה של בחורים, והענקת בונוס לפי שיקול דעת ראש הישיבה</p>
-            </div>
-            <div class="flex items-center flex-wrap gap-2">
-              <button onclick="openGrantBonusModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
-                <span>⭐</span>
-                <span>מתן בונוס מיוחד</span>
-              </button>
-              <button onclick="openAddStudentModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
-                <span>➕</span>
-                <span>הוסף בחור חדש</span>
-              </button>
-              <button onclick="resetToSingleDemoStudent()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1 border border-slate-200" title="איפוס מהיר לבחור הדגמה יחיד">
-                <span>🔄</span>
-                <span>איפוס לדוגמה</span>
-              </button>
-              <button onclick="exportToCsv()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition flex items-center gap-1 border border-slate-200">
-                <span>📊</span>
-                <span>ייצא CSV</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Students Table with Quick Bonus Button & Delete Button -->
-          <div class="overflow-x-auto no-scrollbar rounded-2xl border border-slate-200">
-            <table class="w-full text-right text-xs">
-              <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
-                <tr>
-                  <th class="py-2.5 px-3 font-bold">שם הבחור</th>
-                  <th class="py-2.5 px-3 font-bold text-center">טלפון וסיסמה</th>
-                  <th class="py-2.5 px-3 font-bold text-center">ניקוד נוכחי</th>
-                  <th class="py-2.5 px-3 font-bold text-center">טווח נקודות צפוי</th>
-                  <th class="py-2.5 px-3 font-bold text-center">קישור אישי ויומן</th>
-                  <th class="py-2.5 px-3 font-bold text-left">פעולות ראש הישיבה</th>
-                </tr>
-              </thead>
-              <tbody id="adminStudentsTableBody" class="divide-y divide-slate-100">
-                <!-- Populated by JS -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Bonus Audit Log Table (יומן בונוסים) -->
-          <div class="mt-8 pt-6 border-t border-slate-200">
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
-              <div class="flex items-center gap-2">
-                <span class="text-xl">📜</span>
-                <div>
-                  <div class="flex items-center gap-2">
-                    <h4 class="text-sm font-black text-slate-900">יומן הבונוסים המיוחדים שהוענקו</h4>
-                    <span id="bonusLogsCountBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">0 בונוסים</span>
-                  </div>
-                  <p class="text-xs text-slate-500">תיעוד מלא של כל בונוס, שווי הנקודות והסיבה, עם אפשרות לביטול ומחיקה</p>
-                </div>
-              </div>
-              <button onclick="openGrantBonusModal()" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition flex items-center gap-1 shadow-sm">
-                <span>⭐</span>
-                <span>הענק בונוס נוסף</span>
-              </button>
-            </div>
-
-            <div class="overflow-x-auto no-scrollbar rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <table class="w-full text-right text-xs">
-                <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
-                  <tr>
-                    <th class="py-2.5 px-3 font-bold">תאריך ושעה</th>
-                    <th class="py-2.5 px-3 font-bold">עבור מי</th>
-                    <th class="py-2.5 px-3 font-bold text-center">שווי בונוס</th>
-                    <th class="py-2.5 px-3 font-bold">סיבת ראש הישיבה</th>
-                    <th class="py-2.5 px-3 font-bold text-left">ביטול וקיזוז</th>
-                  </tr>
-                </thead>
-                <tbody id="adminBonusLogsTableBody" class="divide-y divide-slate-100">
-                  <!-- Populated by JS -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SUBVIEW 5: SECURITY & PASSWORD SETTINGS -->
-      <div id="adminView-security" class="admin-subview hidden space-y-4">
-        <div class="soft-card p-5 sm:p-6 max-w-lg mx-auto">
-          <div class="flex items-center gap-2.5 mb-4 pb-3 border-b border-slate-100">
-            <div class="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-900 flex items-center justify-center text-xl shrink-0">
-              🔐
-            </div>
-            <div>
-              <h3 class="text-base font-black text-slate-900">אבטחה ושינוי סיסמת ראש הישיבה</h3>
-              <p class="text-xs text-slate-500">קבע סיסמה אישית וחדשה לכניסה בלעדית לפורטל הניהול</p>
-            </div>
-          </div>
-
-          <div class="space-y-4 text-right">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה נוכחית:</label>
-              <input type="password" id="secCurrentPasswordInput" placeholder="הזן סיסמה נוכחית..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה חדשה:</label>
-              <input type="password" id="secNewPasswordInput" placeholder="לפחות 4 תווים..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">אימות סיסמה חדשה:</label>
-              <input type="password" id="secConfirmPasswordInput" placeholder="הזן שוב את הסיסמה החדשה..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" onkeyup="if(event.key==='Enter') saveNewAdminPasswordFromTab()" />
-            </div>
-            <p id="secPasswordError" class="text-xs text-rose-600 font-bold hidden text-center"></p>
-            <p id="secPasswordSuccess" class="text-xs text-emerald-700 font-bold hidden text-center bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">הסיסמה עודכנה ונשמרה בהצלחה! ✓</p>
-
-            <div class="pt-2 flex flex-col sm:flex-row items-center gap-2">
-              <button onclick="saveNewAdminPasswordFromTab()" class="w-full sm:flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition shadow-md flex items-center justify-center gap-1.5">
-                <span>💾</span>
-                <span>עדכן סיסמה חדשה</span>
-              </button>
-              <button onclick="resetAdminPasswordToDefault()" class="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition" title="איפוס לסיסמת ברירת מחדל">
-                איפוס לברירת מחדל
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </section>
+    <!-- Admin portal is standalone at /admin.html -->
 
   </main>
 
@@ -914,11 +603,7 @@
     </button>
 
     <!-- Tab 4: Rosh HaYeshiva (Revealed dynamically when unlocked) -->
-    <button onclick="switchTab('admin')" id="mtab-admin" class="mtab-btn hidden flex-1 py-1 px-2 flex flex-col items-center gap-0.5 rounded-xl text-amber-800 font-extrabold bg-amber-50">
-      <span class="text-lg">⚙️</span>
-      <span class="text-[10px] leading-none">ראש הישיבה</span>
-    </button>
-  </nav>
+    </nav>
 
   <!-- ========================================================== -->
   <!-- ADD STUDENT MODAL (ROSH HAYESHIVA)                         -->
@@ -1180,56 +865,68 @@
   <!-- ========================================================== -->
   <!-- STUDENT LOGIN / IDENTIFICATION MODAL WITH PROMO VIDEO      -->
   <!-- ========================================================== -->
-  <div id="studentLoginModal" class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <!-- ========================================================== -->
+  <!-- SECURE BLIND STUDENT LOGIN MODAL (PHONE + PASSWORD + DEMO)   -->
+  <!-- ========================================================== -->
+  <div id="studentLoginModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-center relative overflow-hidden">
       
-      <!-- Video at Login (בפתיחה ובהתחברות בלבד) -->
+      <!-- Video at Login (בפתיחה ובהתחברות) -->
       <div class="relative rounded-2xl overflow-hidden mb-4 bg-slate-900 border border-slate-200 shadow-inner">
-        <video id="loginVideoEl" src="promo-video.mp4" controls autoplay muted loop playsinline class="w-full h-44 sm:h-52 object-cover"></video>
+        <video id="loginVideoEl" src="promo-video.mp4" controls autoplay muted loop playsinline class="w-full h-40 sm:h-48 object-cover"></video>
         <div class="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-slate-900/80 backdrop-blur text-[10px] text-amber-300 font-extrabold">
           🎬 סרטון השקת המבצע
         </div>
       </div>
 
-      <div class="flex items-center justify-center gap-2 mb-2">
+      <div class="flex items-center justify-center gap-2 mb-1">
         <div class="w-8 h-8 rounded-xl bg-[#0A1138] p-0.5 overflow-hidden shadow">
           <img src="logo-yeshiva.jpeg" alt="לוגו" class="w-full h-full object-cover rounded-lg" />
         </div>
         <h3 class="text-lg font-black text-slate-900">כניסה למערכת בקשו VIBE</h3>
       </div>
-      <p class="text-xs text-slate-500 mb-4">בחר את שמך מרשימת בחורי הישיבה לכניסה מהירה</p>
+      <p class="text-xs text-slate-500 mb-4">הזן מספר טלפון וסיסמה אישית לכניסה לחשבונך</p>
 
+      <!-- Blind Login Form (No names dropdown for security) -->
       <div class="space-y-3 text-right">
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">מי אתה?</label>
-          <select id="studentLoginSelect" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 bg-white text-indigo-950 focus:ring-2 focus:ring-indigo-600 focus:outline-none" onchange="onStudentLoginSelectChange()">
-            <!-- Populated by JS -->
-          </select>
+          <label class="block text-xs font-bold text-slate-700 mb-1">מספר טלפון:</label>
+          <input type="tel" id="studentLoginPhoneInput" placeholder="לדוגמה: 0501234567" class="w-full text-sm font-bold p-3 rounded-2xl border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-indigo-600 focus:outline-none font-mono" dir="ltr" onkeyup="if(event.key==='Enter') confirmPhonePasswordLogin()" />
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה אישית:</label>
           <div class="relative">
-            <input type="password" id="studentLoginPasswordInput" placeholder="הזן סיסמה אישית (ברירת מחדל: 1234)" class="w-full text-xs font-bold p-3 pl-10 rounded-2xl border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-indigo-600 focus:outline-none font-mono" onkeyup="if(event.key==='Enter') confirmStudentLogin()" />
+            <input type="password" id="studentLoginPasswordInput" placeholder="הזן סיסמה אישית (ברירת מחדל: 1234)" class="w-full text-sm font-bold p-3 pl-10 rounded-2xl border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-indigo-600 focus:outline-none font-mono" onkeyup="if(event.key==='Enter') confirmPhonePasswordLogin()" />
             <button type="button" onclick="togglePasswordVisibility('studentLoginPasswordInput')" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm">
               👁️
             </button>
           </div>
-          <p id="studentLoginErrorMsg" class="text-xs text-rose-600 font-bold hidden text-right mt-1"></p>
+          <p id="studentLoginErrorMsg" class="text-xs text-rose-600 font-bold hidden text-right mt-1.5"></p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2 mt-5">
-        <button onclick="confirmStudentLogin()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs transition shadow-md">
-          היכנס למערכת
+      <div class="flex items-center gap-2 mt-4">
+        <button onclick="confirmPhonePasswordLogin()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs transition shadow-md">
+          היכנס לחשבון
         </button>
         <button onclick="closeStudentLoginModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
           סגור
         </button>
       </div>
+
+      <!-- Demo Student Quick Access Button (לכל מי שרוצה להתנסות) -->
+      <div class="pt-3.5 border-t border-slate-100 mt-4 text-center">
+        <button type="button" onclick="loginAsDemoStudent()" class="w-full py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-950 font-black text-xs border border-amber-300 transition flex items-center justify-center gap-2 shadow-sm">
+          <span>👁️</span>
+          <span>כניסה מהירה כבחור לדוגמה (להתרשמות והדגמה)</span>
+        </button>
+        <p class="text-[10px] text-slate-400 mt-1">מציג נתוני דמו, טווח נקודות והיעדים ללא צורך ברישום מוקדם</p>
+      </div>
+
     </div>
   </div>
 
-  <!-- ========================================================== -->
+<!-- ========================================================== -->
   <!-- ADD/EDIT SEDER SLOT MODAL (FOR ADMIN)                      -->
   <!-- ========================================================== -->
   <div id="addSlotModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
@@ -2224,6 +1921,7 @@ events.join('\n') + '\n' +
 
       renderStudentScreen();
       renderLeaderboard();
+      renderProgressGraph();
       renderAdminRequestsAndStudents();
     }
 
@@ -2233,23 +1931,35 @@ events.join('\n') + '\n' +
 
       const btnArea = document.getElementById('checkInActionArea');
       if (btnArea) {
+        const todaySlots = getSlotsForDate(getTodayDateStr());
+        const activeSlot = todaySlots[0] || { openTime: '09:00', lockTime: '23:59', title: 'סדר היום' };
+        const timeStatus = getSederTimeStatus(activeSlot);
+        const isDemo = state.currentStudent && state.currentStudent.id === 'demo_student_1';
+
         if (isPresent) {
           btnArea.innerHTML = `
-            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
               <div class="flex items-center gap-2.5">
                 <span class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-base">✓</span>
-                <span class="text-emerald-950 font-black text-sm sm:text-base">נוכחותך נרשמה בהצלחה לסדר זה!</span>
+                <span class="text-emerald-950 font-black text-sm sm:text-base">נוכחותך אומתה בסריקת ברקוד בבית המדרש!</span>
               </div>
               <button onclick="handleStudentCheckIn()" class="px-3 py-1.5 rounded-xl bg-white border border-emerald-300 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition">
                 בטל סימון
               </button>
             </div>
           `;
+        } else if (!timeStatus.active && !isDemo) {
+          btnArea.innerHTML = `
+            <div class="w-full py-4 px-6 rounded-2xl bg-slate-100 border border-slate-300 text-slate-500 font-bold text-center flex items-center justify-center gap-2">
+              <span class="text-lg">🔒</span>
+              <span>${timeStatus.msg}</span>
+            </div>
+          `;
         } else {
           btnArea.innerHTML = `
-            <button onclick="handleStudentCheckIn()" id="mainCheckInBtn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-base sm:text-lg shadow-lg shadow-emerald-600/20 active:scale-[0.98] transition flex items-center justify-center gap-3">
-              <span class="text-2xl">✓</span>
-              <span>סמן נוכחות בסדר זה</span>
+            <button onclick="openBarcodeScannerModal()" id="mainCheckInBtn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-900 hover:from-indigo-700 hover:to-indigo-950 text-white font-black text-base sm:text-lg shadow-xl shadow-indigo-950/20 active:scale-[0.98] transition flex items-center justify-center gap-3 animate-pulse">
+              <span class="text-2xl">📸</span>
+              <span>סרוק ברקוד בבית המדרש לסימון נוכחות</span>
             </button>
           `;
         }
@@ -3597,7 +3307,299 @@ events.join('\n') + '\n' +
     // ====================================================
     // 14. INITIALIZATION
     // ====================================================
-    function renderCurrentScreen() {
+    
+    // ====================================================
+    // SECURE PHONE & PASSWORD AUTHENTICATION & DEMO LOGIN
+    // ====================================================
+    function confirmPhonePasswordLogin() {
+      const phoneInput = document.getElementById('studentLoginPhoneInput');
+      const passInput = document.getElementById('studentLoginPasswordInput');
+      const errEl = document.getElementById('studentLoginErrorMsg');
+
+      const rawPhone = (phoneInput?.value || '').trim();
+      const enteredPass = (passInput?.value || '').trim();
+      const cleanPhone = rawPhone.replace(/\D/g, '');
+
+      if (!cleanPhone) {
+        if (errEl) {
+          errEl.textContent = 'אנא הזן מספר טלפון';
+          errEl.classList.remove('hidden');
+        }
+        phoneInput?.focus();
+        return;
+      }
+
+      // Check if student exists in state.students by matching digits
+      const student = state.students.find(s => {
+        const sDigits = (s.phone || '').replace(/\D/g, '');
+        return sDigits === cleanPhone || s.phone === rawPhone;
+      });
+
+      if (!student) {
+        if (errEl) {
+          errEl.textContent = 'מספר טלפון זה אינו רשום בישיבה. פנה לראש הישיבה';
+          errEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      const expectedPass = (student.password || '1234').trim();
+      if (enteredPass !== expectedPass) {
+        if (errEl) {
+          errEl.textContent = 'סיסמה אישית שגויה. נסה שוב (ברירת מחדל: 1234)';
+          errEl.classList.remove('hidden');
+        }
+        passInput?.focus();
+        return;
+      }
+
+      // Login success
+      setStudentActiveSession(student);
+      showToast('שלום ' + student.name + ', התחברת בהצלחה!', '👋');
+      closeStudentLoginModal();
+    }
+
+    function loginAsDemoStudent() {
+      let demo = state.students.find(s => s.id === 'demo_student_1');
+      if (!demo) {
+        demo = {
+          id: 'demo_student_1',
+          name: 'ישראל ישראלי (בחור לדוגמה)',
+          phone: '050-1234567',
+          password: '1234',
+          score: 12,
+          presentToday: false
+        };
+        state.students.unshift(demo);
+        saveLocalStudents();
+      }
+
+      setStudentActiveSession(demo);
+      showToast('נכנסת כבחור לדוגמה להתרשמות מלאה מהמערכת!', '👁️');
+      closeStudentLoginModal();
+    }
+
+    function setStudentActiveSession(student) {
+      state.currentStudent = {
+        id: student.id,
+        name: student.name,
+        phone: student.phone,
+        password: student.password || '1234',
+        presentCurrent: student.presentToday || false,
+        baseScore: Number(student.score) || 0,
+        last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      };
+      localStorage.setItem('bakshu_logged_student_id', student.id);
+
+      const nameGreeting = document.getElementById('greetingStudentName');
+      if (nameGreeting) nameGreeting.textContent = student.name;
+
+      renderStudentScreen();
+      renderLeaderboard();
+      renderProgressGraph();
+    }
+
+    // ====================================================
+    // CAMPAIGN PROGRESS GRAPH & VELOCITY CALCULATIONS
+    // ====================================================
+    function renderProgressGraph() {
+      const targets = state.config.targets || {
+        min: { points: 70, name: 'יעד כניסה להגרלה' },
+        mid: { points: 100, name: 'יעד פרס כספי' },
+        max: { points: 130, name: 'יעד נסיעה ופרס ענק' }
+      };
+
+      const totalBank = calculateCampaignTotalAchievablePoints();
+      const currentScore = state.currentStudent ? (Number(state.currentStudent.baseScore) || 0) : 0;
+      
+      // Update graph targets
+      const t1N = document.getElementById('graphTier1Name');
+      const t1P = document.getElementById('graphTier1Pts');
+      const t1S = document.getElementById('graphTier1Status');
+
+      const t2N = document.getElementById('graphTier2Name');
+      const t2P = document.getElementById('graphTier2Pts');
+      const t2S = document.getElementById('graphTier2Status');
+
+      const t3N = document.getElementById('graphTier3Name');
+      const t3P = document.getElementById('graphTier3Pts');
+      const t3S = document.getElementById('graphTier3Status');
+
+      if (t1N) t1N.textContent = '🥉 ' + targets.min.name;
+      if (t1P) t1P.textContent = targets.min.points + ' נק׳';
+      if (t1S) t1S.textContent = currentScore >= targets.min.points ? '✓ היעד הושג!' : 'חסרות ' + (targets.min.points - currentScore) + ' נק׳';
+
+      if (t2N) t2N.textContent = '🥈 ' + targets.mid.name;
+      if (t2P) t2P.textContent = targets.mid.points + ' נק׳';
+      if (t2S) t2S.textContent = currentScore >= targets.mid.points ? '✓ היעד הושג!' : 'חסרות ' + (targets.mid.points - currentScore) + ' נק׳';
+
+      if (t3N) t3N.textContent = '🥇 ' + targets.max.name;
+      if (t3P) t3P.textContent = targets.max.points + ' נק׳';
+      if (t3S) t3S.textContent = currentScore >= targets.max.points ? '✓ היעד הושג!' : 'חסרות ' + (targets.max.points - currentScore) + ' נק׳';
+
+      // Bar percentage towards Gold
+      const overallBar = document.getElementById('campaignOverallProgressBar');
+      const pctText = document.getElementById('campaignProgressPctText');
+      const pct = Math.min(100, Math.max(5, Math.round((currentScore / targets.max.points) * 100)));
+      if (overallBar) overallBar.style.width = pct + '%';
+      if (pctText) pctText.textContent = pct + '%';
+
+      const bankEl = document.getElementById('graphTotalBankPts');
+      if (bankEl) bankEl.textContent = totalBank + ' נק׳';
+
+      const avgEl = document.getElementById('graphAvgScorePerStudent');
+      if (avgEl) {
+        const totalAll = state.students.reduce((acc, st) => acc + (Number(st.score) || 0), 0);
+        const avg = state.students.length > 0 ? (totalAll / state.students.length).toFixed(1) : '0';
+        avgEl.textContent = avg + ' נק׳';
+      }
+
+      const attRateEl = document.getElementById('graphAttendanceRate');
+      if (attRateEl) {
+        const presentCount = state.students.filter(st => st.presentToday).length;
+        const rate = state.students.length > 0 ? Math.round((presentCount / state.students.length) * 100) : 100;
+        attRateEl.textContent = rate + '%';
+      }
+    }
+
+    // ====================================================
+    // HARD TIME ENFORCEMENT & BARCODE SCANNER
+    // ====================================================
+    let activeCameraStream = null;
+
+    function getSederTimeStatus(slot) {
+      if (!slot) return { active: true, msg: 'סדר פעיל' };
+      const now = new Date();
+      const curMins = now.getHours() * 60 + now.getMinutes();
+
+      const [openH, openM] = (slot.openTime || '09:00').split(':').map(Number);
+      const [lockH, lockM] = (slot.lockTime || '10:15').split(':').map(Number);
+
+      const openMins = openH * 60 + openM;
+      const lockMins = lockH * 60 + lockM;
+
+      if (curMins < openMins) {
+        const diff = openMins - curMins;
+        return {
+          active: false,
+          status: 'before',
+          msg: '🔒 הסדר ייפתח בשעה ' + slot.openTime + ' (בעוד ' + diff + ' דקות)'
+        };
+      }
+      if (curMins > lockMins) {
+        return {
+          active: false,
+          status: 'after',
+          msg: '⏰ הסדר ננעל בשעה ' + slot.lockTime + ' (זמן הסדר עבר)'
+        };
+      }
+      return { active: true, status: 'active', msg: 'סדר פעיל כעת לדיווח' };
+    }
+
+    function openBarcodeScannerModal() {
+      const modal = document.getElementById('barcodeScannerModal');
+      const todayStr = getTodayDateStr();
+      const slots = getSlotsForDate(todayStr);
+      const activeSlot = slots[0] || { title: 'סדר נוכחי' };
+
+      const titleEl = document.getElementById('scannerSederTitle');
+      if (titleEl) titleEl.textContent = 'סריקת ברקוד עבור: ' + activeSlot.title;
+
+      modal?.classList.remove('hidden');
+
+      const video = document.getElementById('scannerVideoFeed');
+      const statusText = document.getElementById('cameraStatusText');
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+          .then(stream => {
+            activeCameraStream = stream;
+            if (video) {
+              video.srcObject = stream;
+              video.play().catch(e => console.log('Video play error:', e));
+            }
+            if (statusText) statusText.textContent = 'המצלמה פועלת • כוון את העדשה לברקוד';
+          })
+          .catch(err => {
+            console.log('Camera access notice:', err);
+            if (statusText) statusText.textContent = 'מצלמה לא זמינה בדפדפן זה • הזן קוד ידני למטה';
+          });
+      } else {
+        if (statusText) statusText.textContent = 'דפדפן זה אינו תומך בהזרמת מצלמה • הזן קוד ידני למטה';
+      }
+    }
+
+    function closeBarcodeScannerModal() {
+      if (activeCameraStream) {
+        activeCameraStream.getTracks().forEach(t => t.stop());
+        activeCameraStream = null;
+      }
+      document.getElementById('barcodeScannerModal')?.classList.add('hidden');
+    }
+
+    function simulateBarcodeSuccess() {
+      handleCheckInConfirmation('סריקת ברקוד בבית המדרש אומתה בהצלחה!');
+    }
+
+    function handleManualCodeSubmit() {
+      const codeInput = document.getElementById('manualBarcodeInput');
+      const code = (codeInput?.value || '').trim();
+      if (!code) {
+        alert('אנא הזן קוד ברקוד');
+        return;
+      }
+      handleCheckInConfirmation('קוד בית המדרש (' + code + ') אומת בהצלחה!');
+      if (codeInput) codeInput.value = '';
+    }
+
+    function handleCheckInConfirmation(successMessage) {
+      closeBarcodeScannerModal();
+      
+      state.currentStudent.presentCurrent = true;
+      state.currentStudent.baseScore = (Number(state.currentStudent.baseScore) || 0) + 1;
+      state.currentStudent.last10.shift();
+      state.currentStudent.last10.push(1);
+
+      const stIdx = state.students.findIndex(s => s.id === state.currentStudent.id);
+      if (stIdx !== -1) {
+        state.students[stIdx].score = state.currentStudent.baseScore;
+        state.students[stIdx].presentToday = true;
+        state.students[stIdx].persistenceCount = state.currentStudent.last10.filter(x => x === 1).length;
+        saveLocalStudents();
+      }
+
+      saveAttendanceLogToSupabase('slot_1', true);
+      showToast(successMessage + ' (+1 נקודה)', '🎉');
+
+      renderStudentScreen();
+      renderLeaderboard();
+      renderProgressGraph();
+    }
+
+
+    function checkUrlForStudentParam() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const inviteId = urlParams.get('invite') || urlParams.get('student');
+      if (inviteId) {
+        const student = state.students.find(s => s.id === inviteId);
+        if (student) {
+          // If first time or default password:
+          if (!student.password || student.password === '1234') {
+            const nPass = prompt('שלום ' + student.name + '!\nברוך הבא למבצע בקשו VIBE.\nקבע כעת סיסמה אישית שתשמש אותך בכניסה למערכת:', '');
+            if (nPass && nPass.trim()) {
+              student.password = nPass.trim();
+              saveLocalStudents();
+            }
+          }
+          setStudentActiveSession(student);
+          // Clean URL without reloading
+          window.history.replaceState({}, document.title, window.location.pathname);
+          showToast('ברוך הבא ' + student.name + ', החשבון הופעל וננעל במכשירך!', '🎉');
+        }
+      }
+    }
+
+function renderCurrentScreen() {
       if (state.activeTab === 'student') renderStudentScreen();
       if (state.activeTab === 'public') {
         renderDynamicCalendar();
@@ -3625,5 +3627,53 @@ events.join('\n') + '\n' +
       checkUrlForAdminParam();
     };
   </script>
+
+  <!-- ========================================================== -->
+  <!-- BARCODE / QR CAMERA SCANNER MODAL FOR BEIT MIDRASH         -->
+  <!-- ========================================================== -->
+  <div id="barcodeScannerModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-center relative flex flex-col items-center">
+      
+      <button onclick="closeBarcodeScannerModal()" class="absolute top-4 left-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition">
+        ✕
+      </button>
+
+      <span class="text-xs font-black px-3 py-1 rounded-full bg-indigo-50 text-indigo-900 border border-indigo-200 mb-2">
+        📸 אימות נוכחות בבית המדרש
+      </span>
+      <h3 id="scannerSederTitle" class="text-lg font-black text-slate-900 mb-1">סריקת ברקוד הסדר</h3>
+      <p class="text-xs text-slate-500 mb-3">כוון את המצלמה לברקוד המוצג על מסך בית המדרש</p>
+
+      <!-- Camera Viewfinder Box -->
+      <div class="relative w-64 h-64 sm:w-72 sm:h-72 rounded-2xl overflow-hidden bg-slate-950 border-2 border-indigo-600 shadow-inner flex items-center justify-center mb-3">
+        <video id="scannerVideoFeed" playsinline autoplay muted class="w-full h-full object-cover"></video>
+        <!-- Animated Viewfinder Overlay -->
+        <div class="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-6">
+          <div class="w-48 h-48 border-2 border-dashed border-amber-400 rounded-xl animate-pulse"></div>
+          <div class="absolute w-44 h-0.5 bg-rose-500 shadow-md shadow-rose-500/50 animate-bounce"></div>
+        </div>
+        <div id="cameraStatusText" class="absolute bottom-2 inset-x-2 text-center text-[10px] text-white/80 bg-slate-950/60 py-1 rounded-lg">
+          המצלמה פועלת • ממתין לסריקה...
+        </div>
+      </div>
+
+      <!-- Manual Code Fallback & Instant Demo Scan Option -->
+      <div class="w-full space-y-2 text-right">
+        <div class="flex items-center gap-1.5">
+          <input type="text" id="manualBarcodeInput" placeholder="או הזן קוד ידני מהמסך (לדוגמה: BK-892)" class="flex-1 text-xs font-mono font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 text-slate-800 focus:outline-none" />
+          <button onclick="handleManualCodeSubmit()" class="px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition">
+            אימות
+          </button>
+        </div>
+        
+        <button type="button" onclick="simulateBarcodeSuccess()" class="w-full py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition border border-indigo-200 flex items-center justify-center gap-1">
+          <span>⚡</span>
+          <span>סריקה מהירה לדוגמה (להתנסות ולבדיקה)</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 </body>
 </html>

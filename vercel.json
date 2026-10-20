@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/admin",
-      "destination": "/index.html?admin"
+      "destination": "/admin.html"
     }
   ]
 }
