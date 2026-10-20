@@ -73,8 +73,8 @@
       
       <!-- Right: Official Yeshiva Crest & Name (High Contrast & Prestigious) -->
       <div class="flex items-center gap-2.5 sm:gap-3">
-        <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#0A1138] p-1 border border-indigo-950/20 overflow-hidden shadow-sm shrink-0 flex items-center justify-center">
-          <img src="logo-yeshiva.jpeg" alt="לוגו ישיבת בקשו ירושלים" class="w-full h-full object-cover rounded-xl" />
+        <div onclick="handleLogoSecretTap()" class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#0A1138] p-1 border border-indigo-950/20 overflow-hidden shadow-sm shrink-0 flex items-center justify-center cursor-pointer select-none active:scale-95 transition" title="ישיבת בקשו ירושלים">
+          <img src="logo-yeshiva.jpeg" alt="לוגו ישיבת בקשו ירושלים" class="w-full h-full object-cover rounded-xl pointer-events-none" />
         </div>
         <div>
           <div class="flex items-center gap-1.5">
@@ -97,10 +97,10 @@
           </div>
         </div>
 
-        <!-- Hidden Rosh HaYeshiva Lock Button (Discreet & Clean) -->
-        <button id="adminLockBtn" onclick="toggleAdminAccess()" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-slate-900 border border-slate-200/80 transition flex items-center gap-1.5 text-xs font-bold" title="כניסת ראש הישיבה (מוגן בסיסמה)">
-          <span id="adminLockIcon">🔒</span>
-          <span id="adminLockText" class="hidden sm:inline">ראש הישיבה</span>
+        <!-- Hidden Rosh HaYeshiva Lock Button (Hidden by default for students; revealed only when Rosh HaYeshiva unlocks) -->
+        <button id="adminLockBtn" onclick="lockAdminPortal()" class="hidden p-2 sm:px-3 sm:py-1.5 rounded-xl bg-amber-100/90 hover:bg-amber-200 text-amber-950 border border-amber-300 transition flex items-center gap-1.5 text-xs font-bold shadow-sm" title="יציאה ונעילת פורטל ראש הישיבה">
+          <span id="adminLockIcon">🔓</span>
+          <span id="adminLockText" class="hidden sm:inline">יציאה מניהול</span>
         </button>
       </div>
 
@@ -1051,6 +1051,23 @@
       document.getElementById('adminPasswordModal')?.classList.add('hidden');
     }
 
+    let logoSecretTapCount = 0;
+    let logoSecretTapTimer = null;
+    function handleLogoSecretTap() {
+      logoSecretTapCount++;
+      if (logoSecretTapTimer) clearTimeout(logoSecretTapTimer);
+
+      if (logoSecretTapCount >= 3) {
+        logoSecretTapCount = 0;
+        openAdminPasswordModal();
+        return;
+      }
+
+      logoSecretTapTimer = setTimeout(() => {
+        logoSecretTapCount = 0;
+      }, 1200);
+    }
+
     function verifyAdminPassword() {
       const val = (document.getElementById('adminPasswordInput')?.value || '').trim();
       const err = document.getElementById('adminPasswordError');
@@ -1060,15 +1077,10 @@
         state.isAdminUnlocked = true;
         closeAdminPasswordModal();
 
-        // Reveal Rosh HaYeshiva Tab buttons
+        // Reveal Rosh HaYeshiva Tab buttons and header button only when unlocked
+        document.getElementById('adminLockBtn')?.classList.remove('hidden');
         document.getElementById('dtab-admin')?.classList.remove('hidden');
         document.getElementById('mtab-admin')?.classList.remove('hidden');
-
-        // Update top lock indicator
-        const lockIcon = document.getElementById('adminLockIcon');
-        const lockText = document.getElementById('adminLockText');
-        if (lockIcon) lockIcon.textContent = '🔓';
-        if (lockText) lockText.textContent = 'ראש הישיבה';
 
         showToast('פורטל ראש הישיבה נפתח בהצלחה', '🔓');
         switchTab('admin');
@@ -1079,13 +1091,11 @@
 
     function lockAdminPortal() {
       state.isAdminUnlocked = false;
+      
+      // Hide all Rosh HaYeshiva portal access points from students
+      document.getElementById('adminLockBtn')?.classList.add('hidden');
       document.getElementById('dtab-admin')?.classList.add('hidden');
       document.getElementById('mtab-admin')?.classList.add('hidden');
-
-      const lockIcon = document.getElementById('adminLockIcon');
-      const lockText = document.getElementById('adminLockText');
-      if (lockIcon) lockIcon.textContent = '🔒';
-      if (lockText) lockText.textContent = 'ראש הישיבה';
 
       showToast('פורטל ראש הישיבה ננעל', '🔒');
       switchTab('student');
