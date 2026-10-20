@@ -93,7 +93,7 @@
           <img src="logo-meyzam.png" alt="בקשו VIBE" class="h-8 sm:h-9 w-auto object-contain animate-vibe" />
           <div class="hidden sm:block text-right">
             <div class="text-[10px] text-amber-600 font-extrabold uppercase tracking-wider">מבצע חורף</div>
-            <div class="text-xs font-black text-slate-900 leading-none">יעד 110 נק׳</div>
+            <div id="headerTargetScoreText" class="text-xs font-black text-slate-900 leading-none">יעד 110 נק׳</div>
           </div>
         </div>
 
@@ -200,13 +200,13 @@
               <span>🔥</span>
               <span>יעד "סדר מלא" ישיבתי (<strong id="studentViewGroupBonusPts" class="text-indigo-700">+4 נק׳ בונוס</strong> לכולם)</span>
             </span>
-            <span id="groupCountText" class="text-indigo-700 font-black">0 / 18 בחורים</span>
+            <span id="groupCountText" class="text-indigo-700 font-black">0 / 1 בחורים</span>
           </div>
           <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
             <div id="groupProgressBar" class="h-full bg-gradient-to-r from-indigo-500 to-indigo-700 rounded-full transition-all duration-500" style="width: 0%"></div>
           </div>
           <p id="groupStatusHint" class="text-[11px] text-slate-500 mt-1.5">
-            נדרשים 18 בחורים בבית המדרש לזיכוי כל הישיבה בבונוס סדר מלא!
+            נדרש בחור 1 בבית המדרש לזיכוי כל הישיבה בבונוס סדר מלא!
           </p>
         </div>
       </div>
@@ -408,7 +408,7 @@
           ⏰ התאמת סדרים ושעות בכל יום
         </button>
         <button onclick="switchAdminSubView('campaign')" id="asub-campaign" class="asub-btn flex-1 py-2 px-3 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">
-          📅 טווח ימי המבצע (לוח שנה)
+          🎁 ניהול בונוסים ומבצע
         </button>
         <button onclick="switchAdminSubView('requests')" id="asub-requests" class="asub-btn flex-1 py-2 px-3 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">
           📋 בקשות שכחתי (<span id="adminPendingCountBadge">0</span>)
@@ -457,40 +457,94 @@
         </div>
       </div>
 
-      <!-- SUBVIEW 2: DYNAMIC CAMPAIGN DURATION (CALENDAR PICKER) -->
+      <!-- SUBVIEW 2: BONUS RULES & CAMPAIGN CONFIGURATION -->
       <div id="adminView-campaign" class="admin-subview hidden space-y-4">
+        
+        <!-- Card 1: Full Seder Collective Goal -->
         <div class="soft-card p-5 sm:p-6">
-          <h3 class="text-base font-black text-slate-900 mb-1">הגדרת טווח תאריכי המבצע בלוח השנה</h3>
-          <p class="text-xs text-slate-500 mb-4">המבצע אינו מוגבל ל-28 יום – תוכל לבחור כל תאריך התחלה וסיום לפי לוח השנה</p>
+          <div class="flex items-center gap-2.5 mb-2 pb-2 border-b border-slate-100">
+            <span class="text-xl">🔥</span>
+            <div>
+              <h3 class="text-base font-black text-slate-900">הגדרת בונוס "סדר מלא" ישיבתי</h3>
+              <p class="text-xs text-slate-500">קביעת סף הנוכחות הנדרש וגובה הבונוס המחולק לכלל הבחורים</p>
+            </div>
+          </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-3">
             <div class="p-3.5 rounded-2xl border border-slate-200 bg-white">
-              <label class="block text-xs font-bold text-slate-700 mb-1">תאריך פתיחת המבצע:</label>
-              <input type="date" id="campaignStartDateInput" value="2026-10-20" class="w-full text-xs font-mono p-2.5 rounded-xl border border-slate-200" />
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-xs font-bold text-slate-700">כמה בחורים נדרשים ל"סדר מלא":</label>
+                <span id="configLiveStudentsCountBadge" class="text-[10px] font-extrabold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">1 בחורים רשומים</span>
+              </div>
+              <input type="number" id="campaignThresholdInput" value="1" min="1" class="w-full text-sm font-black p-2 rounded-xl border border-slate-300 font-mono mt-1" />
+              <button type="button" onclick="autoAdjustGroupThreshold()" class="mt-2 w-full py-1.5 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 text-xs font-bold transition flex items-center justify-center gap-1.5">
+                <span>⚡</span>
+                <span>התאם סף למספר הבחורים הרשומים כעת</span>
+              </button>
             </div>
+
             <div class="p-3.5 rounded-2xl border border-slate-200 bg-white">
-              <label class="block text-xs font-bold text-slate-700 mb-1">תאריך סיום המבצע:</label>
-              <input type="date" id="campaignEndDateInput" value="2026-11-30" class="w-full text-xs font-mono p-2.5 rounded-xl border border-slate-200" />
+              <label class="block text-xs font-bold text-slate-700 mb-1">כמה נקודות בונוס יקבל כל בחור:</label>
+              <input type="number" id="campaignFullBonusInput" value="4" min="1" class="w-full text-sm font-black p-2 rounded-xl border border-slate-300 font-mono mt-1" />
+              <p class="text-[11px] text-slate-400 mt-2">כל בחור מקבל בונוס זה אם כמות הנוכחים בסדר עומדת ביעד שהוגדר.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Persistence (X of Y) Bonus -->
+        <div class="soft-card p-5 sm:p-6">
+          <div class="flex items-center gap-2.5 mb-2 pb-2 border-b border-slate-100">
+            <span class="text-xl">🏆</span>
+            <div>
+              <h3 class="text-base font-black text-slate-900">הגדרת בונוס התמדה (סדרים אחרונים - X מתוך Y)</h3>
+              <p class="text-xs text-slate-500">מתן בונוס על עמידה בחלק ניכר מהסדרים האחרונים (גם ללא רצף מושלם)</p>
             </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-3">
             <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-              <label class="text-[11px] font-bold text-slate-500">יעד מינימום לפרס:</label>
-              <input type="number" id="campaignMinTargetInput" value="110" class="w-full text-sm font-black p-1.5 rounded-lg border border-slate-200 mt-1" />
+              <label class="text-[11px] font-bold text-slate-600">כמה סדרים נדרשים (X):</label>
+              <input type="number" id="campaignXyNeedInput" value="5" min="1" class="w-full text-sm font-black p-1.5 rounded-lg border border-slate-200 mt-1 font-mono" />
             </div>
             <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-              <label class="text-[11px] font-bold text-slate-500">סף סדר מלא ישיבתי:</label>
-              <input type="number" id="campaignThresholdInput" value="18" class="w-full text-sm font-black p-1.5 rounded-lg border border-slate-200 mt-1" />
+              <label class="text-[11px] font-bold text-slate-600">מתוך כמה סדרים אחרונים (Y):</label>
+              <input type="number" id="campaignXyWindowInput" value="10" min="1" class="w-full text-sm font-black p-1.5 rounded-lg border border-slate-200 mt-1 font-mono" />
             </div>
             <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
-              <label class="text-[11px] font-bold text-slate-500">בונוס סדר מלא (נק׳):</label>
-              <input type="number" id="campaignFullBonusInput" value="4" class="w-full text-sm font-black p-1.5 rounded-lg border border-slate-200 mt-1" />
+              <label class="text-[11px] font-bold text-slate-600">שווי הבונוס בנקודות:</label>
+              <input type="number" id="campaignXyBonusInput" value="3" min="1" class="w-full text-sm font-black p-1.5 rounded-lg border border-slate-200 mt-1 font-mono text-amber-700" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: Campaign Target & Dates -->
+        <div class="soft-card p-5 sm:p-6">
+          <div class="flex items-center gap-2.5 mb-2 pb-2 border-b border-slate-100">
+            <span class="text-xl">📅</span>
+            <div>
+              <h3 class="text-base font-black text-slate-900">יעד המבצע ותאריכים בלוח השנה</h3>
+              <p class="text-xs text-slate-500">קביעת רף המינימום לפרס וטווח תאריכי המבצע</p>
             </div>
           </div>
 
-          <button onclick="saveCampaignConfigToSupabase()" class="mt-4 px-5 py-2.5 rounded-xl bg-[#0A1138] text-white font-bold text-xs hover:bg-black transition shadow-sm">
-            שמור הגדרות מבצע חדשות
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-3">
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <label class="text-[11px] font-bold text-slate-600">יעד מינימום לפרס (נק׳):</label>
+              <input type="number" id="campaignMinTargetInput" value="110" class="w-full text-sm font-black p-1.5 rounded-lg border border-slate-200 mt-1 font-mono text-indigo-950" />
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <label class="text-[11px] font-bold text-slate-600">תאריך פתיחה:</label>
+              <input type="date" id="campaignStartDateInput" value="2026-10-20" class="w-full text-xs font-mono p-1.5 rounded-lg border border-slate-200 mt-1" />
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <label class="text-[11px] font-bold text-slate-600">תאריך סיום:</label>
+              <input type="date" id="campaignEndDateInput" value="2026-11-30" class="w-full text-xs font-mono p-1.5 rounded-lg border border-slate-200 mt-1" />
+            </div>
+          </div>
+
+          <button onclick="saveCampaignConfigToSupabase()" class="mt-3 w-full sm:w-auto px-6 py-3 rounded-xl bg-[#0A1138] hover:bg-black text-white font-extrabold text-xs transition shadow-md flex items-center justify-center gap-2">
+            <span>💾</span>
+            <span>שמור את כל הגדרות הבונוסים והמבצע</span>
           </button>
         </div>
       </div>
@@ -518,7 +572,11 @@
               </div>
               <p class="text-xs text-slate-500 mt-0.5">הוספה והורדה של בחורים, והענקת בונוס לפי שיקול דעת ראש הישיבה</p>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center flex-wrap gap-2">
+              <button onclick="openGrantBonusModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
+                <span>⭐</span>
+                <span>מתן בונוס מיוחד</span>
+              </button>
               <button onclick="openAddStudentModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
                 <span>➕</span>
                 <span>הוסף בחור חדש</span>
@@ -535,7 +593,7 @@
           </div>
 
           <!-- Students Table with Quick Bonus Button & Delete Button -->
-          <div class="overflow-x-auto no-scrollbar">
+          <div class="overflow-x-auto no-scrollbar rounded-2xl border border-slate-200">
             <table class="w-full text-right text-xs">
               <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
                 <tr>
@@ -549,6 +607,43 @@
                 <!-- Populated by JS -->
               </tbody>
             </table>
+          </div>
+
+          <!-- Bonus Audit Log Table (יומן בונוסים) -->
+          <div class="mt-8 pt-6 border-t border-slate-200">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">📜</span>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h4 class="text-sm font-black text-slate-900">יומן הבונוסים המיוחדים שהוענקו</h4>
+                    <span id="bonusLogsCountBadge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">0 בונוסים</span>
+                  </div>
+                  <p class="text-xs text-slate-500">תיעוד מלא של כל בונוס, שווי הנקודות והסיבה, עם אפשרות לביטול ומחיקה</p>
+                </div>
+              </div>
+              <button onclick="openGrantBonusModal()" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition flex items-center gap-1 shadow-sm">
+                <span>⭐</span>
+                <span>הענק בונוס נוסף</span>
+              </button>
+            </div>
+
+            <div class="overflow-x-auto no-scrollbar rounded-2xl border border-slate-200 bg-white shadow-sm">
+              <table class="w-full text-right text-xs">
+                <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <tr>
+                    <th class="py-2.5 px-3 font-bold">תאריך ושעה</th>
+                    <th class="py-2.5 px-3 font-bold">עבור מי</th>
+                    <th class="py-2.5 px-3 font-bold text-center">שווי בונוס</th>
+                    <th class="py-2.5 px-3 font-bold">סיבת ראש הישיבה</th>
+                    <th class="py-2.5 px-3 font-bold text-left">ביטול וקיזוז</th>
+                  </tr>
+                </thead>
+                <tbody id="adminBonusLogsTableBody" class="divide-y divide-slate-100">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -735,6 +830,76 @@
   </div>
 
   <!-- ========================================================== -->
+  <!-- GRANT SPECIAL BONUS MODAL (ROSH HAYESHIVA)                 -->
+  <!-- ========================================================== -->
+  <div id="grantBonusModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-2">
+          <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-900 flex items-center justify-center text-xl shrink-0">
+            ⭐
+          </div>
+          <div>
+            <h3 class="text-base font-black text-slate-900">מתן בונוס מיוחד ע״י ראש הישיבה</h3>
+            <p class="text-xs text-slate-500">בחירת בחור, שווי הנקודות והסיבה המזכה</p>
+          </div>
+        </div>
+        <button onclick="closeGrantBonusModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center font-bold">
+          ✕
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Target Selection -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">עבור מי הבונוס:</label>
+          <select id="grantBonusStudentSelect" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 bg-white text-indigo-950 focus:ring-2 focus:ring-indigo-600">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+
+        <!-- Points Selection -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">כמה נקודות בונוס:</label>
+          <div class="flex items-center gap-1.5 mb-2">
+            <button type="button" onclick="setBonusPointsQuick(1)" class="flex-1 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 text-slate-800 font-bold text-xs transition">+1</button>
+            <button type="button" onclick="setBonusPointsQuick(2)" class="flex-1 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 text-slate-800 font-bold text-xs transition">+2</button>
+            <button type="button" onclick="setBonusPointsQuick(3)" class="flex-1 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 text-slate-800 font-bold text-xs transition">+3</button>
+            <button type="button" onclick="setBonusPointsQuick(5)" class="flex-1 py-1.5 rounded-xl border border-amber-300 bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-xs transition">+5</button>
+            <button type="button" onclick="setBonusPointsQuick(10)" class="flex-1 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 text-slate-800 font-bold text-xs transition">+10</button>
+            <button type="button" onclick="setBonusPointsQuick(20)" class="flex-1 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-amber-50 hover:border-amber-300 text-slate-800 font-bold text-xs transition">+20</button>
+          </div>
+          <input type="number" id="grantBonusPointsInput" value="5" min="1" max="100" class="w-full text-sm font-black p-2.5 rounded-xl border border-slate-300 text-center font-mono focus:ring-2 focus:ring-indigo-600" />
+        </div>
+
+        <!-- Reason Selection & Custom Text -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">על מה מקבלים בונוס (סיבה):</label>
+          <div class="flex flex-wrap gap-1.5 mb-2">
+            <button type="button" onclick="setBonusReasonQuick('שקידה והתמדה מיוחדת ⭐')" class="text-[11px] px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold transition">שקידה והתמדה ⭐</button>
+            <button type="button" onclick="setBonusReasonQuick('סיום מסכת 📜')" class="text-[11px] px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold transition">סיום מסכת 📜</button>
+            <button type="button" onclick="setBonusReasonQuick('חזרות ומבחן בהצלחה 📝')" class="text-[11px] px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold transition">חזרות ומבחן 📝</button>
+            <button type="button" onclick="setBonusReasonQuick('משמר ליל שישי 🌙')" class="text-[11px] px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold transition">משמר ליל שישי 🌙</button>
+            <button type="button" onclick="setBonusReasonQuick('עזרה ולימוד עם חבר 🤝')" class="text-[11px] px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold transition">לימוד עם חבר 🤝</button>
+            <button type="button" onclick="setBonusReasonQuick('הקדמת הגעה לסדר בוקר 🌅')" class="text-[11px] px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 font-bold transition">הקדמה לסדר 🌅</button>
+          </div>
+          <input type="text" id="grantBonusReasonInput" placeholder="או הקלד סיבה אישית חדשה..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-indigo-600 focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 mt-6">
+        <button onclick="confirmGrantBonus()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5">
+          <span>⭐</span>
+          <span>אשר והענק בונוס עכשיו</span>
+        </button>
+        <button onclick="closeGrantBonusModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
   <!-- STUDENT LOGIN / IDENTIFICATION MODAL WITH PROMO VIDEO      -->
   <!-- ========================================================== -->
   <div id="studentLoginModal" class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 hidden">
@@ -888,35 +1053,126 @@
     }
 
     // ====================================================
-    // 3. APPLICATION CENTRAL STATE (CLEAN RESET TO ZERO)
+    // 3. PERSISTENT STORAGE: CONFIG, SLOTS & BONUS LOGS
+    // ====================================================
+    const CONFIG_STORAGE_KEY = 'bakshu_config_v2';
+    const SLOTS_STORAGE_KEY = 'bakshu_slots_by_date_v2';
+    const BONUS_LOGS_STORAGE_KEY = 'bakshu_bonus_logs_v1';
+
+    function loadCampaignConfig(studentsCount) {
+      try {
+        const raw = localStorage.getItem(CONFIG_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return {
+            campaignName: parsed.campaignName || 'מבצע חורף - ישיבת בקשו',
+            startDate: parsed.startDate || '2026-10-20',
+            endDate: parsed.endDate || '2026-11-30',
+            minTarget: Number(parsed.minTarget) || 110,
+            groupFullThreshold: Number(parsed.groupFullThreshold) || Math.max(1, studentsCount || 1),
+            groupFullBonus: Number(parsed.groupFullBonus) || 4,
+            xyNeed: Number(parsed.xyNeed) || 5,
+            xyWindow: Number(parsed.xyWindow) || 10,
+            xyBonus: Number(parsed.xyBonus) || 3
+          };
+        }
+      } catch (e) {
+        console.warn('Failed to load campaign config:', e);
+      }
+      return {
+        campaignName: 'מבצע חורף - ישיבת בקשו',
+        startDate: '2026-10-20',
+        endDate: '2026-11-30',
+        minTarget: 110,
+        groupFullThreshold: Math.max(1, studentsCount || 1),
+        groupFullBonus: 4,
+        xyNeed: 5,
+        xyWindow: 10,
+        xyBonus: 3
+      };
+    }
+
+    function saveCampaignConfig(cfg) {
+      try {
+        localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(cfg));
+      } catch (e) {
+        console.warn('Failed to save campaign config:', e);
+      }
+    }
+
+    const DEFAULT_SLOTS = {
+      'default': [
+        { id: 'def_1', title: 'סדר א׳ - לימוד בוקר', openTime: '09:00', lockTime: '10:15', points: 1, isLocked: false },
+        { id: 'def_2', title: 'סדר ב׳ - לימוד צהריים', openTime: '16:00', lockTime: '17:00', points: 1, isLocked: false },
+        { id: 'def_3', title: 'מעריב וסדר ערב', openTime: '20:30', lockTime: '21:15', points: 2, isLocked: false }
+      ]
+    };
+
+    function loadScheduleSlots() {
+      try {
+        const raw = localStorage.getItem(SLOTS_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') return parsed;
+        }
+      } catch (e) {
+        console.warn('Failed to load slots:', e);
+      }
+      return JSON.parse(JSON.stringify(DEFAULT_SLOTS));
+    }
+
+    function saveScheduleSlots(slots) {
+      try {
+        localStorage.setItem(SLOTS_STORAGE_KEY, JSON.stringify(slots));
+      } catch (e) {
+        console.warn('Failed to save slots:', e);
+      }
+    }
+
+    function loadBonusLogs() {
+      try {
+        const raw = localStorage.getItem(BONUS_LOGS_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) return parsed;
+        }
+      } catch (e) {
+        console.warn('Failed to load bonus logs:', e);
+      }
+      return [];
+    }
+
+    function saveBonusLogs(logs) {
+      try {
+        localStorage.setItem(BONUS_LOGS_STORAGE_KEY, JSON.stringify(logs));
+      } catch (e) {
+        console.warn('Failed to save bonus logs:', e);
+      }
+    }
+
+    // ====================================================
+    // 4. APPLICATION CENTRAL STATE
     // ====================================================
     const initialStudentsList = loadInitialStudents();
+    const initialConfig = loadCampaignConfig(initialStudentsList.length);
+    const initialSlots = loadScheduleSlots();
+    const initialBonusLogs = loadBonusLogs();
 
     const state = {
       activeTab: 'student',
       adminSubView: 'schedule',
       isAdminUnlocked: false,
-      adminPasswordHash: loadAdminPassword(), // Password for Rosh HaYeshiva (customizable)
+      adminPasswordHash: loadAdminPassword(),
       currentSelectedCalendarDayIndex: 0,
       calendarWeekOffset: 0,
       
-      // Dynamic Campaign Configuration
-      config: {
-        campaignName: 'מבצע חורף - ישיבת בקשו',
-        startDate: '2026-10-20',
-        endDate: '2026-11-30',
-        minTarget: 110,
-        groupFullThreshold: 18,
-        groupFullBonus: 4,
-        xyNeed: 5,
-        xyWindow: 10,
-        xyBonus: 3
-      },
+      // Dynamic Campaign & Bonus Configuration
+      config: initialConfig,
 
-      // Yeshiva Students List - Initialized to 1 demonstration student
+      // Yeshiva Students List
       students: initialStudentsList,
 
-      // Current Student (Clean slate - 0 score, 0 attendance)
+      // Current Student
       currentStudent: {
         id: initialStudentsList[0].id,
         name: initialStudentsList[0].name,
@@ -927,15 +1183,12 @@
       },
 
       // Daily customizable schedule slot items (Keyed by date / day)
-      slotsByDate: {
-        'default': [
-          { id: 'def_1', title: 'סדר א׳ - לימוד בוקר', openTime: '09:00', lockTime: '10:15', points: 1, isLocked: false },
-          { id: 'def_2', title: 'סדר ב׳ - לימוד צהריים', openTime: '16:00', lockTime: '17:00', points: 1, isLocked: false },
-          { id: 'def_3', title: 'מעריב וסדר ערב', openTime: '20:30', lockTime: '21:15', points: 2, isLocked: false }
-        ]
-      },
+      slotsByDate: initialSlots,
 
-      // Pending "Forgot to mark" requests (Clean slate - 0 requests)
+      // Bonus audit logs
+      bonusLogs: initialBonusLogs,
+
+      // Pending "Forgot to mark" requests
       pendingRequests: [],
       myRequests: []
     };
@@ -1015,6 +1268,14 @@
       const activeBtn = document.getElementById('asub-' + subView);
       if (activeBtn) {
         activeBtn.className = 'asub-btn flex-1 py-2 px-3 rounded-xl transition bg-white text-slate-900 shadow-sm whitespace-nowrap font-black';
+      }
+
+      if (subView === 'campaign') {
+        populateCampaignConfigInputs();
+      } else if (subView === 'students') {
+        renderAdminRequestsAndStudents();
+      } else if (subView === 'schedule') {
+        renderAdminDayScheduleEditor();
       }
     }
 
@@ -1259,10 +1520,20 @@
         showToast('סימון הנוכחות בוטל', 'ℹ️');
       }
 
+      // Sync to state.students
+      const stIdx = state.students.findIndex(s => s.id === state.currentStudent.id);
+      if (stIdx !== -1) {
+        state.students[stIdx].score = state.currentStudent.baseScore;
+        state.students[stIdx].presentToday = state.currentStudent.presentCurrent;
+        state.students[stIdx].persistenceCount = state.currentStudent.last10.filter(x => x === 1).length;
+        saveLocalStudents();
+      }
+
       saveAttendanceLogToSupabase('slot_1', state.currentStudent.presentCurrent);
 
       renderStudentScreen();
       renderLeaderboard();
+      renderAdminRequestsAndStudents();
     }
 
     function renderStudentScreen() {
@@ -1311,17 +1582,46 @@
         barEl.style.width = pct + '%';
       }
 
-      // Group full seder status
-      const presentCount = state.students.filter(st => st.presentToday).length + (s.presentCurrent ? 1 : 0);
+      // Dynamic header & widget targets
+      const headerTargetEl = document.getElementById('headerTargetScoreText');
+      if (headerTargetEl) headerTargetEl.textContent = `יעד ${state.config.minTarget} נק׳`;
+
+      const studentMinTargetEl = document.getElementById('studentMinTargetText');
+      if (studentMinTargetEl) studentMinTargetEl.textContent = state.config.minTarget;
+
+      // Group full seder status (Dynamic threshold from config!)
+      const presentCount = state.students.filter(st => st.presentToday).length;
+      const threshold = Math.max(1, state.config.groupFullThreshold || 1);
       const groupCountEl = document.getElementById('groupCountText');
-      if (groupCountEl) groupCountEl.textContent = `${presentCount} / ${state.config.groupFullThreshold} בחורים`;
+      if (groupCountEl) groupCountEl.textContent = `${presentCount} / ${threshold} בחורים`;
+      
       const groupBarEl = document.getElementById('groupProgressBar');
       if (groupBarEl) {
-        const gPct = Math.min(100, Math.round((presentCount / state.config.groupFullThreshold) * 100));
+        const gPct = Math.min(100, Math.round((presentCount / threshold) * 100));
         groupBarEl.style.width = gPct + '%';
       }
 
-      // X of Y dots
+      const groupHintEl = document.getElementById('groupStatusHint');
+      if (groupHintEl) {
+        if (presentCount >= threshold) {
+          groupHintEl.innerHTML = `<span class="text-emerald-700 font-bold">🎉 היעד הושג! ${presentCount} בחורים נוכחים – כל הישיבה זוכה ב-${state.config.groupFullBonus} נק׳ בונוס סדר מלא!</span>`;
+        } else {
+          const remaining = threshold - presentCount;
+          groupHintEl.textContent = `נדרשים ${threshold} בחורים בבית המדרש לזיכוי כל הישיבה בבונוס סדר מלא! (עוד ${remaining} בחורים להשגת היעד)`;
+        }
+      }
+
+      const groupBonusPtsEl = document.getElementById('studentViewGroupBonusPts');
+      if (groupBonusPtsEl) {
+        groupBonusPtsEl.textContent = `+${state.config.groupFullBonus} נק׳ בונוס`;
+      }
+
+      // X of Y persistence rule dynamic text
+      const xyLabelEl = document.getElementById('ruleXYLabel');
+      if (xyLabelEl) xyLabelEl.textContent = `${state.config.xyNeed} מתוך ${state.config.xyWindow} סדרים`;
+      const xyBonusLabelEl = document.getElementById('ruleXYBonusLabel');
+      if (xyBonusLabelEl) xyBonusLabelEl.textContent = `+${state.config.xyBonus} נק׳`;
+
       const onesCount = s.last10.filter(x => x === 1).length;
       const xyBadge = document.getElementById('xyCurrentBadge');
       if (xyBadge) xyBadge.textContent = `${onesCount} / ${state.config.xyNeed}`;
@@ -1335,10 +1635,20 @@
         `).join('');
       }
 
-      // Today's schedule preview
+      // Today's schedule preview & active slot title
       const todaySlotsList = document.getElementById('todaySlotsList');
-      const todaySlots = state.slotsByDate['default'];
-      if (todaySlotsList && todaySlots) {
+      const todaySlots = state.slotsByDate['default'] || [];
+      if (todaySlots.length > 0) {
+        const activeSlot = todaySlots[0];
+        const titleEl = document.getElementById('activeSederTitle');
+        if (titleEl) titleEl.textContent = activeSlot.title;
+        const timeEl = document.getElementById('currentSlotTimeRange');
+        if (timeEl) timeEl.textContent = `${activeSlot.openTime} - ${activeSlot.lockTime}`;
+        const ptsEl = document.getElementById('activeSederPointsBadge');
+        if (ptsEl) ptsEl.textContent = `+${activeSlot.points} נק׳`;
+      }
+
+      if (todaySlotsList && todaySlots.length > 0) {
         todaySlotsList.innerHTML = todaySlots.map((slot, i) => `
           <div class="p-3 rounded-2xl border ${i === 0 ? 'bg-indigo-50/50 border-indigo-200' : 'bg-white border-slate-200'} flex items-center justify-between">
             <div>
@@ -1630,8 +1940,9 @@
               <td class="py-2.5 px-3 text-center font-black text-indigo-950 text-xs sm:text-sm">${st.score} נק׳</td>
               <td class="py-2.5 px-3 text-left">
                 <div class="flex items-center justify-end gap-1.5">
-                  <button onclick="grantAdminBonus('${st.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-bold text-xs transition" title="הענק בונוס מיוחד לשיקול דעת ראש הישיבה">
-                    ⭐ +5 בונוס
+                  <button onclick="openGrantBonusModal('${st.id}')" class="px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 font-bold text-xs transition flex items-center gap-1 shadow-sm" title="הענק בונוס מיוחד לבחור זה">
+                    <span>⭐</span>
+                    <span>הענק בונוס</span>
                   </button>
                   <button onclick="removeStudent('${st.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition flex items-center gap-1" title="הסר בחור מהישיבה">
                     <span>🗑️</span>
@@ -1643,30 +1954,251 @@
           `).join('');
         }
       }
+
+      // 4. Bonus Audit Log Table
+      const bTbody = document.getElementById('adminBonusLogsTableBody');
+      const bBadge = document.getElementById('bonusLogsCountBadge');
+      if (bBadge) bBadge.textContent = `${state.bonusLogs.length} בונוסים`;
+      if (bTbody) {
+        if (state.bonusLogs.length === 0) {
+          bTbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="py-6 text-center text-slate-400 font-medium">
+                עדיין לא הוענקו בונוסים מיוחדים במבצע
+              </td>
+            </tr>
+          `;
+        } else {
+          bTbody.innerHTML = state.bonusLogs.map(b => `
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-2.5 px-3 font-mono text-slate-500 text-[11px]">${b.dateStr || ''}</td>
+              <td class="py-2.5 px-3 font-bold ${b.targetId === 'ALL' ? 'text-amber-700 font-black' : 'text-slate-900'}">
+                ${b.targetId === 'ALL' ? '🌟 ' + b.targetName : b.targetName}
+              </td>
+              <td class="py-2.5 px-3 text-center">
+                <span class="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 font-black">+${b.points} נק׳</span>
+              </td>
+              <td class="py-2.5 px-3 text-slate-700 font-medium">${b.reason}</td>
+              <td class="py-2.5 px-3 text-left">
+                <button onclick="removeBonusLog('${b.id}')" class="px-2.5 py-1 rounded-lg text-rose-600 hover:bg-rose-50 border border-rose-200 font-bold text-[11px] transition" title="בטל בונוס זה וקזז את הנקודות">
+                  ✕ בטל
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
     }
 
     function resolveRequest(id, approved) {
       const req = state.pendingRequests.find(r => r.id === id);
       if (req && approved) {
         const student = state.students.find(s => s.name === req.studentName);
-        if (student) student.score += 1;
+        if (student) {
+          student.score += 1;
+          saveLocalStudents();
+          if (state.currentStudent && state.currentStudent.id === student.id) {
+            state.currentStudent.baseScore = student.score;
+          }
+        }
       }
       state.pendingRequests = state.pendingRequests.filter(r => r.id !== id);
       const badge = document.getElementById('adminPendingCountBadge');
       if (badge) badge.textContent = state.pendingRequests.length;
       renderAdminRequestsAndStudents();
       renderLeaderboard();
+      renderStudentScreen();
       showToast(approved ? 'הבקשה אושרה והתווסף ניקוד' : 'הבקשה נדחתה', approved ? '✓' : 'ℹ️');
     }
 
-    function grantAdminBonus(studentId) {
-      const student = state.students.find(s => s.id === studentId);
-      if (!student) return;
-      student.score += 5;
+    // ====================================================
+    // ROSH HAYESHIVA: SPECIAL BONUS MODAL & AUDIT LOG
+    // ====================================================
+    function openGrantBonusModal(preSelectedStudentId = null) {
+      const modal = document.getElementById('grantBonusModal');
+      const studentSelect = document.getElementById('grantBonusStudentSelect');
+      const pointsInput = document.getElementById('grantBonusPointsInput');
+      const reasonInput = document.getElementById('grantBonusReasonInput');
+
+      if (studentSelect) {
+        let optionsHtml = `<option value="ALL">🌟 כל בחורי הישיבה יחד! (בונוס קבוצתי רוחבי)</option>`;
+        state.students.forEach(st => {
+          const isSel = (preSelectedStudentId && st.id === preSelectedStudentId);
+          optionsHtml += `<option value="${st.id}" ${isSel ? 'selected' : ''}>${st.name} (נוכחי: ${st.score} נק׳)</option>`;
+        });
+        studentSelect.innerHTML = optionsHtml;
+
+        if (preSelectedStudentId) {
+          studentSelect.value = preSelectedStudentId;
+        } else if (state.students.length > 0) {
+          studentSelect.value = state.students[0].id;
+        } else {
+          studentSelect.value = 'ALL';
+        }
+      }
+
+      if (pointsInput) pointsInput.value = '5';
+      if (reasonInput) reasonInput.value = '';
+
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeGrantBonusModal() {
+      const modal = document.getElementById('grantBonusModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function setBonusPointsQuick(val) {
+      const input = document.getElementById('grantBonusPointsInput');
+      if (input) input.value = val;
+    }
+
+    function setBonusReasonQuick(text) {
+      const input = document.getElementById('grantBonusReasonInput');
+      if (input) input.value = text;
+    }
+
+    async function confirmGrantBonus() {
+      const studentSelect = document.getElementById('grantBonusStudentSelect');
+      const pointsInput = document.getElementById('grantBonusPointsInput');
+      const reasonInput = document.getElementById('grantBonusReasonInput');
+
+      const target = studentSelect ? studentSelect.value : 'ALL';
+      const points = parseInt(pointsInput?.value || '5', 10);
+      const reason = (reasonInput?.value || '').trim() || 'בונוס מיוחד מראש הישיבה ⭐';
+
+      if (isNaN(points) || points <= 0) {
+        alert('אנא הזן מספר נקודות בונוס חוקי (גדול מאפס)');
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')} ${timeStr}`;
+
+      const logEntry = {
+        id: 'bonus_' + Date.now(),
+        dateStr: dateStr,
+        timestamp: Date.now(),
+        targetId: target,
+        targetName: '',
+        points: points,
+        reason: reason
+      };
+
+      if (target === 'ALL') {
+        logEntry.targetName = 'כל בחורי הישיבה (קבוצתי)';
+        state.students.forEach(st => {
+          st.score += points;
+        });
+        if (state.currentStudent) {
+          state.currentStudent.baseScore += points;
+        }
+      } else {
+        const student = state.students.find(s => s.id === target);
+        if (!student) {
+          alert('בחור לא נמצא במערכת');
+          return;
+        }
+        logEntry.targetName = student.name;
+        student.score += points;
+        if (state.currentStudent && state.currentStudent.id === student.id) {
+          state.currentStudent.baseScore += points;
+        }
+      }
+
+      // Save student updates
       saveLocalStudents();
-      renderAdminRequestsAndStudents();
-      renderLeaderboard();
-      showToast(`הוענקו +5 נקודות בונוס ע״י ראש הישיבה ל-${student.name}`, '🎁');
+
+      // Add to bonus logs
+      state.bonusLogs.unshift(logEntry);
+      saveBonusLogs(state.bonusLogs);
+
+      // Sync to Supabase manager_bonus_logs
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('manager_bonus_logs').insert({
+            points: points,
+            reason: reason
+          });
+        } catch (err) {
+          console.warn('Supabase bonus log sync:', err);
+        }
+      }
+
+      closeGrantBonusModal();
+      renderAllViews();
+      showToast(`הוענקו +${points} נק׳ ל-${logEntry.targetName}!`, '🎁');
+    }
+
+    function removeBonusLog(bonusId) {
+      const log = state.bonusLogs.find(b => b.id === bonusId);
+      if (!log) return;
+
+      const confirmed = confirm(`האם ראש הישיבה רוצה לבטל את הבונוס של +${log.points} נק׳ עבור "${log.targetName}"? הניקוד יקוזז חזרה.`);
+      if (!confirmed) return;
+
+      // Revert the points
+      if (log.targetId === 'ALL') {
+        state.students.forEach(st => {
+          st.score = Math.max(0, st.score - log.points);
+        });
+        if (state.currentStudent) {
+          state.currentStudent.baseScore = Math.max(0, state.currentStudent.baseScore - log.points);
+        }
+      } else {
+        const student = state.students.find(s => s.id === log.targetId);
+        if (student) {
+          student.score = Math.max(0, student.score - log.points);
+          if (state.currentStudent && state.currentStudent.id === student.id) {
+            state.currentStudent.baseScore = Math.max(0, state.currentStudent.baseScore - log.points);
+          }
+        }
+      }
+
+      saveLocalStudents();
+
+      // Remove from logs
+      state.bonusLogs = state.bonusLogs.filter(b => b.id !== bonusId);
+      saveBonusLogs(state.bonusLogs);
+
+      renderAllViews();
+      showToast(`הבונוס בוטל והניקוד קוזז`, 'ℹ️');
+    }
+
+    function autoAdjustGroupThreshold() {
+      const currentCount = Math.max(1, state.students.length);
+      state.config.groupFullThreshold = currentCount;
+      saveCampaignConfig(state.config);
+      const threshEl = document.getElementById('campaignThresholdInput');
+      if (threshEl) threshEl.value = currentCount;
+      renderStudentScreen();
+      showToast(`סף סדר מלא הותאם ל-${currentCount} בחורים`, '🎯');
+    }
+
+    function populateCampaignConfigInputs() {
+      const startEl = document.getElementById('campaignStartDateInput');
+      const endEl = document.getElementById('campaignEndDateInput');
+      const minEl = document.getElementById('campaignMinTargetInput');
+      const threshEl = document.getElementById('campaignThresholdInput');
+      const bonusEl = document.getElementById('campaignFullBonusInput');
+      const xyNeedEl = document.getElementById('campaignXyNeedInput');
+      const xyWinEl = document.getElementById('campaignXyWindowInput');
+      const xyBonusEl = document.getElementById('campaignXyBonusInput');
+
+      if (startEl) startEl.value = state.config.startDate;
+      if (endEl) endEl.value = state.config.endDate;
+      if (minEl) minEl.value = state.config.minTarget;
+      if (threshEl) threshEl.value = state.config.groupFullThreshold;
+      if (bonusEl) bonusEl.value = state.config.groupFullBonus;
+      if (xyNeedEl) xyNeedEl.value = state.config.xyNeed;
+      if (xyWinEl) xyWinEl.value = state.config.xyWindow;
+      if (xyBonusEl) xyBonusEl.value = state.config.xyBonus;
+
+      const liveCountEl = document.getElementById('configLiveStudentsCountBadge');
+      if (liveCountEl) {
+        liveCountEl.textContent = state.students.length === 1 ? '1 בחור רשום' : `${state.students.length} בחורים רשומים`;
+      }
     }
 
     // ====================================================
@@ -1793,6 +2325,10 @@
       state.students = [{ ...DEFAULT_DEMO_STUDENT }];
       saveLocalStudents();
 
+      // Reset threshold to 1 as well!
+      state.config.groupFullThreshold = 1;
+      saveCampaignConfig(state.config);
+
       state.currentStudent = {
         id: DEFAULT_DEMO_STUDENT.id,
         name: DEFAULT_DEMO_STUDENT.name,
@@ -1803,8 +2339,9 @@
       };
       localStorage.setItem('bakshu_logged_student_id', DEFAULT_DEMO_STUDENT.id);
 
+      populateCampaignConfigInputs();
       renderAllViews();
-      showToast('רשימת הבחורים אופסה לבחור 1 להדגמה', '🔄');
+      showToast('רשימת הבחורים וסף סדר מלא אופסו לבחור 1 להדגמה', '🔄');
     }
 
     function renderAllViews() {
@@ -1890,20 +2427,53 @@
     }
 
     async function saveCampaignConfigToSupabase() {
-      const start = document.getElementById('campaignStartDateInput')?.value;
-      const end = document.getElementById('campaignEndDateInput')?.value;
+      const start = document.getElementById('campaignStartDateInput')?.value || state.config.startDate;
+      const end = document.getElementById('campaignEndDateInput')?.value || state.config.endDate;
       const min = parseInt(document.getElementById('campaignMinTargetInput')?.value || '110', 10);
-      
+      const thresh = Math.max(1, parseInt(document.getElementById('campaignThresholdInput')?.value || '1', 10));
+      const fullBonus = Math.max(1, parseInt(document.getElementById('campaignFullBonusInput')?.value || '4', 10));
+      const xyNeed = Math.max(1, parseInt(document.getElementById('campaignXyNeedInput')?.value || '5', 10));
+      const xyWindow = Math.max(1, parseInt(document.getElementById('campaignXyWindowInput')?.value || '10', 10));
+      const xyBonus = Math.max(1, parseInt(document.getElementById('campaignXyBonusInput')?.value || '3', 10));
+
       state.config.startDate = start;
       state.config.endDate = end;
       state.config.minTarget = min;
+      state.config.groupFullThreshold = thresh;
+      state.config.groupFullBonus = fullBonus;
+      state.config.xyNeed = xyNeed;
+      state.config.xyWindow = xyWindow;
+      state.config.xyBonus = xyBonus;
 
-      showToast('הגדרות המבצע נשמרו בהצלחה!', '💾');
-      renderStudentScreen();
+      saveCampaignConfig(state.config);
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('campaign_config').upsert({
+            id: 1,
+            campaign_name: state.config.campaignName,
+            start_date: start,
+            end_date: end,
+            min_target_score: min,
+            full_seder_threshold: thresh,
+            full_seder_bonus_pts: fullBonus,
+            xy_required_count: xyNeed,
+            xy_window_size: xyWindow,
+            xy_bonus_pts: xyBonus
+          });
+        } catch (e) {
+          console.warn('Supabase campaign sync:', e);
+        }
+      }
+
+      showToast('כל כללי המבצע והבונוסים נשמרו בהצלחה!', '💾');
+      renderAllViews();
     }
 
     async function saveDailyScheduleToSupabase() {
+      saveScheduleSlots(state.slotsByDate);
       showToast('סדרי היום נשמרו בהצלחה במסד הנתונים', '💾');
+      renderAllViews();
     }
 
     // ====================================================
@@ -2003,12 +2573,14 @@
       if (state.activeTab === 'admin') {
         renderAdminRequestsAndStudents();
         renderAdminDayScheduleEditor();
+        populateCampaignConfigInputs();
       }
     }
 
     window.onload = function () {
       initAdminScheduleDayPicker();
       checkSavedStudentLogin();
+      populateCampaignConfigInputs();
       renderStudentScreen();
       renderDynamicCalendar();
       renderLeaderboard();
