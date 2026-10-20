@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
