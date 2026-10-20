@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body {
       font-family: 'Heebo', sans-serif;
@@ -672,7 +673,7 @@
             <div class="mt-4 bg-slate-50 border border-slate-200 rounded-2xl p-3">
               <div class="text-[11px] font-bold text-slate-600 mb-1">כתובת URL לסנכרון יומן הישיבה:</div>
               <div class="flex items-center gap-2">
-                <input id="calendarUrlInput" type="text" readonly dir="ltr" value="webcal://bakshu.supabase.co/functions/v1/ical?yeshiva=bakshu" class="w-full text-xs font-mono bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-slate-600" />
+                <input id="calendarUrlInput" type="text" readonly dir="ltr" value="webcal://apuuuubjrhejknyvzvpn.supabase.co/functions/v1/ical?yeshiva=bakshu" class="w-full text-xs font-mono bg-white border border-slate-200 rounded-xl px-2.5 py-2 text-slate-600" />
                 <button onclick="copyCalendarUrl()" class="shrink-0 px-3 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition">
                   העתק URL
                 </button>
@@ -770,6 +771,13 @@ CREATE TABLE manager_bonus_logs (
   </main>
 
   <script>
+    // ====================================================
+    // SUPABASE CLIENT INITIALIZATION
+    // ====================================================
+    const SUPABASE_URL = 'https://apuuuubjrhejknyvzvpn.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_DuJUmTpWwU4h3P8r1htVWw_24i-VjeG';
+    const supabaseClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
     // ====================================================
     // APPLICATION STATE
     // ====================================================
