@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS campaign_config (
   full_seder_bonus_pts INT NOT NULL DEFAULT 4,
   xy_required_count INT NOT NULL DEFAULT 5,
   xy_window_size INT NOT NULL DEFAULT 10,
-  xy_bonus_pts INT NOT NULL DEFAULT 3
+  xy_bonus_pts INT NOT NULL DEFAULT 3,
+  admin_password TEXT NOT NULL DEFAULT 'bakshu2026'
 );
 
 -- 2. רשימת המשתתפים (תלמידים וראש הישיבה)

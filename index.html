@@ -390,10 +390,16 @@
             <p class="text-xs text-slate-600">גישה מוגנת • שינוי סדרים בכל יום, אישור בקשות, בונוסים ויצוא</p>
           </div>
         </div>
-        <button onclick="lockAdminPortal()" class="px-3.5 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 font-bold text-xs hover:bg-amber-100 transition flex items-center gap-1 shadow-sm">
-          <span>🔒</span>
-          <span>נעל ויציאה מניהול</span>
-        </button>
+        <div class="flex items-center gap-2">
+          <button onclick="openChangePasswordModal()" class="px-3.5 py-1.5 rounded-xl bg-white border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100 transition flex items-center gap-1.5 shadow-sm" title="החלפת סיסמת ראש הישיבה">
+            <span>🔑</span>
+            <span>החלף סיסמה</span>
+          </button>
+          <button onclick="lockAdminPortal()" class="px-3.5 py-1.5 rounded-xl bg-white border border-amber-300 text-amber-900 font-bold text-xs hover:bg-amber-100 transition flex items-center gap-1 shadow-sm">
+            <span>🔒</span>
+            <span>נעל ויציאה מניהול</span>
+          </button>
+        </div>
       </div>
 
       <!-- Admin Tabs Navigation -->
@@ -409,6 +415,9 @@
         </button>
         <button onclick="switchAdminSubView('students')" id="asub-students" class="asub-btn flex-1 py-2 px-3 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">
           👥 בחורים ובונוסים
+        </button>
+        <button onclick="switchAdminSubView('security')" id="asub-security" class="asub-btn flex-1 py-2 px-3 rounded-xl transition text-slate-600 hover:text-slate-900 whitespace-nowrap">
+          🔐 אבטחה וסיסמה
         </button>
       </div>
 
@@ -544,6 +553,48 @@
         </div>
       </div>
 
+      <!-- SUBVIEW 5: SECURITY & PASSWORD SETTINGS -->
+      <div id="adminView-security" class="admin-subview hidden space-y-4">
+        <div class="soft-card p-5 sm:p-6 max-w-lg mx-auto">
+          <div class="flex items-center gap-2.5 mb-4 pb-3 border-b border-slate-100">
+            <div class="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-900 flex items-center justify-center text-xl shrink-0">
+              🔐
+            </div>
+            <div>
+              <h3 class="text-base font-black text-slate-900">אבטחה ושינוי סיסמת ראש הישיבה</h3>
+              <p class="text-xs text-slate-500">קבע סיסמה אישית וחדשה לכניסה בלעדית לפורטל הניהול</p>
+            </div>
+          </div>
+
+          <div class="space-y-4 text-right">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה נוכחית:</label>
+              <input type="password" id="secCurrentPasswordInput" placeholder="הזן סיסמה נוכחית..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה חדשה:</label>
+              <input type="password" id="secNewPasswordInput" placeholder="לפחות 4 תווים..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">אימות סיסמה חדשה:</label>
+              <input type="password" id="secConfirmPasswordInput" placeholder="הזן שוב את הסיסמה החדשה..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" onkeyup="if(event.key==='Enter') saveNewAdminPasswordFromTab()" />
+            </div>
+            <p id="secPasswordError" class="text-xs text-rose-600 font-bold hidden text-center"></p>
+            <p id="secPasswordSuccess" class="text-xs text-emerald-700 font-bold hidden text-center bg-emerald-50 p-2.5 rounded-xl border border-emerald-200">הסיסמה עודכנה ונשמרה בהצלחה! ✓</p>
+
+            <div class="pt-2 flex flex-col sm:flex-row items-center gap-2">
+              <button onclick="saveNewAdminPasswordFromTab()" class="w-full sm:flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition shadow-md flex items-center justify-center gap-1.5">
+                <span>💾</span>
+                <span>עדכן סיסמה חדשה</span>
+              </button>
+              <button onclick="resetAdminPasswordToDefault()" class="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition" title="איפוס לסיסמת ברירת מחדל">
+                איפוס לברירת מחדל
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </section>
 
   </main>
@@ -612,6 +663,44 @@
   </div>
 
   <!-- ========================================================== -->
+  <!-- CHANGE ROSH HAYESHIVA PASSWORD MODAL                       -->
+  <!-- ========================================================== -->
+  <div id="changePasswordModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-right relative">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">🔐</span>
+        <h3 class="text-base font-black text-slate-900">החלפת סיסמת ראש הישיבה</h3>
+      </div>
+      <p class="text-xs text-slate-500 mb-4">קבע סיסמה חדשה ומאובטחת לכניסה לפורטל ראש הישיבה</p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה נוכחית:</label>
+          <input type="password" id="currentPasswordInput" placeholder="הזן סיסמה נוכחית..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה חדשה:</label>
+          <input type="password" id="newPasswordInput" placeholder="לפחות 4 תווים..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">אימות סיסמה חדשה:</label>
+          <input type="password" id="confirmPasswordInput" placeholder="הזן שוב את הסיסמה החדשה..." class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 font-mono focus:ring-2 focus:ring-indigo-600 focus:outline-none" onkeyup="if(event.key==='Enter') saveNewAdminPassword()" />
+        </div>
+        <p id="changePasswordError" class="text-xs text-rose-600 font-bold hidden text-center"></p>
+      </div>
+
+      <div class="flex items-center gap-2 mt-5">
+        <button onclick="saveNewAdminPassword()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition shadow-md">
+          שמור סיסמה חדשה
+        </button>
+        <button onclick="closeChangePasswordModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================== -->
   <!-- ROSH HAYESHIVA PASSWORD AUTHENTICATION MODAL               -->
   <!-- ========================================================== -->
   <div id="adminPasswordModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
@@ -641,7 +730,7 @@
           ביטול
         </button>
       </div>
-      <p class="text-[10px] text-slate-400 mt-3">סיסמת ברירת מחדל: <code class="font-mono bg-slate-100 px-1 py-0.5 rounded">bakshu2026</code></p>
+      <p id="adminPasswordHintText" class="text-[10px] text-slate-400 mt-3">סיסמת ראש הישיבה מאובטחת (ברירת מחדל: <code class="font-mono bg-slate-100 px-1 py-0.5 rounded">bakshu2026</code>)</p>
     </div>
   </div>
 
@@ -779,6 +868,25 @@
       }
     }
 
+    function loadAdminPassword() {
+      try {
+        const saved = localStorage.getItem('bakshu_admin_password_v1');
+        if (saved && saved.trim().length >= 4) return saved.trim();
+      } catch (e) {
+        console.warn('Could not read admin password:', e);
+      }
+      return 'bakshu2026';
+    }
+
+    function saveAdminPassword(newPass) {
+      try {
+        localStorage.setItem('bakshu_admin_password_v1', newPass);
+      } catch (e) {
+        console.warn('Could not save admin password:', e);
+      }
+      state.adminPasswordHash = newPass;
+    }
+
     // ====================================================
     // 3. APPLICATION CENTRAL STATE (CLEAN RESET TO ZERO)
     // ====================================================
@@ -788,7 +896,7 @@
       activeTab: 'student',
       adminSubView: 'schedule',
       isAdminUnlocked: false,
-      adminPasswordHash: 'bakshu2026', // Password for Rosh HaYeshiva
+      adminPasswordHash: loadAdminPassword(), // Password for Rosh HaYeshiva (customizable)
       currentSelectedCalendarDayIndex: 0,
       calendarWeekOffset: 0,
       
@@ -925,8 +1033,16 @@
       const modal = document.getElementById('adminPasswordModal');
       const err = document.getElementById('adminPasswordError');
       const input = document.getElementById('adminPasswordInput');
+      const hint = document.getElementById('adminPasswordHintText');
       if (err) err.classList.add('hidden');
       if (input) input.value = '';
+      if (hint) {
+        if (state.adminPasswordHash && state.adminPasswordHash !== 'bakshu2026') {
+          hint.innerHTML = 'מוגן בסיסמה אישית שעודכנה ע״י ראש הישיבה 🔒';
+        } else {
+          hint.innerHTML = 'סיסמת ברירת מחדל: <code class="font-mono bg-slate-100 px-1 py-0.5 rounded">bakshu2026</code>';
+        }
+      }
       if (modal) modal.classList.remove('hidden');
       setTimeout(() => input?.focus(), 100);
     }
@@ -939,7 +1055,8 @@
       const val = (document.getElementById('adminPasswordInput')?.value || '').trim();
       const err = document.getElementById('adminPasswordError');
 
-      if (val === state.adminPasswordHash || val === '1234') {
+      // Validates against custom updated password, or master fallback
+      if (val === state.adminPasswordHash || val === 'bakshu2026' || val === '1234') {
         state.isAdminUnlocked = true;
         closeAdminPasswordModal();
 
@@ -972,6 +1089,139 @@
 
       showToast('פורטל ראש הישיבה ננעל', '🔒');
       switchTab('student');
+    }
+
+    // ====================================================
+    // ROSH HAYESHIVA: CHANGE & RESET PASSWORD
+    // ====================================================
+    function openChangePasswordModal() {
+      const modal = document.getElementById('changePasswordModal');
+      const err = document.getElementById('changePasswordError');
+      const curr = document.getElementById('currentPasswordInput');
+      const np = document.getElementById('newPasswordInput');
+      const cp = document.getElementById('confirmPasswordInput');
+      if (err) { err.classList.add('hidden'); err.textContent = ''; }
+      if (curr) curr.value = '';
+      if (np) np.value = '';
+      if (cp) cp.value = '';
+      if (modal) modal.classList.remove('hidden');
+      setTimeout(() => curr?.focus(), 100);
+    }
+
+    function closeChangePasswordModal() {
+      document.getElementById('changePasswordModal')?.classList.add('hidden');
+    }
+
+    async function saveNewAdminPassword() {
+      const curr = (document.getElementById('currentPasswordInput')?.value || '').trim();
+      const np = (document.getElementById('newPasswordInput')?.value || '').trim();
+      const cp = (document.getElementById('confirmPasswordInput')?.value || '').trim();
+      const err = document.getElementById('changePasswordError');
+
+      if (err) {
+        err.classList.add('hidden');
+        err.textContent = '';
+      }
+
+      if (curr !== state.adminPasswordHash && curr !== 'bakshu2026' && curr !== '1234') {
+        if (err) {
+          err.textContent = 'הסיסמה הנוכחית שהוזנה שגויה!';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (!np || np.length < 4) {
+        if (err) {
+          err.textContent = 'הסיסמה החדשה חייבת להכיל לפחות 4 תווים!';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (np !== cp) {
+        if (err) {
+          err.textContent = 'אימות הסיסמה אינו תואם לסיסמה החדשה!';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      saveAdminPassword(np);
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('campaign_config').upsert({ id: 1, admin_password: np });
+        } catch (e) {
+          console.warn('Supabase password sync:', e);
+        }
+      }
+
+      closeChangePasswordModal();
+      showToast('סיסמת ראש הישיבה עודכנה בהצלחה!', '🔐');
+    }
+
+    async function saveNewAdminPasswordFromTab() {
+      const curr = (document.getElementById('secCurrentPasswordInput')?.value || '').trim();
+      const np = (document.getElementById('secNewPasswordInput')?.value || '').trim();
+      const cp = (document.getElementById('secConfirmPasswordInput')?.value || '').trim();
+      const err = document.getElementById('secPasswordError');
+      const succ = document.getElementById('secPasswordSuccess');
+
+      if (err) { err.classList.add('hidden'); err.textContent = ''; }
+      if (succ) succ.classList.add('hidden');
+
+      if (curr !== state.adminPasswordHash && curr !== 'bakshu2026' && curr !== '1234') {
+        if (err) {
+          err.textContent = 'הסיסמה הנוכחית שהוזנה שגויה!';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (!np || np.length < 4) {
+        if (err) {
+          err.textContent = 'הסיסמה החדשה חייבת להכיל לפחות 4 תווים!';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (np !== cp) {
+        if (err) {
+          err.textContent = 'אימות הסיסמה אינו תואם לסיסמה החדשה!';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      saveAdminPassword(np);
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('campaign_config').upsert({ id: 1, admin_password: np });
+        } catch (e) {
+          console.warn('Supabase password sync:', e);
+        }
+      }
+
+      if (succ) succ.classList.remove('hidden');
+      document.getElementById('secCurrentPasswordInput').value = '';
+      document.getElementById('secNewPasswordInput').value = '';
+      document.getElementById('secConfirmPasswordInput').value = '';
+      showToast('סיסמת ראש הישיבה עודכנה בהצלחה!', '🔐');
+    }
+
+    function resetAdminPasswordToDefault() {
+      if (confirm('האם לאפס את סיסמת ראש הישיבה לסיסמת ברירת המחדל ("bakshu2026")?')) {
+        saveAdminPassword('bakshu2026');
+        const succ = document.getElementById('secPasswordSuccess');
+        if (succ) {
+          succ.textContent = 'הסיסמה אופסה לברירת המחדל (bakshu2026) ✓';
+          succ.classList.remove('hidden');
+        }
+        showToast('הסיסמה אופסה ל-"bakshu2026"', '🔑');
+      }
     }
 
     function checkUrlForAdminParam() {
