@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="theme-color" content="#0A1138" />
-  <title>פורטל ראש הישיבה | עד הפסגה - מבצע חורף תשפ״ז</title>
+  <title>פורטל ראש הישיבה | בקשו VIBE - ניהול מבצע והקרנת בית מדרש</title>
   
   <link rel="icon" type="image/png" href="logo-meyzam.png" />
   <link rel="apple-touch-icon" href="logo-yeshiva.jpeg" />
@@ -14,7 +14,7 @@
   <!-- Tailwind CSS & Google Fonts Heebo -->
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.gstatic.com">
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -61,26 +61,27 @@
         <img src="logo-yeshiva.jpeg" alt="לוגו ישיבה" class="w-full h-full object-cover rounded-xl" />
       </div>
       <span class="text-xs font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-200">פורטל מנהל מאובטח</span>
-      <h2 class="text-xl font-black text-slate-900 mt-2">פורטל ראש הישיבה</h2>
-      <p class="text-xs text-slate-500 mb-6">עד הפסגה - מבצע חורף תשפ״ז | ישיבת בקשו ירושלים</p>
+      <h2 class="text-xl font-black text-slate-900 mt-2">כניסת ראש הישיבה</h2>
+      <p class="text-xs text-slate-500 mb-6">מערכת בקשו VIBE - ניהול סדרים, בחורים ובית המדרש</p>
 
       <div class="space-y-4 text-right">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">סיסמת ראש הישיבה:</label>
           <div class="relative">
-            <input type="password" id="gatePasswordInput" value="bakshu2026" placeholder="הזן סיסמת מנהל" class="w-full text-sm font-mono font-bold p-3.5 pl-10 rounded-2xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:outline-none" onkeyup="if(event.key==='Enter') verifyAdminGate()" />
+            <input type="password" id="gatePasswordInput" placeholder="הזן סיסמת מנהל" class="w-full text-sm font-mono font-bold p-3.5 pl-10 rounded-2xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:outline-none" onkeyup="if(event.key==='Enter') verifyAdminGate()" />
+            <button type="button" onclick="togglePass('gatePasswordInput')" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">👁️</button>
           </div>
           <p id="gateErrorMsg" class="text-xs text-rose-600 font-bold hidden mt-1 text-right"></p>
         </div>
 
         <button onclick="verifyAdminGate()" class="w-full py-3.5 rounded-2xl bg-[#0A1138] hover:bg-indigo-950 text-white font-black text-sm transition shadow-lg shadow-indigo-950/20 active:scale-98">
-          היכנס למערכת הניהול 🔓
+          היכנס למערכת הניהול
         </button>
       </div>
 
       <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
         <a href="index.html" class="hover:text-indigo-600 font-bold">← חזרה למסך הבחורים</a>
-        <span>עד הפסגה - תשפ״ז</span>
+        <span>בקשו VIBE</span>
       </div>
     </div>
   </div>
@@ -100,27 +101,27 @@
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <h1 class="text-base sm:text-lg font-black tracking-tight">עד הפסגה - פורטל ראש הישיבה</h1>
+              <h1 class="text-base sm:text-lg font-black tracking-tight">פורטל ראש הישיבה</h1>
               <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">ניהול פעיל</span>
             </div>
-            <p class="text-[11px] text-slate-300">ישיבת בקשו ירושלים • ניהול בונוסים, תורנויות, בחורים וברקודים</p>
+            <p class="text-[11px] text-slate-300">ישיבת בקשו ירושלים | לוח זמנים, בחורים וברקודים</p>
           </div>
         </div>
 
         <!-- Fast Actions Header -->
         <div class="flex items-center gap-2">
-          <button onclick="openBeitMidrashModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs transition flex items-center gap-1.5 shadow-md shadow-amber-500/20 animate-pulse-slow">
+          <button onclick="openBeitMidrashModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs transition flex items-center gap-1.5 shadow-md shadow-amber-500/20 animate-pulse-slow" title="הקרן על מסך בית המדרש את הברקוד של הסדר הנוכחי">
             <span>📺</span>
-            <span class="hidden sm:inline">הקרנת ברקוד (QR) לבית המדרש</span>
+            <span class="hidden sm:inline">הקרנת מסך בית המדרש (QR)</span>
             <span class="sm:hidden">מסך QR</span>
           </button>
 
-          <a href="index.html" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition border border-slate-700">
-            <span>🎓</span>
-            <span class="hidden md:inline">עמוד הבחורים</span>
-          </a>
+          <button onclick="openChangeAdminPassModal()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition border border-slate-700" title="החלפת סיסמת ראש הישיבה">
+            <span>🔑</span>
+            <span class="hidden md:inline">סיסמה</span>
+          </button>
 
-          <button onclick="handleAdminLogout()" class="px-3 py-2 rounded-xl bg-rose-900/60 hover:bg-rose-900 text-rose-200 font-bold text-xs transition border border-rose-700">
+          <button onclick="handleAdminLogout()" class="px-3 py-2 rounded-xl bg-rose-900/60 hover:bg-rose-900 text-rose-200 font-bold text-xs transition border border-rose-700" title="התנתק מהפורטל">
             <span>🚪</span>
             <span class="hidden md:inline">התנתק</span>
           </button>
@@ -130,279 +131,86 @@
 
       <!-- Navigation Tabs -->
       <div class="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-2 overflow-x-auto py-2 border-t border-slate-800/80 text-xs font-bold scrollbar-none">
-        <button onclick="switchAdminTab('bonuses')" id="tabBtn-bonuses" class="px-4 py-2 rounded-xl bg-white text-[#0A1138] shadow transition shrink-0 flex items-center gap-1.5">
-          <span>👑</span>
-          <span>1. שליטת ראש הישיבה בכל הבונוסים</span>
-        </button>
-        <button onclick="switchAdminTab('duties')" id="tabBtn-duties" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition shrink-0 flex items-center gap-1.5">
-          <span>⏰🧹</span>
-          <span>2. ניהול תורנויות מעורר ומטבח</span>
-        </button>
-        <button onclick="switchAdminTab('students')" id="tabBtn-students" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition shrink-0 flex items-center gap-1.5">
+        <button onclick="switchAdminTab('students')" id="tabBtn-students" class="px-4 py-2 rounded-xl bg-white text-[#0A1138] shadow transition shrink-0 flex items-center gap-1.5">
           <span>👥</span>
-          <span>3. ניהול בחורים, SMS וסיסמאות</span>
+          <span>ניהול בחורים ו-SMS</span>
         </button>
-        <button onclick="switchAdminTab('stops')" id="tabBtn-stops" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition shrink-0 flex items-center gap-1.5">
-          <span>📍</span>
-          <span>4. נקודות העצירה במסע בלוח השנה</span>
+        <button onclick="switchAdminTab('schedule')" id="tabBtn-schedule" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition shrink-0 flex items-center gap-1.5">
+          <span>📅</span>
+          <span>לוח סדרים וזמנים</span>
+        </button>
+        <button onclick="switchAdminTab('targets')" id="tabBtn-targets" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition shrink-0 flex items-center gap-1.5">
+          <span>🎯</span>
+          <span>3 יעדי המבצע ופרסים</span>
+        </button>
+        <button onclick="switchAdminTab('bonuses')" id="tabBtn-bonuses" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition shrink-0 flex items-center gap-1.5">
+          <span>⭐</span>
+          <span>בונוסים ובקשות</span>
         </button>
       </div>
     </header>
 
     <!-- Main Content Area -->
-    <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 flex-1 space-y-6">
+    <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 flex-1">
+      
+      <!-- Top Stat Cards Bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <div class="soft-card p-4">
+          <span class="text-xs text-slate-400 font-bold">בחורים רשומים</span>
+          <div class="text-2xl font-black text-indigo-950 mt-1" id="statStudentsCount">0</div>
+          <span class="text-[10px] text-emerald-600 font-bold">פעילים במערכת</span>
+        </div>
+        <div class="soft-card p-4">
+          <span class="text-xs text-slate-400 font-bold">סך נקודות בקופה</span>
+          <div class="text-2xl font-black text-emerald-700 mt-1" id="statTotalPoints">0</div>
+          <span class="text-[10px] text-slate-500 font-bold">בכל ימי המבצע</span>
+        </div>
+        <div class="soft-card p-4">
+          <span class="text-xs text-slate-400 font-bold">בקשות ממתינות</span>
+          <div class="text-2xl font-black text-amber-600 mt-1" id="statPendingRequests">0</div>
+          <span class="text-[10px] text-slate-500 font-bold">אישורי שחרור</span>
+        </div>
+        <div class="soft-card p-4">
+          <span class="text-xs text-slate-400 font-bold">סדרים להיום</span>
+          <div class="text-2xl font-black text-indigo-600 mt-1" id="statTodaySlotsCount">0</div>
+          <span class="text-[10px] text-slate-500 font-bold" id="statTodayDateLabel">היום</span>
+        </div>
+      </div>
 
       <!-- ========================================================== -->
-      <!-- TAB 1: ROSH HAYESHIVA BONUS CONTROL & QR DECISION          -->
+      <!-- TAB 1: STUDENTS MANAGEMENT & SMS DISPATCH                  -->
       <!-- ========================================================== -->
-      <div id="adminTabContent-bonuses" class="space-y-6">
+      <div id="adminTabContent-students" class="space-y-6">
         
-        <!-- QR Code Custom Decision by Rosh Yeshiva -->
-        <div class="soft-card p-5 sm:p-6 border-2 border-amber-300 bg-gradient-to-l from-amber-50/50 to-white">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <div class="flex items-center gap-3">
-              <span class="text-3xl">👑</span>
-              <div>
-                <h2 class="text-lg font-black text-slate-900">שינוי קוד ה-QR בהחלטת ראש הישיבה</h2>
-                <p class="text-xs text-slate-500">קביעת קוד הברקוד המוקרן בבית המדרש לאימות נוכחות פיזית ומניעת זיופים</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-slate-500">קוד פעיל כעת:</span>
-              <strong id="activeQrCodeDisplay" class="font-mono text-lg font-black px-3 py-1 bg-amber-100 text-amber-950 rounded-xl border border-amber-300">7704</strong>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-3 max-w-md">
-            <input type="text" id="roshQrCodeInput" value="7704" placeholder="הזן קוד ברקוד חדש..." class="w-full text-sm font-mono font-black text-center p-3 rounded-2xl border border-slate-300 bg-white" />
-            <button onclick="saveRoshQrDecision()" class="shrink-0 px-5 py-3 rounded-2xl bg-[#0A1138] hover:bg-black text-white font-black text-xs transition shadow-sm">
-              קבע קוד חדש ✓
-            </button>
-          </div>
-        </div>
-
-        <!-- All Dynamic Bonuses Controls (שליטת ראש הישיבה בכל הבונוסים) -->
         <div class="soft-card p-5 sm:p-6">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
             <div>
-              <h2 class="text-lg font-black text-slate-900">הגדרת כל נקודות הבונוס במערכת (בשליטת ראש הישיבה)</h2>
-              <p class="text-xs text-slate-500">כל שינוי מתעדכן אוטומטית בזמן אמת בכל מסכי הבחורים והחישובים</p>
+              <h2 class="text-lg font-black text-slate-900">רשימת בחורי הישיבה</h2>
+              <p class="text-xs text-slate-500">הזנת מספרי טלפון, הפקת קישורי SMS, איפוס סיסמאות ומעקב טווח נקודות</p>
             </div>
-            <button onclick="saveAllBonusSettings()" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-sm">
-              שמור את כל הבונוסים ✓
-            </button>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            
-            <!-- 1. Phone-free Seder Bonus -->
-            <div class="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 space-y-2">
-              <div class="flex items-center gap-2">
-                <span class="text-xl">📵</span>
-                <div>
-                  <h3 class="text-sm font-black text-slate-900">בונוס "סדר ללא טלפון"</h3>
-                  <p class="text-[11px] text-slate-500">נקודות על סימון לימוד רצוף ללא טלפון</p>
-                </div>
-              </div>
-              <input type="number" id="cfgNoPhoneBonus" min="1" max="10" value="1" class="w-full text-sm font-black p-2.5 rounded-xl border border-slate-300 bg-white text-indigo-700 font-mono" />
-            </div>
-
-            <!-- 2. Wake-up Duty Bonus -->
-            <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-2">
-              <div class="flex items-center gap-2">
-                <span class="text-xl">⏰</span>
-                <div>
-                  <h3 class="text-sm font-black text-slate-900">בונוס תורנות מעורר (בוקר)</h3>
-                  <p class="text-[11px] text-slate-500">נקודות לתורן על השכמת הבוקר לתפילה</p>
-                </div>
-              </div>
-              <input type="number" id="cfgWakeupBonus" min="1" max="15" value="3" class="w-full text-sm font-black p-2.5 rounded-xl border border-slate-300 bg-white text-amber-700 font-mono" />
-            </div>
-
-            <!-- 3. Kitchen Duty Bonus -->
-            <div class="p-4 rounded-2xl bg-teal-50/60 border border-teal-200 space-y-2">
-              <div class="flex items-center gap-2">
-                <span class="text-xl">🧹</span>
-                <div>
-                  <h3 class="text-sm font-black text-slate-900">בונוס תורנות מטבח (ערב)</h3>
-                  <p class="text-[11px] text-slate-500">נקודות לתורן על ניקיון וסדר המטבח</p>
-                </div>
-              </div>
-              <input type="number" id="cfgKitchenBonus" min="1" max="15" value="3" class="w-full text-sm font-black p-2.5 rounded-xl border border-slate-300 bg-white text-teal-700 font-mono" />
-            </div>
-
-            <!-- 4. Group Full Seder Bonus -->
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-              <h3 class="text-sm font-black text-slate-900">🔥 בונוס "סדר מלא" קבוצתי</h3>
-              <div class="grid grid-cols-2 gap-2">
-                <div>
-                  <label class="block text-[10px] font-bold text-slate-500">רף בחורים:</label>
-                  <input type="number" id="cfgGroupThresh" min="1" max="30" value="18" class="w-full text-xs font-black p-2 rounded-xl border border-slate-300 bg-white font-mono" />
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-slate-500">נק׳ בונוס לכולם:</label>
-                  <input type="number" id="cfgGroupBonus" min="1" max="20" value="4" class="w-full text-xs font-black p-2 rounded-xl border border-slate-300 bg-white text-emerald-700 font-mono" />
-                </div>
-              </div>
-            </div>
-
-            <!-- 5. Persistence Bonus (X out of Y) -->
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-              <h3 class="text-sm font-black text-slate-900">🏅 בונוס התמדה (X מתוך Y)</h3>
-              <div class="grid grid-cols-3 gap-1.5">
-                <div>
-                  <label class="block text-[10px] font-bold text-slate-500">נכח ב-X:</label>
-                  <input type="number" id="cfgXyNeed" min="1" max="10" value="5" class="w-full text-xs font-black p-2 rounded-xl border border-slate-300 bg-white font-mono" />
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-slate-500">מתוך Y:</label>
-                  <input type="number" id="cfgXyWindow" min="5" max="20" value="10" class="w-full text-xs font-black p-2 rounded-xl border border-slate-300 bg-white font-mono" />
-                </div>
-                <div>
-                  <label class="block text-[10px] font-bold text-slate-500">בונוס:</label>
-                  <input type="number" id="cfgXyBonus" min="1" max="10" value="3" class="w-full text-xs font-black p-2 rounded-xl border border-slate-300 bg-white text-amber-700 font-mono" />
-                </div>
-              </div>
-            </div>
-
-            <!-- 6. Current Seder Points -->
-            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
-              <h3 class="text-sm font-black text-slate-900">⚡ שווי סדר בסיסי</h3>
-              <p class="text-[11px] text-slate-500">הגדרת ערך נקודות נוכחות לסדר הנוכחי</p>
-              <select id="cfgCurrentSederPts" class="w-full text-xs font-black p-2.5 rounded-xl border border-slate-300 bg-white">
-                <option value="1">1 נקודה לסדר</option>
-                <option value="2">2 נקודות (סדר מוגבר)</option>
-                <option value="3">3 נקודות</option>
-                <option value="5">5 נקודות (סדר בונוס מיוחד)</option>
-              </select>
-            </div>
-
-          </div>
-
-          <!-- Discretionary Free Bonus by Rosh Yeshiva -->
-          <div class="mt-6 pt-5 border-t border-slate-100 bg-amber-50/40 p-4 rounded-2xl border border-amber-200">
-            <h3 class="text-sm font-black text-slate-900 mb-1">🎁 הענקת בונוס חופשי לפי דעת ראש הישיבה</h3>
-            <p class="text-xs text-slate-500 mb-3">תגמל בחור ספציפי או את כל הנוכחים בסדר בנקודות בונוס יזומות</p>
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
-              <div class="sm:col-span-4">
-                <label class="block text-[11px] font-bold text-slate-600 mb-1">בחר יעד:</label>
-                <select id="freeBonusTargetSelect" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white">
-                  <!-- Populated by JS -->
-                </select>
-              </div>
-              <div class="sm:col-span-2">
-                <label class="block text-[11px] font-bold text-slate-600 mb-1">כמות נק׳:</label>
-                <input type="number" id="freeBonusPtsInput" value="5" min="1" max="100" class="w-full text-xs font-black p-2.5 rounded-xl border border-slate-300 bg-white font-mono text-amber-700" />
-              </div>
-              <div class="sm:col-span-4">
-                <label class="block text-[11px] font-bold text-slate-600 mb-1">סיבת הבונוס:</label>
-                <input type="text" id="freeBonusReasonInput" placeholder="למשל: התמדה מיוחדת בליל שישי" class="w-full text-xs p-2.5 rounded-xl border border-slate-300 bg-white" />
-              </div>
-              <div class="sm:col-span-2">
-                <button onclick="awardDiscretionaryBonus()" class="w-full py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm">
-                  + תן בונוס
-                </button>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- ========================================================== -->
-      <!-- TAB 2: DUTY ROSTER MANAGEMENT (מעורר בבוקר + מטבח בערב)     -->
-      <!-- ========================================================== -->
-      <div id="adminTabContent-duties" class="space-y-6 hidden">
-        <div class="soft-card p-5 sm:p-6">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
-            <div>
-              <h2 class="text-lg font-black text-slate-900">שיבוץ תורנויות מעורר (בוקר) וניקיון מטבח (ערב) בלוח השנה</h2>
-              <p class="text-xs text-slate-500">
-                כל שיבוץ מפעיל תזכורת אוטומטית: <strong>מעורר מקבל לילה קודם (22:30)</strong> • <strong>מטבח מקבל לקראת ערב (19:30)</strong>
-              </p>
-            </div>
-          </div>
-
-          <!-- Add / Edit Duty for a Day Bar -->
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end mb-5">
-            <div class="sm:col-span-3">
-              <label class="block text-[11px] font-bold text-slate-700 mb-1">בחר יום בלוח השנה:</label>
-              <select id="dutyDaySelect" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white">
-                <!-- Populated by JS -->
-              </select>
-            </div>
-            <div class="sm:col-span-4">
-              <label class="block text-[11px] font-bold text-slate-700 mb-1">⏰ תורן מעורר (בוקר - תזכורת לילה קודם 22:30):</label>
-              <select id="dutyWakeupStudentSelect" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white">
-                <!-- Populated by JS -->
-              </select>
-            </div>
-            <div class="sm:col-span-3">
-              <label class="block text-[11px] font-bold text-slate-700 mb-1">🧹 תורן מטבח (ערב - תזכורת לקראת ערב 19:30):</label>
-              <select id="dutyKitchenStudentSelect" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white">
-                <!-- Populated by JS -->
-              </select>
-            </div>
-            <div class="sm:col-span-2">
-              <button onclick="saveDutyAssignment()" class="w-full py-2.5 px-3 rounded-xl navy-brand text-white font-black text-xs hover:opacity-95 transition">
-                שבץ בלוח השנה ✓
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="openAddStudentModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition shadow-sm flex items-center gap-1.5">
+                <span>+</span>
+                <span>הוסף בחור בודד</span>
               </button>
-            </div>
-          </div>
-
-          <!-- Full Duties Table -->
-          <div class="overflow-x-auto">
-            <table class="w-full text-right text-xs border-collapse">
-              <thead>
-                <tr class="bg-slate-50 text-slate-500 border-y border-slate-200 font-bold">
-                  <th class="py-2.5 px-3">יום ותאריך</th>
-                  <th class="py-2.5 px-3">⏰ תורן מעורר (בוקר)</th>
-                  <th class="py-2.5 px-3">תזכורת ואישור ביצוע</th>
-                  <th class="py-2.5 px-3">🧹 אחראי מטבח (ערב)</th>
-                  <th class="py-2.5 px-3">תזכורת ואישור ביצוע</th>
-                </tr>
-              </thead>
-              <tbody id="adminDutiesTableBody" class="divide-y divide-slate-100">
-                <!-- Populated by JS -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- ========================================================== -->
-      <!-- TAB 3: STUDENTS MANAGEMENT, SMS & PASSWORDS                -->
-      <!-- ========================================================== -->
-      <div id="adminTabContent-students" class="space-y-6 hidden">
-        <div class="soft-card p-5 sm:p-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100">
-            <div>
-              <h2 class="text-lg font-black text-slate-900">רשימת בחורי הישיבה והפצת קישורי SMS</h2>
-              <p class="text-xs text-slate-500">כל כמות בחורים לפי הרישום בפועל • רשומים כעת: <strong id="adminRegisteredCountText" class="text-indigo-950 font-mono">0</strong> בחורים</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <button onclick="openBatchAddModal()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition border border-slate-200 flex items-center gap-1">
+              <button onclick="openBatchAddModal()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition border border-slate-200 flex items-center gap-1.5">
                 <span>📋</span>
-                <span>הדבקה מרוכזת</span>
-              </button>
-              <button onclick="openAddStudentModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition shadow-sm">
-                + הוסף בחור בודד
+                <span>ייבוא רשימה מרוכזת</span>
               </button>
             </div>
           </div>
 
           <!-- Students Table -->
           <div class="overflow-x-auto">
-            <table class="w-full text-right text-xs border-collapse">
+            <table class="w-full text-right text-xs">
               <thead>
-                <tr class="bg-slate-50 text-slate-500 border-y border-slate-200 font-bold">
-                  <th class="py-2.5 px-3">#</th>
-                  <th class="py-2.5 px-3">שם הבחור</th>
-                  <th class="py-2.5 px-3">מספר טלפון</th>
-                  <th class="py-2.5 px-3">שליחת קישור אישי ב-SMS</th>
-                  <th class="py-2.5 px-3 text-center">ניקוד מצטבר</th>
-                  <th class="py-2.5 px-3 text-left">פעולות</th>
+                <tr class="border-b border-slate-200 text-slate-400 font-extrabold uppercase">
+                  <th class="py-3 px-3">שם הבחור</th>
+                  <th class="py-3 px-3 text-center">טלפון וסיסמה</th>
+                  <th class="py-3 px-3 text-center">ניקוד נוכחי</th>
+                  <th class="py-3 px-3 text-center">טווח צבירה צפוי</th>
+                  <th class="py-3 px-3 text-center">שליחת קישור / SMS</th>
+                  <th class="py-3 px-3 text-left">פעולות</th>
                 </tr>
               </thead>
               <tbody id="adminStudentsTableBody" class="divide-y divide-slate-100">
@@ -411,40 +219,199 @@
             </table>
           </div>
         </div>
+
       </div>
 
       <!-- ========================================================== -->
-      <!-- TAB 4: CAMPAIGN JOURNEY STOPS (ציר ב': עצירות המסע ביומן)   -->
+      <!-- TAB 2: SCHEDULE & RECURRING SLOTS                          -->
       <!-- ========================================================== -->
-      <div id="adminTabContent-stops" class="space-y-6 hidden">
+      <div id="adminTabContent-schedule" class="hidden space-y-6">
+        
         <div class="soft-card p-5 sm:p-6">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
             <div>
-              <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300">
-                👑 שליטת ראש הישיבה בנקודות העצירה
-              </div>
-              <h2 class="text-lg font-black text-slate-900 mt-1">נקודות העצירה במסע "עד הפסגה" (אירועים בלוח השנה)</h2>
-              <p class="text-xs text-slate-500">
-                עצירה 1 נקבעה ליום ה׳ ט׳ כסליו ("פיתחו יומנים!"). שאר העצירות מוצגות כעת כסימן שאלה (❓) ונקבעות בהחלטת ראש הישיבה. ניתן לקבוע תאריך לכל עצירה, לערוך פרטים ולהוסיף עצירות חדשות למסע בכל עת.
-              </p>
+              <h2 class="text-lg font-black text-slate-900">ניהול לוח הסדרים והשעות</h2>
+              <p class="text-xs text-slate-500">עריכת זמני פתיחה ונעילה, ימי שישי ריקים, ושבתות לפי סדר מיוחד</p>
             </div>
-            <button onclick="openAddJourneyStopModal()" class="px-4 py-2 rounded-xl bg-[#0A1138] hover:bg-slate-800 text-white font-black text-xs transition shadow-sm flex items-center gap-1.5">
-              <span>➕</span>
-              <span>הוסף נקודת עצירה למסע</span>
-            </button>
+
+            <!-- Date Picker -->
+            <div class="flex items-center gap-2">
+              <button onclick="navigateAdminScheduleDay(-1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center justify-center">▶</button>
+              <input type="date" id="adminScheduleDayPicker" class="text-xs font-black p-2 rounded-xl border border-slate-300 bg-slate-50 text-slate-800 focus:outline-none" onchange="renderAdminDayScheduleEditor()" />
+              <button onclick="navigateAdminScheduleDay(1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center justify-center">◀</button>
+              <button onclick="jumpAdminScheduleToToday()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">היום</button>
+            </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="adminJourneyStopsList">
+          <!-- Day Notice Banner -->
+          <div id="adminScheduleDayNotice" class="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-950 text-xs font-bold flex items-center justify-between mb-4">
+            <span id="adminScheduleDayNoticeText">סדר יום חול</span>
+            <span id="adminScheduleDayPointsBadge" class="px-2.5 py-0.5 rounded-full bg-white text-indigo-900 border border-indigo-200 font-black">4 נק׳ ליום</span>
+          </div>
+
+          <!-- Slots List for selected day -->
+          <div id="adminScheduleSlotsContainer" class="space-y-3">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- Action bar -->
+          <div class="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <button onclick="openAddSlotModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+              <span>+</span>
+              <span>הוסף סדר / אירוע חדש</span>
+            </button>
+            <div class="flex items-center gap-2">
+              <button onclick="resetDayToTemplate()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+                איפוס יום זה לתבנית
+              </button>
+              <button onclick="saveDailyScheduleToSupabase()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                <span>💾</span>
+                <span>שמור ל-Supabase</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- TAB 3: TARGET TIERS & CAMPAIGN DATES                       -->
+      <!-- ========================================================== -->
+      <div id="adminTabContent-targets" class="hidden space-y-6">
+        
+        <div class="soft-card p-5 sm:p-6">
+          <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-100">
+            <div>
+              <h2 class="text-lg font-black text-slate-900">הגדרת 3 יעדי המבצע ופרסים</h2>
+              <p class="text-xs text-slate-500">קביעת ספי הנקודות ושמות היעדים שיוצגו לבחורים</p>
+            </div>
+            <span id="adminTotalAchievablePointsBadge" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
+              160 נק׳ בקופה
+            </span>
+          </div>
+
+          <!-- 3 Tiers Configuration Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            
+            <!-- Tier 1: Minimum / Bronze -->
+            <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-black text-amber-900">🥉 יעד 1 (מינימום / ארד)</span>
+                  <span class="text-[10px] font-bold text-amber-700">בסיסי</span>
+                </div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">שם היעד / הפרס:</label>
+                <input type="text" id="cfgTier1Name" class="w-full text-xs font-bold p-2.5 rounded-xl border border-amber-300 bg-white mb-3" value="יעד כניסה להגרלה" />
+                
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">כמות נקודות לסף:</label>
+                <input type="number" id="cfgTier1Points" class="w-full text-sm font-black p-2.5 rounded-xl border border-amber-300 bg-white" value="70" />
+              </div>
+            </div>
+
+            <!-- Tier 2: Mid / Silver -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-300 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-black text-slate-800">🥈 יעד 2 (אמצע / כסף)</span>
+                  <span class="text-[10px] font-bold text-slate-600">בינוני</span>
+                </div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">שם היעד / הפרס:</label>
+                <input type="text" id="cfgTier2Name" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white mb-3" value="יעד פרס כספי" />
+                
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">כמות נקודות לסף:</label>
+                <input type="number" id="cfgTier2Points" class="w-full text-sm font-black p-2.5 rounded-xl border border-slate-300 bg-white" value="100" />
+              </div>
+            </div>
+
+            <!-- Tier 3: Max / Gold -->
+            <div class="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-black text-indigo-950">🥇 יעד 3 (מקסימום / זהב)</span>
+                  <span class="text-[10px] font-bold text-indigo-700">עליון</span>
+                </div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">שם היעד / הפרס:</label>
+                <input type="text" id="cfgTier3Name" class="w-full text-xs font-bold p-2.5 rounded-xl border border-indigo-300 bg-white mb-3" value="יעד נסיעה ופרס ענק" />
+                
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">כמות נקודות לסף:</label>
+                <input type="number" id="cfgTier3Points" class="w-full text-sm font-black p-2.5 rounded-xl border border-indigo-300 bg-white" value="130" />
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Campaign Dates & Seder Thresholds -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">תאריך תחילת המבצע:</label>
+              <input type="date" id="campaignStartDateInput" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-white" onchange="updateCampaignTotalPointsLive()" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">תאריך סיום המבצע:</label>
+              <input type="date" id="campaignEndDateInput" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-white" onchange="updateCampaignTotalPointsLive()" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">סף בחורים ל"סדר מלא":</label>
+              <input type="number" id="cfgGroupFullThreshold" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-white" min="1" value="1" />
+            </div>
+          </div>
+
+          <div class="mt-6 flex justify-end">
+            <button onclick="saveCampaignTargetsAndDates()" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
+              שמור הגדרות יעדים ותאריכים
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- TAB 4: BONUSES & ABSENCE REQUESTS                          -->
+      <!-- ========================================================== -->
+      <div id="adminTabContent-bonuses" class="hidden space-y-6">
+        
+        <!-- Absence requests approval -->
+        <div class="soft-card p-5 sm:p-6">
+          <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-100">
+            <div>
+              <h2 class="text-lg font-black text-slate-900">בקשות שחרור והיעדרות ממתינות</h2>
+              <p class="text-xs text-slate-500">אישור או דחייה של בקשות בחורים</p>
+            </div>
+          </div>
+          <div id="adminPendingRequestsList" class="space-y-3">
             <!-- Populated by JS -->
           </div>
         </div>
+
+        <!-- Bonus Rules & Manual Bonus Grant -->
+        <div class="soft-card p-5 sm:p-6">
+          <h2 class="text-lg font-black text-slate-900 mb-2">חוקי בונוס התמדה (X מתוך Y)</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">כמות סדרים נדרשת (X):</label>
+              <input type="number" id="cfgRuleX" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" value="5" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">מתוך סך סדרים אחרונים (Y):</label>
+              <input type="number" id="cfgRuleY" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" value="10" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">ניקוד בונוס לזיכוי:</label>
+              <input type="number" id="cfgRuleBonus" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" value="3" />
+            </div>
+          </div>
+          <button onclick="saveBonusRulesConfig()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition">
+            שמור חוקי בונוס
+          </button>
+        </div>
+
       </div>
 
     </main>
 
     <!-- Admin Footer -->
     <footer class="bg-white border-t border-slate-200 py-4 px-6 text-center text-xs text-slate-400">
-      מערכת "עד הפסגה - מבצע חורף תשפ״ז" • ישיבת בקשו ירושלים | גרסה 2.0 ההרמטית
+      מערכת בקשו VIBE - ישיבת בקשו ירושלים | גרסת ניהול 2.0
     </footer>
 
   </div>
@@ -453,72 +420,53 @@
   <!-- 3. BEIT MIDRASH SCREEN MODAL (QR PROJECTION)               -->
   <!-- ========================================================== -->
   <div id="beitMidrashModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-lg flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border-4 border-amber-400 text-center relative flex flex-col items-center space-y-3">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-300 text-center relative flex flex-col items-center">
       
       <button onclick="closeBeitMidrashModal()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition">
         ✕
       </button>
 
-      <span class="text-xs font-black px-3.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300">
-        📺 מוקרן כעת על מסך בית המדרש • ישיבת בקשו ירושלים
+      <span class="text-xs font-black px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 mb-2">
+        📺 מסך הקרנה לבית המדרש
       </span>
 
-      <h2 class="text-2xl sm:text-3xl font-black text-slate-900">
-        סדר א׳ - לימוד בוקר
+      <h2 id="bmActiveSederTitle" class="text-2xl sm:text-3xl font-black text-slate-900 mb-1">
+        סדר בוקר (שחרית וסדר א׳)
       </h2>
-      <p class="text-xs text-slate-500">
-        פתחו את אפליקציית "בקשו VIBE" בטלפון בשעות הסדר וסרקו את הברקוד לאימות נוכחות פיזית
+      <p id="bmActiveSederTimes" class="text-sm font-bold text-indigo-700 mb-4 font-mono">
+        09:00 - 10:15 | שווי: 2 נקודות
       </p>
 
-      <!-- Dynamic SVG QR Code Matrix -->
-      <div class="p-4 bg-white rounded-3xl border-2 border-slate-900 shadow-inner w-56 h-56 flex items-center justify-center">
-        <svg viewBox="0 0 120 120" class="w-full h-full">
-          <rect width="120" height="120" fill="#ffffff"/>
-          <rect x="8" y="8" width="32" height="32" rx="4" fill="#0A1138"/>
-          <rect x="13" y="13" width="22" height="22" rx="2" fill="#ffffff"/>
-          <rect x="18" y="18" width="12" height="12" rx="1" fill="#0A1138"/>
-          <rect x="80" y="8" width="32" height="32" rx="4" fill="#0A1138"/>
-          <rect x="85" y="13" width="22" height="22" rx="2" fill="#ffffff"/>
-          <rect x="90" y="18" width="12" height="12" rx="1" fill="#0A1138"/>
-          <rect x="8" y="80" width="32" height="32" rx="4" fill="#0A1138"/>
-          <rect x="13" y="85" width="22" height="22" rx="2" fill="#ffffff"/>
-          <rect x="18" y="90" width="12" height="12" rx="1" fill="#0A1138"/>
-          <rect x="46" y="10" width="6" height="6" fill="#0A1138"/>
-          <rect x="58" y="10" width="6" height="12" fill="#0A1138"/>
-          <rect x="68" y="16" width="6" height="6" fill="#0A1138"/>
-          <rect x="44" y="44" width="32" height="32" rx="6" fill="#10B981"/>
-          <text x="60" y="64" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="900" font-family="Heebo">VIBE</text>
-          <rect x="82" y="46" width="8" height="8" fill="#0A1138"/>
-          <rect x="94" y="82" width="16" height="10" fill="#0A1138"/>
-          <rect x="48" y="98" width="12" height="12" fill="#0A1138"/>
-          <rect x="94" y="98" width="16" height="12" fill="#10B981"/>
-        </svg>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3 w-full max-w-xs pt-1">
-        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-          <div class="text-[10px] font-bold text-slate-400">קוד גיבוי להקלדה:</div>
-          <div id="projectorBackupCode" class="text-lg font-black font-mono text-indigo-950">7704</div>
-        </div>
-        <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
-          <div class="text-[10px] font-bold text-emerald-700">נוכחים בסדר:</div>
-          <div class="text-lg font-black font-mono text-emerald-800">17 / 18</div>
+      <!-- Large QR Code Frame -->
+      <div class="p-4 bg-white rounded-3xl border-4 border-[#0A1138] shadow-2xl mb-4 relative">
+        <img id="bmQrImage" src="" alt="ברקוד סדר נוכחי" class="w-64 h-64 sm:w-72 sm:h-72 object-contain" />
+        <div class="mt-2 text-center">
+          <span class="text-[11px] font-bold text-slate-400">קוד גיבוי ידני להזנה:</span>
+          <div id="bmManualCodeText" class="text-lg font-black font-mono tracking-widest text-slate-900">BK-892</div>
         </div>
       </div>
 
-      <!-- Quick Change QR Code for Rosh Yeshiva right inside modal -->
-      <div class="p-3 rounded-2xl bg-indigo-50 border border-indigo-200 w-full max-w-sm text-right space-y-1.5">
-        <label class="block text-[11px] font-black text-indigo-950">👑 שינוי קוד ה-QR בהחלטת ראש הישיבה:</label>
-        <div class="flex items-center gap-2">
-          <input type="text" id="modalQrQuickInput" placeholder="הזן קוד חדש..." class="w-full text-xs font-mono font-black text-center p-2 rounded-xl border border-indigo-200 bg-white" />
-          <button onclick="updateQrFromModal()" class="shrink-0 px-3.5 py-2 rounded-xl navy-brand text-white text-xs font-bold">
-            עדכן קוד ✓
-          </button>
-        </div>
+      <p class="text-xs text-slate-500 max-w-sm mb-4">
+        הבחורים סורקים את הברקוד ישירות דרך כפתור "סמן נוכחות" במכשיר הטלפון שלהם בשעות הסדר המוגדרות.
+      </p>
+
+      <div class="flex items-center gap-3">
+        <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center gap-1.5 border border-slate-200">
+          <span>🖨️</span>
+          <span>הדפס דף ברקוד ללוח מודעות</span>
+        </button>
+        <button onclick="closeBeitMidrashModal()" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition">
+          סגור מסך
+        </button>
       </div>
+
     </div>
   </div>
 
+  <!-- ========================================================== -->
+  <!-- 4. MODALS (ADD STUDENT, BATCH ADD, ADD SLOT, ETC.)         -->
+  <!-- ========================================================== -->
+  
   <!-- Single Student Modal -->
   <div id="addStudentModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right">
@@ -527,11 +475,15 @@
       <div class="space-y-3">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">שם מלא:</label>
-          <input type="text" id="newStudentName" placeholder="לדוגמה: אהרן פרידמן" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50" />
+          <input type="text" id="newStudentName" placeholder="לדוגמה: אהרן פרידמן" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 focus:outline-none" />
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">מספר טלפון:</label>
-          <input type="tel" id="newStudentPhone" placeholder="050-1234567" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 font-mono" dir="ltr" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">מספר טלפון (לקבלת SMS):</label>
+          <input type="tel" id="newStudentPhone" placeholder="050-1234567" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 focus:outline-none font-mono" dir="ltr" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה ראשונית (ברירת מחדל: 1234):</label>
+          <input type="text" id="newStudentPass" value="1234" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 focus:outline-none font-mono" />
         </div>
       </div>
       <div class="flex items-center gap-2 mt-5">
@@ -547,18 +499,15 @@
 
   <!-- Batch Add Students Modal -->
   <div id="batchAddModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 text-right space-y-3">
-      <div class="flex items-center justify-between">
-        <h3 class="text-base font-black text-slate-900">📋 הדבקה מרוכזת של בחורים (ללא הגבלה)</h3>
-        <button onclick="closeBatchAddModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold">✕</button>
-      </div>
-      <p class="text-xs text-slate-500">
-        הדבק שורה לכל בחור בפורמט: <code>שם מלא, טלפון</code> (לדוגמה מוואטסאפ או אקסל). המערכת תקלוט את כולם מיידית ותייצר קישורי SMS:
-      </p>
-      <textarea id="batchStudentsInput" rows="6" placeholder="אהרן פרידמן, 052-8819201&#10;שמעון ביטון, 054-3319022&#10;יוסף לוי, 050-1122334" class="w-full p-3 rounded-2xl border border-slate-300 text-xs font-mono"></textarea>
-      <div class="flex items-center gap-2 pt-2">
-        <button onclick="saveBatchStudents()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition">
-          ייבא את כל הבחורים למערכת ✓
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 text-right">
+      <h3 class="text-base font-black text-slate-900 mb-1">ייבוא רשימת בחורים מרוכזת</h3>
+      <p class="text-xs text-slate-500 mb-3">הדבק רשימה שבה כל שורה מכילה: שם, טלפון</p>
+      
+      <textarea id="batchStudentsTextarea" rows="8" placeholder="ישראל ישראלי, 052-1234567&#10;משה כהן, 050-7654321&#10;יוסף לוי, 054-9988776" class="w-full text-xs font-mono p-3 rounded-xl border border-slate-300 bg-slate-50 focus:outline-none leading-relaxed"></textarea>
+
+      <div class="flex items-center gap-2 mt-4">
+        <button onclick="processBatchStudents()" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition">
+          ייבא את כל הבחורים
         </button>
         <button onclick="closeBatchAddModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
           ביטול
@@ -567,90 +516,46 @@
     </div>
   </div>
 
-  <!-- Edit Journey Stop Modal -->
-  <div id="editJourneyStopModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-base font-black text-slate-900">👑 עריכת נקודת עצירה (החלטת ראש הישיבה)</h3>
-        <button onclick="closeEditJourneyStopModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold">✕</button>
-      </div>
-
+  <!-- Add Slot Modal -->
+  <div id="addSlotModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right">
+      <h3 class="text-base font-black text-slate-900 mb-1">הוספת סדר / אירוע חדש</h3>
+      <p class="text-xs text-slate-500 mb-4">קבע כותרת, חזרתיות, זמני פתיחה ונעילה, ושווי נקודות</p>
       <div class="space-y-3">
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">כותרת העצירה:</label>
-          <input type="text" id="editStopTitleInput" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50" />
+          <label class="block text-xs font-bold text-slate-700 mb-1">שם הסדר / האירוע:</label>
+          <input type="text" id="newSlotTitle" placeholder="לדוגמה: סדר מוסר / רעווא דרעווין" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 focus:outline-none" />
         </div>
         <div>
-          <div class="flex items-center justify-between mb-1">
-            <label class="block text-xs font-bold text-slate-700">מועד / תאריך העצירה:</label>
-            <button type="button" onclick="setEditStopDateQuestionMark()" class="text-[10px] font-black text-amber-700 hover:text-amber-800 underline">
-              קבע כסימן שאלה ❓ (טרם נקבע)
-            </button>
+          <label class="block text-xs font-bold text-slate-700 mb-1">מחזוריות וחזרתיות:</label>
+          <select id="newSlotRecurrence" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 focus:outline-none">
+            <option value="single">אירוע חד-פעמי (ליום הנבחר בלבד)</option>
+            <option value="weekdays" selected>אירוע חוזר בכל ימי החול (א׳ - ה׳)</option>
+            <option value="shabbat">אירוע חוזר לכל השבתות</option>
+            <option value="weekly_same_day">אירוע שבועי קבוע ביום זה</option>
+            <option value="all_days">בכל ימי המבצע (כולל שבתות)</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">שעת פתיחה:</label>
+            <input type="time" id="newSlotOpenTime" value="09:00" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:outline-none" />
           </div>
-          <input type="text" id="editStopDateInput" placeholder="לדוגמה: ❓ מועד ייקבע ע״י ראש הישיבה, או: כ״ג כסליו" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 font-mono" />
-          <p class="text-[10px] text-slate-400 mt-1">כל עוד לא נקבע מועד סופי – יוצג כסימן שאלה לבחורים.</p>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">שעת נעילה:</label>
+            <input type="time" id="newSlotLockTime" value="10:15" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:outline-none" />
+          </div>
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">תגית / Badge:</label>
-          <input type="text" id="editStopBadgeInput" placeholder="📍 עצירה 2 (❓)" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה / סלוגן:</label>
-          <input type="text" id="editStopSloganInput" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">תיאור העצירה:</label>
-          <textarea id="editStopDescInput" rows="2" class="w-full text-xs font-medium p-2.5 rounded-xl border border-slate-300 bg-slate-50"></textarea>
+          <label class="block text-xs font-bold text-slate-700 mb-1">נקודות לסדר:</label>
+          <input type="number" id="newSlotPoints" value="1" min="1" max="10" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:outline-none" />
         </div>
       </div>
-
-      <div class="flex items-center gap-2 pt-2">
-        <button onclick="saveEditedJourneyStop()" class="flex-1 py-3 rounded-xl bg-[#0A1138] hover:bg-slate-800 text-white font-black text-xs transition">
-          שמור שינויים ✓
+      <div class="flex items-center gap-2 mt-5">
+        <button onclick="saveNewSlot()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition">
+          הוסף סדר למערכת
         </button>
-        <button onclick="closeEditJourneyStopModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
-          ביטול
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Journey Stop Modal -->
-  <div id="addJourneyStopModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-base font-black text-slate-900">➕ הוספת נקודת עצירה חדשה למסע</h3>
-        <button onclick="closeAddJourneyStopModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold">✕</button>
-      </div>
-
-      <div class="space-y-3">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">כותרת העצירה החדשה:</label>
-          <input type="text" id="addStopTitleInput" placeholder="לדוגמה: עצירה 4: שבת התעלות וגיבוש" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">מועד / תאריך:</label>
-          <input type="text" id="addStopDateInput" value="❓ מועד ייקבע ע״י ראש הישיבה" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 font-mono" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">תגית / Badge:</label>
-          <input type="text" id="addStopBadgeInput" placeholder="📍 עצירה 4 (❓)" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה / סלוגן:</label>
-          <input type="text" id="addStopSloganInput" placeholder="ממשיכים לטפס יחד!" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50" />
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">תיאור העצירה:</label>
-          <textarea id="addStopDescInput" rows="2" placeholder="סדרי לימוד, גיבוש ואירוע מיוחד..." class="w-full text-xs font-medium p-2.5 rounded-xl border border-slate-300 bg-slate-50"></textarea>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 pt-2">
-        <button onclick="saveNewJourneyStop()" class="flex-1 py-3 rounded-xl bg-[#0A1138] hover:bg-slate-800 text-white font-black text-xs transition">
-          הוסף עצירה למסע ✓
-        </button>
-        <button onclick="closeAddJourneyStopModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+        <button onclick="closeAddSlotModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
           ביטול
         </button>
       </div>
@@ -661,623 +566,660 @@
   <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- ========================================================== -->
-  <!-- 5. JAVASCRIPT LOGIC & ZERO DATA LOSS MIGRATION             -->
+  <!-- 5. JAVASCRIPT LOGIC & SUPABASE INTEGRATION                 -->
   <!-- ========================================================== -->
   <script>
+    // Storage Keys
     const STORAGE_KEYS = {
-      STUDENTS: 'bakshu_students_list_v3',
-      BONUS_CONFIG: 'bakshu_bonus_config_v2',
-      DUTIES: 'bakshu_duties_roster_v2',
-      QR_SECRET: 'bakshu_qr_secret_v2',
-      JOURNEY_STOPS: 'bakshu_journey_stops_v2',
-      ADMIN_PASS: 'bakshu_admin_password_v1'
+      STUDENTS: 'bakshu_students',
+      SLOTS_BY_DATE: 'bakshu_slots_by_date',
+      CONFIG: 'bakshu_campaign_config',
+      ADMIN_PASS: 'bakshu_admin_password',
+      BONUS_RULES: 'bakshu_bonus_rules',
+      BONUS_LOGS: 'bakshu_bonus_logs',
+      REQUESTS: 'bakshu_absence_requests'
     };
 
-    function safeGet(key, def) {
+    const DEFAULT_CONFIG = {
+      startDate: '2026-10-20',
+      endDate: '2026-11-30',
+      groupFullThreshold: 1,
+      targets: {
+        min: { points: 70, name: 'יעד כניסה להגרלה' },
+        mid: { points: 100, name: 'יעד פרס כספי' },
+        max: { points: 130, name: 'יעד נסיעה ופרס ענק' }
+      }
+    };
+
+    const DEFAULT_SLOTS = {
+      weekday_template: [
+        { id: 's1', title: 'סדר א׳ (עיון)', openTime: '09:00', lockTime: '10:15', points: 1, isLocked: false },
+        { id: 's2', title: 'סדר ב׳ (בקיאות)', openTime: '15:30', lockTime: '16:45', points: 1, isLocked: false },
+        { id: 's3', title: 'סדר ג׳ (לילה)', openTime: '20:00', lockTime: '21:15', points: 2, isLocked: false }
+      ],
+      shabbat_template: [
+        { id: 'sb1', title: 'סדר ליל שבת קודש', openTime: '21:00', lockTime: '22:00', points: 2, isLocked: false },
+        { id: 'sb2', title: 'סדר שחרית ובוקר שבת', openTime: '08:30', lockTime: '10:00', points: 2, isLocked: false },
+        { id: 'sb3', title: 'סדר רעווא דרעווין', openTime: '16:30', lockTime: '18:00', points: 2, isLocked: false },
+        { id: 'sb4', title: 'סדר מוצאי שבת קודש', openTime: '19:30', lockTime: '21:00', points: 2, isLocked: false }
+      ],
+      friday_template: []
+    };
+
+    const DEFAULT_DEMO_STUDENT = {
+      id: 'demo_student_1',
+      name: 'ישראל ישראלי (בחור לדוגמה)',
+      phone: '050-1234567',
+      password: '1234',
+      score: 12,
+      presentToday: true
+    };
+
+    const state = {
+      students: [],
+      slotsByDate: {},
+      config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)),
+      adminPassword: '1234',
+      bonusLogs: [],
+      bonusRules: { x: 5, y: 10, bonus: 3 },
+      absenceRequests: [],
+      activeAdminTab: 'students'
+    };
+
+    // Load initial state
+    function loadState() {
       try {
-        const val = localStorage.getItem(key);
-        return val ? JSON.parse(val) : def;
+        const rawStudents = localStorage.getItem(STORAGE_KEYS.STUDENTS);
+        state.students = rawStudents ? JSON.parse(rawStudents) : [JSON.parse(JSON.stringify(DEFAULT_DEMO_STUDENT))];
+
+        const rawSlots = localStorage.getItem(STORAGE_KEYS.SLOTS_BY_DATE);
+        state.slotsByDate = rawSlots ? JSON.parse(rawSlots) : JSON.parse(JSON.stringify(DEFAULT_SLOTS));
+
+        const rawConfig = localStorage.getItem(STORAGE_KEYS.CONFIG);
+        if (rawConfig) {
+          state.config = Object.assign({}, DEFAULT_CONFIG, JSON.parse(rawConfig));
+        }
+
+        const rawPass = localStorage.getItem(STORAGE_KEYS.ADMIN_PASS);
+        if (rawPass) state.adminPassword = rawPass;
+
+        const rawLogs = localStorage.getItem(STORAGE_KEYS.BONUS_LOGS);
+        state.bonusLogs = rawLogs ? JSON.parse(rawLogs) : [];
+
+        const rawReqs = localStorage.getItem(STORAGE_KEYS.REQUESTS);
+        state.absenceRequests = rawReqs ? JSON.parse(rawReqs) : [];
       } catch (e) {
-        return def;
+        console.error('Error loading state:', e);
       }
     }
 
-    function safeSet(key, val) {
-      try {
-        localStorage.setItem(key, JSON.stringify(val));
-      } catch (e) {}
+    function saveState() {
+      localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(state.students));
+      localStorage.setItem(STORAGE_KEYS.SLOTS_BY_DATE, JSON.stringify(state.slotsByDate));
+      localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(state.config));
+      localStorage.setItem(STORAGE_KEYS.BONUS_LOGS, JSON.stringify(state.bonusLogs));
+      localStorage.setItem(STORAGE_KEYS.REQUESTS, JSON.stringify(state.absenceRequests));
     }
 
-    let toastTimer = null;
-    function showToast(message, icon = '✨') {
-      const container = document.getElementById('toastContainer');
-      if (!container) return;
-      const box = document.createElement('div');
-      box.className = 'bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-bold';
-      box.innerHTML = `<span>${icon}</span><span>${message}</span>`;
-      container.appendChild(box);
-      setTimeout(() => { box.remove(); }, 3500);
-    }
-
-    const state = {
-      adminUnlocked: false,
-      activeAdminTab: 'bonuses',
-      bonusConfig: safeGet(STORAGE_KEYS.BONUS_CONFIG, {
-        noPhoneBonus: 1,
-        wakeupDutyBonus: 3,
-        kitchenDutyBonus: 3,
-        groupFullBonus: 4,
-        groupFullThreshold: 18,
-        xyNeed: 5,
-        xyWindow: 10,
-        xyBonus: 3,
-        currentSederPoints: 1
-      }),
-      dutiesRoster: safeGet(STORAGE_KEYS.DUTIES, [
-        { dayIdx: 8, dateStr: 'ו׳ חשוון', dayName: 'יום ב׳', wakeupStudentId: 2, wakeupDone: true, wakeupReminderTime: 'לילה קודם (22:30)', kitchenStudentId: 3, kitchenDone: true, kitchenReminderTime: 'לקראת ערב (19:30)' },
-        { dayIdx: 9, dateStr: 'ז׳ חשוון', dayName: 'יום ג׳', wakeupStudentId: 4, wakeupDone: true, wakeupReminderTime: 'לילה קודם (22:30)', kitchenStudentId: 5, kitchenDone: true, kitchenReminderTime: 'לקראת ערב (19:30)' },
-        { dayIdx: 10, dateStr: 'ח׳ חשוון (היום)', dayName: 'יום ד׳ (היום)', wakeupStudentId: 1, wakeupDone: false, wakeupReminderTime: 'לילה קודם (22:30)', kitchenStudentId: 6, kitchenDone: false, kitchenReminderTime: 'לקראת ערב (19:30)' },
-        { dayIdx: 11, dateStr: 'ט׳ חשוון', dayName: 'יום ה׳', wakeupStudentId: 7, wakeupDone: false, wakeupReminderTime: 'הלילה (22:30)', kitchenStudentId: 1, kitchenDone: false, kitchenReminderTime: 'מחר (19:30)' },
-        { dayIdx: 12, dateStr: 'י׳ חשוון', dayName: 'יום ו׳', wakeupStudentId: 8, wakeupDone: false, wakeupReminderTime: 'לילה קודם (22:30)', kitchenStudentId: 9, kitchenDone: false, kitchenReminderTime: 'לקראת שבת' },
-        { dayIdx: 14, dateStr: 'י״ב חשוון', dayName: 'יום א׳', wakeupStudentId: 10, wakeupDone: false, wakeupReminderTime: 'מוצ״ש (22:30)', kitchenStudentId: 11, kitchenDone: false, kitchenReminderTime: 'לקראת ערב (19:30)' },
-        { dayIdx: 15, dateStr: 'י״ג חשוון', dayName: 'יום ב׳', wakeupStudentId: 12, wakeupDone: false, wakeupReminderTime: 'לילה קודם (22:30)', kitchenStudentId: 13, kitchenDone: false, kitchenReminderTime: 'לקראת ערב (19:30)' }
-      ]),
-      qrSecretCode: safeGet(STORAGE_KEYS.QR_SECRET, '7704'),
-      students: safeGet(STORAGE_KEYS.STUDENTS, [
-        { id: 1, inviteCode: 'st_101', name: 'יהודה כהן (אתה)', phone: '054-7829104', password: '1234', locked: true, presentCurrent: false, baseScore: 96 },
-        { id: 2, inviteCode: 'st_102', name: 'משה אהרון לוי', phone: '052-4118902', password: '1234', locked: true, presentCurrent: true, baseScore: 118 },
-        { id: 3, inviteCode: 'st_103', name: 'דוד שפירא', phone: '053-8821904', password: '1234', locked: true, presentCurrent: true, baseScore: 114 },
-        { id: 4, inviteCode: 'st_104', name: 'נתנאל מזרחי', phone: '050-6721899', password: '', locked: false, presentCurrent: true, baseScore: 109 },
-        { id: 5, inviteCode: 'st_105', name: 'יוסף חיים רוזן', phone: '054-9012388', password: '1234', locked: true, presentCurrent: true, baseScore: 106 },
-        { id: 6, inviteCode: 'st_106', name: 'שמואל גרינברג', phone: '058-4412098', password: '1234', locked: true, presentCurrent: true, baseScore: 103 },
-        { id: 7, inviteCode: 'st_107', name: 'אליהו פרידמן', phone: '052-7612390', password: '', locked: false, presentCurrent: true, baseScore: 101 },
-        { id: 8, inviteCode: 'st_108', name: 'חיים ישראל כץ', phone: '054-3390112', password: '1234', locked: true, presentCurrent: true, baseScore: 99 },
-        { id: 9, inviteCode: 'st_109', name: 'בנימין שטרן', phone: '053-2198430', password: '1234', locked: true, presentCurrent: true, baseScore: 97 },
-        { id: 10, inviteCode: 'st_110', name: 'אריאל חדד', phone: '050-5541290', password: '1234', locked: true, presentCurrent: true, baseScore: 95 }
-      ]),
-      journeyStops: (function() {
-        const raw = safeGet(STORAGE_KEYS.JOURNEY_STOPS, null);
-        const defaults = [
-          { id: 'stop_1', title: 'עצירה ראשונה: יום חמישי ט׳ כסליו', dateStr: 'יום ה׳ ט׳ כסליו (פיתחו יומנים!)', slogan: 'פיתחו יומנים! עצירה ראשונה במסע עד הפסגה', desc: 'יום גיבוש, חוויה ונופים מדהימים לעצירה הראשונה בישיבה!', badge: '📍 עצירה 1' },
-          { id: 'stop_2', title: 'עצירה שנייה: אמצע המסע', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', slogan: 'מועד העצירה ייקבע ויוכרז בהחלטת ראש הישיבה', desc: 'עצירת אמצע מסע מרוממת, סדרי לימוד וגיבוש ישיבתי', badge: '📍 עצירה 2 (❓)' },
-          { id: 'stop_3', title: 'עצירה שלישית: לקראת הפסגה', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', slogan: 'מועד העצירה ייקבע ויוכרז בהחלטת ראש הישיבה', desc: 'סדרי עיון והתמדה לקראת הישורת האחרונה לפסגה', badge: '📍 עצירה 3 (❓)' },
-          { id: 'stop_4', title: 'הגעה לפסגה – היעד הגדול!', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', slogan: 'בסוף המסע – המטרה הגדולה מחכה לנו!', desc: 'חגיגת סיום מפוארת ומתנת הפסגה הגדולה (חסויה 🎁)', badge: '🏔️ הפסגה (❓)' }
-        ];
-        if (!raw || !Array.isArray(raw)) return defaults;
-        return raw.map(st => {
-          if (st.id === 'stop_2' && (st.dateStr.includes('חנוכה') || !st.dateStr.includes('?'))) {
-            return { ...st, dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', badge: '📍 עצירה 2 (❓)' };
-          }
-          if (st.id === 'stop_3' && (st.dateStr.includes('טבת') || !st.dateStr.includes('?'))) {
-            return { ...st, dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', badge: '📍 עצירה 3 (❓)' };
-          }
-          if (st.id === 'stop_4' && (st.dateStr.includes('אדר') || !st.dateStr.includes('?'))) {
-            return { ...st, dateStr: '❓ מועד מדויק ייקבע ע״י ראש הישיבה', badge: '🏔️ הפסגה (❓)' };
-          }
-          return st;
-        });
-      })()
-    };
-
-    // ====================================================
-    // AUTHENTICATION
-    // ====================================================
+    // Authentication Gate
     function verifyAdminGate() {
       const pass = (document.getElementById('gatePasswordInput')?.value || '').trim();
-      const savedPass = safeGet(STORAGE_KEYS.ADMIN_PASS, 'bakshu2026');
-      if (pass === savedPass || pass === 'bakshu2026' || pass === '1234') {
-        state.adminUnlocked = true;
-        document.getElementById('adminGateModal').classList.add('hidden');
-        document.getElementById('adminPortalMain').classList.remove('hidden');
-        renderAdminAll();
-        showToast('ברוך הבא לפורטל ראש הישיבה!', '👑');
+      const err = document.getElementById('gateErrorMsg');
+      if (pass === state.adminPassword || pass === '1234') {
+        document.getElementById('adminGateModal')?.classList.add('hidden');
+        document.getElementById('adminPortalMain')?.classList.remove('hidden');
+        sessionStorage.setItem('bakshu_admin_logged', 'true');
+        initAdminDashboard();
       } else {
-        const err = document.getElementById('gateErrorMsg');
-        err.textContent = 'סיסמת ראש הישיבה שגויה';
-        err.classList.remove('hidden');
+        if (err) {
+          err.textContent = 'סיסמת ראש הישיבה שגויה. נסה שוב';
+          err.classList.remove('hidden');
+        }
       }
     }
 
     function handleAdminLogout() {
-      state.adminUnlocked = false;
-      document.getElementById('adminPortalMain').classList.add('hidden');
-      document.getElementById('adminGateModal').classList.remove('hidden');
+      sessionStorage.removeItem('bakshu_admin_logged');
+      window.location.reload();
     }
 
-    // ====================================================
-    // NAVIGATION
-    // ====================================================
-    function switchAdminTab(tabId) {
-      state.activeAdminTab = tabId;
-      ['bonuses', 'duties', 'students', 'stops'].forEach(t => {
-        const content = document.getElementById('adminTabContent-' + t);
+    function togglePass(inputId) {
+      const input = document.getElementById(inputId);
+      if (input) input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    // Tabs
+    function switchAdminTab(tabName) {
+      state.activeAdminTab = tabName;
+      ['students', 'schedule', 'targets', 'bonuses'].forEach(t => {
         const btn = document.getElementById('tabBtn-' + t);
-        if (content) content.classList.add('hidden');
-        if (btn) btn.className = 'px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition shrink-0 flex items-center gap-1.5';
-      });
-
-      const activeContent = document.getElementById('adminTabContent-' + tabId);
-      const activeBtn = document.getElementById('tabBtn-' + tabId);
-      if (activeContent) activeContent.classList.remove('hidden');
-      if (activeBtn) activeBtn.className = 'px-4 py-2 rounded-xl bg-white text-[#0A1138] shadow transition shrink-0 flex items-center gap-1.5';
-    }
-
-    // ====================================================
-    // QR CODE DECISION BY ROSH YESHIVA
-    // ====================================================
-    function saveRoshQrDecision() {
-      const val = (document.getElementById('roshQrCodeInput')?.value || '').trim();
-      if (!val) return;
-      state.qrSecretCode = val;
-      safeSet(STORAGE_KEYS.QR_SECRET, val);
-      document.getElementById('activeQrCodeDisplay').textContent = val;
-      document.getElementById('projectorBackupCode').textContent = val;
-      showToast(`קוד ה-QR שונה בהחלטת ראש הישיבה ל-"${val}"!`, '👑');
-    }
-
-    function updateQrFromModal() {
-      const val = (document.getElementById('modalQrQuickInput')?.value || '').trim();
-      if (!val) return;
-      state.qrSecretCode = val;
-      safeSet(STORAGE_KEYS.QR_SECRET, val);
-      document.getElementById('activeQrCodeDisplay').textContent = val;
-      document.getElementById('projectorBackupCode').textContent = val;
-      document.getElementById('roshQrCodeInput').value = val;
-      document.getElementById('modalQrQuickInput').value = '';
-      showToast(`קוד הברקוד המוקרן עודכן ל-"${val}"!`, '📺');
-    }
-
-    // ====================================================
-    // BONUSES CONFIGURATION SAVE
-    // ====================================================
-    function saveAllBonusSettings() {
-      state.bonusConfig.noPhoneBonus = parseInt(document.getElementById('cfgNoPhoneBonus')?.value, 10) || 1;
-      state.bonusConfig.wakeupDutyBonus = parseInt(document.getElementById('cfgWakeupBonus')?.value, 10) || 3;
-      state.bonusConfig.kitchenDutyBonus = parseInt(document.getElementById('cfgKitchenBonus')?.value, 10) || 3;
-      state.bonusConfig.groupFullThreshold = parseInt(document.getElementById('cfgGroupThresh')?.value, 10) || 18;
-      state.bonusConfig.groupFullBonus = parseInt(document.getElementById('cfgGroupBonus')?.value, 10) || 4;
-      state.bonusConfig.xyNeed = parseInt(document.getElementById('cfgXyNeed')?.value, 10) || 5;
-      state.bonusConfig.xyWindow = parseInt(document.getElementById('cfgXyWindow')?.value, 10) || 10;
-      state.bonusConfig.xyBonus = parseInt(document.getElementById('cfgXyBonus')?.value, 10) || 3;
-      state.bonusConfig.currentSederPoints = parseInt(document.getElementById('cfgCurrentSederPts')?.value, 10) || 1;
-
-      safeSet(STORAGE_KEYS.BONUS_CONFIG, state.bonusConfig);
-      showToast('כל הגדרות הבונוס של ראש הישיבה נשמרו בהצלחה!', '✓');
-    }
-
-    function awardDiscretionaryBonus() {
-      const targetVal = document.getElementById('freeBonusTargetSelect')?.value;
-      const pts = parseInt(document.getElementById('freeBonusPtsInput')?.value, 10) || 5;
-      const reason = (document.getElementById('freeBonusReasonInput')?.value || 'בונוס הערכה מראש הישיבה').trim();
-
-      if (targetVal === 'all') {
-        state.students.forEach(s => { s.baseScore = (s.baseScore || 0) + pts; });
-        showToast(`הוענקו +${pts} נק׳ בונוס לכלל תלמידי הישיבה!`, '🎁');
-      } else {
-        const st = state.students.find(s => s.id === parseInt(targetVal, 10));
-        if (st) {
-          st.baseScore = (st.baseScore || 0) + pts;
-          showToast(`הוענקו +${pts} נק׳ בונוס ל-${st.name} (${reason})!`, '🎁');
-        }
-      }
-      safeSet(STORAGE_KEYS.STUDENTS, state.students);
-      document.getElementById('freeBonusReasonInput').value = '';
-      renderStudentsTable();
-    }
-
-    // ====================================================
-    // DUTIES ROSTER ACTIONS
-    // ====================================================
-    function saveDutyAssignment() {
-      const dayIdx = parseInt(document.getElementById('dutyDaySelect')?.value, 10);
-      const wakeupId = parseInt(document.getElementById('dutyWakeupStudentSelect')?.value, 10);
-      const kitchenId = parseInt(document.getElementById('dutyKitchenStudentSelect')?.value, 10);
-
-      let entry = state.dutiesRoster.find(d => d.dayIdx === dayIdx);
-      if (entry) {
-        entry.wakeupStudentId = wakeupId;
-        entry.kitchenStudentId = kitchenId;
-      }
-      safeSet(STORAGE_KEYS.DUTIES, state.dutiesRoster);
-      renderDutiesTable();
-      showToast('השיבוץ נשמר בלוח השנה ויופצו תזכורות מתוזמנות!', '📅');
-    }
-
-    function toggleAdminDutyStatus(dayIdx, type) {
-      const entry = state.dutiesRoster.find(d => d.dayIdx === dayIdx);
-      if (!entry) return;
-      if (type === 'wakeup') entry.wakeupDone = !entry.wakeupDone;
-      else entry.kitchenDone = !entry.kitchenDone;
-      safeSet(STORAGE_KEYS.DUTIES, state.dutiesRoster);
-      renderDutiesTable();
-      showToast('סטטוס ביצוע התורנות עודכן!', '✓');
-    }
-
-    function sendDutyReminderNow(studentId, roleName, timing) {
-      const st = state.students.find(s => s.id === studentId);
-      if (!st) return;
-      const cleanPhone = (st.phone || '').replace(/-/g, '');
-      const msg = `שלום ${st.name}, תזכורת מישיבת בקשו: הנך משובץ כ-${roleName} (${timing}). סמן קיום תורנות באפליקציה לקבלת בונוס!`;
-      const smsHref = `sms:${cleanPhone}?body=${encodeURIComponent(msg)}`;
-      window.open(smsHref, '_blank');
-      showToast(`נפתחה תזכורת SMS עבור ${st.name}!`, '📲');
-    }
-
-    // ====================================================
-    // STUDENTS MANAGEMENT
-    // ====================================================
-    function openAddStudentModal() {
-      document.getElementById('addStudentModal').classList.remove('hidden');
-    }
-
-    function closeAddStudentModal() {
-      document.getElementById('addStudentModal').classList.add('hidden');
-    }
-
-    function saveNewStudent() {
-      const name = (document.getElementById('newStudentName')?.value || '').trim();
-      const phone = (document.getElementById('newStudentPhone')?.value || '').trim();
-      if (!name) return;
-
-      const newId = state.students.length ? Math.max(...state.students.map(s => s.id)) + 1 : 1;
-      state.students.push({
-        id: newId,
-        inviteCode: 'st_' + (100 + newId),
-        name: name,
-        phone: phone || '050-0000000',
-        password: '1234',
-        locked: false,
-        presentCurrent: false,
-        baseScore: 80
-      });
-
-      safeSet(STORAGE_KEYS.STUDENTS, state.students);
-      closeAddStudentModal();
-      document.getElementById('newStudentName').value = '';
-      document.getElementById('newStudentPhone').value = '';
-      renderStudentsTable();
-      renderTargetDropdowns();
-      showToast(`הבחור "${name}" נוסף בהצלחה למבצע!`, '👤');
-    }
-
-    function openBatchAddModal() {
-      document.getElementById('batchAddModal').classList.remove('hidden');
-    }
-
-    function closeBatchAddModal() {
-      document.getElementById('batchAddModal').classList.add('hidden');
-    }
-
-    function saveBatchStudents() {
-      const raw = (document.getElementById('batchStudentsInput')?.value || '').trim();
-      if (!raw) return;
-
-      const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-      let count = 0;
-      lines.forEach(line => {
-        const parts = line.split(',');
-        const name = (parts[0] || '').trim();
-        const phone = (parts[1] || '050-0000000').trim();
-        if (name) {
-          const newId = state.students.length ? Math.max(...state.students.map(s => s.id)) + 1 : 1;
-          state.students.push({
-            id: newId,
-            inviteCode: 'st_' + (100 + newId),
-            name: name,
-            phone: phone,
-            password: '1234',
-            locked: false,
-            presentCurrent: false,
-            baseScore: 80
-          });
-          count++;
+        const content = document.getElementById('adminTabContent-' + t);
+        if (t === tabName) {
+          btn?.classList.add('bg-white', 'text-[#0A1138]', 'shadow');
+          btn?.classList.remove('text-slate-300');
+          content?.classList.remove('hidden');
+        } else {
+          btn?.classList.remove('bg-white', 'text-[#0A1138]', 'shadow');
+          btn?.classList.add('text-slate-300');
+          content?.classList.add('hidden');
         }
       });
-
-      safeSet(STORAGE_KEYS.STUDENTS, state.students);
-      closeBatchAddModal();
-      document.getElementById('batchStudentsInput').value = '';
-      renderStudentsTable();
-      renderTargetDropdowns();
-      showToast(`נקלטו ${count} בחורים חדשים למערכת!`, '👥');
     }
 
-    function sendSmsInvite(studentId) {
-      const st = state.students.find(s => s.id === studentId);
-      if (!st) return;
-      const cleanPhone = (st.phone || '').replace(/-/g, '');
-      const msg = `שלום ${st.name}, קישור הכניסה האישי שלך למבצע 'עד הפסגה': https://bakshu-vibe.vercel.app/?student=${st.id}`;
-      window.open(`sms:${cleanPhone}?body=${encodeURIComponent(msg)}`, '_blank');
-      showToast(`נפתחה הודעת SMS מוכנה עבור ${st.name}!`, '📱');
+    // Seder Slots Resolution
+    function getSlotsForDate(dateStr) {
+      if (state.slotsByDate[dateStr]) return state.slotsByDate[dateStr];
+      const d = new Date(dateStr + 'T12:00:00');
+      const day = d.getDay();
+      if (day === 5) return state.slotsByDate['friday_template'] || [];
+      if (day === 6) return state.slotsByDate['shabbat_template'] || DEFAULT_SLOTS.shabbat_template;
+      return state.slotsByDate['weekday_template'] || DEFAULT_SLOTS.weekday_template;
     }
 
-    // ====================================================
-    // MODALS & HELPERS
-    // ====================================================
-    function openBeitMidrashModal() {
-      document.getElementById('projectorBackupCode').textContent = state.qrSecretCode;
-      document.getElementById('beitMidrashModal').classList.remove('hidden');
-    }
-
-    function closeBeitMidrashModal() {
-      document.getElementById('beitMidrashModal').classList.add('hidden');
-    }
-
-    // ====================================================
-    // RENDERING
-    // ====================================================
-    function renderTargetDropdowns() {
-      const freeSel = document.getElementById('freeBonusTargetSelect');
-      const wakeupSel = document.getElementById('dutyWakeupStudentSelect');
-      const kitchenSel = document.getElementById('dutyKitchenStudentSelect');
-      const daySel = document.getElementById('dutyDaySelect');
-
-      if (freeSel) {
-        freeSel.innerHTML = `
-          <option value="all">⭐ כלל תלמידי הישיבה</option>
-          ${state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
-        `;
+    function calculateCampaignTotalAchievablePoints() {
+      const start = new Date(state.config.startDate + 'T12:00:00');
+      const end = new Date(state.config.endDate + 'T12:00:00');
+      if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return 160;
+      let total = 0;
+      let curr = new Date(start);
+      while (curr <= end) {
+        const dStr = curr.toISOString().slice(0, 10);
+        const slots = getSlotsForDate(dStr);
+        slots.forEach(s => total += (Number(s.points) || 0));
+        curr.setDate(curr.getDate() + 1);
       }
-      if (wakeupSel) {
-        wakeupSel.innerHTML = state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-      }
-      if (kitchenSel) {
-        kitchenSel.innerHTML = state.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-      }
-      if (daySel) {
-        daySel.innerHTML = state.dutiesRoster.map(d => `<option value="${d.dayIdx}">${d.dayName} • ${d.dateStr}</option>`).join('');
-      }
+      return total;
     }
 
-    function renderDutiesTable() {
-      const tbody = document.getElementById('adminDutiesTableBody');
+    function calculateStudentProjectedRange(student) {
+      const campaignTotal = calculateCampaignTotalAchievablePoints();
+      const current = Number(student.score) || 0;
+      const now = new Date();
+      const end = new Date(state.config.endDate + 'T12:00:00');
+      let remaining = 0;
+      if (!isNaN(end.getTime())) {
+        let curr = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+        while (curr <= end) {
+          const dStr = curr.toISOString().slice(0, 10);
+          const slots = getSlotsForDate(dStr);
+          slots.forEach(s => remaining += (Number(s.points) || 0));
+          curr.setDate(curr.getDate() + 1);
+        }
+      }
+      return { current, maxPossible: current + remaining, remaining };
+    }
+
+    // Render Students Table
+    function renderStudentsTable() {
+      const tbody = document.getElementById('adminStudentsTableBody');
+      const statCount = document.getElementById('statStudentsCount');
+      if (statCount) statCount.textContent = state.students.length;
       if (!tbody) return;
 
-      tbody.innerHTML = state.dutiesRoster.map(d => {
-        const wakeupSt = state.students.find(s => s.id === d.wakeupStudentId) || state.students[0];
-        const kitchenSt = state.students.find(s => s.id === d.kitchenStudentId) || state.students[1];
-        const isToday = d.dayIdx === 10;
+      if (state.students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 font-bold">אין בחורים רשומים במערכת</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = state.students.map(st => {
+        const range = calculateStudentProjectedRange(st);
+        const studentInviteUrl = window.location.origin + '/?invite=' + st.id;
+        const smsMessage = encodeURIComponent('שלום ' + st.name + ', כנס לקישור להפעלת חשבונך במבצע בקשו VIBE: ' + studentInviteUrl);
+        const smsHref = 'sms:' + (st.phone || '') + '?body=' + smsMessage;
 
         return `
-          <tr class="hover:bg-slate-50 transition ${isToday ? 'bg-amber-50/50 font-bold' : ''}">
+          <tr class="hover:bg-slate-50 transition">
             <td class="py-3 px-3">
-              <div class="font-black text-slate-900">${d.dayName}</div>
-              <div class="text-[11px] text-slate-500">${d.dateStr}</div>
+              <div class="font-black text-slate-900">${st.name}</div>
+              <div class="text-[10px] text-slate-400 font-mono sm:hidden" dir="ltr">${st.phone}</div>
             </td>
-            <td class="py-3 px-3">
-              <div class="font-bold text-slate-800">${wakeupSt.name}</div>
-              <button onclick="sendDutyReminderNow(${wakeupSt.id}, 'תורן מעורר בוקר', 'לילה קודם')" class="text-[11px] text-indigo-700 font-bold hover:underline flex items-center gap-1 mt-0.5">
-                <span>📲 שלח תזכורת SMS</span>
-              </button>
+            <td class="py-3 px-3 text-center">
+              <div class="font-mono font-bold text-slate-700" dir="ltr">${st.phone}</div>
+              <div class="mt-0.5">
+                <span class="text-[10px] font-mono bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">
+                  🔑 ${st.password || '1234'}
+                </span>
+                <button onclick="promptEditPassword('${st.id}')" class="text-indigo-600 hover:text-indigo-800 text-[10px] font-bold mr-1">ערוך</button>
+              </div>
             </td>
-            <td class="py-3 px-3">
-              <button onclick="toggleAdminDutyStatus(${d.dayIdx}, 'wakeup')" class="px-2.5 py-1 rounded-lg text-xs font-black transition ${d.wakeupDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-600'}">
-                ${d.wakeupDone ? '✓ בוצע (+3 נק׳)' : 'סמן כבוצע'}
-              </button>
+            <td class="py-3 px-3 text-center font-black text-indigo-950 font-mono text-sm">
+              ${st.score} נק׳
             </td>
-            <td class="py-3 px-3">
-              <div class="font-bold text-slate-800">${kitchenSt.name}</div>
-              <button onclick="sendDutyReminderNow(${kitchenSt.id}, 'אחראי ניקיון מטבח', 'לקראת ערב')" class="text-[11px] text-indigo-700 font-bold hover:underline flex items-center gap-1 mt-0.5">
-                <span>📲 שלח תזכורת SMS</span>
-              </button>
+            <td class="py-3 px-3 text-center">
+              <span class="px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-950 font-mono font-black text-xs">
+                ${range.current} - ${range.maxPossible} נק׳
+              </span>
             </td>
-            <td class="py-3 px-3">
-              <button onclick="toggleAdminDutyStatus(${d.dayIdx}, 'kitchen')" class="px-2.5 py-1 rounded-lg text-xs font-black transition ${d.kitchenDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-600'}">
-                ${d.kitchenDone ? '✓ בוצע (+3 נק׳)' : 'סמן כבוצע'}
-              </button>
+            <td class="py-3 px-3 text-center">
+              <div class="flex items-center justify-center gap-1.5">
+                <a href="${smsHref}" class="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-[11px] border border-emerald-200 transition flex items-center gap-1" title="שלח הודעת SMS עם קישור ישיר">
+                  <span>📱</span>
+                  <span>שלח SMS</span>
+                </a>
+                <button onclick="copyStudentInvite('${st.id}')" class="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] border border-slate-200 transition" title="העתק קישור להודעה">
+                  📋 העתק
+                </button>
+              </div>
+            </td>
+            <td class="py-3 px-3 text-left">
+              <div class="flex items-center justify-end gap-1.5">
+                <button onclick="openGrantBonusModal('${st.id}')" class="px-2 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-xs border border-amber-300 transition" title="הענק בונוס מיוחד">
+                  ⭐ בונוס
+                </button>
+                <button onclick="deleteStudent('${st.id}')" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition" title="הסר בחור">
+                  🗑️
+                </button>
+              </div>
             </td>
           </tr>
         `;
       }).join('');
     }
 
-    function renderStudentsTable() {
-      const tbody = document.getElementById('adminStudentsTableBody');
-      const countEl = document.getElementById('adminRegisteredCountText');
-      if (countEl) countEl.textContent = state.students.length;
-      if (!tbody) return;
+    function copyStudentInvite(studentId) {
+      const url = window.location.origin + '/?invite=' + studentId;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => showToast('קישור הכניסה הועתק ללוח!', '📋'));
+      } else {
+        prompt('העתק קישור זה:', url);
+      }
+    }
 
-      tbody.innerHTML = state.students.map((st, idx) => `
-        <tr class="hover:bg-slate-50 transition">
-          <td class="py-3 px-3 font-mono text-slate-400">#${idx + 1}</td>
-          <td class="py-3 px-3 font-bold text-slate-900">${st.name}</td>
-          <td class="py-3 px-3 font-mono text-slate-600" dir="ltr">${st.phone || '—'}</td>
-          <td class="py-3 px-3">
-            <button onclick="sendSmsInvite(${st.id})" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-xs font-bold transition flex items-center gap-1">
-              <span>📱</span>
-              <span>שלח SMS</span>
+    function promptEditPassword(studentId) {
+      const st = state.students.find(s => s.id === studentId);
+      if (!st) return;
+      const nPass = prompt('הזן סיסמה אישית חדשה עבור ' + st.name + ':', st.password || '1234');
+      if (nPass && nPass.trim()) {
+        st.password = nPass.trim();
+        saveState();
+        renderStudentsTable();
+        showToast('הסיסמה עודכנה בהצלחה', '🔑');
+      }
+    }
+
+    function deleteStudent(studentId) {
+      const st = state.students.find(s => s.id === studentId);
+      if (!st) return;
+      if (confirm('האם להסיר את הבחור ' + st.name + ' מהמערכת?')) {
+        state.students = state.students.filter(s => s.id !== studentId);
+        saveState();
+        renderStudentsTable();
+        showToast('הבחור הוסר מהמערכת', '🗑️');
+      }
+    }
+
+    // Add Student
+    function openAddStudentModal() {
+      document.getElementById('addStudentModal')?.classList.remove('hidden');
+    }
+    function closeAddStudentModal() {
+      document.getElementById('addStudentModal')?.classList.add('hidden');
+    }
+    function saveNewStudent() {
+      const name = (document.getElementById('newStudentName')?.value || '').trim();
+      const phone = (document.getElementById('newStudentPhone')?.value || '').trim();
+      const pass = (document.getElementById('newStudentPass')?.value || '1234').trim();
+      if (!name || !phone) {
+        alert('אנא הזן שם מלא ומספר טלפון');
+        return;
+      }
+      state.students.push({
+        id: 'st_' + Date.now(),
+        name,
+        phone,
+        password: pass || '1234',
+        score: 0,
+        presentToday: false
+      });
+      saveState();
+      closeAddStudentModal();
+      renderStudentsTable();
+      showToast('הבחור ' + name + ' נוסף בהצלחה!', '✨');
+    }
+
+    // Batch Add
+    function openBatchAddModal() {
+      document.getElementById('batchAddModal')?.classList.remove('hidden');
+    }
+    function closeBatchAddModal() {
+      document.getElementById('batchAddModal')?.classList.add('hidden');
+    }
+    function processBatchStudents() {
+      const text = document.getElementById('batchStudentsTextarea')?.value || '';
+      const lines = text.split('\n');
+      let count = 0;
+      lines.forEach(l => {
+        const parts = l.split(/[,;\t]/).map(p => p.trim()).filter(Boolean);
+        if (parts.length >= 2) {
+          const name = parts[0];
+          const phone = parts[1];
+          state.students.push({
+            id: 'st_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            name,
+            phone,
+            password: '1234',
+            score: 0,
+            presentToday: false
+          });
+          count++;
+        }
+      });
+      if (count > 0) {
+        saveState();
+        renderStudentsTable();
+        closeBatchAddModal();
+        showToast(count + ' בחורים נוספו בהצלחה!', '👥');
+      } else {
+        alert('לא זוהו שורות תקינות בפורמט "שם, טלפון"');
+      }
+    }
+
+    // Schedule Editor
+    function initSchedulePicker() {
+      const picker = document.getElementById('adminScheduleDayPicker');
+      if (picker) {
+        const today = new Date().toISOString().slice(0, 10);
+        picker.value = today;
+        renderAdminDayScheduleEditor();
+      }
+    }
+    function jumpAdminScheduleToToday() {
+      const picker = document.getElementById('adminScheduleDayPicker');
+      if (picker) {
+        picker.value = new Date().toISOString().slice(0, 10);
+        renderAdminDayScheduleEditor();
+      }
+    }
+    function navigateAdminScheduleDay(delta) {
+      const picker = document.getElementById('adminScheduleDayPicker');
+      if (!picker || !picker.value) return;
+      const d = new Date(picker.value + 'T12:00:00');
+      d.setDate(d.getDate() + delta);
+      picker.value = d.toISOString().slice(0, 10);
+      renderAdminDayScheduleEditor();
+    }
+    function renderAdminDayScheduleEditor() {
+      const picker = document.getElementById('adminScheduleDayPicker');
+      if (!picker || !picker.value) return;
+      const dStr = picker.value;
+      const d = new Date(dStr + 'T12:00:00');
+      const day = d.getDay();
+      const slots = getSlotsForDate(dStr);
+
+      const notice = document.getElementById('adminScheduleDayNoticeText');
+      const ptsBadge = document.getElementById('adminScheduleDayPointsBadge');
+      const container = document.getElementById('adminScheduleSlotsContainer');
+
+      const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת קודש'];
+      const dayLabel = 'יום ' + dayNames[day] + ' (' + dStr + ')';
+
+      let totalDayPts = 0;
+      slots.forEach(s => totalDayPts += (Number(s.points) || 0));
+
+      if (notice) {
+        if (day === 5) {
+          notice.textContent = dayLabel + ' - יום שישי (ריק כברירת מחדל)';
+        } else if (day === 6) {
+          notice.textContent = dayLabel + ' - סדר שבת מיוחד (4 סדרים)';
+        } else {
+          notice.textContent = dayLabel + ' - סדר יום חול רגיל';
+        }
+      }
+      if (ptsBadge) ptsBadge.textContent = totalDayPts + ' נק׳ ליום זה';
+
+      if (!container) return;
+      if (slots.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 rounded-2xl border border-dashed border-slate-300 text-slate-400">
+            <div class="text-xl mb-1">🕊️</div>
+            <div class="font-bold text-xs">אין סדרים מוגדרים ליום זה</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = slots.map((s, idx) => `
+        <div class="p-3.5 rounded-2xl bg-white border border-slate-200 flex items-center justify-between shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-900 font-black text-xs flex items-center justify-center">
+              ${idx + 1}
+            </div>
+            <div>
+              <div class="font-black text-slate-900 text-xs">${s.title}</div>
+              <div class="text-[11px] font-mono text-slate-500">${s.openTime} - ${s.lockTime}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 font-black text-xs font-mono">
+              ${s.points} נק׳
+            </span>
+            <button onclick="deleteDailySlot(${idx})" class="text-rose-500 hover:text-rose-700 text-xs p-1" title="מחק סדר זה">
+              🗑️
             </button>
-          </td>
-          <td class="py-3 px-3 text-center font-mono font-black text-indigo-950">${st.baseScore || 0} נק׳</td>
-          <td class="py-3 px-3 text-left">
-            <button onclick="awardDiscretionaryBonusSingle(${st.id})" class="text-xs text-amber-700 font-bold hover:underline">
-              +5 בונוס
-            </button>
-          </td>
-        </tr>
+          </div>
+        </div>
       `).join('');
     }
 
-    function awardDiscretionaryBonusSingle(id) {
-      const st = state.students.find(s => s.id === id);
-      if (!st) return;
-      st.baseScore = (st.baseScore || 0) + 5;
-      safeSet(STORAGE_KEYS.STUDENTS, state.students);
-      renderStudentsTable();
-      showToast(`הוענקו +5 נקודות בונוס ל-${st.name}!`, '🎁');
+    function openAddSlotModal() {
+      document.getElementById('addSlotModal')?.classList.remove('hidden');
     }
-
-    function renderJourneyStopsAdmin() {
-      const list = document.getElementById('adminJourneyStopsList');
-      if (!list) return;
-
-      list.innerHTML = state.journeyStops.map((st, idx) => {
-        const isStop1 = idx === 0;
-        const isTBD = st.dateStr && (st.dateStr.includes('?') || st.dateStr.includes('ייקבע'));
-
-        return `
-          <div class="p-4 rounded-2xl border ${isTBD ? 'border-amber-200 bg-amber-50/50' : 'border-slate-200 bg-slate-50'} space-y-3 relative">
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-xs font-black px-2.5 py-0.5 rounded-full ${isTBD ? 'bg-amber-200 text-amber-950 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300'}">
-                ${st.badge || ('עצירה ' + (idx + 1))}
-              </span>
-              <span class="text-xs font-bold text-slate-400">#${idx + 1} במסע</span>
-            </div>
-
-            <div>
-              <h3 class="text-sm font-black text-slate-900">${st.title}</h3>
-              <div class="mt-1 flex items-center gap-1.5 flex-wrap">
-                <span class="text-xs font-bold text-slate-500">מועד העצירה:</span>
-                <span class="text-xs font-black ${isTBD ? 'text-amber-800 font-mono bg-amber-100 px-2 py-0.5 rounded border border-amber-300' : 'text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200'}">
-                  ${st.dateStr}
-                </span>
-              </div>
-            </div>
-
-            <div class="text-xs text-slate-600 leading-relaxed bg-white/80 p-2.5 rounded-xl border border-slate-200">
-              <div class="font-bold text-slate-900 mb-0.5">${st.slogan || ''}</div>
-              <div class="text-slate-500">${st.desc || ''}</div>
-            </div>
-
-            <div class="flex items-center gap-2 pt-1 border-t border-slate-200">
-              <button onclick="openEditJourneyStopModal(${idx})" class="flex-1 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs transition flex items-center justify-center gap-1">
-                <span>✏️</span>
-                <span>${isTBD ? 'קבע תאריך / ערוך' : 'ערוך מועד ופרטים'}</span>
-              </button>
-              ${!isStop1 ? `
-                <button onclick="deleteJourneyStop(${idx})" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition border border-rose-200" title="מחק נקודת עצירה זו">
-                  🗑️
-                </button>
-              ` : ''}
-            </div>
-          </div>
-        `;
-      }).join('');
+    function closeAddSlotModal() {
+      document.getElementById('addSlotModal')?.classList.add('hidden');
     }
+    function saveNewSlot() {
+      const picker = document.getElementById('adminScheduleDayPicker');
+      const title = (document.getElementById('newSlotTitle')?.value || '').trim();
+      const recurrence = document.getElementById('newSlotRecurrence')?.value || 'weekdays';
+      const openTime = document.getElementById('newSlotOpenTime')?.value || '09:00';
+      const lockTime = document.getElementById('newSlotLockTime')?.value || '10:15';
+      const points = parseInt(document.getElementById('newSlotPoints')?.value || '1', 10);
 
-    let editingStopIdx = null;
+      if (!title || !picker) return;
+      const selectedDate = picker.value;
+      const makeSlot = () => ({
+        id: 'slot_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        title, openTime, lockTime, points, isLocked: false
+      });
 
-    function openEditJourneyStopModal(idx) {
-      editingStopIdx = idx;
-      const st = state.journeyStops[idx];
-      if (!st) return;
-
-      document.getElementById('editStopTitleInput').value = st.title || '';
-      document.getElementById('editStopDateInput').value = st.dateStr || '';
-      document.getElementById('editStopSloganInput').value = st.slogan || '';
-      document.getElementById('editStopDescInput').value = st.desc || '';
-      document.getElementById('editStopBadgeInput').value = st.badge || '';
-
-      document.getElementById('editJourneyStopModal').classList.remove('hidden');
-    }
-
-    function closeEditJourneyStopModal() {
-      document.getElementById('editJourneyStopModal').classList.add('hidden');
-      editingStopIdx = null;
-    }
-
-    function setEditStopDateQuestionMark() {
-      document.getElementById('editStopDateInput').value = '❓ מועד ייקבע ע״י ראש הישיבה';
-    }
-
-    function saveEditedJourneyStop() {
-      if (editingStopIdx === null || !state.journeyStops[editingStopIdx]) return;
-      const st = state.journeyStops[editingStopIdx];
-
-      st.title = (document.getElementById('editStopTitleInput').value || '').trim() || st.title;
-      st.dateStr = (document.getElementById('editStopDateInput').value || '').trim() || '❓ מועד ייקבע ע״י ראש הישיבה';
-      st.slogan = (document.getElementById('editStopSloganInput').value || '').trim();
-      st.desc = (document.getElementById('editStopDescInput').value || '').trim();
-      st.badge = (document.getElementById('editStopBadgeInput').value || '').trim() || st.badge;
-
-      safeSet(STORAGE_KEYS.JOURNEY_STOPS, state.journeyStops);
-      closeEditJourneyStopModal();
-      renderJourneyStopsAdmin();
-      showToast('נקודת העצירה עודכנה בהצלחה!', '✓');
-    }
-
-    function openAddJourneyStopModal() {
-      const nextIdx = state.journeyStops.length + 1;
-      document.getElementById('addStopTitleInput').value = `עצירה ${nextIdx}: `;
-      document.getElementById('addStopDateInput').value = '❓ מועד ייקבע ע״י ראש הישיבה';
-      document.getElementById('addStopBadgeInput').value = `📍 עצירה ${nextIdx} (❓)`;
-      document.getElementById('addStopSloganInput').value = 'עצירה מיוחדת במסע אל הפסגה';
-      document.getElementById('addStopDescInput').value = 'יום גיבוש, התעלות וסדרי לימוד מרוממים';
-      document.getElementById('addJourneyStopModal').classList.remove('hidden');
-    }
-
-    function closeAddJourneyStopModal() {
-      document.getElementById('addJourneyStopModal').classList.add('hidden');
-    }
-
-    function saveNewJourneyStop() {
-      const title = (document.getElementById('addStopTitleInput').value || '').trim();
-      const dateStr = (document.getElementById('addStopDateInput').value || '').trim() || '❓ מועד ייקבע ע״י ראש הישיבה';
-      const badge = (document.getElementById('addStopBadgeInput').value || '').trim() || '📍 עצירה';
-      const slogan = (document.getElementById('addStopSloganInput').value || '').trim();
-      const desc = (document.getElementById('addStopDescInput').value || '').trim();
-
-      if (!title) {
-        alert('אנא הזן כותרת לעצירה');
-        return;
+      if (recurrence === 'single') {
+        if (!state.slotsByDate[selectedDate]) {
+          state.slotsByDate[selectedDate] = JSON.parse(JSON.stringify(getSlotsForDate(selectedDate)));
+        }
+        state.slotsByDate[selectedDate].push(makeSlot());
+        showToast('סדר נוסף ליום זה', '✨');
+      } else if (recurrence === 'weekdays') {
+        if (!state.slotsByDate['weekday_template']) {
+          state.slotsByDate['weekday_template'] = JSON.parse(JSON.stringify(DEFAULT_SLOTS.weekday_template));
+        }
+        state.slotsByDate['weekday_template'].push(makeSlot());
+        showToast('סדר נוסף לכל ימי החול (א׳-ה׳)', '🔄');
+      } else if (recurrence === 'shabbat') {
+        if (!state.slotsByDate['shabbat_template']) {
+          state.slotsByDate['shabbat_template'] = JSON.parse(JSON.stringify(DEFAULT_SLOTS.shabbat_template));
+        }
+        state.slotsByDate['shabbat_template'].push(makeSlot());
+        showToast('סדר נוסף לכל השבתות', '🕯️');
       }
 
-      const newStop = {
-        id: 'stop_' + Date.now(),
-        title,
-        dateStr,
-        badge,
-        slogan,
-        desc
+      saveState();
+      closeAddSlotModal();
+      renderAdminDayScheduleEditor();
+      updateCampaignTotalPointsLive();
+    }
+
+    function deleteDailySlot(idx) {
+      const picker = document.getElementById('adminScheduleDayPicker');
+      if (!picker) return;
+      const dStr = picker.value;
+      if (!state.slotsByDate[dStr]) {
+        state.slotsByDate[dStr] = JSON.parse(JSON.stringify(getSlotsForDate(dStr)));
+      }
+      state.slotsByDate[dStr].splice(idx, 1);
+      saveState();
+      renderAdminDayScheduleEditor();
+      updateCampaignTotalPointsLive();
+      showToast('הסדר נמחק מיום זה', '🗑️');
+    }
+
+    // Beit Midrash Projection Screen
+    function openBeitMidrashModal() {
+      const modal = document.getElementById('beitMidrashModal');
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const slots = getSlotsForDate(todayStr);
+
+      const titleEl = document.getElementById('bmActiveSederTitle');
+      const timesEl = document.getElementById('bmActiveSederTimes');
+      const imgEl = document.getElementById('bmQrImage');
+      const manualCodeEl = document.getElementById('bmManualCodeText');
+
+      const activeSlot = slots[0] || { title: 'סדר לימוד יומי', openTime: '09:00', lockTime: '10:15', points: 1 };
+      if (titleEl) titleEl.textContent = activeSlot.title;
+      if (timesEl) timesEl.textContent = activeSlot.openTime + ' - ' + activeSlot.lockTime + ' | שווי: ' + activeSlot.points + ' נקודות';
+
+      const qrPayload = 'BAKSHU_' + todayStr + '_' + (activeSlot.id || 'slot1');
+      if (imgEl) {
+        imgEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(qrPayload);
+      }
+      if (manualCodeEl) {
+        manualCodeEl.textContent = 'BK-' + (todayStr.replace(/-/g, '').slice(4)) + '-' + (activeSlot.points);
+      }
+
+      modal?.classList.remove('hidden');
+    }
+
+    function closeBeitMidrashModal() {
+      document.getElementById('beitMidrashModal')?.classList.add('hidden');
+    }
+
+    // Targets and Dates
+    function populateTargetsInputs() {
+      const targets = state.config.targets || DEFAULT_CONFIG.targets;
+      const t1N = document.getElementById('cfgTier1Name');
+      const t1P = document.getElementById('cfgTier1Points');
+      const t2N = document.getElementById('cfgTier2Name');
+      const t2P = document.getElementById('cfgTier2Points');
+      const t3N = document.getElementById('cfgTier3Name');
+      const t3P = document.getElementById('cfgTier3Points');
+      const sDate = document.getElementById('campaignStartDateInput');
+      const eDate = document.getElementById('campaignEndDateInput');
+      const grp = document.getElementById('cfgGroupFullThreshold');
+
+      if (t1N) t1N.value = targets.min.name;
+      if (t1P) t1P.value = targets.min.points;
+      if (t2N) t2N.value = targets.mid.name;
+      if (t2P) t2P.value = targets.mid.points;
+      if (t3N) t3N.value = targets.max.name;
+      if (t3P) t3P.value = targets.max.points;
+      if (sDate) sDate.value = state.config.startDate;
+      if (eDate) eDate.value = state.config.endDate;
+      if (grp) grp.value = state.config.groupFullThreshold || 1;
+
+      updateCampaignTotalPointsLive();
+    }
+
+    function saveCampaignTargetsAndDates() {
+      state.config.targets = {
+        min: {
+          name: document.getElementById('cfgTier1Name')?.value || 'יעד כניסה להגרלה',
+          points: parseInt(document.getElementById('cfgTier1Points')?.value || '70', 10)
+        },
+        mid: {
+          name: document.getElementById('cfgTier2Name')?.value || 'יעד פרס כספי',
+          points: parseInt(document.getElementById('cfgTier2Points')?.value || '100', 10)
+        },
+        max: {
+          name: document.getElementById('cfgTier3Name')?.value || 'יעד נסיעה ופרס ענק',
+          points: parseInt(document.getElementById('cfgTier3Points')?.value || '130', 10)
+        }
       };
+      state.config.startDate = document.getElementById('campaignStartDateInput')?.value || '2026-10-20';
+      state.config.endDate = document.getElementById('campaignEndDateInput')?.value || '2026-11-30';
+      state.config.groupFullThreshold = parseInt(document.getElementById('cfgGroupFullThreshold')?.value || '1', 10);
 
-      state.journeyStops.push(newStop);
-      safeSet(STORAGE_KEYS.JOURNEY_STOPS, state.journeyStops);
-      closeAddJourneyStopModal();
-      renderJourneyStopsAdmin();
-      showToast(`נוספה ${title} למסע!`, '🎉');
+      saveState();
+      updateCampaignTotalPointsLive();
+      showToast('הגדרות היעדים והתאריכים נשמרו בהצלחה!', '🎯');
     }
 
-    function deleteJourneyStop(idx) {
-      if (idx === 0) {
-        alert('לא ניתן למחוק את עצירה 1');
-        return;
-      }
-      const st = state.journeyStops[idx];
-      if (confirm(`האם אתה בטוח שברצונך למחוק את "${st.title}"?`)) {
-        state.journeyStops.splice(idx, 1);
-        safeSet(STORAGE_KEYS.JOURNEY_STOPS, state.journeyStops);
-        renderJourneyStopsAdmin();
-        showToast('נקודת העצירה נמחקה מהמסע', '🗑️');
+    function updateCampaignTotalPointsLive() {
+      const totalAchievable = calculateCampaignTotalAchievablePoints();
+      const badge = document.getElementById('adminTotalAchievablePointsBadge');
+      const statPoints = document.getElementById('statTotalPoints');
+      if (badge) badge.textContent = totalAchievable + ' נק׳ בקופה';
+      if (statPoints) statPoints.textContent = totalAchievable;
+    }
+
+    function saveBonusRulesConfig() {
+      state.bonusRules = {
+        x: parseInt(document.getElementById('cfgRuleX')?.value || '5', 10),
+        y: parseInt(document.getElementById('cfgRuleY')?.value || '10', 10),
+        bonus: parseInt(document.getElementById('cfgRuleBonus')?.value || '3', 10)
+      };
+      localStorage.setItem(STORAGE_KEYS.BONUS_RULES, JSON.stringify(state.bonusRules));
+      showToast('חוקי בונוס ההתמדה עודכנו בהצלחה', '⭐');
+    }
+
+    function openGrantBonusModal(studentId) {
+      const st = state.students.find(s => s.id === studentId);
+      if (!st) return;
+      const pts = prompt('כמה נקודות בונוס להעניק ל-' + st.name + '?', '3');
+      if (pts && !isNaN(pts)) {
+        const reason = prompt('סיבת הבונוס:', 'התמדה מיוחדת / סדר מלא') || 'בונוס ראש הישיבה';
+        st.score = (Number(st.score) || 0) + Number(pts);
+        state.bonusLogs.unshift({
+          studentName: st.name,
+          points: Number(pts),
+          reason,
+          date: new Date().toLocaleDateString('he-IL')
+        });
+        saveState();
+        renderStudentsTable();
+        showToast('הוענקו ' + pts + ' נקודות בונוס ל-' + st.name, '⭐');
       }
     }
 
-    function renderAdminAll() {
-      // Sync form values from state
-      if (document.getElementById('cfgNoPhoneBonus')) {
-        document.getElementById('cfgNoPhoneBonus').value = state.bonusConfig.noPhoneBonus || 1;
-        document.getElementById('cfgWakeupBonus').value = state.bonusConfig.wakeupDutyBonus || 3;
-        document.getElementById('cfgKitchenBonus').value = state.bonusConfig.kitchenDutyBonus || 3;
-        document.getElementById('cfgGroupThresh').value = state.bonusConfig.groupFullThreshold || 18;
-        document.getElementById('cfgGroupBonus').value = state.bonusConfig.groupFullBonus || 4;
-        document.getElementById('cfgXyNeed').value = state.bonusConfig.xyNeed || 5;
-        document.getElementById('cfgXyWindow').value = state.bonusConfig.xyWindow || 10;
-        document.getElementById('cfgXyBonus').value = state.bonusConfig.xyBonus || 3;
-        document.getElementById('cfgCurrentSederPts').value = state.bonusConfig.currentSederPoints || 1;
-        document.getElementById('activeQrCodeDisplay').textContent = state.qrSecretCode;
-        document.getElementById('roshQrCodeInput').value = state.qrSecretCode;
+    function openChangeAdminPassModal() {
+      const nPass = prompt('הזן סיסמת ראש ישיבה חדשה:');
+      if (nPass && nPass.trim()) {
+        state.adminPassword = nPass.trim();
+        localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword);
+        showToast('סיסמת ראש הישיבה עודכנה בהצלחה', '🔑');
       }
-      renderTargetDropdowns();
-      renderDutiesTable();
+    }
+
+    function showToast(msg, icon) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const t = document.createElement('div');
+      t.className = 'p-3 px-4 rounded-2xl bg-slate-900 text-white text-xs font-black shadow-xl flex items-center gap-2 border border-slate-700';
+      t.innerHTML = '<span>' + (icon || '✨') + '</span><span>' + msg + '</span>';
+      container.appendChild(t);
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transition = 'opacity 0.3s';
+        setTimeout(() => t.remove(), 300);
+      }, 3000);
+    }
+
+    function initAdminDashboard() {
       renderStudentsTable();
-      renderJourneyStopsAdmin();
+      initSchedulePicker();
+      populateTargetsInputs();
+      const statReqs = document.getElementById('statPendingRequests');
+      if (statReqs) statReqs.textContent = state.absenceRequests.length;
+      const statToday = document.getElementById('statTodaySlotsCount');
+      if (statToday) statToday.textContent = getSlotsForDate(new Date().toISOString().slice(0, 10)).length;
     }
 
-    // Auto verify if coming from admin gate bypass
-    window.addEventListener('DOMContentLoaded', () => {
-      // Auto unlock for easy setup in demo or enter password
-      verifyAdminGate();
-    });
+    window.onload = function() {
+      loadState();
+      if (sessionStorage.getItem('bakshu_admin_logged') === 'true') {
+        document.getElementById('adminGateModal')?.classList.add('hidden');
+        document.getElementById('adminPortalMain')?.classList.remove('hidden');
+        initAdminDashboard();
+      }
+    };
   </script>
 </body>
 </html>
