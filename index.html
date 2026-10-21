@@ -168,6 +168,24 @@
         </div>
       </div>
 
+      <!-- Today's Duty Banner (Shown dynamically if the student is on duty today) -->
+      <div id="studentTodayDutyCard" class="hidden soft-card p-4 border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50/50">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <span class="text-2xl" id="studentDutyIcon">⏰</span>
+            <div>
+              <div class="text-[11px] font-black uppercase text-amber-800 tracking-wider">תורנות היום שלך</div>
+              <h3 class="text-sm font-black text-slate-900" id="studentDutyTitle">השכמת בוקר (מעורר לתפילה)</h3>
+              <p class="text-xs text-slate-600 mt-0.5" id="studentDutyReminderText">תזכורת נשלחה אליך לילה קודם (22:30)</p>
+            </div>
+          </div>
+          <button id="studentDutyActionBtn" onclick="handleDutyCompletionAction()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5">
+            <span>✓</span>
+            <span id="studentDutyBtnText">סמן ביצוע תורנות (+3 נק׳)</span>
+          </button>
+        </div>
+      </div>
+
       <!-- 1. Hero Check-in Card (Mobile-First) -->
       <div class="soft-card-elevated p-5 sm:p-6 border-indigo-100/80 bg-gradient-to-b from-white to-slate-50/50">
         <div class="flex items-center justify-between gap-2 mb-3">
@@ -189,11 +207,28 @@
         </div>
 
         <!-- Big Touch-Friendly Action Button for Mobile -->
-        <div id="checkInActionArea" class="mt-4 sm:mt-5">
+        <div id="checkInActionArea" class="mt-4 sm:mt-5 space-y-2.5">
           <button onclick="handleStudentCheckIn()" id="mainCheckInBtn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-base sm:text-lg shadow-lg shadow-emerald-600/20 active:scale-[0.98] transition flex items-center justify-center gap-3">
             <span class="text-2xl">✓</span>
             <span>סמן נוכחות בסדר זה</span>
           </button>
+
+          <!-- Phone-Free Seder Toggle Option (📵) -->
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3 transition hover:bg-slate-100/70">
+            <label class="flex items-center gap-2.5 cursor-pointer select-none flex-1">
+              <input type="checkbox" id="noPhoneCheckInToggle" onchange="toggleActiveSederNoPhone(this.checked)" class="w-5 h-5 rounded-lg text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer" />
+              <div>
+                <div class="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                  <span>📵</span>
+                  <span>למדתי סדר זה ללא טלפון כלל</span>
+                </div>
+                <div class="text-[10px] text-slate-500">עמידה בלימוד נקי מזכה בבונוס מיוחד!</div>
+              </div>
+            </label>
+            <span class="text-xs font-black px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-900 border border-indigo-200 shrink-0" id="noPhoneBonusBadgeDisplay">
+              +1 נק׳ בונוס
+            </span>
+          </div>
         </div>
 
         <!-- Group "Full Seder" Collective Goal -->
@@ -369,104 +404,109 @@
     <!-- SCREEN 2: CAMPAIGN CALENDAR & FULL LEADERBOARD             -->
     <!-- ========================================================== -->
     <section id="screen-public" class="screen-section hidden space-y-4">
-      <!-- 1. Campaign Progress & Target Milestones Graph (גרף התקדמות המבצע) -->
-      <div class="soft-card p-4 sm:p-6 bg-gradient-to-br from-white via-indigo-50/20 to-white">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+      <!-- 1. Campaign Mountain Ascent Graph & Milestones (גרף הר קולקטיבי של כל הישיבה) -->
+      <div class="soft-card p-4 sm:p-6 bg-gradient-to-b from-[#0A1138] via-[#0F172A] to-[#1E1B4B] text-white rounded-3xl shadow-xl border border-indigo-900/60 overflow-hidden relative">
+        
+        <!-- Header & View Switcher -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10">
           <div>
             <div class="flex items-center gap-2">
-              <span class="text-xl">📈</span>
-              <h2 class="text-base sm:text-lg font-black text-slate-900">גרף התקדמות המבצע ויעדי הישיבה</h2>
+              <span class="text-2xl">🏔️</span>
+              <h2 class="text-lg sm:text-xl font-black text-white tracking-tight">עד הפסגה - מבצע חורף תשפ״ז</h2>
+              <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">מסע משותף</span>
             </div>
-            <p class="text-xs text-slate-500">מעקב קצב צבירת הנקודות ועמידה ביעדי הפרסים (ארד, כסף, זהב)</p>
+            <p class="text-xs text-indigo-200 mt-1">"לא משנה איפה נעצור – השנה מטפסים ביחד עד לפסגה!"</p>
           </div>
-          <div class="flex items-center gap-2">
-            <span id="campaignPaceBadge" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-sm font-mono">
-              ⚡ קצב צבירה: מצוין
-            </span>
+
+          <!-- Mode Toggle: Collective vs Individual -->
+          <div class="inline-flex p-1 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 shrink-0 self-start md:self-auto">
+            <button id="graphBtnGeneral" onclick="switchGraphMode('collective')" class="px-3.5 py-1.5 rounded-xl font-black text-xs transition bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm flex items-center gap-1.5">
+              <span>🏔️</span>
+              <span>גרף כללי של כל הישיבה</span>
+            </button>
+            <button id="graphBtnIndividual" onclick="switchGraphMode('individual')" class="px-3.5 py-1.5 rounded-xl font-bold text-xs text-white/80 hover:text-white transition flex items-center gap-1.5">
+              <span>👥</span>
+              <span>עמודות אישיות</span>
+            </button>
           </div>
         </div>
 
-        <!-- Visual Milestone Progress Bar -->
-        <div class="my-4">
-          <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-1.5">
-            <span>התקדמות הישיבה ליעדים</span>
-            <span id="campaignProgressPctText" class="font-mono font-black text-indigo-950">0%</span>
+        <!-- 4 Collective Mountain Ascent KPIs -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-4">
+          <div class="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div class="text-[11px] text-indigo-200 font-medium">סך נקודות הישיבה בקופה</div>
+            <div class="text-base sm:text-lg font-black text-amber-400 font-mono mt-0.5" id="mountainTotalScore">0 נק׳</div>
           </div>
-          <div class="w-full h-4 bg-slate-100 rounded-full overflow-hidden border border-slate-200 relative">
-            <div id="campaignOverallProgressBar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 rounded-full transition-all duration-700" style="width: 25%"></div>
+          <div class="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div class="text-[11px] text-indigo-200 font-medium">אחוז התקדמות לפסגה</div>
+            <div class="text-base sm:text-lg font-black text-emerald-400 font-mono mt-0.5" id="mountainProgressPct">0%</div>
           </div>
-          
-          <!-- 3 Milestone Markers on Scale -->
-          <div class="grid grid-cols-3 gap-2 mt-3 text-center">
-            <div class="p-2.5 rounded-2xl bg-amber-50/80 border border-amber-200 text-xs">
-              <div class="font-extrabold text-amber-900 text-[11px]" id="graphTier1Name">🥉 יעד ארד (כניסה להגרלה)</div>
-              <div class="font-black text-amber-950 font-mono text-sm mt-0.5" id="graphTier1Pts">70 נק׳</div>
-              <div class="text-[10px] text-amber-700 font-bold mt-0.5" id="graphTier1Status">נצברו 12 נק׳</div>
-            </div>
-
-            <div class="p-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
-              <div class="font-extrabold text-slate-800 text-[11px]" id="graphTier2Name">🥈 יעד כסף (פרס כספי)</div>
-              <div class="font-black text-slate-900 font-mono text-sm mt-0.5" id="graphTier2Pts">100 נק׳</div>
-              <div class="text-[10px] text-slate-500 font-bold mt-0.5" id="graphTier2Status">עוד 88 נק׳</div>
-            </div>
-
-            <div class="p-2.5 rounded-2xl bg-indigo-50/80 border border-indigo-200 text-xs">
-              <div class="font-extrabold text-indigo-950 text-[11px]" id="graphTier3Name">🥇 יעד זהב (נסיעה ענקית)</div>
-              <div class="font-black text-indigo-950 font-mono text-sm mt-0.5" id="graphTier3Pts">130 נק׳</div>
-              <div class="text-[10px] text-indigo-700 font-bold mt-0.5" id="graphTier3Status">עוד 118 נק׳</div>
-            </div>
+          <div class="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div class="text-[11px] text-indigo-200 font-medium">העצירה הבאה במסע</div>
+            <div class="text-xs sm:text-sm font-black text-sky-300 mt-0.5 truncate" id="mountainNextStopPts">ט׳ כסליו (עצירה 1)</div>
+          </div>
+          <div class="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div class="text-[11px] text-indigo-200 font-medium">מתנה חסויה קרובה 🎁</div>
+            <div class="text-xs sm:text-sm font-black text-amber-300 mt-0.5 truncate" id="mountainNextGiftPts">יעד 75 נק׳</div>
           </div>
         </div>
 
-        <!-- SVG Visual Trajectory Curve -->
-        <div class="my-4 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+        <!-- Dynamic Visual Mountain SVG or Individual Columns Chart -->
+        <div id="svgProgressChartWrapper" class="my-3 rounded-2xl bg-slate-950/60 border border-white/10 p-2 sm:p-4 overflow-hidden relative min-h-[220px]">
+          <!-- Populated dynamically by renderTopProgressGraph() -->
+        </div>
+
+        <!-- Axis A: Mystery Gifts Row (יעדים נושאי מתנה חסויה - ללא ציון הפרס) -->
+        <div class="mt-4 pt-3 border-t border-white/10">
           <div class="flex items-center justify-between text-xs mb-2">
-            <span class="font-bold text-slate-600">עקומת קצב שבועי (בפועל מול יעד)</span>
-            <span class="text-[11px] text-indigo-600 font-bold">מתעדכן אוטומטית</span>
+            <span class="font-extrabold text-amber-300 flex items-center gap-1.5">
+              <span>🎁</span>
+              <span>ציר א׳: יעדי ניקוד נושאי מתנה חסויה (הפתעה מובטחת במעמד הזכייה!)</span>
+            </span>
+            <span class="text-[11px] text-indigo-300">סודי לחלוטין 🤫</span>
           </div>
-          <svg viewBox="0 0 500 120" class="w-full h-24 sm:h-28 overflow-visible">
-            <defs>
-              <linearGradient id="curveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#4F46E5" stop-opacity="0.3" />
-                <stop offset="100%" stop-color="#4F46E5" stop-opacity="0.0" />
-              </linearGradient>
-            </defs>
-            <!-- Grid reference lines -->
-            <line x1="0" y1="30" x2="500" y2="30" stroke="#E2E8F0" stroke-dasharray="4,4" />
-            <line x1="0" y1="70" x2="500" y2="70" stroke="#E2E8F0" stroke-dasharray="4,4" />
-            <line x1="0" y1="110" x2="500" y2="110" stroke="#E2E8F0" />
-            <!-- Target line (dashed gold) -->
-            <path d="M 10 100 Q 150 70, 300 45 T 490 20" fill="none" stroke="#F59E0B" stroke-width="2" stroke-dasharray="6,4" />
-            <!-- Actual line fill area -->
-            <path d="M 10 100 Q 120 80, 240 60 L 240 110 L 10 110 Z" fill="url(#curveGrad)" />
-            <!-- Actual line (indigo) -->
-            <path d="M 10 100 Q 120 80, 240 60" fill="none" stroke="#4F46E5" stroke-width="3.5" stroke-linecap="round" />
-            <!-- Current Point Node -->
-            <circle cx="240" cy="60" r="5" fill="#4F46E5" stroke="#FFFFFF" stroke-width="2" />
-            <circle cx="240" cy="60" r="9" fill="#4F46E5" fill-opacity="0.2" class="animate-ping" />
-            <!-- Labels -->
-            <text x="15" y="118" font-size="10" fill="#94A3B8" font-family="Heebo">שבוע 1</text>
-            <text x="120" y="118" font-size="10" fill="#94A3B8" font-family="Heebo">שבוע 2</text>
-            <text x="230" y="118" font-size="10" fill="#4F46E5" font-weight="bold" font-family="Heebo">היום</text>
-            <text x="360" y="118" font-size="10" fill="#94A3B8" font-family="Heebo">שבוע 4</text>
-            <text x="460" y="118" font-size="10" fill="#94A3B8" font-family="Heebo">יעד סיום</text>
-          </svg>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-center">
+            <div class="p-3 rounded-2xl bg-white/5 border border-amber-400/30 text-xs hover:bg-white/10 transition">
+              <div class="font-black text-amber-300 text-xs">🥉 יעד נושא מתנה חסויה 🎁</div>
+              <div class="font-mono font-black text-white text-base mt-1" id="giftTier1Pts">75 נק׳</div>
+              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier1Status">נצברו 0 נק׳</div>
+            </div>
+
+            <div class="p-3 rounded-2xl bg-white/5 border border-slate-300/30 text-xs hover:bg-white/10 transition">
+              <div class="font-black text-slate-200 text-xs">🥈 יעד נושא מתנה חסויה 🎁</div>
+              <div class="font-mono font-black text-white text-base mt-1" id="giftTier2Pts">110 נק׳</div>
+              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier2Status">עוד 110 נק׳</div>
+            </div>
+
+            <div class="p-3 rounded-2xl bg-white/5 border border-indigo-400/30 text-xs hover:bg-white/10 transition">
+              <div class="font-black text-indigo-300 text-xs">🥇 יעד נושא מתנה חסויה 🎁</div>
+              <div class="font-mono font-black text-white text-base mt-1" id="giftTier3Pts">140 נק׳</div>
+              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier3Status">עוד 140 נק׳</div>
+            </div>
+          </div>
         </div>
 
-        <!-- 3 Quick Live Metrics Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-          <div class="p-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-between">
-            <span class="text-slate-500 font-bold">סך נקודות הישיבה בקופה:</span>
-            <strong id="graphTotalBankPts" class="font-black text-indigo-950 font-mono">160 נק׳</strong>
+      </div>
+
+      <!-- Axis B: Journey Stops Stepper (ציר ב׳ - נקודות העצירה במסע עם ?) -->
+      <div class="soft-card p-4 sm:p-6 bg-white border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-100">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xl">📍</span>
+              <h3 class="text-base font-black text-slate-900">ציר ב׳: נקודות העצירה במסע</h3>
+            </div>
+            <p class="text-xs text-slate-500">עצירה 1 נקבעה לט׳ כסליו • שאר העצירות ייקבעו בהחלטת ראש הישיבה</p>
           </div>
-          <div class="p-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-between">
-            <span class="text-slate-500 font-bold">אחוז התייצבות ממוצע:</span>
-            <strong id="graphAttendanceRate" class="font-black text-emerald-700 font-mono">100%</strong>
-          </div>
-          <div class="p-3 rounded-2xl bg-white border border-slate-200 flex items-center justify-between">
-            <span class="text-slate-500 font-bold">ממוצע צבירה לבחור:</span>
-            <strong id="graphAvgScorePerStudent" class="font-black text-amber-700 font-mono">12 נק׳</strong>
-          </div>
+          <button onclick="downloadJourneyStop1Ics()" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-black text-xs transition flex items-center gap-1.5 self-start sm:self-auto shadow-sm">
+            <span>📲</span>
+            <span>סנכרן עצירה 1 ליומן (.ics)</span>
+          </button>
+        </div>
+
+        <div id="journeyStopsContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+          <!-- Populated by JS -->
         </div>
       </div>
 
@@ -1572,6 +1612,115 @@ events.join('\n') + '\n' +
     }
 
     // ====================================================
+    // 3B. AD HAPISGA EXTENDED STORAGE: BONUSES, DUTIES & STOPS
+    // ====================================================
+    const BONUS_CONFIG_KEY = 'bakshu_bonus_config_v2';
+    const DUTIES_ROSTER_KEY = 'bakshu_duties_roster_v2';
+    const JOURNEY_STOPS_KEY = 'bakshu_journey_stops_v2';
+    const QR_SECRET_KEY = 'bakshu_qr_secret_v2';
+
+    function loadBonusConfig() {
+      try {
+        const raw = localStorage.getItem(BONUS_CONFIG_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {
+        console.warn('Could not load bonus config:', e);
+      }
+      return {
+        noPhoneBonus: 1,
+        dutyWakerBonus: 3,
+        dutyKitchenBonus: 3,
+        groupFullBonus: 4,
+        groupFullThreshold: 20,
+        persistenceBonus: 3,
+        persistenceNeed: 5,
+        persistenceWindow: 10
+      };
+    }
+
+    function saveBonusConfig(cfg) {
+      try {
+        localStorage.setItem(BONUS_CONFIG_KEY, JSON.stringify(cfg));
+      } catch (e) {
+        console.warn('Could not save bonus config:', e);
+      }
+    }
+
+    function loadDutiesRoster() {
+      try {
+        const raw = localStorage.getItem(DUTIES_ROSTER_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {
+        console.warn('Could not load duties roster:', e);
+      }
+      const today = getTodayDateStr();
+      const def = {};
+      def[today] = {
+        wakerStudentId: 'st_demo_1',
+        wakerStudentName: 'ישראל ישראלי (בחור לדוגמה)',
+        wakerDone: false,
+        wakerReminderTime: '22:30',
+        kitchenStudentId: 'st_demo_1',
+        kitchenStudentName: 'ישראל ישראלי (בחור לדוגמה)',
+        kitchenDone: false,
+        kitchenReminderTime: '19:30'
+      };
+      return def;
+    }
+
+    function saveDutiesRoster(roster) {
+      try {
+        localStorage.setItem(DUTIES_ROSTER_KEY, JSON.stringify(roster));
+      } catch (e) {
+        console.warn('Could not save duties roster:', e);
+      }
+    }
+
+    function loadJourneyStops() {
+      try {
+        const raw = localStorage.getItem(JOURNEY_STOPS_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {
+        console.warn('Could not load journey stops:', e);
+      }
+      return [
+        { id: 'stop_1', title: 'עצירה 1 - פיתחו יומנים!', dateStr: 'יום ה׳ ט׳ כסליו', isoDate: '2026-11-19', isDecided: true, note: 'האירוע הפותח של מסע החורף - סמנו ביומנים!', icon: '📍' },
+        { id: 'stop_2', title: 'עצירה 2', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isoDate: '', isDecided: false, note: 'פרטי העצירה ייחשפו בהחלטת ראש הישיבה', icon: '❓' },
+        { id: 'stop_3', title: 'עצירה 3', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isoDate: '', isDecided: false, note: 'הפתעה מיוחדת לעומדים ביעדים', icon: '❓' },
+        { id: 'stop_summit', title: 'הפסגה - סיום המסע', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isoDate: '', isDecided: false, note: 'אירוע השיא והמעמד החגיגי של כלל הישיבה!', icon: '🏔️' }
+      ];
+    }
+
+    function saveJourneyStops(stops) {
+      try {
+        localStorage.setItem(JOURNEY_STOPS_KEY, JSON.stringify(stops));
+      } catch (e) {
+        console.warn('Could not save journey stops:', e);
+      }
+    }
+
+    function loadQrSecret() {
+      try {
+        const raw = localStorage.getItem(QR_SECRET_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch (e) {
+        console.warn('Could not load QR secret:', e);
+      }
+      return { code: 'BK-892', updatedAt: Date.now() };
+    }
+
+    function saveQrSecret(qr) {
+      try {
+        localStorage.setItem(QR_SECRET_KEY, JSON.stringify(qr));
+      } catch (e) {
+        console.warn('Could not save QR secret:', e);
+      }
+    }
+
+    // ====================================================
     // 4. APPLICATION CENTRAL STATE
     // ====================================================
     const initialStudentsList = loadInitialStudents();
@@ -1589,6 +1738,12 @@ events.join('\n') + '\n' +
       
       // Dynamic Campaign & Bonus Configuration
       config: initialConfig,
+      bonusConfig: loadBonusConfig(),
+      dutiesRoster: loadDutiesRoster(),
+      journeyStops: loadJourneyStops(),
+      qrSecret: loadQrSecret(),
+      graphMode: 'collective',
+      activeSederNoPhone: false,
 
       // Yeshiva Students List
       students: initialStudentsList,
@@ -1892,16 +2047,120 @@ events.join('\n') + '\n' +
     }
 
     // ====================================================
-    // 6. STUDENT CHECK-IN & SCORE CALCULATIONS
+    // 6. STUDENT CHECK-IN, DUTIES & SCORE CALCULATIONS
     // ====================================================
+    function toggleActiveSederNoPhone(checked) {
+      state.activeSederNoPhone = !!checked;
+    }
+
+    function renderTodayDutyCard() {
+      const card = document.getElementById('studentTodayDutyCard');
+      if (!card) return;
+      const todayStr = getTodayDateStr();
+      const duty = (state.dutiesRoster && state.dutiesRoster[todayStr]) ? state.dutiesRoster[todayStr] : null;
+      const curStudent = state.currentStudent;
+      if (!duty || !curStudent) {
+        card.classList.add('hidden');
+        return;
+      }
+
+      const isWaker = duty.wakerStudentId === curStudent.id || duty.wakerStudentName === curStudent.name;
+      const isKitchen = duty.kitchenStudentId === curStudent.id || duty.kitchenStudentName === curStudent.name;
+
+      if (!isWaker && !isKitchen) {
+        card.classList.add('hidden');
+        return;
+      }
+
+      card.classList.remove('hidden');
+      const iconEl = document.getElementById('studentDutyIcon');
+      const titleEl = document.getElementById('studentDutyTitle');
+      const remTextEl = document.getElementById('studentDutyReminderText');
+      const btnEl = document.getElementById('studentDutyActionBtn');
+      const btnTextEl = document.getElementById('studentDutyBtnText');
+
+      const isDone = isWaker ? duty.wakerDone : duty.kitchenDone;
+      const bonusPts = isWaker ? (state.bonusConfig.dutyWakerBonus || 3) : (state.bonusConfig.dutyKitchenBonus || 3);
+
+      if (iconEl) iconEl.textContent = isWaker ? '⏰' : '🧹';
+      if (titleEl) titleEl.textContent = isWaker ? 'השכמת בוקר (מעורר לתפילה)' : 'ניקיון ושטיפת מטבח (ערב)';
+      if (remTextEl) remTextEl.textContent = isWaker ? 'תזכורת נשלחת ב-22:30 לילה קודם' : 'תזכורת נשלחת ב-19:30 לקראת ערב';
+
+      if (btnEl && btnTextEl) {
+        if (isDone) {
+          btnEl.disabled = true;
+          btnEl.className = 'px-4 py-2 rounded-xl bg-emerald-100 text-emerald-800 font-black text-xs transition border border-emerald-300 flex items-center gap-1.5 cursor-default';
+          btnTextEl.textContent = '✓ תורנות בוצעה (+ ' + bonusPts + ' נק׳)';
+        } else {
+          btnEl.disabled = false;
+          btnEl.className = 'px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer';
+          btnTextEl.textContent = 'סמן ביצוע תורנות (+' + bonusPts + ' נק׳)';
+        }
+      }
+    }
+
+    function handleDutyCompletionAction() {
+      const todayStr = getTodayDateStr();
+      if (!state.dutiesRoster) state.dutiesRoster = {};
+      if (!state.dutiesRoster[todayStr]) {
+        state.dutiesRoster[todayStr] = {
+          wakerStudentId: state.currentStudent.id,
+          wakerStudentName: state.currentStudent.name,
+          wakerDone: false,
+          wakerReminderTime: '22:30',
+          kitchenStudentId: state.currentStudent.id,
+          kitchenStudentName: state.currentStudent.name,
+          kitchenDone: false,
+          kitchenReminderTime: '19:30'
+        };
+      }
+      const duty = state.dutiesRoster[todayStr];
+      const curStudent = state.currentStudent;
+      const isWaker = duty.wakerStudentId === curStudent.id || duty.wakerStudentName === curStudent.name;
+      const isKitchen = duty.kitchenStudentId === curStudent.id || duty.kitchenStudentName === curStudent.name;
+
+      let bonusEarned = 3;
+      if (isWaker && !duty.wakerDone) {
+        duty.wakerDone = true;
+        bonusEarned = state.bonusConfig.dutyWakerBonus || 3;
+      } else if (isKitchen && !duty.kitchenDone) {
+        duty.kitchenDone = true;
+        bonusEarned = state.bonusConfig.dutyKitchenBonus || 3;
+      } else {
+        showToast('תורנות זו כבר סומנה כהושלמה', 'ℹ️');
+        return;
+      }
+
+      saveDutiesRoster(state.dutiesRoster);
+
+      // Award bonus points to student
+      state.currentStudent.baseScore += bonusEarned;
+      const stIdx = state.students.findIndex(s => s.id === curStudent.id);
+      if (stIdx !== -1) {
+        state.students[stIdx].score = state.currentStudent.baseScore;
+        saveLocalStudents();
+      }
+
+      showToast('כל הכבוד! סומן ביצוע תורנות (+' + bonusEarned + ' נק׳)', '🎉');
+      renderTodayDutyCard();
+      renderStudentScreen();
+      renderLeaderboard();
+      renderProgressGraph();
+    }
+
     function handleStudentCheckIn() {
       state.currentStudent.presentCurrent = !state.currentStudent.presentCurrent;
       
       if (state.currentStudent.presentCurrent) {
-        state.currentStudent.baseScore += 1;
+        const noPhoneBonus = state.activeSederNoPhone ? (state.bonusConfig.noPhoneBonus || 1) : 0;
+        const totalPointsEarned = 1 + noPhoneBonus;
+        state.currentStudent.baseScore += totalPointsEarned;
         state.currentStudent.last10.shift();
         state.currentStudent.last10.push(1);
-        showToast('נוכחות סומנה בהצלחה! +1 נקודה', '🎉');
+        let msg = 'נוכחות סומנה בהצלחה! +' + totalPointsEarned + ' נקודות';
+        if (noPhoneBonus > 0) msg += ' (כולל בונוס ללא טלפון 📵)';
+        showToast(msg, '🎉');
+        state.activeSederNoPhone = false;
       } else {
         state.currentStudent.baseScore = Math.max(0, state.currentStudent.baseScore - 1);
         state.currentStudent.last10.pop();
@@ -1926,6 +2185,7 @@ events.join('\n') + '\n' +
     }
 
     function renderStudentScreen() {
+      renderTodayDutyCard();
       const s = state.currentStudent;
       const isPresent = s.presentCurrent;
 
@@ -1956,11 +2216,27 @@ events.join('\n') + '\n' +
             </div>
           `;
         } else {
+          const npBonus = state.bonusConfig ? (state.bonusConfig.noPhoneBonus || 1) : 1;
           btnArea.innerHTML = `
             <button onclick="openBarcodeScannerModal()" id="mainCheckInBtn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-900 hover:from-indigo-700 hover:to-indigo-950 text-white font-black text-base sm:text-lg shadow-xl shadow-indigo-950/20 active:scale-[0.98] transition flex items-center justify-center gap-3 animate-pulse">
               <span class="text-2xl">📸</span>
               <span>סרוק ברקוד בבית המדרש לסימון נוכחות</span>
             </button>
+            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3 transition hover:bg-slate-100/70">
+              <label class="flex items-center gap-2.5 cursor-pointer select-none flex-1">
+                <input type="checkbox" id="noPhoneCheckInToggle" ${state.activeSederNoPhone ? 'checked' : ''} onchange="toggleActiveSederNoPhone(this.checked)" class="w-5 h-5 rounded-lg text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer" />
+                <div>
+                  <div class="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                    <span>📵</span>
+                    <span>למדתי סדר זה ללא טלפון כלל</span>
+                  </div>
+                  <div class="text-[10px] text-slate-500">עמידה בלימוד נקי מזכה בבונוס מיוחד!</div>
+                </div>
+              </label>
+              <span class="text-xs font-black px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-900 border border-indigo-200 shrink-0" id="noPhoneBonusBadgeDisplay">
+                +${npBonus} נק׳ בונוס
+              </span>
+            </div>
           `;
         }
       }
@@ -2186,13 +2462,26 @@ events.join('\n') + '\n' +
       const sorted = [...state.students].sort((a, b) => b.score - a.score);
       tbody.innerHTML = sorted.map((st, idx) => {
         const range = calculateStudentProjectedRange(st);
+        const sScore = Number(st.score) || 0;
+        let giftBadge = '';
+        if (sScore >= 140) {
+          giftBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-400 text-slate-950 border border-amber-300 ml-1.5 shadow-xs">👑 כל 3 המתנות!</span>';
+        } else if (sScore >= 110) {
+          giftBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-indigo-100 text-indigo-900 border border-indigo-200 ml-1.5">🎁🎁 2 מתנות חסויות!</span>';
+        } else if (sScore >= 75) {
+          giftBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-200 ml-1.5">🎁 מתנה 1 נפתחה!</span>';
+        }
+
         return `
         <tr class="hover:bg-slate-50 transition">
           <td class="py-2.5 px-3 font-bold ${idx < 3 ? 'text-amber-600 font-black' : 'text-slate-400'}">
             ${idx === 0 ? '🥇 1' : idx === 1 ? '🥈 2' : idx === 2 ? '🥉 3' : idx + 1}
           </td>
           <td class="py-2.5 px-3">
-            <div class="font-bold text-slate-900">${st.name}</div>
+            <div class="font-bold text-slate-900 flex items-center flex-wrap gap-1">
+              <span>${st.name}</span>
+              ${giftBadge}
+            </div>
             <div class="text-[10px] text-slate-400 font-mono font-bold">${range.icon} טווח צפוי: ${range.current} - ${range.maxPossible} נק׳</div>
           </td>
           <td class="py-2.5 px-3 text-center">
@@ -2273,14 +2562,37 @@ events.join('\n') + '\n' +
         ptsDesc = 'שווי שבת קודש: 8 נקודות';
       }
 
+      // Check duty roster for today
+      const todayStr = getTodayDateStr();
+      const duty = (state.dutiesRoster && state.dutiesRoster[todayStr]) ? state.dutiesRoster[todayStr] : null;
+      let dutyInfoHtml = '';
+      if (duty) {
+        dutyInfoHtml = `
+          <div class="w-full flex flex-wrap items-center gap-2 pt-2.5 mt-2 border-t border-indigo-100/80 text-xs">
+            <span class="font-extrabold text-slate-700">תורני היום בישיבה:</span>
+            <span class="px-2.5 py-1 rounded-xl bg-amber-100/80 text-amber-950 border border-amber-300 font-bold flex items-center gap-1">
+              <span>⏰</span>
+              <span>מעורר (בוקר): <strong>${duty.wakerStudentName || 'טרם שובץ'}</strong></span>
+            </span>
+            <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-800 border border-slate-300 font-bold flex items-center gap-1">
+              <span>🧹</span>
+              <span>מטבח (ערב): <strong>${duty.kitchenStudentName || 'טרם שובץ'}</strong></span>
+            </span>
+          </div>
+        `;
+      }
+
       bar.innerHTML = `
-        <div>
-          <strong class="text-indigo-950 font-black">${dayName} במבצע</strong>
-          <span class="text-slate-500 mr-1">${desc}</span>
+        <div class="flex flex-wrap items-center justify-between gap-3 w-full">
+          <div>
+            <strong class="text-indigo-950 font-black">${dayName} במבצע</strong>
+            <span class="text-slate-500 mr-1">${desc}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="bg-white border border-indigo-200 px-2.5 py-1 rounded-xl font-bold text-indigo-900">${ptsDesc}</span>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <span class="bg-white border border-indigo-200 px-2.5 py-1 rounded-xl font-bold text-indigo-900">${ptsDesc}</span>
-        </div>
+        ${dutyInfoHtml}
       `;
     }
 
@@ -3400,66 +3712,319 @@ events.join('\n') + '\n' +
     }
 
     // ====================================================
-    // CAMPAIGN PROGRESS GRAPH & VELOCITY CALCULATIONS
+    // CAMPAIGN PROGRESS GRAPH, MOUNTAIN ASCENT & JOURNEY STOPS
     // ====================================================
-    function renderProgressGraph() {
-      const targets = state.config.targets || {
-        min: { points: 70, name: 'יעד כניסה להגרלה' },
-        mid: { points: 100, name: 'יעד פרס כספי' },
-        max: { points: 130, name: 'יעד נסיעה ופרס ענק' }
-      };
+    function switchGraphMode(mode) {
+      state.graphMode = mode;
+      const btnGen = document.getElementById('graphBtnGeneral');
+      const btnInd = document.getElementById('graphBtnIndividual');
+      if (btnGen && btnInd) {
+        if (mode === 'collective') {
+          btnGen.className = 'px-3.5 py-1.5 rounded-xl font-black text-xs transition bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm flex items-center gap-1.5';
+          btnInd.className = 'px-3.5 py-1.5 rounded-xl font-bold text-xs text-white/80 hover:text-white transition flex items-center gap-1.5';
+        } else {
+          btnInd.className = 'px-3.5 py-1.5 rounded-xl font-black text-xs transition bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-sm flex items-center gap-1.5';
+          btnGen.className = 'px-3.5 py-1.5 rounded-xl font-bold text-xs text-white/80 hover:text-white transition flex items-center gap-1.5';
+        }
+      }
+      renderProgressGraph();
+    }
 
-      const totalBank = calculateCampaignTotalAchievablePoints();
+    function renderProgressGraph() {
+      // 1. Calculate Yeshiva & Individual metrics
+      const totalAll = state.students.reduce((acc, st) => acc + (Number(st.score) || 0), 0);
+      const studentCount = state.students.length || 1;
+      const avgScore = Number((totalAll / studentCount).toFixed(1));
       const currentScore = state.currentStudent ? (Number(state.currentStudent.baseScore) || 0) : 0;
       
-      // Update graph targets
-      const t1N = document.getElementById('graphTier1Name');
-      const t1P = document.getElementById('graphTier1Pts');
-      const t1S = document.getElementById('graphTier1Status');
+      // Summit points target is 140
+      const summitTarget = 140;
+      const climbScore = state.graphMode === 'individual' ? currentScore : Math.max(avgScore, currentScore);
+      const progressPct = Math.min(100, Math.round((climbScore / summitTarget) * 100));
 
-      const t2N = document.getElementById('graphTier2Name');
-      const t2P = document.getElementById('graphTier2Pts');
-      const t2S = document.getElementById('graphTier2Status');
+      // Update 4 KPIs
+      const mTotal = document.getElementById('mountainTotalScore');
+      if (mTotal) mTotal.textContent = totalAll + ' נק׳';
 
-      const t3N = document.getElementById('graphTier3Name');
-      const t3P = document.getElementById('graphTier3Pts');
-      const t3S = document.getElementById('graphTier3Status');
+      const mPct = document.getElementById('mountainProgressPct');
+      if (mPct) mPct.textContent = progressPct + '%';
 
-      if (t1N) t1N.textContent = '🥉 ' + targets.min.name;
-      if (t1P) t1P.textContent = targets.min.points + ' נק׳';
-      if (t1S) t1S.textContent = currentScore >= targets.min.points ? '✓ היעד הושג!' : 'חסרות ' + (targets.min.points - currentScore) + ' נק׳';
-
-      if (t2N) t2N.textContent = '🥈 ' + targets.mid.name;
-      if (t2P) t2P.textContent = targets.mid.points + ' נק׳';
-      if (t2S) t2S.textContent = currentScore >= targets.mid.points ? '✓ היעד הושג!' : 'חסרות ' + (targets.mid.points - currentScore) + ' נק׳';
-
-      if (t3N) t3N.textContent = '🥇 ' + targets.max.name;
-      if (t3P) t3P.textContent = targets.max.points + ' נק׳';
-      if (t3S) t3S.textContent = currentScore >= targets.max.points ? '✓ היעד הושג!' : 'חסרות ' + (targets.max.points - currentScore) + ' נק׳';
-
-      // Bar percentage towards Gold
-      const overallBar = document.getElementById('campaignOverallProgressBar');
-      const pctText = document.getElementById('campaignProgressPctText');
-      const pct = Math.min(100, Math.max(5, Math.round((currentScore / targets.max.points) * 100)));
-      if (overallBar) overallBar.style.width = pct + '%';
-      if (pctText) pctText.textContent = pct + '%';
-
-      const bankEl = document.getElementById('graphTotalBankPts');
-      if (bankEl) bankEl.textContent = totalBank + ' נק׳';
-
-      const avgEl = document.getElementById('graphAvgScorePerStudent');
-      if (avgEl) {
-        const totalAll = state.students.reduce((acc, st) => acc + (Number(st.score) || 0), 0);
-        const avg = state.students.length > 0 ? (totalAll / state.students.length).toFixed(1) : '0';
-        avgEl.textContent = avg + ' נק׳';
+      const mNextStop = document.getElementById('mountainNextStopPts');
+      if (mNextStop) {
+        if (climbScore >= 140) {
+          mNextStop.textContent = '🏔️ הגענו לפסגה!';
+        } else if (climbScore >= 110) {
+          mNextStop.textContent = 'הפסגה (עוד ' + (140 - Math.round(climbScore)) + ' נק׳)';
+        } else if (climbScore >= 75) {
+          mNextStop.textContent = 'עצירה 3 (עוד ' + (110 - Math.round(climbScore)) + ' נק׳)';
+        } else if (climbScore >= 35) {
+          mNextStop.textContent = 'עצירה 2 (עוד ' + (75 - Math.round(climbScore)) + ' נק׳)';
+        } else {
+          mNextStop.textContent = 'ט׳ כסליו (עצירה 1)';
+        }
       }
 
-      const attRateEl = document.getElementById('graphAttendanceRate');
-      if (attRateEl) {
-        const presentCount = state.students.filter(st => st.presentToday).length;
-        const rate = state.students.length > 0 ? Math.round((presentCount / state.students.length) * 100) : 100;
-        attRateEl.textContent = rate + '%';
+      const mNextGift = document.getElementById('mountainNextGiftPts');
+      if (mNextGift) {
+        if (currentScore >= 140) {
+          mNextGift.textContent = '🎉 כל 3 המתנות נפתחו!';
+        } else if (currentScore >= 110) {
+          mNextGift.textContent = 'מתנה 3 (עוד ' + (140 - currentScore) + ' נק׳)';
+        } else if (currentScore >= 75) {
+          mNextGift.textContent = 'מתנה 2 (עוד ' + (110 - currentScore) + ' נק׳)';
+        } else {
+          mNextGift.textContent = 'מתנה 1 (עוד ' + (75 - currentScore) + ' נק׳)';
+        }
       }
+
+      // Update Mystery Gifts row (Axis A)
+      const g1P = document.getElementById('giftTier1Pts');
+      const g1S = document.getElementById('giftTier1Status');
+      const g2P = document.getElementById('giftTier2Pts');
+      const g2S = document.getElementById('giftTier2Status');
+      const g3P = document.getElementById('giftTier3Pts');
+      const g3S = document.getElementById('giftTier3Status');
+
+      if (g1P) g1P.textContent = '75 נק׳';
+      if (g1S) g1S.textContent = currentScore >= 75 ? '✓ זכית במתנה חסויה 1!' : 'נצברו ' + currentScore + ' נק׳ (עוד ' + (75 - currentScore) + ')';
+      
+      if (g2P) g2P.textContent = '110 נק׳';
+      if (g2S) g2S.textContent = currentScore >= 110 ? '✓ זכית במתנה חסויה 2!' : 'עוד ' + (110 - currentScore) + ' נק׳';
+
+      if (g3P) g3P.textContent = '140 נק׳';
+      if (g3S) g3S.textContent = currentScore >= 140 ? '✓ זכית במתנת הפסגה!' : 'עוד ' + (140 - currentScore) + ' נק׳';
+
+      // Render Visual Mountain SVG or Individual columns
+      renderTopProgressGraph(climbScore, summitTarget);
+
+      // Render Journey Stops Stepper (Axis B)
+      renderJourneyStops();
+    }
+
+    function renderTopProgressGraph(climbScore, summitTarget) {
+      const container = document.getElementById('svgProgressChartWrapper');
+      if (!container) return;
+
+      if (state.graphMode === 'individual') {
+        const sorted = [...state.students].sort((a, b) => (b.score || 0) - (a.score || 0));
+        container.innerHTML = `
+          <div class="space-y-3 p-2">
+            <div class="flex items-center justify-between text-xs font-bold text-indigo-200 pb-2 border-b border-white/10">
+              <span>טיפוס אישי של בחורי הישיבה אל הפסגה (יעד 140 נק׳)</span>
+              <span>${sorted.length} בחורים</span>
+            </div>
+            <div class="space-y-2.5 max-h-[300px] overflow-y-auto no-scrollbar">
+              ${sorted.map((st, idx) => {
+                const sScore = Number(st.score) || 0;
+                const pct = Math.min(100, Math.round((sScore / 140) * 100));
+                const isMe = state.currentStudent && state.currentStudent.id === st.id;
+                let giftBadge = '';
+                if (sScore >= 140) giftBadge = '👑 כל 3 המתנות!';
+                else if (sScore >= 110) giftBadge = '🎁🎁 2 מתנות';
+                else if (sScore >= 75) giftBadge = '🎁 מתנה 1';
+                
+                return `
+                  <div class="p-2.5 rounded-xl ${isMe ? 'bg-indigo-900/60 border border-amber-400/50' : 'bg-white/5 border border-white/10'} flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between text-xs">
+                      <div class="flex items-center gap-2">
+                        <span class="font-bold ${idx < 3 ? 'text-amber-400 font-black' : 'text-slate-400'}">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}</span>
+                        <span class="font-black text-white">${st.name} ${isMe ? '<span class="text-[10px] text-amber-300 font-bold">(אתה)</span>' : ''}</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        ${giftBadge ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-400/20 text-amber-300 border border-amber-400/30">${giftBadge}</span>` : ''}
+                        <span class="font-mono font-black text-amber-400 text-xs">${sScore} נק׳</span>
+                      </div>
+                    </div>
+                    <div class="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400" style="width: ${Math.max(4, pct)}%"></div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Collective Mountain Mode (Scenic SVG Mountain Ascent)
+      const fraction = Math.min(1, Math.max(0, climbScore / summitTarget));
+      const bx = Math.round(80 + fraction * 720);
+      const by = Math.round(220 - fraction * 175);
+
+      container.innerHTML = `
+        <svg viewBox="0 0 900 270" class="w-full h-auto overflow-visible select-none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#0A1138" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#1E1B4B" stop-opacity="0.8"/>
+            </linearGradient>
+            <linearGradient id="mntSilhouette" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#1E293B" stop-opacity="0.85"/>
+              <stop offset="100%" stop-color="#0F172A" stop-opacity="0.98"/>
+            </linearGradient>
+            <linearGradient id="trailGlow" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#F59E0B"/>
+              <stop offset="50%" stop-color="#38BDF8"/>
+              <stop offset="100%" stop-color="#34D399"/>
+            </linearGradient>
+            <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+            </filter>
+          </defs>
+
+          <!-- Sky Background -->
+          <rect width="900" height="270" fill="url(#skyGrad)" rx="16"/>
+
+          <!-- Ambient Stars -->
+          <circle cx="120" cy="40" r="1.5" fill="#FFFFFF" opacity="0.6"/>
+          <circle cx="260" cy="25" r="1" fill="#FFFFFF" opacity="0.4"/>
+          <circle cx="410" cy="50" r="1.5" fill="#FFFFFF" opacity="0.7"/>
+          <circle cx="560" cy="20" r="1" fill="#FFFFFF" opacity="0.5"/>
+          <circle cx="680" cy="35" r="2" fill="#FDE047" opacity="0.8"/>
+          <circle cx="760" cy="18" r="1.2" fill="#FFFFFF" opacity="0.6"/>
+
+          <!-- Mountain Ridge Silhouette -->
+          <path d="M 0 270 L 0 200 L 160 170 L 320 190 L 520 120 L 680 90 L 800 35 L 860 110 L 900 150 L 900 270 Z" fill="url(#mntSilhouette)"/>
+
+          <!-- Snow Cap on Summit -->
+          <polygon points="800,35 770,65 830,60" fill="#FFFFFF" opacity="0.9"/>
+
+          <!-- Full Unclimbed Mountain Trail (Dashed Guide) -->
+          <path d="M 80 220 Q 240 190, 400 150 T 800 45" fill="none" stroke="#475569" stroke-width="3" stroke-dasharray="6,6" opacity="0.5"/>
+
+          <!-- Climbed Trail Portion (Glowing Solid) -->
+          <path d="M 80 220 Q 240 190, 400 150 T 800 45" fill="none" stroke="url(#trailGlow)" stroke-width="4.5" stroke-linecap="round" filter="url(#glowEffect)" stroke-dasharray="800" stroke-dashoffset="${Math.max(0, 800 - fraction * 800)}"/>
+
+          <!-- Waypoint 1: Stop 1 (ט׳ כסליו) -->
+          <g transform="translate(190, 188)">
+            <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#38BDF8" stroke-width="2.5"/>
+            <text x="0" y="-12" text-anchor="middle" fill="#BAE6FD" font-size="10" font-weight="800" font-family="Heebo">📍 עצירה 1 (ט׳ כסליו)</text>
+          </g>
+
+          <!-- Waypoint 2: Mystery Gift 1 (75 pts) -->
+          <g transform="translate(350, 155)">
+            <circle cx="0" cy="0" r="7" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5"/>
+            <text x="0" y="-12" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 מתנה חסויה 1 (75)</text>
+          </g>
+
+          <!-- Waypoint 3: Stop 2 (❓) -->
+          <g transform="translate(480, 130)">
+            <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#94A3B8" stroke-width="2"/>
+            <text x="0" y="-12" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="800" font-family="Heebo">❓ עצירה 2</text>
+          </g>
+
+          <!-- Waypoint 4: Mystery Gift 2 (110 pts) -->
+          <g transform="translate(610, 100)">
+            <circle cx="0" cy="0" r="7" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5"/>
+            <text x="0" y="-12" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 מתנה חסויה 2 (110)</text>
+          </g>
+
+          <!-- Waypoint 5: Stop 3 (❓) -->
+          <g transform="translate(710, 75)">
+            <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#94A3B8" stroke-width="2"/>
+            <text x="0" y="-12" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="800" font-family="Heebo">❓ עצירה 3</text>
+          </g>
+
+          <!-- Summit (140 pts) -->
+          <g transform="translate(800, 45)">
+            <circle cx="0" cy="0" r="9" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2.5"/>
+            <text x="0" y="-15" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">🏔️ הפסגה! (140) ❓</text>
+          </g>
+
+          <!-- Animated Yeshiva Climber Beacon -->
+          <g transform="translate(${bx}, ${by})">
+            <circle cx="0" cy="0" r="16" fill="#F59E0B" fill-opacity="0.3" class="animate-ping"/>
+            <circle cx="0" cy="0" r="8" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2.5"/>
+            <!-- Climber Floating Badge -->
+            <g transform="translate(-90, -42)">
+              <rect width="180" height="28" rx="14" fill="#0A1138" stroke="#F59E0B" stroke-width="1.8" filter="url(#glowEffect)"/>
+              <text x="90" y="18" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="900" font-family="Heebo">🧗‍♂️ ישיבת בקשו מטפסת! (${Math.round(climbScore)} נק׳)</text>
+            </g>
+          </g>
+        </svg>
+      `;
+    }
+
+    function renderJourneyStops() {
+      const container = document.getElementById('journeyStopsContainer');
+      if (!container) return;
+
+      const stops = state.journeyStops || [
+        { id: 'stop_1', title: 'עצירה 1 - פיתחו יומנים!', dateStr: 'יום ה׳ ט׳ כסליו', isDecided: true, note: 'האירוע הפותח של מסע החורף', icon: '📍' },
+        { id: 'stop_2', title: 'עצירה 2', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isDecided: false, note: 'פרטי העצירה ייחשפו בהמשך', icon: '❓' },
+        { id: 'stop_3', title: 'עצירה 3', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isDecided: false, note: 'פרטי העצירה ייחשפו בהמשך', icon: '❓' },
+        { id: 'stop_summit', title: 'הפסגה - סיום המסע', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isDecided: false, note: 'האירוע המרכזי והחגיגי בסיום המבצע', icon: '🏔️' }
+      ];
+
+      container.innerHTML = stops.map((stop, idx) => {
+        const isDecided = stop.isDecided;
+        return `
+          <div class="p-3.5 rounded-2xl border ${isDecided ? 'border-amber-300 bg-gradient-to-b from-amber-50/70 to-white shadow-sm' : 'border-slate-200 bg-slate-50/70'} flex flex-col justify-between transition hover:shadow-md">
+            <div>
+              <div class="flex items-center justify-between gap-1 mb-1">
+                <span class="text-xs font-black text-slate-900 flex items-center gap-1">
+                  <span>${stop.icon || '📍'}</span>
+                  <span>${stop.title}</span>
+                </span>
+                <span class="text-[9px] font-black px-2 py-0.5 rounded-full ${isDecided ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-200 text-slate-600'}">
+                  ${isDecided ? 'מועד סופי ✓' : 'ממתין לקביעה ⏳'}
+                </span>
+              </div>
+              <div class="text-xs font-black text-indigo-950 mt-1">${stop.dateStr}</div>
+              <p class="text-[10px] text-slate-500 mt-1">${stop.note || ''}</p>
+            </div>
+            ${isDecided ? `
+              <button onclick="downloadJourneyStop1Ics()" class="mt-3 w-full py-1.5 px-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-[11px] transition flex items-center justify-center gap-1 shadow-xs">
+                <span>📲</span>
+                <span>סנכרן ליומן</span>
+              </button>
+            ` : `
+              <div class="mt-3 text-center py-1 text-[10px] font-bold text-slate-400 bg-white/80 rounded-xl border border-slate-200">
+                ייקבע ע״י ראש הישיבה
+              </div>
+            `}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function downloadJourneyStop1Ics() {
+      const ics = 
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Yeshivat Bakshu//Ad HaPisga//HE
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:מסע חורף - עצירה 1
+X-WR-TIMEZONE:Asia/Jerusalem
+BEGIN:VEVENT
+UID:bakshu_stop_1_20261119@bakshu-vibe
+DTSTAMP:20261021T120000Z
+DTSTART:20261119T180000
+DTEND:20261119T220000
+SUMMARY:📍 עצירה 1 - ישיבת בקשו (פיתחו יומנים!)
+DESCRIPTION:עצירה 1 במסע חורף תשפ״ז - 'עד הפסגה'. לא משנה איפה נעצור – השנה מטפסים עד לפסגה!
+LOCATION:ישיבת בקשו ירושלים
+BEGIN:VALARM
+TRIGGER:-P1D
+ACTION:DISPLAY
+DESCRIPTION:תזכורת: מחר מתקיימת עצירה 1 של מבצע עד הפסגה בישיבת בקשו!
+END:VALARM
+END:VEVENT
+END:VCALENDAR`;
+
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'עצירה_1_ישיבת_בקשו.ics';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('אירוע עצירה 1 ירד ליומן בהצלחה! (ט׳ כסליו)', '📲');
     }
 
     // ====================================================
@@ -3555,8 +4120,11 @@ events.join('\n') + '\n' +
     function handleCheckInConfirmation(successMessage) {
       closeBarcodeScannerModal();
       
+      const noPhoneBonus = state.activeSederNoPhone ? (state.bonusConfig.noPhoneBonus || 1) : 0;
+      const totalPointsEarned = 1 + noPhoneBonus;
+
       state.currentStudent.presentCurrent = true;
-      state.currentStudent.baseScore = (Number(state.currentStudent.baseScore) || 0) + 1;
+      state.currentStudent.baseScore = (Number(state.currentStudent.baseScore) || 0) + totalPointsEarned;
       state.currentStudent.last10.shift();
       state.currentStudent.last10.push(1);
 
@@ -3569,7 +4137,11 @@ events.join('\n') + '\n' +
       }
 
       saveAttendanceLogToSupabase('slot_1', true);
-      showToast(successMessage + ' (+1 נקודה)', '🎉');
+      let msg = successMessage + ' (+' + totalPointsEarned + ' נקודה';
+      if (noPhoneBonus > 0) msg += ' כולל בונוס ללא טלפון 📵';
+      msg += ')';
+      showToast(msg, '🎉');
+      state.activeSederNoPhone = false;
 
       renderStudentScreen();
       renderLeaderboard();
@@ -3599,9 +4171,10 @@ events.join('\n') + '\n' +
       }
     }
 
-function renderCurrentScreen() {
+    function renderCurrentScreen() {
       if (state.activeTab === 'student') renderStudentScreen();
       if (state.activeTab === 'public') {
+        renderProgressGraph();
         renderDynamicCalendar();
         renderLeaderboard();
       }

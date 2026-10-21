@@ -145,7 +145,15 @@
         </button>
         <button onclick="switchAdminTab('bonuses')" id="tabBtn-bonuses" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition shrink-0 flex items-center gap-1.5">
           <span>⭐</span>
-          <span>בונוסים ובקשות</span>
+          <span>לוח בונוסים</span>
+        </button>
+        <button onclick="switchAdminTab('duties')" id="tabBtn-duties" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition shrink-0 flex items-center gap-1.5">
+          <span>⏰</span>
+          <span>שיבוץ תורנויות (מעורר ומטבח)</span>
+        </button>
+        <button onclick="switchAdminTab('stops')" id="tabBtn-stops" class="px-4 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800/60 transition shrink-0 flex items-center gap-1.5">
+          <span>🏔️</span>
+          <span>עצירות המסע (ציר ב׳)</span>
         </button>
       </div>
     </header>
@@ -370,6 +378,80 @@
       <!-- ========================================================== -->
       <div id="adminTabContent-bonuses" class="hidden space-y-6">
         
+        <!-- Rosh Yeshiva Dynamic Bonus Control Engine -->
+        <div class="soft-card p-5 sm:p-6 bg-gradient-to-br from-white via-amber-50/20 to-white border-2 border-amber-200/80">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-amber-100">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xl">👑</span>
+                <h2 class="text-base sm:text-lg font-black text-slate-900">לוח בקרת בונוסים דינמי ע״י ראש הישיבה</h2>
+              </div>
+              <p class="text-xs text-slate-500">קביעת שווי הנקודות המזכות עבור כל פעילות במבצע "עד הפסגה"</p>
+            </div>
+            <button onclick="saveBonusEngineConfig()" class="px-4 py-2 rounded-xl bg-[#0A1138] hover:bg-black text-white font-black text-xs transition shadow-md flex items-center gap-1.5">
+              <span>💾</span>
+              <span>שמור הגדרות בונוסים</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-right">
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200">
+              <label class="block text-xs font-black text-slate-800 mb-1">📵 סדר ללא טלפון כלל:</label>
+              <div class="flex items-center gap-2">
+                <input type="number" id="cfgNoPhoneBonus" class="w-full text-xs font-mono font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white" min="0" max="10" value="1" />
+                <span class="text-xs font-bold text-slate-500 shrink-0">נקודות</span>
+              </div>
+              <span class="text-[10px] text-slate-400 mt-1 block">מתווסף אוטומטית בעת סימון</span>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200">
+              <label class="block text-xs font-black text-slate-800 mb-1">⏰ תורנות מעורר בוקר:</label>
+              <div class="flex items-center gap-2">
+                <input type="number" id="cfgDutyWakerBonus" class="w-full text-xs font-mono font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white" min="0" max="10" value="3" />
+                <span class="text-xs font-bold text-slate-500 shrink-0">נקודות</span>
+              </div>
+              <span class="text-[10px] text-slate-400 mt-1 block">תזכורת 22:30 לילה קודם</span>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200">
+              <label class="block text-xs font-black text-slate-800 mb-1">🧹 תורנות ניקיון מטבח:</label>
+              <div class="flex items-center gap-2">
+                <input type="number" id="cfgDutyKitchenBonus" class="w-full text-xs font-mono font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white" min="0" max="10" value="3" />
+                <span class="text-xs font-bold text-slate-500 shrink-0">נקודות</span>
+              </div>
+              <span class="text-[10px] text-slate-400 mt-1 block">תזכורת 19:30 לקראת ערב</span>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200">
+              <label class="block text-xs font-black text-slate-800 mb-1">🏛️ בונוס "סדר מלא":</label>
+              <div class="flex items-center gap-2">
+                <input type="number" id="cfgGroupFullBonus" class="w-full text-xs font-mono font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white" min="0" max="15" value="4" />
+                <span class="text-xs font-bold text-slate-500 shrink-0">נקודות</span>
+              </div>
+              <span class="text-[10px] text-slate-400 mt-1 block">זיכוי לכל בחורי הישיבה</span>
+            </div>
+          </div>
+
+          <!-- Persistence Bonus Rule row -->
+          <div class="mt-4 pt-4 border-t border-slate-200/80">
+            <h3 class="text-xs font-black text-slate-900 mb-2">⚡ בונוס התמדה ורצף אישי (X מתוך Y סדרים):</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">כמות סדרים נדרשת (X):</label>
+                <input type="number" id="cfgRuleX" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white" value="5" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">מתוך סך סדרים אחרונים (Y):</label>
+                <input type="number" id="cfgRuleY" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white" value="10" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">ניקוד בונוס לזיכוי:</label>
+                <input type="number" id="cfgRuleBonus" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white" value="3" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Absence requests approval -->
         <div class="soft-card p-5 sm:p-6">
           <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-100">
@@ -383,28 +465,72 @@
           </div>
         </div>
 
-        <!-- Bonus Rules & Manual Bonus Grant -->
-        <div class="soft-card p-5 sm:p-6">
-          <h2 class="text-lg font-black text-slate-900 mb-2">חוקי בונוס התמדה (X מתוך Y)</h2>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">כמות סדרים נדרשת (X):</label>
-              <input type="number" id="cfgRuleX" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" value="5" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">מתוך סך סדרים אחרונים (Y):</label>
-              <input type="number" id="cfgRuleY" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" value="10" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">ניקוד בונוס לזיכוי:</label>
-              <input type="number" id="cfgRuleBonus" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" value="3" />
-            </div>
-          </div>
-          <button onclick="saveBonusRulesConfig()" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition">
-            שמור חוקי בונוס
-          </button>
-        </div>
+      </div>
 
+      <!-- ========================================================== -->
+      <!-- TAB 5: DUTIES ROSTER (מעורר בוקר ומטבח ערב)               -->
+      <!-- ========================================================== -->
+      <div id="adminTabContent-duties" class="hidden space-y-6">
+        <div class="soft-card p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xl">⏰</span>
+                <h2 class="text-lg font-black text-slate-900">מערך שיבוץ תורנויות יומי</h2>
+              </div>
+              <p class="text-xs text-slate-500">שיבוץ תורן מעורר (תזכורת 22:30 לילה קודם) ותורן מטבח (תזכורת 19:30), שליחת SMS ישיר ואישור ביצוע</p>
+            </div>
+            <button onclick="saveDutiesSchedule()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-sm flex items-center gap-1.5">
+              <span>💾</span>
+              <span>שמור שיבוץ תורנויות</span>
+            </button>
+          </div>
+
+          <!-- Duties Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+              <thead>
+                <tr class="border-b border-slate-200 text-slate-400 font-extrabold uppercase">
+                  <th class="py-3 px-3">תאריך ויום</th>
+                  <th class="py-3 px-3">⏰ תורן השכמה (מעורר)</th>
+                  <th class="py-3 px-3 text-center">תזכורת מעורר</th>
+                  <th class="py-3 px-3">🧹 תורן מטבח (ערב)</th>
+                  <th class="py-3 px-3 text-center">תזכורת מטבח</th>
+                  <th class="py-3 px-3 text-left">סטטוס ושמירה</th>
+                </tr>
+              </thead>
+              <tbody id="adminDutiesTableBody" class="divide-y divide-slate-100">
+                <!-- Populated dynamically by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================== -->
+      <!-- TAB 6: JOURNEY STOPS MANAGER (ציר ב׳ - נקודות העצירה במסע) -->
+      <!-- ========================================================== -->
+      <div id="adminTabContent-stops" class="hidden space-y-6">
+        <div class="soft-card p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xl">🏔️</span>
+                <h2 class="text-lg font-black text-slate-900">ניהול נקודות העצירה במסע (ציר ב׳)</h2>
+              </div>
+              <p class="text-xs text-slate-500">עצירה 1 נקבעה לט׳ כסליו. שאר העצירות כרגע בסימן שאלה (❓) וראש הישיבה יכול לקבוע מועד בכל עת או להוסיף עצירות נוספות</p>
+            </div>
+            <button onclick="openAddJourneyStopModal()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5">
+              <span>➕</span>
+              <span>הוסף נקודת עצירה למסע</span>
+            </button>
+          </div>
+
+          <!-- Stops Grid / Cards -->
+          <div id="adminJourneyStopsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Populated dynamically by JS -->
+          </div>
+        </div>
       </div>
 
     </main>
@@ -443,6 +569,17 @@
         <div class="mt-2 text-center">
           <span class="text-[11px] font-bold text-slate-400">קוד גיבוי ידני להזנה:</span>
           <div id="bmManualCodeText" class="text-lg font-black font-mono tracking-widest text-slate-900">BK-892</div>
+        </div>
+        
+        <!-- Live Instant QR Code Changer -->
+        <div class="mt-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-right w-full">
+          <label class="block text-[11px] font-black text-slate-800 mb-1">החלפת קוד ה-QR וקוד הגיבוי הידני ע״י ראש הישיבה:</label>
+          <div class="flex items-center gap-2">
+            <input type="text" id="bmCustomSecretInput" placeholder="הזן קוד ידני חדש (למשל: BK-950)" class="flex-1 text-xs font-mono font-bold p-2 rounded-xl border border-slate-300 bg-white" />
+            <button onclick="updateBeitMidrashSecretCode()" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm shrink-0">
+              החלף קוד
+            </button>
+          </div>
         </div>
       </div>
 
@@ -562,6 +699,77 @@
     </div>
   </div>
 
+  <!-- Edit Journey Stop Modal -->
+  <div id="editJourneyStopModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right">
+      <input type="hidden" id="editStopId" />
+      <h3 class="text-base font-black text-slate-900 mb-1">עריכת נקודת עצירה במסע</h3>
+      <p class="text-xs text-slate-500 mb-4">קבע מועד סופי במקום סימן שאלה (❓) או עדכן את פרטי העצירה</p>
+      
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">שם העצירה:</label>
+          <input type="text" id="editStopTitle" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">מועד העצירה (טקסט שיוצג לבחורים):</label>
+          <input type="text" id="editStopDateStr" placeholder="לדוגמה: יום ה׳ ט״ו כסליו או ❓ מועד ייקבע בהמשך" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">תיאור קצר או הפתעה:</label>
+          <input type="text" id="editStopNote" placeholder="לדוגמה: יציאה חגיגית לערב גיבוש מיוחד" class="w-full text-xs p-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none" />
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+          <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-800">
+            <input type="checkbox" id="editStopIsDecided" class="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500" />
+            <span>מועד סופי ומוכרז (הסר את סימן השאלה ❓)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 mt-5">
+        <button onclick="saveEditedJourneyStop()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition">
+          שמור שינויים בעצירה
+        </button>
+        <button onclick="closeEditJourneyStopModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Journey Stop Modal -->
+  <div id="addJourneyStopModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right">
+      <h3 class="text-base font-black text-slate-900 mb-1">הוספת נקודת עצירה חדשה למסע</h3>
+      <p class="text-xs text-slate-500 mb-4">הוסף עצירה מיוחדת נוספת לאורך הטיפוס לפסגה</p>
+      
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">שם העצירה:</label>
+          <input type="text" id="newStopTitle" placeholder="לדוגמה: עצירת ביניים - חנוכה" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">מועד העצירה:</label>
+          <input type="text" id="newStopDateStr" placeholder="לדוגמה: כ״ה כסליו או ❓ מועד ייקבע ע״י ראש הישיבה" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">תיאור העצירה:</label>
+          <input type="text" id="newStopNote" placeholder="לדוגמה: הדלקת נרות משותפת וסעודת מלווה מלכה" class="w-full text-xs p-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none" />
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 mt-5">
+        <button onclick="saveNewJourneyStop()" class="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition">
+          הוסף עצירה ושמור
+        </button>
+        <button onclick="closeAddJourneyStopModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
@@ -571,13 +779,17 @@
   <script>
     // Storage Keys
     const STORAGE_KEYS = {
-      STUDENTS: 'bakshu_students',
-      SLOTS_BY_DATE: 'bakshu_slots_by_date',
-      CONFIG: 'bakshu_campaign_config',
-      ADMIN_PASS: 'bakshu_admin_password',
+      STUDENTS: 'bakshu_students_list_v3',
+      SLOTS_BY_DATE: 'bakshu_slots_by_date_v2',
+      CONFIG: 'bakshu_config_v2',
+      ADMIN_PASS: 'bakshu_admin_password_v1',
       BONUS_RULES: 'bakshu_bonus_rules',
-      BONUS_LOGS: 'bakshu_bonus_logs',
-      REQUESTS: 'bakshu_absence_requests'
+      BONUS_LOGS: 'bakshu_bonus_logs_v1',
+      REQUESTS: 'bakshu_absence_requests_v1',
+      DUTIES: 'bakshu_duties_roster_v2',
+      JOURNEY_STOPS: 'bakshu_journey_stops_v2',
+      BONUS_CONFIG: 'bakshu_bonus_config_v2',
+      QR_SECRET: 'bakshu_qr_secret_v2'
     };
 
     const DEFAULT_CONFIG = {
@@ -615,6 +827,23 @@
       presentToday: true
     };
 
+    const DEFAULT_JOURNEY_STOPS = [
+      { id: 'stop_1', title: 'עצירה 1 - פיתחו יומנים!', dateStr: 'יום ה׳ ט׳ כסליו', isDecided: true, note: 'האירוע הפותח של מסע החורף', icon: '📍' },
+      { id: 'stop_2', title: 'עצירה 2', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isDecided: false, note: 'פרטי העצירה ייחשפו בהמשך', icon: '❓' },
+      { id: 'stop_3', title: 'עצירה 3', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isDecided: false, note: 'פרטי העצירה ייחשפו בהמשך', icon: '❓' },
+      { id: 'stop_summit', title: 'הפסגה - סיום המסע', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isDecided: false, note: 'האירוע המרכזי והחגיגי בסיום המבצע', icon: '🏔️' }
+    ];
+
+    const DEFAULT_BONUS_CONFIG = {
+      noPhoneBonus: 1,
+      dutyWakerBonus: 2,
+      dutyKitchenBonus: 2,
+      groupFullBonus: 2,
+      ruleX: 5,
+      ruleY: 10,
+      ruleBonus: 3
+    };
+
     const state = {
       students: [],
       slotsByDate: {},
@@ -623,31 +852,47 @@
       bonusLogs: [],
       bonusRules: { x: 5, y: 10, bonus: 3 },
       absenceRequests: [],
-      activeAdminTab: 'students'
+      activeAdminTab: 'students',
+      dutiesRoster: {},
+      journeyStops: JSON.parse(JSON.stringify(DEFAULT_JOURNEY_STOPS)),
+      bonusConfig: JSON.parse(JSON.stringify(DEFAULT_BONUS_CONFIG)),
+      qrSecret: 'BK-892'
     };
 
     // Load initial state
     function loadState() {
       try {
-        const rawStudents = localStorage.getItem(STORAGE_KEYS.STUDENTS);
+        const rawStudents = localStorage.getItem(STORAGE_KEYS.STUDENTS) || localStorage.getItem('bakshu_students');
         state.students = rawStudents ? JSON.parse(rawStudents) : [JSON.parse(JSON.stringify(DEFAULT_DEMO_STUDENT))];
 
-        const rawSlots = localStorage.getItem(STORAGE_KEYS.SLOTS_BY_DATE);
+        const rawSlots = localStorage.getItem(STORAGE_KEYS.SLOTS_BY_DATE) || localStorage.getItem('bakshu_slots_by_date');
         state.slotsByDate = rawSlots ? JSON.parse(rawSlots) : JSON.parse(JSON.stringify(DEFAULT_SLOTS));
 
-        const rawConfig = localStorage.getItem(STORAGE_KEYS.CONFIG);
+        const rawConfig = localStorage.getItem(STORAGE_KEYS.CONFIG) || localStorage.getItem('bakshu_campaign_config');
         if (rawConfig) {
           state.config = Object.assign({}, DEFAULT_CONFIG, JSON.parse(rawConfig));
         }
 
-        const rawPass = localStorage.getItem(STORAGE_KEYS.ADMIN_PASS);
+        const rawPass = localStorage.getItem(STORAGE_KEYS.ADMIN_PASS) || localStorage.getItem('bakshu_admin_password');
         if (rawPass) state.adminPassword = rawPass;
 
-        const rawLogs = localStorage.getItem(STORAGE_KEYS.BONUS_LOGS);
+        const rawLogs = localStorage.getItem(STORAGE_KEYS.BONUS_LOGS) || localStorage.getItem('bakshu_bonus_logs');
         state.bonusLogs = rawLogs ? JSON.parse(rawLogs) : [];
 
-        const rawReqs = localStorage.getItem(STORAGE_KEYS.REQUESTS);
+        const rawReqs = localStorage.getItem(STORAGE_KEYS.REQUESTS) || localStorage.getItem('bakshu_absence_requests');
         state.absenceRequests = rawReqs ? JSON.parse(rawReqs) : [];
+
+        const rawDuties = localStorage.getItem(STORAGE_KEYS.DUTIES);
+        state.dutiesRoster = rawDuties ? JSON.parse(rawDuties) : {};
+
+        const rawStops = localStorage.getItem(STORAGE_KEYS.JOURNEY_STOPS);
+        state.journeyStops = rawStops ? JSON.parse(rawStops) : JSON.parse(JSON.stringify(DEFAULT_JOURNEY_STOPS));
+
+        const rawBonusCfg = localStorage.getItem(STORAGE_KEYS.BONUS_CONFIG);
+        state.bonusConfig = rawBonusCfg ? Object.assign({}, DEFAULT_BONUS_CONFIG, JSON.parse(rawBonusCfg)) : JSON.parse(JSON.stringify(DEFAULT_BONUS_CONFIG));
+
+        const rawSecret = localStorage.getItem(STORAGE_KEYS.QR_SECRET);
+        if (rawSecret) state.qrSecret = rawSecret;
       } catch (e) {
         console.error('Error loading state:', e);
       }
@@ -659,6 +904,10 @@
       localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(state.config));
       localStorage.setItem(STORAGE_KEYS.BONUS_LOGS, JSON.stringify(state.bonusLogs));
       localStorage.setItem(STORAGE_KEYS.REQUESTS, JSON.stringify(state.absenceRequests));
+      localStorage.setItem(STORAGE_KEYS.DUTIES, JSON.stringify(state.dutiesRoster));
+      localStorage.setItem(STORAGE_KEYS.JOURNEY_STOPS, JSON.stringify(state.journeyStops));
+      localStorage.setItem(STORAGE_KEYS.BONUS_CONFIG, JSON.stringify(state.bonusConfig));
+      localStorage.setItem(STORAGE_KEYS.QR_SECRET, state.qrSecret);
     }
 
     // Authentication Gate
@@ -691,7 +940,7 @@
     // Tabs
     function switchAdminTab(tabName) {
       state.activeAdminTab = tabName;
-      ['students', 'schedule', 'targets', 'bonuses'].forEach(t => {
+      ['students', 'schedule', 'targets', 'bonuses', 'duties', 'stops'].forEach(t => {
         const btn = document.getElementById('tabBtn-' + t);
         const content = document.getElementById('adminTabContent-' + t);
         if (t === tabName) {
@@ -1072,17 +1321,22 @@
       const timesEl = document.getElementById('bmActiveSederTimes');
       const imgEl = document.getElementById('bmQrImage');
       const manualCodeEl = document.getElementById('bmManualCodeText');
+      const customSecretInput = document.getElementById('bmCustomSecretInput');
 
       const activeSlot = slots[0] || { title: 'סדר לימוד יומי', openTime: '09:00', lockTime: '10:15', points: 1 };
       if (titleEl) titleEl.textContent = activeSlot.title;
       if (timesEl) timesEl.textContent = activeSlot.openTime + ' - ' + activeSlot.lockTime + ' | שווי: ' + activeSlot.points + ' נקודות';
 
-      const qrPayload = 'BAKSHU_' + todayStr + '_' + (activeSlot.id || 'slot1');
+      const secret = state.qrSecret || ('BK-' + (todayStr.replace(/-/g, '').slice(4)) + '-' + (activeSlot.points));
+      const qrPayload = 'BAKSHU_' + todayStr + '_' + secret;
       if (imgEl) {
         imgEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(qrPayload);
       }
       if (manualCodeEl) {
-        manualCodeEl.textContent = 'BK-' + (todayStr.replace(/-/g, '').slice(4)) + '-' + (activeSlot.points);
+        manualCodeEl.textContent = secret;
+      }
+      if (customSecretInput) {
+        customSecretInput.value = secret;
       }
 
       modal?.classList.remove('hidden');
@@ -1090,6 +1344,28 @@
 
     function closeBeitMidrashModal() {
       document.getElementById('beitMidrashModal')?.classList.add('hidden');
+    }
+
+    function updateBeitMidrashSecretCode() {
+      const input = document.getElementById('bmCustomSecretInput');
+      const val = (input?.value || '').trim();
+      if (!val) {
+        showToast('נא להזין קוד תקין', '⚠️');
+        return;
+      }
+      state.qrSecret = val;
+      localStorage.setItem(STORAGE_KEYS.QR_SECRET, state.qrSecret);
+
+      const manualCodeEl = document.getElementById('bmManualCodeText');
+      if (manualCodeEl) manualCodeEl.textContent = state.qrSecret;
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const qrPayload = 'BAKSHU_' + todayStr + '_' + state.qrSecret;
+      const imgEl = document.getElementById('bmQrImage');
+      if (imgEl) {
+        imgEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(qrPayload);
+      }
+      showToast('קוד בית המדרש עודכן ל: ' + state.qrSecret, '⚡');
     }
 
     // Targets and Dates
@@ -1150,14 +1426,321 @@
       if (statPoints) statPoints.textContent = totalAchievable;
     }
 
-    function saveBonusRulesConfig() {
-      state.bonusRules = {
-        x: parseInt(document.getElementById('cfgRuleX')?.value || '5', 10),
-        y: parseInt(document.getElementById('cfgRuleY')?.value || '10', 10),
-        bonus: parseInt(document.getElementById('cfgRuleBonus')?.value || '3', 10)
+    // Dynamic Bonus Engine
+    function populateBonusEngineInputs() {
+      const b = state.bonusConfig || DEFAULT_BONUS_CONFIG;
+      const elPhone = document.getElementById('cfgNoPhoneBonus');
+      const elWaker = document.getElementById('cfgDutyWakerBonus');
+      const elKitchen = document.getElementById('cfgDutyKitchenBonus');
+      const elGroup = document.getElementById('cfgGroupFullBonus');
+      const elX = document.getElementById('cfgRuleX');
+      const elY = document.getElementById('cfgRuleY');
+      const elBonus = document.getElementById('cfgRuleBonus');
+
+      if (elPhone) elPhone.value = b.noPhoneBonus ?? 1;
+      if (elWaker) elWaker.value = b.dutyWakerBonus ?? 2;
+      if (elKitchen) elKitchen.value = b.dutyKitchenBonus ?? 2;
+      if (elGroup) elGroup.value = b.groupFullBonus ?? 2;
+      if (elX) elX.value = b.ruleX ?? 5;
+      if (elY) elY.value = b.ruleY ?? 10;
+      if (elBonus) elBonus.value = b.ruleBonus ?? 3;
+    }
+
+    function saveBonusEngineConfig() {
+      state.bonusConfig = {
+        noPhoneBonus: parseInt(document.getElementById('cfgNoPhoneBonus')?.value || '1', 10),
+        dutyWakerBonus: parseInt(document.getElementById('cfgDutyWakerBonus')?.value || '2', 10),
+        dutyKitchenBonus: parseInt(document.getElementById('cfgDutyKitchenBonus')?.value || '2', 10),
+        groupFullBonus: parseInt(document.getElementById('cfgGroupFullBonus')?.value || '2', 10),
+        ruleX: parseInt(document.getElementById('cfgRuleX')?.value || '5', 10),
+        ruleY: parseInt(document.getElementById('cfgRuleY')?.value || '10', 10),
+        ruleBonus: parseInt(document.getElementById('cfgRuleBonus')?.value || '3', 10)
       };
-      localStorage.setItem(STORAGE_KEYS.BONUS_RULES, JSON.stringify(state.bonusRules));
-      showToast('חוקי בונוס ההתמדה עודכנו בהצלחה', '⭐');
+      state.bonusRules = {
+        x: state.bonusConfig.ruleX,
+        y: state.bonusConfig.ruleY,
+        bonus: state.bonusConfig.ruleBonus
+      };
+      saveState();
+      showToast('הגדרות מנוע הבונוסים עודכנו בהצלחה!', '⚡');
+    }
+
+    function saveBonusRulesConfig() {
+      saveBonusEngineConfig();
+    }
+
+    // Duties Roster
+    function renderDutiesTable() {
+      const tbody = document.getElementById('dutiesTableBody');
+      if (!tbody) return;
+
+      const dates = [];
+      const today = new Date();
+      for (let i = 0; i < 14; i++) {
+        const d = new Date(today);
+        d.setDate(today.getDate() + i);
+        dates.push(d.toISOString().slice(0, 10));
+      }
+
+      tbody.innerHTML = dates.map(dStr => {
+        const d = new Date(dStr + 'T12:00:00');
+        const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+        const dayName = 'יום ' + dayNames[d.getDay()];
+        const isToday = dStr === today.toISOString().slice(0, 10);
+
+        const duty = state.dutiesRoster[dStr] || {
+          wakerStudentId: '',
+          wakerStudentName: '',
+          wakerDone: false,
+          wakerReminderTime: '22:30',
+          kitchenStudentId: '',
+          kitchenStudentName: '',
+          kitchenDone: false,
+          kitchenReminderTime: '19:30'
+        };
+
+        return `
+          <tr class="${isToday ? 'bg-amber-50/70 font-bold' : 'hover:bg-slate-50/60'} border-b border-slate-100 transition">
+            <td class="py-3 px-3">
+              <div class="font-bold text-slate-900">${dayName}</div>
+              <div class="text-[10px] text-slate-400 font-mono">${dStr} ${isToday ? '⭐ היום' : ''}</div>
+            </td>
+            
+            <!-- Waker duty -->
+            <td class="py-3 px-3 border-r border-slate-100">
+              <select onchange="updateDutyAssignee('${dStr}', 'waker', this.value)" class="w-full text-xs font-bold p-1.5 rounded-lg border border-slate-200 bg-white">
+                <option value="">-- בחר בחור מעורר --</option>
+                ${state.students.map(s => `<option value="${s.id}" ${duty.wakerStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+              </select>
+            </td>
+            <td class="py-3 px-2 text-center border-r border-slate-100">
+              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">${duty.wakerReminderTime || '22:30'}</span>
+            </td>
+            <td class="py-3 px-2 text-center border-r border-slate-100">
+              <button onclick="sendDutyReminderSms('${dStr}', 'waker')" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] transition" title="שלח תזכורת SMS">
+                📲 שלח
+              </button>
+            </td>
+            <td class="py-3 px-2 text-center border-r border-slate-100">
+              <button onclick="toggleDutyDone('${dStr}', 'waker')" class="px-2.5 py-1 rounded-lg text-xs font-black transition ${duty.wakerDone ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}">
+                ${duty.wakerDone ? 'בוצע ✓' : 'סמן כבוצע'}
+              </button>
+            </td>
+
+            <!-- Kitchen duty -->
+            <td class="py-3 px-3 border-r border-slate-100">
+              <select onchange="updateDutyAssignee('${dStr}', 'kitchen', this.value)" class="w-full text-xs font-bold p-1.5 rounded-lg border border-slate-200 bg-white">
+                <option value="">-- בחר תורן מטבח --</option>
+                ${state.students.map(s => `<option value="${s.id}" ${duty.kitchenStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+              </select>
+            </td>
+            <td class="py-3 px-2 text-center border-r border-slate-100">
+              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">${duty.kitchenReminderTime || '19:30'}</span>
+            </td>
+            <td class="py-3 px-2 text-center border-r border-slate-100">
+              <button onclick="sendDutyReminderSms('${dStr}', 'kitchen')" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] transition" title="שלח תזכורת SMS">
+                📲 שלח
+              </button>
+            </td>
+            <td class="py-3 px-2 text-center">
+              <button onclick="toggleDutyDone('${dStr}', 'kitchen')" class="px-2.5 py-1 rounded-lg text-xs font-black transition ${duty.kitchenDone ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}">
+                ${duty.kitchenDone ? 'בוצע ✓' : 'סמן כבוצע'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateDutyAssignee(dateStr, role, studentId) {
+      if (!state.dutiesRoster[dateStr]) {
+        state.dutiesRoster[dateStr] = {
+          wakerStudentId: '', wakerStudentName: '', wakerDone: false, wakerReminderTime: '22:30',
+          kitchenStudentId: '', kitchenStudentName: '', kitchenDone: false, kitchenReminderTime: '19:30'
+        };
+      }
+      const st = state.students.find(s => s.id === studentId);
+      if (role === 'waker') {
+        state.dutiesRoster[dateStr].wakerStudentId = studentId;
+        state.dutiesRoster[dateStr].wakerStudentName = st ? st.name : '';
+      } else if (role === 'kitchen') {
+        state.dutiesRoster[dateStr].kitchenStudentId = studentId;
+        state.dutiesRoster[dateStr].kitchenStudentName = st ? st.name : '';
+      }
+      saveState();
+      showToast('השיבוץ עודכן בהצלחה', '📋');
+    }
+
+    function toggleDutyDone(dateStr, role) {
+      if (!state.dutiesRoster[dateStr]) return;
+      const duty = state.dutiesRoster[dateStr];
+      const bonusPts = role === 'waker' 
+        ? (state.bonusConfig.dutyWakerBonus || 2) 
+        : (state.bonusConfig.dutyKitchenBonus || 2);
+      
+      const stId = role === 'waker' ? duty.wakerStudentId : duty.kitchenStudentId;
+      const student = state.students.find(s => s.id === stId);
+
+      if (role === 'waker') {
+        duty.wakerDone = !duty.wakerDone;
+        if (duty.wakerDone && student) {
+          student.score = (Number(student.score) || 0) + bonusPts;
+          showToast(`תורנות מעורר בוצעה! +${bonusPts} נקודות ל-${student.name}`, '⏰');
+        }
+      } else {
+        duty.kitchenDone = !duty.kitchenDone;
+        if (duty.kitchenDone && student) {
+          student.score = (Number(student.score) || 0) + bonusPts;
+          showToast(`תורנות מטבח בוצעה! +${bonusPts} נקודות ל-${student.name}`, '🧹');
+        }
+      }
+      saveState();
+      renderDutiesTable();
+      renderStudentsTable();
+    }
+
+    function sendDutyReminderSms(dateStr, role) {
+      const duty = state.dutiesRoster[dateStr];
+      const stId = role === 'waker' ? duty?.wakerStudentId : duty?.kitchenStudentId;
+      const student = state.students.find(s => s.id === stId);
+      if (!student) {
+        showToast('נא לשבץ בחור לפני שליחת תזכורת', '⚠️');
+        return;
+      }
+      const roleName = role === 'waker' ? 'מעורר בוקר' : 'נקיון מטבח ערב';
+      const timeStr = role === 'waker' ? '22:30' : '19:30';
+      const text = encodeURIComponent(`שלום ${student.name}, תזכורת מישיבת בקשו: אתה משובץ לתורנות ${roleName} לתאריך ${dateStr}. נא להיערך. תודה ובהצלחה!`);
+      const phone = (student.phone || '').replace(/[^0-9]/g, '');
+      if (phone) {
+        window.open(`sms:${phone}?body=${text}`, '_blank');
+        showToast(`נפתחה הודעת תזכורת ל-${student.name}`, '📲');
+      } else {
+        showToast(`תזכורת נשלחה (סימולציה) ל-${student.name} (${timeStr})`, '📲');
+      }
+    }
+
+    function saveDutiesSchedule() {
+      saveState();
+      showToast('לוח השיבוצים השבועי נשמר בהצלחה', '💾');
+    }
+
+    // Journey Stops Admin
+    function renderJourneyStopsAdmin() {
+      const container = document.getElementById('adminJourneyStopsList');
+      if (!container) return;
+
+      const stops = state.journeyStops || DEFAULT_JOURNEY_STOPS;
+      container.innerHTML = stops.map(stop => {
+        const isDecided = stop.isDecided;
+        return `
+          <div class="p-4 rounded-2xl border ${isDecided ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200 bg-white'} shadow-xs flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                  <span class="text-base">${stop.icon || '📍'}</span>
+                  <span>${stop.title}</span>
+                </span>
+                <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${isDecided ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-600'}">
+                  ${isDecided ? 'מועד סופי ✓' : 'סימן שאלה ❓'}
+                </span>
+              </div>
+              <div class="text-xs font-black text-indigo-950 mb-1">${stop.dateStr}</div>
+              <p class="text-xs text-slate-500 mb-3">${stop.note || ''}</p>
+            </div>
+
+            <div class="flex items-center gap-2 pt-3 border-t border-slate-100">
+              <button onclick="openEditJourneyStopModal('${stop.id}')" class="flex-1 py-1.5 px-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-black text-xs transition flex items-center justify-center gap-1">
+                <span>✏️</span>
+                <span>ערוך / קבע מועד</span>
+              </button>
+              ${stop.id !== 'stop_1' && stop.id !== 'stop_summit' ? `
+                <button onclick="deleteJourneyStop('${stop.id}')" class="p-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs transition" title="מחק עצירה">
+                  🗑️
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openEditJourneyStopModal(stopId) {
+      const stop = (state.journeyStops || []).find(s => s.id === stopId);
+      if (!stop) return;
+      document.getElementById('editStopId').value = stop.id;
+      document.getElementById('editStopTitle').value = stop.title;
+      document.getElementById('editStopDateStr').value = stop.dateStr;
+      document.getElementById('editStopNote').value = stop.note || '';
+      document.getElementById('editStopIsDecided').checked = Boolean(stop.isDecided);
+      document.getElementById('editJourneyStopModal')?.classList.remove('hidden');
+    }
+
+    function closeEditJourneyStopModal() {
+      document.getElementById('editJourneyStopModal')?.classList.add('hidden');
+    }
+
+    function saveEditedJourneyStop() {
+      const id = document.getElementById('editStopId')?.value;
+      const stop = (state.journeyStops || []).find(s => s.id === id);
+      if (!stop) return;
+
+      stop.title = document.getElementById('editStopTitle')?.value || stop.title;
+      stop.dateStr = document.getElementById('editStopDateStr')?.value || stop.dateStr;
+      stop.note = document.getElementById('editStopNote')?.value || '';
+      stop.isDecided = document.getElementById('editStopIsDecided')?.checked || false;
+      if (stop.isDecided) {
+        stop.icon = '📍';
+      }
+
+      saveState();
+      renderJourneyStopsAdmin();
+      closeEditJourneyStopModal();
+      showToast('נקודת העצירה עודכנה בהצלחה!', '🏔️');
+    }
+
+    function openAddJourneyStopModal() {
+      document.getElementById('newStopTitle').value = '';
+      document.getElementById('newStopDateStr').value = '';
+      document.getElementById('newStopNote').value = '';
+      document.getElementById('addJourneyStopModal')?.classList.remove('hidden');
+    }
+
+    function closeAddJourneyStopModal() {
+      document.getElementById('addJourneyStopModal')?.classList.add('hidden');
+    }
+
+    function saveNewJourneyStop() {
+      const title = (document.getElementById('newStopTitle')?.value || '').trim();
+      if (!title) {
+        showToast('נא להזין שם לעצירה', '⚠️');
+        return;
+      }
+      const dateStr = (document.getElementById('newStopDateStr')?.value || '❓ מועד ייקבע ע״י ראש הישיבה').trim();
+      const note = (document.getElementById('newStopNote')?.value || '').trim();
+
+      const newStop = {
+        id: 'stop_custom_' + Date.now(),
+        title,
+        dateStr,
+        note,
+        isDecided: !dateStr.includes('❓'),
+        icon: dateStr.includes('❓') ? '❓' : '📍'
+      };
+
+      if (!state.journeyStops) state.journeyStops = JSON.parse(JSON.stringify(DEFAULT_JOURNEY_STOPS));
+      state.journeyStops.push(newStop);
+      saveState();
+      renderJourneyStopsAdmin();
+      closeAddJourneyStopModal();
+      showToast('עצירה חדשה נוספה למסע!', '✨');
+    }
+
+    function deleteJourneyStop(stopId) {
+      if (!confirm('האם אתה בטוח שברצונך למחוק עצירה זו?')) return;
+      state.journeyStops = (state.journeyStops || []).filter(s => s.id !== stopId);
+      saveState();
+      renderJourneyStopsAdmin();
+      showToast('העצירה נמחקה', '🗑️');
     }
 
     function openGrantBonusModal(studentId) {
@@ -1206,6 +1789,9 @@
       renderStudentsTable();
       initSchedulePicker();
       populateTargetsInputs();
+      populateBonusEngineInputs();
+      renderDutiesTable();
+      renderJourneyStopsAdmin();
       const statReqs = document.getElementById('statPendingRequests');
       if (statReqs) statReqs.textContent = state.absenceRequests.length;
       const statToday = document.getElementById('statTodaySlotsCount');
