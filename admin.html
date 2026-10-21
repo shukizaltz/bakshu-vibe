@@ -264,10 +264,16 @@
 
           <!-- Action bar -->
           <div class="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <button onclick="openAddSlotModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-              <span>+</span>
-              <span>הוסף סדר / אירוע חדש</span>
-            </button>
+            <div class="flex items-center gap-2">
+              <button onclick="openAddSlotModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                <span>+</span>
+                <span>הוסף סדר / אירוע חדש</span>
+              </button>
+              <button onclick="sendSederReminderSmsToAll()" class="px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black transition flex items-center gap-1.5 shadow-sm" title="שליחת תזכורת SMS מרוכזת לסדר לכל הבחורים הרשומים">
+                <span>📲</span>
+                <span>שלח SMS תזכורת לסדר</span>
+              </button>
+            </div>
             <div class="flex items-center gap-2">
               <button onclick="resetDayToTemplate()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
                 איפוס יום זה לתבנית
@@ -493,10 +499,13 @@
                 <tr class="border-b border-slate-200 text-slate-400 font-extrabold uppercase">
                   <th class="py-3 px-3">תאריך ויום</th>
                   <th class="py-3 px-3">⏰ תורן השכמה (מעורר)</th>
-                  <th class="py-3 px-3 text-center">תזכורת מעורר</th>
+                  <th class="py-3 px-2 text-center">שעת תזכורת</th>
+                  <th class="py-3 px-2 text-center">SMS</th>
+                  <th class="py-3 px-2 text-center">ביצוע</th>
                   <th class="py-3 px-3">🧹 תורן מטבח (ערב)</th>
-                  <th class="py-3 px-3 text-center">תזכורת מטבח</th>
-                  <th class="py-3 px-3 text-left">סטטוס ושמירה</th>
+                  <th class="py-3 px-2 text-center">שעת תזכורת</th>
+                  <th class="py-3 px-2 text-center">SMS</th>
+                  <th class="py-3 px-2 text-center">ביצוע</th>
                 </tr>
               </thead>
               <tbody id="adminDutiesTableBody" class="divide-y divide-slate-100">
@@ -953,6 +962,12 @@
           content?.classList.add('hidden');
         }
       });
+      if (tabName === 'duties') renderDutiesTable();
+      if (tabName === 'bonuses') renderPendingRequestsList();
+      if (tabName === 'schedule') renderAdminDayScheduleEditor();
+      if (tabName === 'targets') populateTargetsInputs();
+      if (tabName === 'stops') renderJourneyStopsAdmin();
+      if (tabName === 'students') renderStudentsTable();
     }
 
     // Seder Slots Resolution
@@ -1311,6 +1326,31 @@
       showToast('הסדר נמחק מיום זה', '🗑️');
     }
 
+    function resetDayToTemplate() {
+      const picker = document.getElementById('adminScheduleDayPicker');
+      if (!picker) return;
+      const dStr = picker.value;
+      const d = new Date(dStr + 'T12:00:00');
+      const day = d.getDay();
+      if (day === 5) {
+        state.slotsByDate[dStr] = JSON.parse(JSON.stringify(DEFAULT_SLOTS.friday_template || []));
+      } else if (day === 6) {
+        state.slotsByDate[dStr] = JSON.parse(JSON.stringify(DEFAULT_SLOTS.shabbat_template));
+      } else {
+        state.slotsByDate[dStr] = JSON.parse(JSON.stringify(DEFAULT_SLOTS.weekday_template));
+      }
+      saveState();
+      renderAdminDayScheduleEditor();
+      updateCampaignTotalPointsLive();
+      showToast('היום אופס לתבנית המקורית בהצלחה', '🔄');
+    }
+
+    function saveDailyScheduleToSupabase() {
+      saveState();
+      updateCampaignTotalPointsLive();
+      showToast('לוח הסדרים נשמר ומסונכרן בהצלחה!', '💾');
+    }
+
     // Beit Midrash Projection Screen
     function openBeitMidrashModal() {
       const modal = document.getElementById('beitMidrashModal');
@@ -1471,7 +1511,7 @@
 
     // Duties Roster
     function renderDutiesTable() {
-      const tbody = document.getElementById('dutiesTableBody');
+      const tbody = document.getElementById('adminDutiesTableBody');
       if (!tbody) return;
 
       const dates = [];
@@ -1622,6 +1662,123 @@
     function saveDutiesSchedule() {
       saveState();
       showToast('לוח השיבוצים השבועי נשמר בהצלחה', '💾');
+    }
+
+    // Absence Requests Management for Rosh HaYeshiva
+    function renderPendingRequestsList() {
+      const container = document.getElementById('adminPendingRequestsList');
+      if (!container) return;
+
+      const requests = state.absenceRequests || [];
+      const pending = requests.filter(r => r.status === 'pending' || r.status === 'ממתין לאישור ראש הישיבה ⏳');
+      const statReqs = document.getElementById('statPendingRequests');
+      if (statReqs) statReqs.textContent = pending.length;
+
+      if (requests.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-8 rounded-2xl border border-dashed border-slate-300 text-slate-400">
+            <div class="text-2xl mb-1.5">📭</div>
+            <div class="font-bold text-xs">אין כרגע בקשות שחרור או "שכחתי לסמן"</div>
+            <div class="text-[11px] text-slate-400 mt-1">כאשר בחורים ישלחו בקשות מהעמוד שלהם, הן יופיעו כאן לאישור ראש הישיבה</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = requests.map(req => {
+        const isPending = req.status === 'pending' || req.status === 'ממתין לאישור ראש הישיבה ⏳';
+        const isApproved = req.status === 'approved' || req.status === 'אושר ע״י ראש הישיבה ✓';
+        const isRejected = req.status === 'rejected' || req.status === 'נדחה ❌';
+
+        return `
+          <div class="p-4 rounded-2xl border ${isPending ? 'border-amber-300 bg-amber-50/40' : isApproved ? 'border-emerald-200 bg-emerald-50/30' : 'border-slate-200 bg-slate-50/60'} flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs transition">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="text-base">${isPending ? '⏳' : isApproved ? '✅' : '❌'}</span>
+                <span class="font-black text-slate-900 text-sm">${req.studentName}</span>
+                <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${isPending ? 'bg-amber-100 text-amber-800 border border-amber-200' : isApproved ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'}">
+                  ${isPending ? 'ממתין להכרעת ראש הישיבה' : isApproved ? 'אושר (+1 נקודת נוכחות)' : 'בקשה נדחתה'}
+                </span>
+              </div>
+              <div class="text-xs text-slate-700 font-semibold">
+                <span>סדר מבוקש: <strong>${req.slotTitle}</strong></span>
+                ${req.dateStr ? `<span class="text-slate-400 mr-2">תאריך: ${req.dateStr}</span>` : ''}
+              </div>
+              <div class="text-xs text-slate-600 bg-white/80 p-2 rounded-xl border border-slate-200/60">
+                <span class="font-bold text-slate-800">הסבר הבחור: </span>
+                <span>"${req.note || 'ללא הסבר'}"</span>
+              </div>
+              ${req.submittedAt ? `<div class="text-[10px] text-slate-400 font-mono">הוגש בתאריך: ${new Date(req.submittedAt).toLocaleString('he-IL')}</div>` : ''}
+            </div>
+
+            <div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+              ${isPending ? `
+                <button onclick="approveAbsenceRequest('${req.id}')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-sm flex items-center gap-1">
+                  <span>✓</span>
+                  <span>אשר (+1 נק׳)</span>
+                </button>
+                <button onclick="rejectAbsenceRequest('${req.id}')" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-black text-xs transition border border-rose-200 flex items-center gap-1">
+                  <span>✗</span>
+                  <span>דחה</span>
+                </button>
+              ` : `
+                <button onclick="deleteAbsenceRequest('${req.id}')" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold text-xs transition" title="מחק מההיסטוריה">
+                  🗑️ הסר
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function approveAbsenceRequest(reqId) {
+      const req = state.absenceRequests.find(r => r.id === reqId);
+      if (!req) return;
+      req.status = 'approved';
+
+      // Find the student and award +1 point
+      const student = state.students.find(s => s.id === req.studentId || s.name === req.studentName);
+      if (student) {
+        student.score = (Number(student.score) || 0) + 1;
+        showToast(`הבקשה אושרה! +1 נקודה הוענקה ל-${student.name}`, '🎉');
+      } else {
+        showToast('הבקשה אושרה בהצלחה', '✓');
+      }
+
+      saveState();
+      renderPendingRequestsList();
+      renderStudentsTable();
+    }
+
+    function rejectAbsenceRequest(reqId) {
+      const req = state.absenceRequests.find(r => r.id === reqId);
+      if (!req) return;
+      req.status = 'rejected';
+      saveState();
+      renderPendingRequestsList();
+      showToast('הבקשה סומנה כנדחתה', 'ℹ️');
+    }
+
+    function deleteAbsenceRequest(reqId) {
+      state.absenceRequests = state.absenceRequests.filter(r => r.id !== reqId);
+      saveState();
+      renderPendingRequestsList();
+      showToast('הבקשה נמחקה מההיסטוריה', '🗑️');
+    }
+
+    function sendSederReminderSmsToAll() {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const slots = getSlotsForDate(todayStr);
+      const activeSlot = slots[0] || { title: 'סדר לימוד' };
+      const phones = state.students.map(s => s.phone).filter(p => !!p).join(';');
+      const text = encodeURIComponent(`תזכורת מישיבת בקשו: בעוד כ-10 דקות מתחיל ${activeSlot.title}! מצפים לראותך בבית המדרש.`);
+      if (phones) {
+        window.open(`sms:${phones}?body=${text}`, '_blank');
+        showToast(`נפתחה הודעת תזכורת ב-SMS לכל הבחורים`, '📲');
+      } else {
+        showToast('תזכורת SMS נשלחה (סימולציה) לכל הבחורים הרשומים', '📲');
+      }
     }
 
     // Journey Stops Admin
@@ -1791,9 +1948,13 @@
       populateTargetsInputs();
       populateBonusEngineInputs();
       renderDutiesTable();
+      renderPendingRequestsList();
       renderJourneyStopsAdmin();
       const statReqs = document.getElementById('statPendingRequests');
-      if (statReqs) statReqs.textContent = state.absenceRequests.length;
+      if (statReqs) {
+        const pendingCount = (state.absenceRequests || []).filter(r => r.status === 'pending' || r.status === 'ממתין לאישור ראש הישיבה ⏳').length;
+        statReqs.textContent = pendingCount;
+      }
       const statToday = document.getElementById('statTodaySlotsCount');
       if (statToday) statToday.textContent = getSlotsForDate(new Date().toISOString().slice(0, 10)).length;
     }

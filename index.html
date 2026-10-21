@@ -329,11 +329,7 @@
             </div>
           </div>
 
-          <!-- Target Feasibility Badge -->
-          <div id="studentRangeTierStatus" class="p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/80 text-xs font-black text-indigo-950 flex items-center justify-center gap-1.5 shadow-sm text-center">
-            <span>🥇</span>
-            <span>יעד זהב (מקסימום) בהישג ידך המלא!</span>
-          </div>
+
         </div>
 
       </div>
@@ -369,14 +365,14 @@
               </div>
             </div>
             <p class="text-[11px] text-slate-500 my-2">
-              הורדת לוח שנה תתקין ביומן הטלפון (iPhone / Android / Outlook) את שעות הסדרים עם תזכורת וקישור ישיר לסימון נוכחות.
+              סנכרון ישיר ליומן Google Calendar יתקין ביומן הטלפון את שעות הסדרים עם תזכורת 10 דקות לפני וקישור ישיר לסימון נוכחות.
             </p>
           </div>
 
           <div class="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-slate-100">
-            <button onclick="downloadStudentCalendarIcs()" class="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm">
-              <span>📲</span>
-              <span>הורד יומן עם תזכורות (iCal)</span>
+            <button onclick="openGoogleCalendarSync()" class="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm">
+              <span>📅</span>
+              <span>סנכרן ליומן Google Calendar</span>
             </button>
             <button onclick="copyStudentDirectUrl()" class="w-full sm:w-auto py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1 border border-slate-200" title="העתק קישור ישיר מהיר">
               <span>📋</span>
@@ -468,21 +464,21 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-center">
             <div class="p-3 rounded-2xl bg-white/5 border border-amber-400/30 text-xs hover:bg-white/10 transition">
-              <div class="font-black text-amber-300 text-xs">🥉 יעד נושא מתנה חסויה 🎁</div>
-              <div class="font-mono font-black text-white text-base mt-1" id="giftTier1Pts">75 נק׳</div>
+              <div class="font-black text-amber-300 text-xs" id="giftTier1Title">🥉 יעד כניסה להגרלה</div>
+              <div class="font-mono font-black text-white text-base mt-1" id="giftTier1Pts">70 נק׳</div>
               <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier1Status">נצברו 0 נק׳</div>
             </div>
 
             <div class="p-3 rounded-2xl bg-white/5 border border-slate-300/30 text-xs hover:bg-white/10 transition">
-              <div class="font-black text-slate-200 text-xs">🥈 יעד נושא מתנה חסויה 🎁</div>
-              <div class="font-mono font-black text-white text-base mt-1" id="giftTier2Pts">110 נק׳</div>
-              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier2Status">עוד 110 נק׳</div>
+              <div class="font-black text-slate-200 text-xs" id="giftTier2Title">🥈 יעד פרס כספי</div>
+              <div class="font-mono font-black text-white text-base mt-1" id="giftTier2Pts">100 נק׳</div>
+              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier2Status">עוד 100 נק׳</div>
             </div>
 
             <div class="p-3 rounded-2xl bg-white/5 border border-indigo-400/30 text-xs hover:bg-white/10 transition">
-              <div class="font-black text-indigo-300 text-xs">🥇 יעד נושא מתנה חסויה 🎁</div>
-              <div class="font-mono font-black text-white text-base mt-1" id="giftTier3Pts">140 נק׳</div>
-              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier3Status">עוד 140 נק׳</div>
+              <div class="font-black text-indigo-300 text-xs" id="giftTier3Title">🥇 יעד נסיעה ופרס ענק</div>
+              <div class="font-mono font-black text-white text-base mt-1" id="giftTier3Pts">130 נק׳</div>
+              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier3Status">עוד 130 נק׳</div>
             </div>
           </div>
         </div>
@@ -499,9 +495,9 @@
             </div>
             <p class="text-xs text-slate-500">עצירה 1 נקבעה לט׳ כסליו • שאר העצירות ייקבעו בהחלטת ראש הישיבה</p>
           </div>
-          <button onclick="downloadJourneyStop1Ics()" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-black text-xs transition flex items-center gap-1.5 self-start sm:self-auto shadow-sm">
-            <span>📲</span>
-            <span>סנכרן עצירה 1 ליומן (.ics)</span>
+          <button onclick="openJourneyStopGoogleCalendar('stop_1')" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-black text-xs transition flex items-center gap-1.5 self-start sm:self-auto shadow-sm">
+            <span>📅</span>
+            <span>סנכרן עצירה 1 ליומן Google</span>
           </button>
         </div>
 
@@ -1038,13 +1034,13 @@
     // 2. DEMO STUDENT DEFINITION & PERSISTENT STORAGE
     // ====================================================
     const DEFAULT_DEMO_STUDENT = {
-      id: 'st_demo_1',
+      id: 'demo_student_1',
       name: 'ישראל ישראלי (בחור לדוגמה)',
       phone: '050-1234567',
       password: '1234',
-      score: 0,
+      score: 12,
       presentToday: false,
-      persistenceCount: 0
+      persistenceCount: 3
     };
 
     function loadInitialStudents() {
@@ -1439,6 +1435,53 @@ events.join('\n') + '\n' +
       showToast('לוח השנה עם התזכורות ירד בהצלחה!', '📲');
     }
 
+    function openGoogleCalendarSync() {
+      const todayStr = getTodayDateStr();
+      const slots = getSlotsForDate(todayStr);
+      const slot = slots[0] || { title: 'סדר לימוד יומי', openTime: '09:00', lockTime: '10:15', points: 1 };
+      const stName = state.currentStudent ? state.currentStudent.name : 'בחור ישיבה';
+      const directUrl = window.location.origin + (state.currentStudent ? '/?invite=' + encodeURIComponent(state.currentStudent.id) : '');
+
+      const openParts = (slot.openTime || '09:00').split(':');
+      const lockParts = (slot.lockTime || '10:15').split(':');
+      const now = new Date();
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(openParts[0], 10), parseInt(openParts[1], 10));
+      const dEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(lockParts[0], 10), parseInt(lockParts[1], 10));
+
+      const pad = (n) => String(n).padStart(2, '0');
+      const formatGDate = (dt) => dt.getUTCFullYear() + pad(dt.getUTCMonth()+1) + pad(dt.getUTCDate()) + 'T' + pad(dt.getUTCHours()) + pad(dt.getUTCMinutes()) + '00Z';
+
+      const title = encodeURIComponent('ישיבת בקשו - ' + slot.title);
+      const dates = formatGDate(d) + '/' + formatGDate(dEnd);
+      const details = encodeURIComponent('מבצע בקשו VIBE עבור ' + stName + '.\nשווי הסדר: ' + slot.points + ' נקודות.\nקישור ישיר לסימון נוכחות: ' + directUrl);
+      const location = encodeURIComponent('בית המדרש - ישיבת בקשו ירושלים');
+
+      const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+      window.open(googleUrl, '_blank');
+      showToast('נפתח יומן Google Calendar עם פרטי הסדר והתזכורת', '📅');
+    }
+
+    function openJourneyStopGoogleCalendar(stopId) {
+      const stop = (state.journeyStops || []).find(s => s.id === stopId) || { title: 'עצירה 1 במסע החורף', dateStr: 'ט׳ כסליו' };
+      const title = encodeURIComponent('ישיבת בקשו - ' + stop.title);
+      const details = encodeURIComponent('אירוע עצירה מיוחד במסע מבצע בקשו VIBE: ' + (stop.note || 'האירוע הפותח של מסע החורף'));
+      const location = encodeURIComponent('ישיבת בקשו ירושלים');
+      
+      const d = new Date();
+      d.setDate(d.getDate() + 7);
+      d.setHours(20, 0, 0, 0);
+      const dEnd = new Date(d);
+      dEnd.setHours(22, 0, 0, 0);
+
+      const pad = (n) => String(n).padStart(2, '0');
+      const formatGDate = (dt) => dt.getUTCFullYear() + pad(dt.getUTCMonth()+1) + pad(dt.getUTCDate()) + 'T' + pad(dt.getUTCHours()) + pad(dt.getUTCMinutes()) + '00Z';
+      const dates = formatGDate(d) + '/' + formatGDate(dEnd);
+
+      const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+      window.open(googleUrl, '_blank');
+      showToast('נפתח יומן Google Calendar עבור ' + stop.title, '📅');
+    }
+
     // ====================================================
     // STUDENT PASSWORD AUTHENTICATION & SELF-SERVICE
     // ====================================================
@@ -1656,12 +1699,12 @@ events.join('\n') + '\n' +
       const today = getTodayDateStr();
       const def = {};
       def[today] = {
-        wakerStudentId: 'st_demo_1',
+        wakerStudentId: 'demo_student_1',
         wakerStudentName: 'ישראל ישראלי (בחור לדוגמה)',
         wakerDone: false,
         wakerReminderTime: '22:30',
-        kitchenStudentId: 'st_demo_1',
-        kitchenStudentName: 'ישראל ישראלי (בחור לדוגמה)',
+        kitchenStudentId: '',
+        kitchenStudentName: '',
         kitchenDone: false,
         kitchenReminderTime: '19:30'
       };
@@ -2348,10 +2391,7 @@ events.join('\n') + '\n' +
       const rangeMaxPossiblePts = document.getElementById('studentRangeMaxPossiblePts');
       if (rangeMaxPossiblePts) rangeMaxPossiblePts.textContent = range.maxPossible + ' נק׳';
 
-      const rangeTierStatus = document.getElementById('studentRangeTierStatus');
-      if (rangeTierStatus) {
-        rangeTierStatus.innerHTML = '<span>' + range.icon + '</span> <span>' + range.statusText + '</span>';
-      }
+
 
       const presentCount = state.students.filter(st => st.presentToday).length;
       const threshold = Math.max(1, state.config.groupFullThreshold || 1);
@@ -3350,42 +3390,76 @@ events.join('\n') + '\n' +
 
     function submitForgottenRequest() {
       const sel = document.getElementById('reqSlotSelect')?.value;
-      const note = document.getElementById('reqNoteInput')?.value;
+      const note = (document.getElementById('reqNoteInput')?.value || '').trim();
       if (!note) {
         alert('אנא הזן סיבה קצרה לבקשה');
         return;
       }
+      const curStudent = state.currentStudent || DEFAULT_DEMO_STUDENT;
       const newReq = {
         id: 'req_' + Date.now(),
-        studentName: state.currentStudent.name,
+        studentId: curStudent.id,
+        studentName: curStudent.name,
         slotTitle: sel,
+        dateStr: getTodayDateStr(),
         note: note,
-        status: 'ממתין לאישור ראש הישיבה ⏳'
+        status: 'pending',
+        submittedAt: new Date().toISOString()
       };
-      state.pendingRequests.push(newReq);
-      state.myRequests.push(newReq);
+
+      let allReqs = [];
+      try {
+        const raw = localStorage.getItem('bakshu_absence_requests_v1');
+        allReqs = raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        allReqs = [];
+      }
+      allReqs.unshift(newReq);
+      localStorage.setItem('bakshu_absence_requests_v1', JSON.stringify(allReqs));
+
       document.getElementById('reqNoteInput').value = '';
       showToast('בקשתך נשלחה בהצלחה לראש הישיבה', '📨');
-      const badge = document.getElementById('adminPendingCountBadge');
-      if (badge) badge.textContent = state.pendingRequests.length;
       renderMyRequestsStatus();
     }
 
     function renderMyRequestsStatus() {
       const container = document.getElementById('myRequestsStatusContainer');
       if (!container) return;
-      if (state.myRequests.length === 0) {
+      const curStudent = state.currentStudent || DEFAULT_DEMO_STUDENT;
+
+      let allReqs = [];
+      try {
+        const raw = localStorage.getItem('bakshu_absence_requests_v1');
+        allReqs = raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        allReqs = [];
+      }
+
+      const myReqs = allReqs.filter(r => r.studentId === curStudent.id || r.studentName === curStudent.name);
+
+      if (myReqs.length === 0) {
         container.innerHTML = `<div class="text-xs text-slate-400 py-3 text-center">טרם הגשת בקשות "שכחתי לסמן"</div>`;
       } else {
-        container.innerHTML = state.myRequests.map(r => `
-          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
-            <div>
-              <span class="font-bold text-slate-900">${r.slotTitle}</span>
-              <span class="text-slate-500 mr-1">("${r.note}")</span>
+        container.innerHTML = myReqs.map(r => {
+          const isPending = r.status === 'pending' || r.status === 'ממתין לאישור ראש הישיבה ⏳';
+          const isApproved = r.status === 'approved' || r.status === 'אושר ע״י ראש הישיבה ✓';
+          const badgeClass = isPending 
+            ? 'font-extrabold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200'
+            : isApproved
+            ? 'font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300'
+            : 'font-extrabold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200';
+          const statusText = isPending ? 'ממתין לאישור ראש הישיבה ⏳' : isApproved ? '✓ אושר ע״י ראש הישיבה (+1 נק׳)' : 'לא אושר ❌';
+
+          return `
+            <div class="p-3 rounded-xl border border-slate-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shadow-xs">
+              <div>
+                <span class="font-bold text-slate-900">${r.slotTitle}</span>
+                <span class="text-slate-500 mr-1.5 font-normal">("${r.note}")</span>
+              </div>
+              <span class="${badgeClass}">${statusText}</span>
             </div>
-            <span class="font-extrabold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">${r.status}</span>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
     }
 
@@ -3686,8 +3760,43 @@ events.join('\n') + '\n' +
         saveLocalStudents();
       }
 
+      // Ensure demo duty is populated for today if none assigned
+      const todayStr = getTodayDateStr();
+      if (!state.dutiesRoster) state.dutiesRoster = {};
+      if (!state.dutiesRoster[todayStr] || (!state.dutiesRoster[todayStr].wakerStudentId && !state.dutiesRoster[todayStr].kitchenStudentId)) {
+        state.dutiesRoster[todayStr] = {
+          wakerStudentId: 'demo_student_1',
+          wakerStudentName: 'ישראל ישראלי (בחור לדוגמה)',
+          wakerDone: false,
+          wakerReminderTime: '22:30',
+          kitchenStudentId: '',
+          kitchenStudentName: '',
+          kitchenDone: false,
+          kitchenReminderTime: '19:30'
+        };
+        saveDutiesRoster(state.dutiesRoster);
+      }
+
+      // Ensure sample request exists in requests history for demo student
+      try {
+        let allReqs = JSON.parse(localStorage.getItem('bakshu_absence_requests_v1') || '[]');
+        if (!allReqs.some(r => r.studentId === 'demo_student_1')) {
+          allReqs.unshift({
+            id: 'req_demo_sample',
+            studentId: 'demo_student_1',
+            studentName: 'ישראל ישראלי (בחור לדוגמה)',
+            slotTitle: 'סדר א׳ (עיון)',
+            dateStr: todayStr,
+            note: 'הייתי בבית המדרש והטלפון היה בחדר',
+            status: 'approved',
+            submittedAt: new Date().toISOString()
+          });
+          localStorage.setItem('bakshu_absence_requests_v1', JSON.stringify(allReqs));
+        }
+      } catch (e) {}
+
       setStudentActiveSession(demo);
-      showToast('נכנסת כבחור לדוגמה להתרשמות מלאה מהמערכת!', '👁️');
+      showToast('נכנסת כבחור לדוגמה להתרשמות מלאה מכל יכולות המערכת!', '👁️');
       closeStudentLoginModal();
     }
 
@@ -3764,35 +3873,47 @@ events.join('\n') + '\n' +
         }
       }
 
+      const targets = state.config.targets || {
+        min: { points: 70, name: 'יעד כניסה להגרלה' },
+        mid: { points: 100, name: 'יעד פרס כספי' },
+        max: { points: 130, name: 'יעד נסיעה ופרס ענק' }
+      };
+
       const mNextGift = document.getElementById('mountainNextGiftPts');
       if (mNextGift) {
-        if (currentScore >= 140) {
-          mNextGift.textContent = '🎉 כל 3 המתנות נפתחו!';
-        } else if (currentScore >= 110) {
-          mNextGift.textContent = 'מתנה 3 (עוד ' + (140 - currentScore) + ' נק׳)';
-        } else if (currentScore >= 75) {
-          mNextGift.textContent = 'מתנה 2 (עוד ' + (110 - currentScore) + ' נק׳)';
+        if (currentScore >= targets.max.points) {
+          mNextGift.textContent = '🎉 כל היעדים נכבשו!';
+        } else if (currentScore >= targets.mid.points) {
+          mNextGift.textContent = targets.max.name + ' (עוד ' + (targets.max.points - currentScore) + ' נק׳)';
+        } else if (currentScore >= targets.min.points) {
+          mNextGift.textContent = targets.mid.name + ' (עוד ' + (targets.mid.points - currentScore) + ' נק׳)';
         } else {
-          mNextGift.textContent = 'מתנה 1 (עוד ' + (75 - currentScore) + ' נק׳)';
+          mNextGift.textContent = targets.min.name + ' (עוד ' + (targets.min.points - currentScore) + ' נק׳)';
         }
       }
 
       // Update Mystery Gifts row (Axis A)
+      const g1T = document.getElementById('giftTier1Title');
       const g1P = document.getElementById('giftTier1Pts');
       const g1S = document.getElementById('giftTier1Status');
+      const g2T = document.getElementById('giftTier2Title');
       const g2P = document.getElementById('giftTier2Pts');
       const g2S = document.getElementById('giftTier2Status');
+      const g3T = document.getElementById('giftTier3Title');
       const g3P = document.getElementById('giftTier3Pts');
       const g3S = document.getElementById('giftTier3Status');
 
-      if (g1P) g1P.textContent = '75 נק׳';
-      if (g1S) g1S.textContent = currentScore >= 75 ? '✓ זכית במתנה חסויה 1!' : 'נצברו ' + currentScore + ' נק׳ (עוד ' + (75 - currentScore) + ')';
-      
-      if (g2P) g2P.textContent = '110 נק׳';
-      if (g2S) g2S.textContent = currentScore >= 110 ? '✓ זכית במתנה חסויה 2!' : 'עוד ' + (110 - currentScore) + ' נק׳';
+      if (g1T) g1T.textContent = '🥉 ' + targets.min.name;
+      if (g1P) g1P.textContent = targets.min.points + ' נק׳';
+      if (g1S) g1S.textContent = currentScore >= targets.min.points ? '✓ היעד הושג בהצלחה!' : 'נצברו ' + currentScore + ' נק׳ (עוד ' + (targets.min.points - currentScore) + ')';
 
-      if (g3P) g3P.textContent = '140 נק׳';
-      if (g3S) g3S.textContent = currentScore >= 140 ? '✓ זכית במתנת הפסגה!' : 'עוד ' + (140 - currentScore) + ' נק׳';
+      if (g2T) g2T.textContent = '🥈 ' + targets.mid.name;
+      if (g2P) g2P.textContent = targets.mid.points + ' נק׳';
+      if (g2S) g2S.textContent = currentScore >= targets.mid.points ? '✓ היעד הושג בהצלחה!' : 'עוד ' + (targets.mid.points - currentScore) + ' נק׳';
+
+      if (g3T) g3T.textContent = '🥇 ' + targets.max.name;
+      if (g3P) g3P.textContent = targets.max.points + ' נק׳';
+      if (g3S) g3S.textContent = currentScore >= targets.max.points ? '✓ פסגת המבצע הושגה!' : 'עוד ' + (targets.max.points - currentScore) + ' נק׳';
 
       // Render Visual Mountain SVG or Individual columns
       renderTopProgressGraph(climbScore, summitTarget);
@@ -3805,23 +3926,30 @@ events.join('\n') + '\n' +
       const container = document.getElementById('svgProgressChartWrapper');
       if (!container) return;
 
+      const targets = state.config.targets || {
+        min: { points: 70, name: 'יעד כניסה להגרלה' },
+        mid: { points: 100, name: 'יעד פרס כספי' },
+        max: { points: 130, name: 'יעד נסיעה ופרס ענק' }
+      };
+      const summitTargetCalculated = targets.max.points || summitTarget || 130;
+
       if (state.graphMode === 'individual') {
         const sorted = [...state.students].sort((a, b) => (b.score || 0) - (a.score || 0));
         container.innerHTML = `
           <div class="space-y-3 p-2">
             <div class="flex items-center justify-between text-xs font-bold text-indigo-200 pb-2 border-b border-white/10">
-              <span>טיפוס אישי של בחורי הישיבה אל הפסגה (יעד 140 נק׳)</span>
+              <span>טיפוס אישי של בחורי הישיבה אל הפסגה (${targets.max.name} - ${summitTargetCalculated} נק׳)</span>
               <span>${sorted.length} בחורים</span>
             </div>
             <div class="space-y-2.5 max-h-[300px] overflow-y-auto no-scrollbar">
               ${sorted.map((st, idx) => {
                 const sScore = Number(st.score) || 0;
-                const pct = Math.min(100, Math.round((sScore / 140) * 100));
+                const pct = Math.min(100, Math.round((sScore / summitTargetCalculated) * 100));
                 const isMe = state.currentStudent && state.currentStudent.id === st.id;
                 let giftBadge = '';
-                if (sScore >= 140) giftBadge = '👑 כל 3 המתנות!';
-                else if (sScore >= 110) giftBadge = '🎁🎁 2 מתנות';
-                else if (sScore >= 75) giftBadge = '🎁 מתנה 1';
+                if (sScore >= targets.max.points) giftBadge = '👑 ' + targets.max.name;
+                else if (sScore >= targets.mid.points) giftBadge = '🎁 ' + targets.mid.name;
+                else if (sScore >= targets.min.points) giftBadge = '🥉 ' + targets.min.name;
                 
                 return `
                   <div class="p-2.5 rounded-xl ${isMe ? 'bg-indigo-900/60 border border-amber-400/50' : 'bg-white/5 border border-white/10'} flex flex-col gap-1.5">
@@ -3848,7 +3976,7 @@ events.join('\n') + '\n' +
       }
 
       // Collective Mountain Mode (Scenic SVG Mountain Ascent)
-      const fraction = Math.min(1, Math.max(0, climbScore / summitTarget));
+      const fraction = Math.min(1, Math.max(0, climbScore / summitTargetCalculated));
       const bx = Math.round(80 + fraction * 720);
       const by = Math.round(220 - fraction * 175);
 
@@ -3903,10 +4031,10 @@ events.join('\n') + '\n' +
             <text x="0" y="-12" text-anchor="middle" fill="#BAE6FD" font-size="10" font-weight="800" font-family="Heebo">📍 עצירה 1 (ט׳ כסליו)</text>
           </g>
 
-          <!-- Waypoint 2: Mystery Gift 1 (75 pts) -->
+          <!-- Waypoint 2: Tier 1 Target -->
           <g transform="translate(350, 155)">
             <circle cx="0" cy="0" r="7" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5"/>
-            <text x="0" y="-12" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 מתנה חסויה 1 (75)</text>
+            <text x="0" y="-12" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 ${targets.min.name} (${targets.min.points})</text>
           </g>
 
           <!-- Waypoint 3: Stop 2 (❓) -->
@@ -3915,10 +4043,10 @@ events.join('\n') + '\n' +
             <text x="0" y="-12" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="800" font-family="Heebo">❓ עצירה 2</text>
           </g>
 
-          <!-- Waypoint 4: Mystery Gift 2 (110 pts) -->
+          <!-- Waypoint 4: Tier 2 Target -->
           <g transform="translate(610, 100)">
             <circle cx="0" cy="0" r="7" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5"/>
-            <text x="0" y="-12" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 מתנה חסויה 2 (110)</text>
+            <text x="0" y="-12" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 ${targets.mid.name} (${targets.mid.points})</text>
           </g>
 
           <!-- Waypoint 5: Stop 3 (❓) -->
@@ -3927,10 +4055,10 @@ events.join('\n') + '\n' +
             <text x="0" y="-12" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="800" font-family="Heebo">❓ עצירה 3</text>
           </g>
 
-          <!-- Summit (140 pts) -->
+          <!-- Summit: Tier 3 Target -->
           <g transform="translate(800, 45)">
             <circle cx="0" cy="0" r="9" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2.5"/>
-            <text x="0" y="-15" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">🏔️ הפסגה! (140) ❓</text>
+            <text x="0" y="-15" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">🏔️ ${targets.max.name} (${targets.max.points}) ❓</text>
           </g>
 
           <!-- Animated Yeshiva Climber Beacon -->
@@ -3976,9 +4104,9 @@ events.join('\n') + '\n' +
               <p class="text-[10px] text-slate-500 mt-1">${stop.note || ''}</p>
             </div>
             ${isDecided ? `
-              <button onclick="downloadJourneyStop1Ics()" class="mt-3 w-full py-1.5 px-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-[11px] transition flex items-center justify-center gap-1 shadow-xs">
-                <span>📲</span>
-                <span>סנכרן ליומן</span>
+              <button onclick="openJourneyStopGoogleCalendar('${stop.id}')" class="mt-3 w-full py-1.5 px-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] transition flex items-center justify-center gap-1 shadow-xs">
+                <span>📅</span>
+                <span>סנכרן ליומן Google</span>
               </button>
             ` : `
               <div class="mt-3 text-center py-1 text-[10px] font-bold text-slate-400 bg-white/80 rounded-xl border border-slate-200">
@@ -4199,6 +4327,34 @@ END:VCALENDAR`;
       renderAdminRequestsAndStudents();
       checkUrlForAdminParam();
     };
+
+    // Live storage sync across tabs
+    window.addEventListener('storage', (e) => {
+      if (e.key === CONFIG_STORAGE_KEY || e.key === 'bakshu_config_v2') {
+        state.config = loadCampaignConfig(state.students.length);
+        renderCurrentStudent();
+        renderTopGraphSection();
+      } else if (e.key === DUTIES_ROSTER_KEY || e.key === 'bakshu_duties_roster_v2') {
+        state.dutiesRoster = loadDutiesRoster();
+        renderTodayDutyCard();
+      } else if (e.key === 'bakshu_absence_requests_v1') {
+        renderMyRequestsStatus();
+      } else if (e.key === 'bakshu_students_list_v3') {
+        state.students = loadInitialStudents();
+        renderLeaderboard();
+      }
+    });
+
+    function sendStudentSederSmsReminder(slotTitle) {
+      const phone = state.currentStudent?.phone || '';
+      const text = encodeURIComponent(`תזכורת עבורי: סדר ${slotTitle} מתחיל בעוד 10 דקות בישיבת בקשו!`);
+      if (phone) {
+        window.open(`sms:${phone}?body=${text}`, '_blank');
+        showToast('נפתחה תזכורת SMS אישית', '📲');
+      } else {
+        showToast('תזכורת נשלחה (סימולציה)', '📲');
+      }
+    }
   </script>
 
   <!-- ========================================================== -->
