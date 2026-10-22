@@ -1885,6 +1885,42 @@
     ];
     const HEBREW_DAY_NAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת קודש'];
 
+    // Hebrew Calendar Formatter (תאריכים עבריים באותיות)
+    const HEBREW_NUMERALS = {
+      1: 'א׳', 2: 'ב׳', 3: 'ג׳', 4: 'ד׳', 5: 'ה׳', 6: 'ו׳', 7: 'ז׳', 8: 'ח׳', 9: 'ט׳', 10: 'י׳',
+      11: 'י״א', 12: 'י״ב', 13: 'י״ג', 14: 'י״ד', 15: 'ט״ו', 16: 'ט״ז', 17: 'י״ז', 18: 'י״ח', 19: 'י״ט', 20: 'כ׳',
+      21: 'כ״א', 22: 'כ״ב', 23: 'כ״ג', 24: 'כ״ד', 25: 'כ״ה', 26: 'כ״ו', 27: 'כ״ז', 28: 'כ״ח', 29: 'כ״ט', 30: 'ל׳'
+    };
+
+    const HEBREW_YEARS = {
+      5784: 'תשפ״ד', 5785: 'תשפ״ה', 5786: 'תשפ״ו', 5787: 'תשפ״ז', 5788: 'תשפ״ח', 5789: 'תשפ״ט', 5790: 'תש״צ'
+    };
+
+    function getHebrewDateString(date) {
+      try {
+        const d = typeof date === 'string' ? new Date(date + (date.length <= 10 ? 'T12:00:00' : '')) : date;
+        const parts = new Intl.DateTimeFormat('he-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' }).formatToParts(d);
+        let dayNum = 1, monthName = '', yearNum = 5787;
+        parts.forEach(p => {
+          if (p.type === 'day') dayNum = parseInt(p.value, 10);
+          if (p.type === 'month') monthName = p.value;
+          if (p.type === 'year') yearNum = parseInt(p.value, 10);
+        });
+        const hebrewDay = HEBREW_NUMERALS[dayNum] || (dayNum + '׳');
+        const hebrewYear = HEBREW_YEARS[yearNum] || ('תשפ״ז');
+        return {
+          dayMonth: hebrewDay + ' ' + monthName,
+          full: hebrewDay + ' ' + monthName + ' ' + hebrewYear,
+          hebrewDay,
+          dayNum,
+          monthName,
+          hebrewYear
+        };
+      } catch(e) {
+        return { dayMonth: '', full: '', hebrewDay: '', dayNum: 1, monthName: '', hebrewYear: '' };
+      }
+    }
+
     function renderCampaignCalendar() {
       const grid = document.getElementById('campaignCalendarGrid');
       const label = document.getElementById('calendarMonthLabel');
@@ -1894,7 +1930,9 @@
       const month = state.calendarViewingMonth !== undefined ? state.calendarViewingMonth : 9;
 
       if (label) {
-        label.textContent = HEBREW_MONTH_NAMES[month] + ' ' + year;
+        const midMonthDate = new Date(year, month, 15);
+        const midHDate = getHebrewDateString(midMonthDate);
+        label.innerHTML = `<span>${HEBREW_MONTH_NAMES[month]} ${year}</span> <span class="text-amber-800 font-extrabold mr-1.5">• ${midHDate.monthName} ${midHDate.hebrewYear}</span>`;
       }
 
       const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sun .. 6 = Sat
@@ -1905,7 +1943,7 @@
 
       // Leading blank cells
       for (let i = 0; i < firstDayIndex; i++) {
-        html += `<div class="min-h-[70px] sm:min-h-[82px] p-2 rounded-2xl bg-slate-50/40 border border-transparent opacity-30 select-none"></div>`;
+        html += `<div class="min-h-[76px] sm:min-h-[88px] p-2 rounded-2xl bg-slate-50/40 border border-transparent opacity-30 select-none"></div>`;
       }
 
       // Day cells
@@ -1934,6 +1972,8 @@
           return count >= threshold;
         });
 
+        const hDate = getHebrewDateString(dateStr);
+
         let borderClass = 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-md';
         if (isSelected) {
           borderClass = 'border-indigo-600 bg-indigo-50/60 ring-2 ring-indigo-600 shadow-lg';
@@ -1944,9 +1984,15 @@
         }
 
         html += `
-          <div onclick="selectCalendarDate('${dateStr}')" class="min-h-[76px] sm:min-h-[88px] p-2 rounded-2xl border transition cursor-pointer flex flex-col justify-between select-none relative ${borderClass}">
-            <div class="flex items-center justify-between">
-              <span class="text-xs sm:text-sm font-black ${isSelected ? 'text-indigo-950 font-black' : isToday ? 'text-amber-800' : 'text-slate-800'}">${d}</span>
+          <div onclick="selectCalendarDate('${dateStr}')" title="${hDate.full} • ${dateStr}" class="min-h-[78px] sm:min-h-[92px] p-2 rounded-2xl border transition cursor-pointer flex flex-col justify-between select-none relative ${borderClass}">
+            <div class="flex items-start justify-between">
+              <div class="flex flex-col">
+                <div class="flex items-baseline gap-1">
+                  <span class="text-xs sm:text-sm font-black ${isSelected ? 'text-indigo-950 font-black' : isToday ? 'text-amber-900' : 'text-slate-800'} leading-none">${d}</span>
+                  <span class="text-[10px] sm:text-[11px] font-black ${isSelected ? 'text-indigo-700' : isToday ? 'text-amber-800' : 'text-amber-700'} leading-none">${hDate.hebrewDay}</span>
+                </div>
+                ${(d === 1 || hDate.hebrewDay === 'א׳') ? `<span class="text-[9px] font-black text-amber-700 leading-none mt-1">${hDate.monthName}</span>` : ''}
+              </div>
               <div class="flex items-center gap-1">
                 ${isToday ? '<span class="text-[9px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.5 rounded-full">היום</span>' : ''}
                 ${isSelected && !isToday ? '<span class="text-[9px] bg-indigo-600 text-white font-bold px-1.5 py-0.5 rounded-full">נבחר</span>' : ''}
@@ -2026,8 +2072,10 @@
       const todayStr = new Date().toISOString().slice(0, 10);
       const isToday = dateStr === todayStr;
 
+      const hDate = getHebrewDateString(dateStr);
+
       if (titleEl) {
-        titleEl.textContent = `יום ${dow}, ${dObj.getDate()} ב${monthName} ${dObj.getFullYear()}`;
+        titleEl.innerHTML = `יום ${dow}, <span class="text-amber-800 font-black">${hDate.full}</span> <span class="text-slate-400 font-normal text-xs sm:text-sm">(${dObj.getDate()} ב${monthName} ${dObj.getFullYear()})</span>`;
       }
       if (todayBadge) {
         todayBadge.classList.toggle('hidden', !isToday);
@@ -2584,12 +2632,13 @@
             const timeFormatted = rec.markedAt ? new Date(rec.markedAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '09:00';
             const d = new Date(rec.dateStr + 'T12:00:00');
             const dayName = isNaN(d.getTime()) ? '' : HEBREW_DAY_NAMES[d.getDay()];
+            const hDate = getHebrewDateString(rec.dateStr);
 
             return `
               <tr class="hover:bg-slate-50 transition">
                 <td class="py-2.5 px-3">
-                  <div class="font-bold text-slate-900">${rec.dateStr}</div>
-                  <div class="text-[10px] text-slate-400">${dayName ? 'יום ' + dayName : ''}</div>
+                  <div class="font-bold text-slate-900">${hDate.dayMonth ? `${hDate.dayMonth}` : rec.dateStr}</div>
+                  <div class="text-[10px] text-slate-400 font-mono">${rec.dateStr} ${dayName ? '• יום ' + dayName : ''}</div>
                 </td>
                 <td class="py-2.5 px-3 font-bold text-slate-800">
                   ${rec.slotTitle || 'סדר לימוד'}
@@ -2775,7 +2824,8 @@
       const container = document.getElementById('adminScheduleSlotsContainer');
 
       const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת קודש'];
-      const dayLabel = 'יום ' + dayNames[day] + ' (' + dStr + ')';
+      const hDate = getHebrewDateString(dStr);
+      const dayLabel = 'יום ' + dayNames[day] + (hDate.dayMonth ? ' • ' + hDate.dayMonth : '') + ' (' + dStr + ')';
 
       let totalDayPts = 0;
       slots.forEach(s => totalDayPts += (Number(s.points) || 0));
@@ -3125,10 +3175,12 @@
           kitchenReminderTime: '19:30'
         };
 
+        const hDate = getHebrewDateString(dStr);
+
         return `
           <tr class="${isToday ? 'bg-amber-50/70 font-bold' : 'hover:bg-slate-50/60'} border-b border-slate-100 transition">
             <td class="py-3 px-3">
-              <div class="font-bold text-slate-900">${dayName}</div>
+              <div class="font-bold text-slate-900">${dayName} • <span class="text-amber-800 font-extrabold">${hDate.dayMonth}</span></div>
               <div class="text-[10px] text-slate-400 font-mono">${dStr} ${isToday ? '⭐ היום' : ''}</div>
             </td>
             
