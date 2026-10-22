@@ -168,6 +168,43 @@
         </div>
       </div>
 
+      <!-- Shabbat Batch Reporting Card (Motzei Shabbat through Sunday 10:00 AM) -->
+      <div id="studentShabbatBatchCard" class="hidden soft-card p-5 border-2 border-indigo-300 bg-gradient-to-r from-indigo-50/90 via-white to-amber-50/50 shadow-md">
+        <div class="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-indigo-100">
+          <div class="flex items-center gap-2.5">
+            <span class="text-2xl">🕯️✨</span>
+            <div>
+              <h3 class="text-base font-black text-indigo-950">דיווח סדרי שבת קודש</h3>
+              <p class="text-xs text-indigo-700" id="studentShabbatWindowNotice">חלון הדיווח פתוח כעת (נסגר ביום ראשון ב-10:00 בבוקר)</p>
+            </div>
+          </div>
+          <span class="text-xs font-black px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200">מוצאי שבת</span>
+        </div>
+
+        <div id="studentShabbatFormContent">
+          <p class="text-xs text-slate-600 mb-3 font-medium">בחר את סדרי השבת בהם השתתפת לקבלת נקודות המבצע:</p>
+          <div id="shabbatSedarimChecklist" class="space-y-2 mb-4">
+            <!-- Dynamically populated by JS -->
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-indigo-100">
+            <button type="button" onclick="submitShabbatBatchReporting(true)" class="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+              <span>👑</span>
+              <span>נכחתי בכל סדרי השבת (+8 נקודות מלאות)</span>
+            </button>
+            <button type="button" onclick="submitShabbatBatchReporting(false)" class="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+              <span>✓</span>
+              <span>אשר עבור מה שסומן</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="studentShabbatSuccessContent" class="hidden p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
+          <span class="text-emerald-900 font-black text-sm block">✓ סדרי שבת קודש שלך דווחו בהצלחה!</span>
+          <span class="text-emerald-700 text-xs mt-0.5 block" id="studentShabbatSuccessDetails">הנקודות נוספו לדירוג שלך. שבוע טוב ומבורך!</span>
+        </div>
+      </div>
+
       <!-- Today's Duty Banner (Shown dynamically if the student is on duty today) -->
       <div id="studentTodayDutyCard" class="hidden soft-card p-4 border-2 border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50/50">
         <div class="flex flex-wrap items-center justify-between gap-3">
@@ -1606,6 +1643,13 @@
           const summary = 'סדר: ' + slot.title + ' (' + slot.points + ' נק׳)';
           const desc = 'מבצע ישיבת בקשו עבור ' + student.name + '. לחץ כאן לסימון נוכחות: ' + directUrl;
 
+          const isShabbatSlot = (curr.getDay() === 6) || (curr.getDay() === 5 && parseInt(openParts[0], 10) >= 16);
+          const alarmBlock = isShabbatSlot ? '' : ('BEGIN:VALARM\n' +
+'TRIGGER:-PT10M\n' +
+'ACTION:DISPLAY\n' +
+'DESCRIPTION:תזכורת: בעוד 10 דקות מתחיל ' + slot.title + ' בישיבת בקשו!\n' +
+'END:VALARM\n');
+
           events.push('BEGIN:VEVENT\n' +
 'UID:' + uid + '\n' +
 'DTSTAMP:' + formatIcsDate(new Date()) + 'Z\n' +
@@ -1615,11 +1659,7 @@
 'DESCRIPTION:' + desc + '\n' +
 'URL:' + directUrl + '\n' +
 'LOCATION:בית המדרש - ישיבת בקשו\n' +
-'BEGIN:VALARM\n' +
-'TRIGGER:-PT10M\n' +
-'ACTION:DISPLAY\n' +
-'DESCRIPTION:תזכורת: בעוד 10 דקות מתחיל ' + slot.title + ' בישיבת בקשו!\n' +
-'END:VALARM\n' +
+alarmBlock +
 'END:VEVENT');
         });
 
@@ -2474,6 +2514,162 @@ events.join('\n') + '\n' +
       state.activeSederNoPhone = !!checked;
     }
 
+    // Shabbat Batch Reporting Logic (Motzei Shabbat through Sunday 10:00 AM)
+    function getShabbatReportingState() {
+      const now = new Date();
+      const day = now.getDay(); // 0 = Sun, 6 = Sat
+      const hour = now.getHours();
+      const min = now.getMinutes();
+
+      let isOpen = false;
+      let shabbatDateStr = '';
+
+      if (day === 6 && (hour > 18 || (hour === 18 && min >= 30))) {
+        // Motzei Shabbat
+        isOpen = true;
+        shabbatDateStr = now.toISOString().slice(0, 10);
+      } else if (day === 0 && hour < 10) {
+        // Sunday morning until 10:00 AM!
+        isOpen = true;
+        const y = new Date(now);
+        y.setDate(now.getDate() - 1);
+        shabbatDateStr = y.toISOString().slice(0, 10);
+      }
+
+      return { isOpen, shabbatDateStr };
+    }
+
+    function renderShabbatBatchReportingCard() {
+      const card = document.getElementById('studentShabbatBatchCard');
+      if (!card) return;
+
+      const curStudent = state.currentStudent;
+      if (!curStudent) {
+        card.classList.add('hidden');
+        return;
+      }
+
+      const { isOpen, shabbatDateStr } = getShabbatReportingState();
+      if (!isOpen || !shabbatDateStr) {
+        card.classList.add('hidden');
+        return;
+      }
+
+      card.classList.remove('hidden');
+
+      const storageKey = `bakshu_shabbat_reported_${curStudent.id}_${shabbatDateStr}`;
+      const existingReportRaw = localStorage.getItem(storageKey);
+      const formEl = document.getElementById('studentShabbatFormContent');
+      const succEl = document.getElementById('studentShabbatSuccessContent');
+
+      if (existingReportRaw) {
+        const rep = JSON.parse(existingReportRaw);
+        if (formEl) formEl.classList.add('hidden');
+        if (succEl) {
+          succEl.classList.remove('hidden');
+          const detailsEl = document.getElementById('studentShabbatSuccessDetails');
+          if (detailsEl) detailsEl.textContent = `דווחו ${rep.slotsCount || 4} סדרים (+${rep.points || 8} נקודות). שבוע טוב ומבורך!`;
+        }
+        return;
+      }
+
+      if (formEl) formEl.classList.remove('hidden');
+      if (succEl) succEl.classList.add('hidden');
+
+      // Populate checklist of Shabbat slots
+      const listEl = document.getElementById('shabbatSedarimChecklist');
+      if (!listEl) return;
+
+      const shabbatSlots = getSlotsForDate(shabbatDateStr);
+      const slotsToRender = (shabbatSlots && shabbatSlots.length > 0) ? shabbatSlots : DEFAULT_SLOTS['shabbat_template'];
+
+      listEl.innerHTML = slotsToRender.map((slot, idx) => `
+        <label class="flex items-center justify-between p-3 rounded-xl bg-white border border-indigo-100 hover:border-indigo-300 transition cursor-pointer shadow-2xs">
+          <div class="flex items-center gap-2.5">
+            <input type="checkbox" name="shabbatSlotCheck" value="${slot.id || 'sh_' + idx}" data-points="${slot.points || 2}" data-title="${slot.title}" checked class="w-4 h-4 text-indigo-600 rounded" />
+            <span class="text-xs font-bold text-slate-900">${slot.title}</span>
+          </div>
+          <span class="text-xs font-black text-indigo-900 font-mono bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">+${slot.points || 2} נק׳</span>
+        </label>
+      `).join('');
+    }
+
+    async function submitShabbatBatchReporting(isAll) {
+      const curStudent = state.currentStudent;
+      if (!curStudent) return;
+
+      const { isOpen, shabbatDateStr } = getShabbatReportingState();
+      if (!isOpen || !shabbatDateStr) {
+        showToast('חלון הדיווח של שבת נסגר ביום ראשון ב-10:00 בבוקר', 'ℹ️');
+        return;
+      }
+
+      const checkboxes = Array.from(document.querySelectorAll('input[name="shabbatSlotCheck"]'));
+      if (isAll) {
+        checkboxes.forEach(cb => cb.checked = true);
+      }
+
+      const selected = checkboxes.filter(cb => cb.checked);
+      if (selected.length === 0) {
+        alert('אנא סמן לפחות סדר אחד בו נכחת בשבת');
+        return;
+      }
+
+      let totalPoints = 0;
+      const selectedTitles = [];
+      const selectedIds = [];
+      selected.forEach(cb => {
+        totalPoints += Number(cb.dataset.points) || 2;
+        selectedTitles.push(cb.dataset.title);
+        selectedIds.push(cb.value);
+      });
+
+      // Update student score
+      curStudent.baseScore = (Number(curStudent.baseScore) || 0) + totalPoints;
+      curStudent.score = curStudent.baseScore;
+
+      const stIdx = state.students.findIndex(s => s.id === curStudent.id);
+      if (stIdx !== -1) {
+        state.students[stIdx].score = curStudent.baseScore;
+        saveLocalStudents();
+      }
+
+      // Save local report
+      const storageKey = `bakshu_shabbat_reported_${curStudent.id}_${shabbatDateStr}`;
+      localStorage.setItem(storageKey, JSON.stringify({
+        shabbatDateStr,
+        reportedAt: new Date().toISOString(),
+        slotsCount: selected.length,
+        points: totalPoints,
+        slots: selectedIds
+      }));
+
+      // Sync to Supabase
+      if (supabaseClient) {
+        try {
+          const validUserId = (/^[0-9a-f-]{36}$/i.test(curStudent.id)) ? curStudent.id : null;
+          await supabaseClient.from('manager_bonus_logs').insert({
+            user_id: validUserId || '00000000-0000-0000-0000-000000000000',
+            points: totalPoints,
+            reason: `SHABBAT_BATCH:${shabbatDateStr} (${curStudent.name} - ${selectedTitles.join(', ')})`
+          });
+          if (validUserId) {
+            await supabaseClient.from('users').update({
+              manual_bonus_pts: Number(curStudent.baseScore) || 0
+            }).eq('id', validUserId);
+          }
+        } catch(e) {
+          console.warn('Supabase shabbat sync:', e);
+        }
+      }
+
+      showToast(`🎉 סדרי שבת קודש דווחו בהצלחה! +${totalPoints} נקודות`, '🕯️');
+      renderShabbatBatchReportingCard();
+      renderLeaderboard();
+      renderProgressGraph();
+      if (typeof renderDynamicCalendar === 'function') renderDynamicCalendar();
+    }
+
     function renderTodayDutyCard() {
       const card = document.getElementById('studentTodayDutyCard');
       const upcomingCard = document.getElementById('studentUpcomingDutyCard');
@@ -2660,6 +2856,7 @@ events.join('\n') + '\n' +
 
     function renderStudentScreen() {
       renderTodayDutyCard();
+      renderShabbatBatchReportingCard();
       const s = state.currentStudent;
       const isPresent = s.presentCurrent;
 

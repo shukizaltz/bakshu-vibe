@@ -580,24 +580,32 @@
             </div>
           </div>
 
-          <!-- Duties Stats & Filter Bar -->
+          <!-- Focused Rosh HaYeshiva Action Area: 2 Upcoming Immediate Duties -->
+          <div id="dutiesImmediateActionContainer" class="mb-6">
+            <!-- Rendered dynamically by renderDutiesHub() -->
+          </div>
+
+          <!-- Duties Stats & View/Filter Bar -->
           <div id="dutiesStatsContainer" class="mb-5">
             <!-- Dynamically rendered by JS -->
           </div>
 
-          <!-- Duties Table -->
-          <div class="overflow-x-auto">
+          <!-- Dedicated Admin Calendar View -->
+          <div id="adminDutiesCalendarView" class="space-y-4">
+            <!-- Populated dynamically by JS with day cards, WhatsApp & SMS triggers -->
+          </div>
+
+          <!-- Duties Table (Togglable) -->
+          <div id="adminDutiesTableView" class="hidden overflow-x-auto">
             <table class="w-full text-right text-xs">
               <thead>
                 <tr class="border-b border-slate-200 text-slate-400 font-extrabold uppercase">
                   <th class="py-3 px-3">תאריך ויום</th>
                   <th class="py-3 px-3">⏰ תורן השכמה (מעורר)</th>
                   <th class="py-3 px-2 text-center">שעת תזכורת</th>
-                  <th class="py-3 px-2 text-center">SMS</th>
                   <th class="py-3 px-2 text-center">ביצוע</th>
                   <th class="py-3 px-3">🧹 תורן מטבח (ערב)</th>
                   <th class="py-3 px-2 text-center">שעת תזכורת</th>
-                  <th class="py-3 px-2 text-center">SMS</th>
                   <th class="py-3 px-2 text-center">ביצוע</th>
                 </tr>
               </thead>
@@ -2389,12 +2397,16 @@
                   </div>
                 </div>
               </div>
-              <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
-                <button onclick="toggleDutyDone('${dateStr}', 'waker'); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 py-1.5 rounded-xl ${duty.wakerDone ? 'bg-slate-100 text-slate-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} font-black text-xs transition">
-                  ${duty.wakerDone ? 'בטל אישור ביצוע' : '✓ אשר ביצוע תורנות'}
+              <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100">
+                <button onclick="toggleDutyDone('${dateStr}', 'waker'); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 min-w-[100px] py-1.5 rounded-xl ${duty.wakerDone ? 'bg-slate-100 text-slate-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} font-black text-xs transition">
+                  ${duty.wakerDone ? 'בטל ביצוע' : '✓ אשר ביצוע'}
                 </button>
-                <button onclick="sendDutyReminderSms('${dateStr}', 'waker')" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition" title="שלח תזכורת SMS לתורן">
-                  📱 תזכורת
+                <button onclick="sendDutyReminderWhatsApp('${dateStr}', 'waker')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1 shadow-xs" title="שלח תזכורת בוואטסאפ לתורן (ישיר)">
+                  <span>💬</span>
+                  <span>וואטסאפ</span>
+                </button>
+                <button onclick="sendDutyReminderSms('${dateStr}', 'waker')" class="px-2 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition" title="שלח תזכורת SMS לתורן">
+                  📱 SMS
                 </button>
               </div>
             </div>
@@ -2425,12 +2437,16 @@
                   </div>
                 </div>
               </div>
-              <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
-                <button onclick="toggleDutyDone('${dateStr}', 'kitchen'); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 py-1.5 rounded-xl ${duty.kitchenDone ? 'bg-slate-100 text-slate-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} font-black text-xs transition">
-                  ${duty.kitchenDone ? 'בטל אישור ביצוע' : '✓ אשר ביצוע תורנות'}
+              <div class="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100">
+                <button onclick="toggleDutyDone('${dateStr}', 'kitchen'); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 min-w-[100px] py-1.5 rounded-xl ${duty.kitchenDone ? 'bg-slate-100 text-slate-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} font-black text-xs transition">
+                  ${duty.kitchenDone ? 'בטל ביצוע' : '✓ אשר ביצוע'}
                 </button>
-                <button onclick="sendDutyReminderSms('${dateStr}', 'kitchen')" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition" title="שלח תזכורת SMS לתורן">
-                  📱 תזכורת
+                <button onclick="sendDutyReminderWhatsApp('${dateStr}', 'kitchen')" class="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition flex items-center gap-1 shadow-xs" title="שלח תזכורת בוואטסאפ לתורן (ישיר)">
+                  <span>💬</span>
+                  <span>וואטסאפ</span>
+                </button>
+                <button onclick="sendDutyReminderSms('${dateStr}', 'kitchen')" class="px-2 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition" title="שלח תזכורת SMS לתורן">
+                  📱 SMS
                 </button>
               </div>
             </div>
@@ -3704,11 +3720,17 @@
     // ====================================================
     // 5. DUTIES ROSTER & SMART RANDOM ASSIGNMENT
     // ====================================================
-    let dutiesFilterMode = 'all'; // 'all' | '14days' | 'currentWeek'
+    let dutiesViewMode = 'calendar'; // 'calendar' | 'table'
+    let dutiesFilterMode = 'all'; // 'all' | 'currentWeek' | '14days' | 'past' | 'future'
+
+    function setDutiesViewMode(mode) {
+      dutiesViewMode = mode;
+      renderDutiesHub();
+    }
 
     function setDutiesFilterMode(mode) {
       dutiesFilterMode = mode;
-      renderDutiesTable();
+      renderDutiesHub();
     }
 
     // Helper: Get all weekday dates within campaign (Sun-Thu only; no Friday or Shabbat)
@@ -3998,17 +4020,571 @@
       showToast(`🎲 ${chosenStudent.name} שובץ לתורנות ${roleTitle} (${minCount} תורנויות קודמות)`, roleEmoji);
     }
 
-    // Render Duties Table with live stats and filter
-    function renderDutiesTable() {
-      const tbody = document.getElementById('adminDutiesTableBody');
-      const statsContainer = document.getElementById('dutiesStatsContainer');
-      if (!tbody) return;
+    // Helper: Format Israeli Phone for WhatsApp Click-to-chat (e.g. 052-1234567 -> 972521234567)
+    function formatIsraeliPhoneForWhatsApp(phone) {
+      if (!phone) return '';
+      let clean = phone.replace(/[^0-9]/g, '');
+      if (clean.startsWith('0')) {
+        clean = '972' + clean.slice(1);
+      } else if (!clean.startsWith('972') && clean.length === 9) {
+        clean = '972' + clean;
+      }
+      return clean;
+    }
 
+    // WhatsApp Click-to-Chat (Alternative 1: Direct link, zero cost, instant)
+    function sendDutyReminderWhatsApp(dateStr, role) {
+      const duty = state.dutiesRoster[dateStr];
+      const stId = role === 'waker' ? duty?.wakerStudentId : duty?.kitchenStudentId;
+      const student = state.students.find(s => s.id === stId);
+      if (!student) {
+        showToast('נא לשבץ בחור לפני שליחת תזכורת', '⚠️');
+        return;
+      }
+
+      const d = new Date(dateStr + 'T12:00:00');
+      const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+      const dayName = 'יום ' + dayNames[d.getDay()];
+      const hDate = getHebrewDateString(dateStr);
+      const roleTitle = role === 'waker' ? 'השכמה (מעורר בוקר ⏰)' : 'נקיון מטבח ערב 🧹';
+
+      const cleanPhone = formatIsraeliPhoneForWhatsApp(student.phone);
+      const msg = `שלום ${student.name} היקר! 🌺
+תזכורת מישיבת בקשו: אתה משובץ לתורנות *${roleTitle}* ל${dayName} (${hDate.dayMonth}, ${dateStr}).
+תודה רבה מקרב לב על העזרה לכל בני הישיבה! עלה והצלח! ✨`;
+
+      if (cleanPhone) {
+        const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+        window.open(waUrl, '_blank');
+        showToast(`נפתח וואטסאפ לתזכורת עבור ${student.name}`, '💬');
+      } else {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(msg).then(() => {
+            showToast('נוסח ההודעה הועתק ללוח (לבחור אין טלפון מעודכן)', '📋');
+          });
+        }
+        alert(`לבחור ${student.name} טרם הוגדר מספר טלפון במערכת.\nנוסח ההודעה הועתק ללוח:\n\n${msg}`);
+      }
+    }
+
+    // SMS Reminder
+    function sendDutyReminderSms(dateStr, role) {
+      const duty = state.dutiesRoster[dateStr];
+      const stId = role === 'waker' ? duty?.wakerStudentId : duty?.kitchenStudentId;
+      const student = state.students.find(s => s.id === stId);
+      if (!student) {
+        showToast('נא לשבץ בחור לפני שליחת תזכורת', '⚠️');
+        return;
+      }
+      const d = new Date(dateStr + 'T12:00:00');
+      const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+      const dayName = 'יום ' + dayNames[d.getDay()];
+      const hDate = getHebrewDateString(dateStr);
+      const roleName = role === 'waker' ? 'מעורר בוקר' : 'נקיון מטבח ערב';
+      const text = encodeURIComponent(`שלום ${student.name} היקר, תזכורת מישיבת בקשו: אתה משובץ לתורנות ${roleName} ל${dayName} (${hDate.dayMonth}, ${dateStr}). נא להיערך. תודה ובהצלחה!`);
+      const phone = (student.phone || '').replace(/[^0-9]/g, '');
+      if (phone) {
+        window.open(`sms:${phone}?body=${text}`, '_blank');
+        showToast(`נפתחה הודעת SMS ל-${student.name}`, '📲');
+      } else {
+        showToast(`אין מספר טלפון מעודכן ל-${student.name}`, '⚠️');
+      }
+    }
+
+    // Download Admin Duties Calendar (.ics) with alarms for Rosh HaYeshiva
+    function downloadAdminDutiesCalendarIcs() {
+      const weekdayDates = getCampaignWeekdayDates();
+      if (weekdayDates.length === 0) {
+        alert('לא נמצאו תאריכים ביומן.');
+        return;
+      }
+
+      const now = new Date();
+      const dtStamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      const icsLines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Bakshu Yeshiva//Admin Duties Calendar//HE',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'X-WR-CALNAME:ישיבת בקשו - יומן תזכורות לתורנויות (ראש הישיבה)',
+        'X-WR-TIMEZONE:Asia/Jerusalem'
+      ];
+
+      let eventCount = 0;
+
+      weekdayDates.forEach(dStr => {
+        const duty = state.dutiesRoster[dStr];
+        if (!duty) return;
+
+        const d = new Date(dStr + 'T12:00:00');
+        const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+        const dayName = 'יום ' + dayNames[d.getDay()];
+        const hDate = getHebrewDateString(dStr);
+
+        // 1. Waker Duty Reminder (Evening before at 22:30 with alarm)
+        if (duty.wakerStudentId) {
+          const student = state.students.find(s => s.id === duty.wakerStudentId);
+          const stName = student ? student.name : 'תורן';
+          const stPhone = student ? student.phone : '';
+          const cleanPhone = formatIsraeliPhoneForWhatsApp(stPhone);
+          const waLink = cleanPhone ? `https://wa.me/${cleanPhone}` : '';
+
+          const prevDate = new Date(d);
+          prevDate.setDate(d.getDate() - 1);
+          const prevStr = prevDate.toISOString().slice(0, 10).replace(/-/g, '');
+
+          icsLines.push('BEGIN:VEVENT');
+          icsLines.push(`UID:admin_duty_waker_${dStr}_${duty.wakerStudentId}@bakshu.yeshiva`);
+          icsLines.push(`DTSTAMP:${dtStamp}`);
+          icsLines.push(`DTSTART:${prevStr}T223000`);
+          icsLines.push(`DTEND:${prevStr}T224500`);
+          icsLines.push(`SUMMARY:תזכורת לתורן מעורר: ${stName} (למחר בבוקר)`);
+          icsLines.push(`DESCRIPTION:תורן השכמה ל${dayName} (${hDate.dayMonth}, ${dStr}): ${stName}\\nטלפון: ${stPhone || 'לא הוזן'}\\nוואטסאפ: ${waLink}`);
+          icsLines.push('BEGIN:VALARM');
+          icsLines.push('ACTION:DISPLAY');
+          icsLines.push(`DESCRIPTION:תזכורת לשלוח הודעה למעורר: ${stName}`);
+          icsLines.push('TRIGGER:-PT15M');
+          icsLines.push('END:VALARM');
+          icsLines.push('END:VEVENT');
+          eventCount++;
+        }
+
+        // 2. Kitchen Duty Reminder (Evening at 19:15 with alarm)
+        if (duty.kitchenStudentId) {
+          const student = state.students.find(s => s.id === duty.kitchenStudentId);
+          const stName = student ? student.name : 'תורן';
+          const stPhone = student ? student.phone : '';
+          const cleanPhone = formatIsraeliPhoneForWhatsApp(stPhone);
+          const waLink = cleanPhone ? `https://wa.me/${cleanPhone}` : '';
+
+          const dClean = dStr.replace(/-/g, '');
+
+          icsLines.push('BEGIN:VEVENT');
+          icsLines.push(`UID:admin_duty_kitchen_${dStr}_${duty.kitchenStudentId}@bakshu.yeshiva`);
+          icsLines.push(`DTSTAMP:${dtStamp}`);
+          icsLines.push(`DTSTART:${dClean}T191500`);
+          icsLines.push(`DTEND:${dClean}T193000`);
+          icsLines.push(`SUMMARY:תזכורת לתורן מטבח: ${stName} (הערב)`);
+          icsLines.push(`DESCRIPTION:תורן מטבח ערב ל${dayName} (${hDate.dayMonth}, ${dStr}): ${stName}\\nטלפון: ${stPhone || 'לא הוזן'}\\nוואטסאפ: ${waLink}`);
+          icsLines.push('BEGIN:VALARM');
+          icsLines.push('ACTION:DISPLAY');
+          icsLines.push(`DESCRIPTION:תזכורת לשלוח הודעה לתורן מטבח: ${stName}`);
+          icsLines.push('TRIGGER:-PT15M');
+          icsLines.push('END:VALARM');
+          icsLines.push('END:VEVENT');
+          eventCount++;
+        }
+      });
+
+      icsLines.push('END:VCALENDAR');
+
+      if (eventCount === 0) {
+        alert('טרם שובצו בחורים לתורנויות. נא לשבץ תחילה לפני הורדת היומן.');
+        return;
+      }
+
+      const blob = new Blob([icsLines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bakshu_admin_duties_reminders_${new Date().toISOString().slice(0, 10)}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`יומן תזכורות לאדמין הורד בהצלחה (${eventCount} תזכורות)`, '📥');
+    }
+
+    // Focused Rosh HaYeshiva Algorithm: Resolve the 2 Most Immediate Upcoming Duties
+    function getNextTwoImmediateDuties() {
+      const allDates = getCampaignWeekdayDates();
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const now = new Date();
+      const currentHour = now.getHours();
+      const candidateItems = [];
+
+      const tomorrow = new Date(now);
+      tomorrow.setDate(now.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+
+      allDates.forEach(dStr => {
+        const duty = state.dutiesRoster[dStr] || {
+          wakerStudentId: '', wakerStudentName: '', wakerDone: false,
+          kitchenStudentId: '', kitchenStudentName: '', kitchenDone: false
+        };
+
+        const isToday = (dStr === todayStr);
+        const isPast = (dStr < todayStr);
+        if (isPast) return;
+
+        const d = new Date(dStr + 'T12:00:00');
+        const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+        const dayName = 'יום ' + dayNames[d.getDay()];
+        const hDate = getHebrewDateString(dStr);
+
+        if (isToday) {
+          if (!duty.wakerDone || currentHour < 10) {
+            candidateItems.push({
+              dateStr: dStr,
+              role: 'waker',
+              roleTitle: 'השכמה (מעורר בוקר)',
+              roleEmoji: '⏰',
+              studentId: duty.wakerStudentId,
+              isDone: Boolean(duty.wakerDone),
+              isToday: true,
+              dayName,
+              hDate,
+              relativeLabel: currentHour >= 12 ? 'מחר בבוקר' : 'הבוקר',
+              order: 1
+            });
+          }
+          if (!duty.kitchenDone || currentHour < 22) {
+            candidateItems.push({
+              dateStr: dStr,
+              role: 'kitchen',
+              roleTitle: 'נקיון מטבח ערב',
+              roleEmoji: '🧹',
+              studentId: duty.kitchenStudentId,
+              isDone: Boolean(duty.kitchenDone),
+              isToday: true,
+              dayName,
+              hDate,
+              relativeLabel: 'הערב',
+              order: 2
+            });
+          }
+        } else {
+          candidateItems.push({
+            dateStr: dStr,
+            role: 'waker',
+            roleTitle: 'השכמה (מעורר בוקר)',
+            roleEmoji: '⏰',
+            studentId: duty.wakerStudentId,
+            isDone: Boolean(duty.wakerDone),
+            isToday: false,
+            dayName,
+            hDate,
+            relativeLabel: dStr === tomorrowStr ? 'מחר בבוקר' : `${dayName} בבוקר`,
+            order: 1
+          });
+          candidateItems.push({
+            dateStr: dStr,
+            role: 'kitchen',
+            roleTitle: 'נקיון מטבח ערב',
+            roleEmoji: '🧹',
+            studentId: duty.kitchenStudentId,
+            isDone: Boolean(duty.kitchenDone),
+            isToday: false,
+            dayName,
+            hDate,
+            relativeLabel: dStr === tomorrowStr ? 'מחר בערב' : `${dayName} בערב`,
+            order: 2
+          });
+        }
+      });
+
+      candidateItems.sort((a, b) => {
+        if (a.dateStr !== b.dateStr) return a.dateStr.localeCompare(b.dateStr);
+        return a.order - b.order;
+      });
+
+      const pending = candidateItems.filter(c => !c.isDone);
+      if (pending.length >= 2) return pending.slice(0, 2);
+      if (candidateItems.length >= 2) return candidateItems.slice(0, 2);
+      return candidateItems;
+    }
+
+    // Render 2 Immediate Upcoming Duties High Priority Cards
+    function renderDutiesImmediateActionCards() {
+      const container = document.getElementById('dutiesImmediateActionContainer');
+      if (!container) return;
+
+      const nextDuties = getNextTwoImmediateDuties();
+      if (nextDuties.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-[#0A1138] via-indigo-950 to-slate-900 text-white shadow-xl border border-indigo-500/30">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+            <div class="flex items-center gap-2.5">
+              <span class="w-8 h-8 rounded-xl bg-amber-400/20 text-amber-400 flex items-center justify-center text-lg border border-amber-400/40">⚡</span>
+              <div>
+                <h3 class="text-sm sm:text-base font-black text-white">2 התורנויות הקרובות לתזכורת מיידית</h3>
+                <p class="text-[11px] text-indigo-200">מוקד תזכורות ישירות לראש הישיבה – לחץ לשליחת הודעה ישירה בוואטסאפ או בסמס לתורן</p>
+              </div>
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 self-start sm:self-center">
+              מוקד תזכורות פעיל
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${nextDuties.map(item => {
+              const student = (state.students || []).find(s => s.id === item.studentId);
+              return `
+                <div class="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 hover:border-amber-400/50 transition flex flex-col justify-between shadow-lg">
+                  <div>
+                    <div class="flex items-center justify-between gap-2 mb-2.5">
+                      <div class="flex items-center gap-2">
+                        <span class="text-2xl">${item.roleEmoji}</span>
+                        <div>
+                          <div class="font-black text-white text-sm">${item.roleTitle}</div>
+                          <div class="text-[11px] font-bold text-amber-300">${item.relativeLabel} • ${item.dayName} (${item.hDate.dayMonth}, ${item.dateStr})</div>
+                        </div>
+                      </div>
+                      <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full ${item.isDone ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' : 'bg-amber-400/20 text-amber-300 border border-amber-400/40'}">
+                        ${item.isDone ? '✓ בוצע' : '⏳ טרם בוצע'}
+                      </span>
+                    </div>
+
+                    <div class="p-3 rounded-xl bg-white/95 text-slate-900 border border-white mb-3 shadow-inner">
+                      <div class="text-[10px] text-slate-400 font-bold mb-0.5">בחור משובץ:</div>
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                          <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-950 font-black text-xs flex items-center justify-center border border-indigo-200">
+                            ${student ? student.name.charAt(0) : '?'}
+                          </div>
+                          <div>
+                            <div class="font-black text-slate-900 text-sm">${student ? student.name : '<span class="text-rose-600 font-bold">⚠️ טרם שובץ בחור!</span>'}</div>
+                            <div class="text-[11px] text-slate-500 font-mono">${student && student.phone ? '📞 ' + student.phone : 'אין מספר טלפון מעודכן'}</div>
+                          </div>
+                        </div>
+                        <button onclick="randomAssignSingleDuty('${item.dateStr}', '${item.role}')" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-black text-xs transition flex items-center gap-1 shrink-0" title="החלף שיבוץ באקראי לתורנות זו">
+                          <span>🎲</span>
+                          <span>החלף</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Quick action triggers -->
+                  <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10">
+                    <button onclick="sendDutyReminderWhatsApp('${item.dateStr}', '${item.role}')" class="flex-1 min-w-[125px] py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5" title="שלח תזכורת ישירה בוואטסאפ (חלופה 1)">
+                      <span class="text-base">💬</span>
+                      <span>וואטסאפ לתורן</span>
+                    </button>
+                    <button onclick="sendDutyReminderSms('${item.dateStr}', '${item.role}')" class="py-2 px-3 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs border border-white/20 transition flex items-center justify-center gap-1" title="שלח תזכורת SMS">
+                      <span>📲</span>
+                      <span>SMS</span>
+                    </button>
+                    <button onclick="toggleDutyDone('${item.dateStr}', '${item.role}')" class="py-2 px-3 rounded-xl ${item.isDone ? 'bg-white/20 text-slate-200 hover:bg-white/30' : 'bg-amber-400 hover:bg-amber-300 text-slate-950'} font-black text-xs transition">
+                      ${item.isDone ? 'בטל ביצוע' : '✓ אשר שבוצע'}
+                    </button>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Render Dedicated Admin Calendar (Grid of Day Cards with WhatsApp & SMS triggers)
+    function renderAdminDutiesCalendar(filteredDates, todayStr) {
+      const container = document.getElementById('adminDutiesCalendarView');
+      if (!container) return;
+
+      if (filteredDates.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 text-slate-400 font-bold text-xs">
+            לא נמצאו ימי תורנות לתצוגה שנבחרה
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          ${filteredDates.map(dStr => {
+            const d = new Date(dStr + 'T12:00:00');
+            const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+            const dayName = 'יום ' + dayNames[d.getDay()];
+            const hDate = getHebrewDateString(dStr);
+            const isToday = (dStr === todayStr);
+            const isPast = (dStr < todayStr);
+
+            const duty = state.dutiesRoster[dStr] || {
+              wakerStudentId: '', wakerStudentName: '', wakerDone: false, wakerReminderTime: '22:30',
+              kitchenStudentId: '', kitchenStudentName: '', kitchenDone: false, kitchenReminderTime: '19:30'
+            };
+
+            const isConflict = Boolean(duty.wakerStudentId && duty.kitchenStudentId && duty.wakerStudentId === duty.kitchenStudentId);
+
+            return `
+              <div class="rounded-2xl border ${isToday ? 'border-amber-400 bg-amber-50/40 ring-2 ring-amber-300 shadow-md' : isConflict ? 'border-rose-300 bg-rose-50/30' : isPast ? 'border-slate-200 bg-slate-50/70 opacity-90' : 'border-slate-200 bg-white hover:border-indigo-300'} p-4 transition shadow-xs flex flex-col justify-between">
+                <!-- Day Header -->
+                <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                  <div>
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-black text-slate-900 text-sm">${dayName}</span>
+                      <span class="text-xs font-extrabold text-amber-800">${hDate.dayMonth}</span>
+                      ${isToday ? '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 shadow-xs">⭐ היום</span>' : isPast ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-600">עבר</span>' : ''}
+                    </div>
+                    <div class="text-[10px] text-slate-400 font-mono">${dStr}</div>
+                  </div>
+                  ${isConflict ? '<span class="text-[10px] font-black px-1.5 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-300">⚠️ כפילות!</span>' : ''}
+                </div>
+
+                <!-- Role 1: Waker (Morning) -->
+                <div class="p-3 rounded-xl bg-white border border-slate-100 mb-3 shadow-2xs">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center gap-1 text-xs font-black text-slate-800">
+                      <span>⏰</span>
+                      <span>השכמה (מעורר)</span>
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${duty.wakerDone ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}">
+                      ${duty.wakerDone ? '✓ בוצע' : '⏳ טרם בוצע'}
+                    </span>
+                  </div>
+
+                  <div class="flex items-center gap-1.5 mb-2">
+                    <select onchange="updateDutyAssignee('${dStr}', 'waker', this.value)" class="flex-1 text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-slate-50'}">
+                      <option value="">-- בחר בחור מעורר --</option>
+                      ${(state.students || []).map(s => `<option value="${s.id}" ${duty.wakerStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+                    </select>
+                    <button onclick="randomAssignSingleDuty('${dStr}', 'waker')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition shrink-0" title="שבץ/החלף באקראי">
+                      🎲
+                    </button>
+                  </div>
+
+                  <div class="flex items-center gap-1.5 pt-1.5 border-t border-slate-100">
+                    <button onclick="sendDutyReminderWhatsApp('${dStr}', 'waker')" class="flex-1 py-1 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition flex items-center justify-center gap-1 shadow-2xs" title="שלח תזכורת בוואטסאפ לתורן (ישיר)">
+                      <span>💬</span>
+                      <span>וואטסאפ</span>
+                    </button>
+                    <button onclick="sendDutyReminderSms('${dStr}', 'waker')" class="py-1 px-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-[11px] border border-indigo-200 transition flex items-center justify-center gap-1" title="שלח תזכורת SMS">
+                      <span>📲</span>
+                      <span>SMS</span>
+                    </button>
+                    <button onclick="toggleDutyDone('${dStr}', 'waker')" class="py-1 px-2 rounded-lg text-[11px] font-bold transition ${duty.wakerDone ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
+                      ${duty.wakerDone ? '✓' : 'סמן'}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Role 2: Kitchen (Evening) -->
+                <div class="p-3 rounded-xl bg-white border border-slate-100 shadow-2xs">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center gap-1 text-xs font-black text-slate-800">
+                      <span>🧹</span>
+                      <span>נקיון מטבח ערב</span>
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${duty.kitchenDone ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}">
+                      ${duty.kitchenDone ? '✓ בוצע' : '⏳ טרם בוצע'}
+                    </span>
+                  </div>
+
+                  <div class="flex items-center gap-1.5 mb-2">
+                    <select onchange="updateDutyAssignee('${dStr}', 'kitchen', this.value)" class="flex-1 text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-slate-50'}">
+                      <option value="">-- בחר תורן מטבח --</option>
+                      ${(state.students || []).map(s => `<option value="${s.id}" ${duty.kitchenStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+                    </select>
+                    <button onclick="randomAssignSingleDuty('${dStr}', 'kitchen')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition shrink-0" title="שבץ/החלף באקראי">
+                      🎲
+                    </button>
+                  </div>
+
+                  <div class="flex items-center gap-1.5 pt-1.5 border-t border-slate-100">
+                    <button onclick="sendDutyReminderWhatsApp('${dStr}', 'kitchen')" class="flex-1 py-1 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition flex items-center justify-center gap-1 shadow-2xs" title="שלח תזכורת בוואטסאפ לתורן (ישיר)">
+                      <span>💬</span>
+                      <span>וואטסאפ</span>
+                    </button>
+                    <button onclick="sendDutyReminderSms('${dStr}', 'kitchen')" class="py-1 px-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-[11px] border border-indigo-200 transition flex items-center justify-center gap-1" title="שלח תזכורת SMS">
+                      <span>📲</span>
+                      <span>SMS</span>
+                    </button>
+                    <button onclick="toggleDutyDone('${dStr}', 'kitchen')" class="py-1 px-2 rounded-lg text-[11px] font-bold transition ${duty.kitchenDone ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
+                      ${duty.kitchenDone ? '✓' : 'סמן'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    // Render Stats & View Switcher Bar
+    function renderAdminDutiesStatsAndTabs(allDates, filteredDates, totalAssigned, totalSlots, avgPerStudent, conflictsCount) {
+      const statsContainer = document.getElementById('dutiesStatsContainer');
+      if (!statsContainer) return;
+
+      statsContainer.innerHTML = `
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+            <span class="text-[10px] text-slate-400 font-bold block">ימי תורנות במבצע (חול)</span>
+            <span class="text-base font-black text-slate-900 font-mono">${allDates.length} ימים</span>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+            <span class="text-[10px] text-slate-400 font-bold block">תורנויות משובצות</span>
+            <span class="text-base font-black text-indigo-950 font-mono">${totalAssigned} / ${totalSlots}</span>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+            <span class="text-[10px] text-slate-400 font-bold block">ממוצע תורנויות לבחור</span>
+            <span class="text-base font-black text-amber-900 font-mono">${avgPerStudent} תורנויות</span>
+          </div>
+          <div class="p-3.5 rounded-2xl ${conflictsCount === 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'} border shadow-xs">
+            <span class="text-[10px] ${conflictsCount === 0 ? 'text-emerald-700' : 'text-rose-700'} font-bold block">כפילות בוקר וערב</span>
+            <span class="text-xs font-black ${conflictsCount === 0 ? 'text-emerald-950' : 'text-rose-950'} flex items-center gap-1 mt-1">
+              <span>${conflictsCount === 0 ? '✓' : '⚠️'}</span>
+              <span>${conflictsCount === 0 ? 'תקין! 0 כפילויות' : `${conflictsCount} כפילויות לתיקון!`}</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Mode Switcher, Period Filter Tabs & ICS Download -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 p-2 rounded-2xl bg-slate-100 border border-slate-200">
+          <!-- View Mode: Calendar vs Table -->
+          <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs self-start">
+            <button onclick="setDutiesViewMode('calendar')" class="px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 ${dutiesViewMode === 'calendar' ? 'bg-[#0A1138] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}">
+              <span>📅</span>
+              <span>לוח תזכורות לאדמין</span>
+            </button>
+            <button onclick="setDutiesViewMode('table')" class="px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1.5 ${dutiesViewMode === 'table' ? 'bg-[#0A1138] text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'}">
+              <span>📋</span>
+              <span>טבלת כל הימים</span>
+            </button>
+          </div>
+
+          <!-- Period Filter Tabs -->
+          <div class="flex flex-wrap items-center gap-1 text-xs">
+            <button onclick="setDutiesFilterMode('all')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${dutiesFilterMode === 'all' ? 'bg-white text-slate-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'}">
+              כל הימים (${allDates.length})
+            </button>
+            <button onclick="setDutiesFilterMode('currentWeek')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${dutiesFilterMode === 'currentWeek' ? 'bg-white text-slate-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'}">
+              השבוע הנוכחי
+            </button>
+            <button onclick="setDutiesFilterMode('14days')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${dutiesFilterMode === '14days' ? 'bg-white text-slate-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'}">
+              14 ימים קרובים
+            </button>
+            <button onclick="setDutiesFilterMode('past')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${dutiesFilterMode === 'past' ? 'bg-white text-slate-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'}">
+              תורנויות שהיו (עבר)
+            </button>
+            <button onclick="setDutiesFilterMode('future')" class="px-2.5 py-1.5 rounded-xl font-bold transition ${dutiesFilterMode === 'future' ? 'bg-white text-slate-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'}">
+              הבאות (עתיד)
+            </button>
+          </div>
+
+          <!-- Download Admin Calendar Button -->
+          <button onclick="downloadAdminDutiesCalendarIcs()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-xs flex items-center gap-1.5 self-start lg:self-auto shrink-0" title="הורד יומן תזכורות עם התראות מראש לטלפון של ראש הישיבה">
+            <span>📥</span>
+            <span>הורד יומן תזכורות (.ics)</span>
+          </button>
+        </div>
+      `;
+    }
+
+    // Main Orchestrator: renderDutiesHub
+    function renderDutiesHub() {
       const allDates = getCampaignWeekdayDates();
       const todayStr = new Date().toISOString().slice(0, 10);
       const today = new Date();
 
-      // Filter dates according to active filter
+      // Filter dates
       let filteredDates = [...allDates];
       if (dutiesFilterMode === '14days') {
         filteredDates = allDates.filter(dStr => {
@@ -4025,11 +4601,15 @@
         const sunStr = sunday.toISOString().slice(0, 10);
         const thuStr = thursday.toISOString().slice(0, 10);
         filteredDates = allDates.filter(dStr => dStr >= sunStr && dStr <= thuStr);
+      } else if (dutiesFilterMode === 'past') {
+        filteredDates = allDates.filter(dStr => dStr < todayStr);
+      } else if (dutiesFilterMode === 'future') {
+        filteredDates = allDates.filter(dStr => dStr >= todayStr);
       }
 
-      // Compute statistics across all campaign dates
+      // Compute statistics
       let totalAssigned = 0;
-      let totalSlots = allDates.length * 2;
+      const totalSlots = allDates.length * 2;
       let conflictsCount = 0;
       const studentDutyCounts = {};
       (state.students || []).forEach(s => { studentDutyCounts[s.id] = 0; });
@@ -4054,52 +4634,36 @@
       const studentsCount = (state.students || []).length;
       const avgPerStudent = studentsCount > 0 ? (totalAssigned / studentsCount).toFixed(1) : '0';
 
-      if (statsContainer) {
-        statsContainer.innerHTML = `
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
-              <span class="text-[10px] text-slate-400 font-bold block">ימי תורנות (חול) במבצע</span>
-              <span class="text-base font-black text-slate-900 font-mono">${allDates.length} ימים</span>
-            </div>
-            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
-              <span class="text-[10px] text-slate-400 font-bold block">תורנויות משובצות</span>
-              <span class="text-base font-black text-indigo-950 font-mono">${totalAssigned} / ${totalSlots}</span>
-            </div>
-            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
-              <span class="text-[10px] text-slate-400 font-bold block">ממוצע תורנויות לבחור</span>
-              <span class="text-base font-black text-amber-900 font-mono">${avgPerStudent} תורנויות</span>
-            </div>
-            <div class="p-3.5 rounded-2xl ${conflictsCount === 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'} border shadow-xs">
-              <span class="text-[10px] ${conflictsCount === 0 ? 'text-emerald-700' : 'text-rose-700'} font-bold block">בדיקת כפילות בוקר וערב</span>
-              <span class="text-xs font-black ${conflictsCount === 0 ? 'text-emerald-950' : 'text-rose-950'} flex items-center gap-1 mt-1">
-                <span>${conflictsCount === 0 ? '✓' : '⚠️'}</span>
-                <span>${conflictsCount === 0 ? 'תקין! 0 כפילויות' : `${conflictsCount} כפילויות לתיקון!`}</span>
-              </span>
-            </div>
-          </div>
+      // 1. Render Top Action Area: 2 Upcoming Immediate Duties
+      renderDutiesImmediateActionCards();
 
-          <!-- View Filter Tabs -->
-          <div class="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-slate-100 border border-slate-200">
-            <div class="flex items-center gap-1 text-xs">
-              <button onclick="setDutiesFilterMode('all')" class="px-3 py-1.5 rounded-xl font-bold transition ${dutiesFilterMode === 'all' ? 'bg-white text-slate-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'}">
-                כל ימי המבצע (${allDates.length})
-              </button>
-              <button onclick="setDutiesFilterMode('14days')" class="px-3 py-1.5 rounded-xl font-bold transition ${dutiesFilterMode === '14days' ? 'bg-white text-slate-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'}">
-                14 ימים קרובים
-              </button>
-              <button onclick="setDutiesFilterMode('currentWeek')" class="px-3 py-1.5 rounded-xl font-bold transition ${dutiesFilterMode === 'currentWeek' ? 'bg-white text-slate-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'}">
-                השבוע הנוכחי
-              </button>
-            </div>
-            <span class="text-[11px] text-slate-500 font-bold px-2 hidden sm:inline">מוצגים ${filteredDates.length} ימים</span>
-          </div>
-        `;
+      // 2. Render Stats & Filter Tabs Bar
+      renderAdminDutiesStatsAndTabs(allDates, filteredDates, totalAssigned, totalSlots, avgPerStudent, conflictsCount);
+
+      // 3. Toggle & Render Active View
+      const calViewEl = document.getElementById('adminDutiesCalendarView');
+      const tblViewEl = document.getElementById('adminDutiesTableView');
+
+      if (dutiesViewMode === 'calendar') {
+        calViewEl?.classList.remove('hidden');
+        tblViewEl?.classList.add('hidden');
+        renderAdminDutiesCalendar(filteredDates, todayStr);
+      } else {
+        calViewEl?.classList.add('hidden');
+        tblViewEl?.classList.remove('hidden');
+        renderDutiesTableRows(filteredDates, todayStr);
       }
+    }
+
+    // Render Table Rows (Without inline SMS button, clean 7 columns)
+    function renderDutiesTableRows(filteredDates, todayStr) {
+      const tbody = document.getElementById('adminDutiesTableBody');
+      if (!tbody) return;
 
       if (filteredDates.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="9" class="text-center py-8 text-slate-400 font-bold">
+            <td colspan="7" class="text-center py-8 text-slate-400 font-bold">
               לא נמצאו ימי תורנות לתצוגה שנבחרה
             </td>
           </tr>
@@ -4111,7 +4675,7 @@
         const d = new Date(dStr + 'T12:00:00');
         const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
         const dayName = 'יום ' + dayNames[d.getDay()];
-        const isToday = dStr === todayStr;
+        const isToday = (dStr === todayStr);
 
         const duty = state.dutiesRoster[dStr] || {
           wakerStudentId: '',
@@ -4140,22 +4704,17 @@
             <!-- Waker duty -->
             <td class="py-3 px-3 border-r border-slate-100">
               <div class="flex items-center gap-1.5">
-                <select onchange="updateDutyAssignee('${dStr}', 'waker', this.value)" class="flex-1 min-w-[125px] text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-white'}">
+                <select onchange="updateDutyAssignee('${dStr}', 'waker', this.value)" class="flex-1 min-w-[130px] text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-white'}">
                   <option value="">-- בחר בחור מעורר --</option>
                   ${(state.students || []).map(s => `<option value="${s.id}" ${duty.wakerStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
                 </select>
-                <button type="button" onclick="randomAssignSingleDuty('${dStr}', 'waker')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black transition shrink-0" title="שבץ / החלף באקראי תורנות מעורר ביום זה בלבד לפי האלגוריתם (הכי פחות תורנויות וללא כפילויות)">
+                <button type="button" onclick="randomAssignSingleDuty('${dStr}', 'waker')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black transition shrink-0" title="שבץ / החלף באקראי תורנות מעורר ביום זה בלבד">
                   🎲
                 </button>
               </div>
             </td>
             <td class="py-3 px-2 text-center border-r border-slate-100">
               <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">${duty.wakerReminderTime || '22:30'}</span>
-            </td>
-            <td class="py-3 px-2 text-center border-r border-slate-100">
-              <button onclick="sendDutyReminderSms('${dStr}', 'waker')" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] transition" title="שלח תזכורת SMS">
-                📲 שלח
-              </button>
             </td>
             <td class="py-3 px-2 text-center border-r border-slate-100">
               <button onclick="toggleDutyDone('${dStr}', 'waker')" class="px-2.5 py-1 rounded-lg text-xs font-black transition ${duty.wakerDone ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}">
@@ -4166,22 +4725,17 @@
             <!-- Kitchen duty -->
             <td class="py-3 px-3 border-r border-slate-100">
               <div class="flex items-center gap-1.5">
-                <select onchange="updateDutyAssignee('${dStr}', 'kitchen', this.value)" class="flex-1 min-w-[125px] text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-white'}">
+                <select onchange="updateDutyAssignee('${dStr}', 'kitchen', this.value)" class="flex-1 min-w-[130px] text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-white'}">
                   <option value="">-- בחר תורן מטבח --</option>
                   ${(state.students || []).map(s => `<option value="${s.id}" ${duty.kitchenStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
                 </select>
-                <button type="button" onclick="randomAssignSingleDuty('${dStr}', 'kitchen')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black transition shrink-0" title="שבץ / החלף באקראי תורנות מטבח ביום זה בלבד לפי האלגוריתם (הכי פחות תורנויות וללא כפילויות)">
+                <button type="button" onclick="randomAssignSingleDuty('${dStr}', 'kitchen')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black transition shrink-0" title="שבץ / החלף באקראי תורנות מטבח ביום זה בלבד">
                   🎲
                 </button>
               </div>
             </td>
             <td class="py-3 px-2 text-center border-r border-slate-100">
               <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">${duty.kitchenReminderTime || '19:30'}</span>
-            </td>
-            <td class="py-3 px-2 text-center border-r border-slate-100">
-              <button onclick="sendDutyReminderSms('${dStr}', 'kitchen')" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[10px] transition" title="שלח תזכורת SMS">
-                📲 שלח
-              </button>
             </td>
             <td class="py-3 px-2 text-center">
               <button onclick="toggleDutyDone('${dStr}', 'kitchen')" class="px-2.5 py-1 rounded-lg text-xs font-black transition ${duty.kitchenDone ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}">
@@ -4191,6 +4745,11 @@
           </tr>
         `;
       }).join('');
+    }
+
+    // Backward-compatible alias for any callers
+    function renderDutiesTable() {
+      renderDutiesHub();
     }
 
     function updateDutyAssignee(dateStr, role, studentId) {
@@ -4214,7 +4773,6 @@
         state.dutiesRoster[dateStr].kitchenStudentName = st ? st.name : '';
       }
 
-      // Check conflict notice
       if (state.dutiesRoster[dateStr].wakerStudentId && state.dutiesRoster[dateStr].kitchenStudentId && state.dutiesRoster[dateStr].wakerStudentId === state.dutiesRoster[dateStr].kitchenStudentId) {
         showToast('שים לב: נקבעה כפילות של אותו תורן בוקר וערב!', '⚠️');
       } else {
@@ -4222,7 +4780,7 @@
       }
 
       saveState();
-      renderDutiesTable();
+      renderDutiesHub();
     }
 
     function toggleDutyDone(dateStr, role) {
@@ -4249,33 +4807,13 @@
         }
       }
       saveState();
-      renderDutiesTable();
+      renderDutiesHub();
       renderStudentsTable();
-    }
-
-    function sendDutyReminderSms(dateStr, role) {
-      const duty = state.dutiesRoster[dateStr];
-      const stId = role === 'waker' ? duty?.wakerStudentId : duty?.kitchenStudentId;
-      const student = state.students.find(s => s.id === stId);
-      if (!student) {
-        showToast('נא לשבץ בחור לפני שליחת תזכורת', '⚠️');
-        return;
-      }
-      const roleName = role === 'waker' ? 'מעורר בוקר' : 'נקיון מטבח ערב';
-      const timeStr = role === 'waker' ? '22:30' : '19:30';
-      const text = encodeURIComponent(`שלום ${student.name}, תזכורת מישיבת בקשו: אתה משובץ לתורנות ${roleName} לתאריך ${dateStr}. נא להיערך. תודה ובהצלחה!`);
-      const phone = (student.phone || '').replace(/[^0-9]/g, '');
-      if (phone) {
-        window.open(`sms:${phone}?body=${text}`, '_blank');
-        showToast(`נפתחה הודעת תזכורת ל-${student.name}`, '📲');
-      } else {
-        showToast(`תזכורת נשלחה (סימולציה) ל-${student.name} (${timeStr})`, '📲');
-      }
     }
 
     function saveDutiesSchedule() {
       saveState();
-      renderDutiesTable();
+      renderDutiesHub();
       showToast('לוח השיבוצים השבועי נשמר ומסונכרן בהצלחה!', '💾');
     }
 
