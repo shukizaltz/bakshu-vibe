@@ -236,7 +236,7 @@
           <div class="flex items-center justify-between text-xs font-bold mb-1.5">
             <span class="text-slate-700 flex items-center gap-1">
               <span>🔥</span>
-              <span>יעד "סדר מלא" ישיבתי (<strong id="studentViewGroupBonusPts" class="text-indigo-700">+4 נק׳ בונוס</strong> לכולם)</span>
+              <span>יעד "סדר מלא" ישיבתי (<strong id="studentViewGroupBonusPts" class="text-indigo-700">+4 נק׳ בונוס</strong> למי שהיה בסדר בלבד!)</span>
             </span>
             <span id="groupCountText" class="text-indigo-700 font-black">0 / 1 בחורים</span>
           </div>
@@ -244,7 +244,7 @@
             <div id="groupProgressBar" class="h-full bg-gradient-to-r from-indigo-500 to-indigo-700 rounded-full transition-all duration-500" style="width: 0%"></div>
           </div>
           <p id="groupStatusHint" class="text-[11px] text-slate-500 mt-1.5">
-            נדרש בחור 1 בבית המדרש לזיכוי כל הישיבה בבונוס סדר מלא!
+            נדרש בחור 1 בבית המדרש לזיכוי הנוכחים בבונוס סדר מלא! (הבונוס מוענק רק למי שהיה בסדר)
           </p>
         </div>
       </div>
@@ -2648,10 +2648,10 @@ events.join('\n') + '\n' +
       const groupHintEl = document.getElementById('groupStatusHint');
       if (groupHintEl) {
         if (presentCount >= threshold) {
-          groupHintEl.innerHTML = '<span class="text-emerald-700 font-bold">🎉 היעד הושג! ' + presentCount + ' בחורים נוכחים – כל הישיבה זוכה ב-' + state.config.groupFullBonus + ' נק׳ בונוס סדר מלא!</span>';
+          groupHintEl.innerHTML = '<span class="text-emerald-700 font-bold">🎉 היעד הושג! ' + presentCount + ' בחורים נוכחים – כל מי שהיה בסדר זוכה ב-' + state.config.groupFullBonus + ' נק׳ בונוס סדר מלא!</span>';
         } else {
           const remaining = threshold - presentCount;
-          groupHintEl.textContent = 'נדרשים ' + threshold + ' בחורים בבית המדרש לזיכוי כל הישיבה בבונוס סדר מלא! (עוד ' + remaining + ' בחורים להשגת היעד)';
+          groupHintEl.textContent = 'נדרשים ' + threshold + ' בחורים בבית המדרש לזיכוי הנוכחים בבונוס סדר מלא! (עוד ' + remaining + ' בחורים להשגת היעד. הבונוס אך ורק למי שהיה בסדר!)';
         }
       }
 
@@ -3726,14 +3726,19 @@ events.join('\n') + '\n' +
       try {
         const studentId = state.currentStudent?.id;
         const validUserId = (studentId && /^[0-9a-f-]{36}$/i.test(studentId)) ? studentId : null;
-        await supabaseClient.from('attendance_logs').insert({
-          user_id: validUserId,
-          student_name: state.currentStudent?.name || '',
-          slot_title: slotId || 'סדר יומי',
-          status: isPresent ? 'approved' : 'pending',
-          marked_at: new Date().toISOString()
-        });
         if (validUserId) {
+          // Valid schema columns for attendance_logs: user_id, status, marked_at
+          await supabaseClient.from('attendance_logs').insert({
+            user_id: validUserId,
+            status: isPresent ? 'approved' : 'pending',
+            marked_at: new Date().toISOString()
+          });
+          // Also record attendance log in manager_bonus_logs for detailed audit
+          await supabaseClient.from('manager_bonus_logs').insert({
+            user_id: validUserId,
+            points: 1,
+            reason: 'ATTENDANCE_LOG:' + (state.currentStudent?.name || '') + ' - ' + (slotId || 'סדר יומי')
+          });
           await supabaseClient.from('users').update({
             manual_bonus_pts: Number(state.currentStudent.baseScore) || 0
           }).eq('id', validUserId);

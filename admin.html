@@ -220,6 +220,7 @@
                   <th class="py-3 px-3">שם הבחור</th>
                   <th class="py-3 px-3 text-center">טלפון וסיסמה</th>
                   <th class="py-3 px-3 text-center">ניקוד נוכחי</th>
+                  <th class="py-3 px-3 text-center">נוכחות ודוח ("מתי היה")</th>
                   <th class="py-3 px-3 text-center">טווח צבירה צפוי</th>
                   <th class="py-3 px-3 text-center">שליחת קישור / SMS</th>
                   <th class="py-3 px-3 text-left">פעולות</th>
@@ -239,55 +240,118 @@
       <!-- ========================================================== -->
       <div id="adminTabContent-schedule" class="hidden space-y-6">
         
+        <!-- Main Campaign Calendar Card -->
         <div class="soft-card p-5 sm:p-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
             <div>
-              <h2 class="text-lg font-black text-slate-900">ניהול לוח הסדרים והשעות</h2>
-              <p class="text-xs text-slate-500">עריכת זמני פתיחה ונעילה, ימי שישי ריקים, ושבתות לפי סדר מיוחד</p>
+              <div class="flex items-center gap-2">
+                <span class="text-xl">📅</span>
+                <h2 class="text-lg font-black text-slate-900">לוח שנה של תאריכי המבצע</h2>
+                <span class="text-xs bg-indigo-50 text-indigo-700 font-bold px-2.5 py-0.5 rounded-full border border-indigo-200">אינטראקטיבי</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">לחץ על כל יום בלוח לצפייה בכמות הסדרים שנקבעו, התורנים המשובצים, ומי דיווח נוכחות בכל סדר</p>
             </div>
 
-            <!-- Date Picker -->
+            <!-- Month Navigator & Quick Actions -->
             <div class="flex items-center gap-2">
-              <button onclick="navigateAdminScheduleDay(-1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center justify-center">▶</button>
-              <input type="date" id="adminScheduleDayPicker" class="text-xs font-black p-2 rounded-xl border border-slate-300 bg-slate-50 text-slate-800 focus:outline-none" onchange="renderAdminDayScheduleEditor()" />
-              <button onclick="navigateAdminScheduleDay(1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center justify-center">◀</button>
-              <button onclick="jumpAdminScheduleToToday()" class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">היום</button>
+              <button onclick="navigateCalendarMonth(-1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center justify-center text-sm" title="חודש קודם">▶</button>
+              <span id="calendarMonthLabel" class="text-xs font-black px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 font-mono">חודש נוכחי</span>
+              <button onclick="navigateCalendarMonth(1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition flex items-center justify-center text-sm" title="חודש הבא">◀</button>
+              <button onclick="jumpCalendarToToday()" class="px-3 py-1.5 rounded-xl bg-[#0A1138] hover:bg-black text-white text-xs font-black transition shadow-sm">היום ⭐</button>
             </div>
           </div>
 
-          <!-- Day Notice Banner -->
-          <div id="adminScheduleDayNotice" class="p-3.5 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-950 text-xs font-bold flex items-center justify-between mb-4">
-            <span id="adminScheduleDayNoticeText">סדר יום חול</span>
-            <span id="adminScheduleDayPointsBadge" class="px-2.5 py-0.5 rounded-full bg-white text-indigo-900 border border-indigo-200 font-black">4 נק׳ ליום</span>
+          <!-- Calendar Days Grid (Sun - Sat) -->
+          <div class="mb-4">
+            <!-- Weekday Headers -->
+            <div class="grid grid-cols-7 gap-1.5 sm:gap-2 mb-2 text-center text-xs font-black text-slate-400">
+              <div class="py-1">ראשון</div>
+              <div class="py-1">שני</div>
+              <div class="py-1">שלישי</div>
+              <div class="py-1">רביעי</div>
+              <div class="py-1">חמישי</div>
+              <div class="py-1 text-amber-700 bg-amber-50/50 rounded-lg">שישי</div>
+              <div class="py-1 text-indigo-800 bg-indigo-50/50 rounded-lg">שבת קודש</div>
+            </div>
+
+            <!-- Days Grid Cells -->
+            <div id="campaignCalendarGrid" class="grid grid-cols-7 gap-1.5 sm:gap-2">
+              <!-- Rendered dynamically by JS -->
+            </div>
           </div>
 
-          <!-- Slots List for selected day -->
-          <div id="adminScheduleSlotsContainer" class="space-y-3">
-            <!-- Populated by JS -->
+          <!-- Legend -->
+          <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-500 pt-3 border-t border-slate-100">
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span><span>נוכחות מלאה / גבוהה</span></div>
+            <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span><span>סדרים רגילים</span></div>
+            <div class="flex items-center gap-1.5"><span>⏰</span><span>תורן מעורר</span></div>
+            <div class="flex items-center gap-1.5"><span>🍳</span><span>תורן מטבח</span></div>
+            <div class="flex items-center gap-1.5 mr-auto text-indigo-700 font-bold"><span>💡 לחיצה על יום מציגה את הסדרים, התורנים ודיווחי הנוכחות</span></div>
           </div>
+        </div>
 
-          <!-- Action bar -->
-          <div class="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+        <!-- Selected Day Inspector & Seder Attendance Panel -->
+        <div id="calendarSelectedDayPanel" class="soft-card p-5 sm:p-6 border-2 border-indigo-300 bg-white">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">יום נבחר במבצע</span>
+                <h3 id="selectedDayTitle" class="text-lg font-black text-slate-900">יום חמישי, 22 באוקטובר 2026</h3>
+                <span id="selectedDayTodayBadge" class="hidden text-xs bg-amber-500 text-slate-950 font-black px-2 py-0.5 rounded-full">⭐ היום</span>
+              </div>
+              <p id="selectedDaySubtitle" class="text-xs text-slate-500 mt-1">טוען סדרי יום...</p>
+            </div>
+
+            <!-- Action buttons for selected day -->
             <div class="flex items-center gap-2">
-              <button onclick="openAddSlotModal()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+              <button onclick="openAddSlotModalForSelectedDate()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition shadow-sm flex items-center gap-1.5">
                 <span>+</span>
-                <span>הוסף סדר / אירוע חדש</span>
+                <span>הוסף סדר ליום זה</span>
               </button>
-              <button onclick="sendSederReminderSmsToAll()" class="px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black transition flex items-center gap-1.5 shadow-sm" title="שליחת תזכורת SMS מרוכזת לסדר לכל הבחורים הרשומים">
+              <button onclick="sendSederReminderSmsToAll()" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5">
                 <span>📲</span>
-                <span>שלח SMS תזכורת לסדר</span>
-              </button>
-            </div>
-            <div class="flex items-center gap-2">
-              <button onclick="resetDayToTemplate()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
-                איפוס יום זה לתבנית
-              </button>
-              <button onclick="saveDailyScheduleToSupabase()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
-                <span>💾</span>
-                <span>שמור ל-Supabase</span>
+                <span>שלח SMS תזכורת</span>
               </button>
             </div>
           </div>
+
+          <!-- Section 1: מי התורנים של יום זה -->
+          <div class="mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-base">⏰🍳</span>
+                <h4 class="text-xs font-black text-slate-900">מי התורנים של היום?</h4>
+                <span class="text-[10px] text-slate-400 font-bold">(תורנות מעורר לתפילה ומטבח ערב)</span>
+              </div>
+              <button onclick="switchAdminTab('duties')" class="text-indigo-600 hover:text-indigo-800 text-xs font-bold transition">
+                מעבר ללוח שיבוץ תורנויות מלא ←
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="selectedDayDutiesCardsContainer">
+              <!-- Rendered dynamically by JS -->
+            </div>
+          </div>
+
+          <!-- Section 2: כמה סדרים נקבעו לאותו יום + מי דיווח בכל סדר -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-base">📖</span>
+                <h4 class="text-xs font-black text-slate-900">כמה סדרים נקבעו ומי דיווח נוכחות:</h4>
+                <span class="text-[10px] text-slate-400 font-bold">לחץ על כל סדר לצפייה ברשימת המדווחים והנעדרים</span>
+              </div>
+              <span id="selectedDayFullSederThresholdNotice" class="text-xs font-black px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                סף סדר מלא: 18 נוכחים
+              </span>
+            </div>
+
+            <!-- List of Sedarim for this date -->
+            <div id="selectedDaySedarimListContainer" class="space-y-4">
+              <!-- Rendered dynamically by JS -->
+            </div>
+          </div>
+
         </div>
 
       </div>
@@ -838,6 +902,153 @@
     </div>
   </div>
 
+  <!-- Student Attendance History & Points Modal ("מתי היה וכמה נקודות") -->
+  <div id="studentAttendanceHistoryModal" class="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-right max-h-[90vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-2xl font-black text-indigo-700">
+            📊
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="modalHistStudentName" class="text-lg font-black text-slate-900">ישראל ישראלי</h3>
+              <span id="modalHistStudentStatus" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">פעיל במבצע</span>
+            </div>
+            <p id="modalHistStudentPhone" class="text-xs text-slate-500 font-mono mt-0.5" dir="ltr">050-1234567</p>
+          </div>
+        </div>
+        <button onclick="closeStudentHistoryModal()" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center text-lg font-bold transition">
+          ✕
+        </button>
+      </div>
+
+      <!-- Stat Cards Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-4 shrink-0">
+        <div class="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-center">
+          <span class="text-[10px] font-bold text-indigo-600 block">סך כל הנקודות</span>
+          <span id="modalHistTotalPoints" class="text-xl font-black text-indigo-950 font-mono">0</span>
+          <span class="text-[9px] text-slate-400 block mt-0.5">פעיל בקופה</span>
+        </div>
+        <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-100 text-center">
+          <span class="text-[10px] font-bold text-emerald-600 block">סדרים בהם נכח</span>
+          <span id="modalHistSederCount" class="text-xl font-black text-emerald-950 font-mono">0</span>
+          <span class="text-[9px] text-slate-400 block mt-0.5">התייצבויות</span>
+        </div>
+        <div class="p-3 rounded-2xl bg-amber-50/70 border border-amber-100 text-center">
+          <span class="text-[10px] font-bold text-amber-700 block">בונוסים אישיים</span>
+          <span id="modalHistBonusPoints" class="text-xl font-black text-amber-950 font-mono">0</span>
+          <span class="text-[9px] text-slate-400 block mt-0.5">מעורר / מטבח / מנהל</span>
+        </div>
+        <div class="p-3 rounded-2xl bg-purple-50/70 border border-purple-100 text-center">
+          <span class="text-[10px] font-bold text-purple-700 block">אחוז התמדה</span>
+          <span id="modalHistAttendanceRate" class="text-xl font-black text-purple-950 font-mono">0%</span>
+          <span class="text-[9px] text-slate-400 block mt-0.5">מתוך כלל הסדרים</span>
+        </div>
+      </div>
+
+      <!-- Sub Tabs inside Modal -->
+      <div class="flex items-center gap-2 mb-3 shrink-0 border-b border-slate-100 pb-2">
+        <button onclick="switchStudentHistoryTab('sedarim')" id="tabHistBtn-sedarim" class="px-3 py-1.5 rounded-xl bg-slate-900 text-white font-bold text-xs transition">
+          📅 מתי היה? (היסטוריית סדרים)
+        </button>
+        <button onclick="switchStudentHistoryTab('bonuses')" id="tabHistBtn-bonuses" class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition">
+          ⭐ בונוסים מיוחדים
+        </button>
+        <div class="mr-auto">
+          <button onclick="openManualAddAttendanceForCurrentStudent()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition shadow-sm flex items-center gap-1">
+            <span>+</span>
+            <span>סמן נוכחות בסדר קודם</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable Content Area -->
+      <div class="overflow-y-auto flex-1 pr-1 pl-1 space-y-3">
+        <!-- Sedarim History Table -->
+        <div id="modalHistSedarimView">
+          <div class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-black">
+                <tr>
+                  <th class="py-2.5 px-3">תאריך ויום</th>
+                  <th class="py-2.5 px-3">שם הסדר ושעות</th>
+                  <th class="py-2.5 px-3 text-center">שעת דיווח</th>
+                  <th class="py-2.5 px-3 text-center">ניקוד</th>
+                  <th class="py-2.5 px-3 text-center">סטטוס</th>
+                  <th class="py-2.5 px-3 text-left">פעולה</th>
+                </tr>
+              </thead>
+              <tbody id="modalHistSedarimTableBody" class="divide-y divide-slate-100 font-medium">
+                <!-- Rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Bonuses History View -->
+        <div id="modalHistBonusesView" class="hidden">
+          <div class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-black">
+                <tr>
+                  <th class="py-2.5 px-3">תאריך</th>
+                  <th class="py-2.5 px-3">סיבת הבונוס</th>
+                  <th class="py-2.5 px-3 text-center">נקודות</th>
+                </tr>
+              </thead>
+              <tbody id="modalHistBonusesTableBody" class="divide-y divide-slate-100 font-medium">
+                <!-- Rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3 shrink-0 mt-3">
+        <button onclick="openGrantBonusModal(state.currentHistStudentId)" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition flex items-center gap-1.5 shadow-sm">
+          <span>⭐</span>
+          <span>הענק בונוס מיוחד לבחור זה</span>
+        </button>
+        <button onclick="closeStudentHistoryModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          סגור
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manual Add Attendance Modal for a Student -->
+  <div id="manualAddAttendanceModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right">
+      <h3 class="text-base font-black text-slate-900 mb-1">סימון נוכחות רטרואקטיבי לבחור</h3>
+      <p id="manualAddSubtitle" class="text-xs text-slate-500 mb-4">בחר תאריך וסדר שבו הבחור השתתף</p>
+      
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">תאריך:</label>
+          <input type="date" id="manualAddDateInput" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none" onchange="populateManualAddSlotsSelect()" />
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">בחר סדר:</label>
+          <select id="manualAddSlotSelect" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 mt-5">
+        <button onclick="saveManualStudentAttendance()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition">
+          אשר נוכחות וזכה בנקודה
+        </button>
+        <button onclick="closeManualAddAttendanceModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
@@ -857,7 +1068,8 @@
       DUTIES: 'bakshu_duties_roster_v2',
       JOURNEY_STOPS: 'bakshu_journey_stops_v2',
       BONUS_CONFIG: 'bakshu_bonus_config_v2',
-      QR_SECRET: 'bakshu_qr_secret_v2'
+      QR_SECRET: 'bakshu_qr_secret_v2',
+      ATTENDANCE_RECORDS: 'bakshu_attendance_records_v2'
     };
 
     // ====================================================
@@ -957,7 +1169,14 @@
       dutiesRoster: {},
       journeyStops: JSON.parse(JSON.stringify(DEFAULT_JOURNEY_STOPS)),
       bonusConfig: JSON.parse(JSON.stringify(DEFAULT_BONUS_CONFIG)),
-      qrSecret: 'BK-892'
+      qrSecret: 'BK-892',
+      attendanceRecords: [],
+      calendarSelectedDate: new Date().toISOString().slice(0, 10),
+      calendarViewingYear: 2026,
+      calendarViewingMonth: 9, // October 2026 (0-indexed: 9 = Oct)
+      currentHistStudentId: null,
+      currentHistTab: 'sedarim',
+      expandedSederSlotId: null
     };
 
     // Load initial local state
@@ -994,6 +1213,20 @@
 
         const rawSecret = localStorage.getItem(STORAGE_KEYS.QR_SECRET);
         if (rawSecret) state.qrSecret = rawSecret;
+
+        const rawAtt = localStorage.getItem(STORAGE_KEYS.ATTENDANCE_RECORDS) || localStorage.getItem('bakshu_attendance_records_v1');
+        if (rawAtt) {
+          state.attendanceRecords = JSON.parse(rawAtt);
+        } else {
+          // Initial baseline demo attendance for the demo student
+          state.attendanceRecords = [
+            { id: 'att_demo_1', studentId: DEFAULT_DEMO_STUDENT.id, studentName: DEFAULT_DEMO_STUDENT.name, dateStr: '2026-10-20', slotId: 's1', slotTitle: 'סדר א׳ (עיון)', markedAt: '2026-10-20T09:12:00Z', status: 'approved', points: 1, markedBy: 'student' },
+            { id: 'att_demo_2', studentId: DEFAULT_DEMO_STUDENT.id, studentName: DEFAULT_DEMO_STUDENT.name, dateStr: '2026-10-20', slotId: 's2', slotTitle: 'סדר ב׳ (בקיאות)', markedAt: '2026-10-20T15:35:00Z', status: 'approved', points: 1, markedBy: 'student' },
+            { id: 'att_demo_3', studentId: DEFAULT_DEMO_STUDENT.id, studentName: DEFAULT_DEMO_STUDENT.name, dateStr: '2026-10-21', slotId: 's1', slotTitle: 'סדר א׳ (עיון)', markedAt: '2026-10-21T09:05:00Z', status: 'approved', points: 1, markedBy: 'student' },
+            { id: 'att_demo_4', studentId: DEFAULT_DEMO_STUDENT.id, studentName: DEFAULT_DEMO_STUDENT.name, dateStr: '2026-10-21', slotId: 's3', slotTitle: 'סדר ג׳ (לילה)', markedAt: '2026-10-21T20:10:00Z', status: 'approved', points: 2, markedBy: 'student' },
+            { id: 'att_demo_5', studentId: DEFAULT_DEMO_STUDENT.id, studentName: DEFAULT_DEMO_STUDENT.name, dateStr: '2026-10-22', slotId: 's1', slotTitle: 'סדר א׳ (עיון)', markedAt: '2026-10-22T09:14:00Z', status: 'approved', points: 1, markedBy: 'student' }
+          ];
+        }
       } catch (e) {
         console.error('Error loading state:', e);
       }
@@ -1084,6 +1317,14 @@
             if (snap.bonusConfig) state.bonusConfig = snap.bonusConfig;
             if (snap.qrSecret) state.qrSecret = snap.qrSecret;
             if (snap.absenceRequests) state.absenceRequests = snap.absenceRequests;
+            if (snap.attendanceRecords && Array.isArray(snap.attendanceRecords)) {
+              snap.attendanceRecords.forEach(r => {
+                if (!state.attendanceRecords.some(x => x.id === r.id)) {
+                  state.attendanceRecords.push(r);
+                }
+              });
+              localStorage.setItem(STORAGE_KEYS.ATTENDANCE_RECORDS, JSON.stringify(state.attendanceRecords));
+            }
             if (snap.adminPassword && snap.adminPassword.trim()) {
               state.adminPassword = snap.adminPassword.trim();
               localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword);
@@ -1144,6 +1385,35 @@
           }
         } catch(e) {}
 
+        // 7. Fetch Attendance Logs from attendance_logs table
+        try {
+          const { data: dbAtt } = await supabaseClient.from('attendance_logs').select('*').order('marked_at', { ascending: false }).limit(200);
+          if (dbAtt && dbAtt.length > 0) {
+            dbAtt.forEach(log => {
+              const st = state.students.find(s => s.id === log.user_id);
+              const exists = state.attendanceRecords.some(r => r.id === log.id || (r.studentId === log.user_id && r.markedAt === log.marked_at));
+              if (!exists && log.user_id) {
+                const dateStr = log.marked_at ? log.marked_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
+                const daySlots = getSlotsForDate(dateStr);
+                const matchingSlot = daySlots.find(s => s.id === log.slot_id) || daySlots[0] || { id: 's1', title: 'סדר יומי', points: 1 };
+                state.attendanceRecords.push({
+                  id: log.id,
+                  studentId: log.user_id,
+                  studentName: st ? st.name : 'בחור בישיבה',
+                  dateStr: dateStr,
+                  slotId: log.slot_id || matchingSlot.id,
+                  slotTitle: matchingSlot.title,
+                  markedAt: log.marked_at || new Date().toISOString(),
+                  status: log.status || 'approved',
+                  points: Number(matchingSlot.points) || 1,
+                  markedBy: log.marked_by || 'auto'
+                });
+              }
+            });
+            localStorage.setItem(STORAGE_KEYS.ATTENDANCE_RECORDS, JSON.stringify(state.attendanceRecords));
+          }
+        } catch(e) {}
+
         updateSupabaseStatusUI(true, 'מחובר ומסונכרן');
 
         // Re-render UI with fresh database data
@@ -1154,6 +1424,8 @@
           renderDutiesTable();
           renderJourneyStopsAdmin();
           renderPendingRequestsList();
+          renderCampaignCalendar();
+          renderSelectedCalendarDayDetails(state.calendarSelectedDate);
         }
       } catch (err) {
         console.warn('Supabase initial fetch failed:', err);
@@ -1243,7 +1515,8 @@
                   bonusConfig: state.bonusConfig,
                   qrSecret: state.qrSecret,
                   absenceRequests: state.absenceRequests,
-                  adminPassword: state.adminPassword || '1234'
+                  adminPassword: state.adminPassword || '1234',
+                  attendanceRecords: state.attendanceRecords
                 })
               }
             ]);
@@ -1288,6 +1561,7 @@
       localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword || '1234');
       localStorage.setItem('bakshu_admin_password', state.adminPassword || '1234');
       localStorage.setItem('bakshu_admin_password_v1', state.adminPassword || '1234');
+      localStorage.setItem(STORAGE_KEYS.ATTENDANCE_RECORDS, JSON.stringify(state.attendanceRecords));
 
       // Trigger automatic cloud sync to Supabase
       syncStateToSupabase();
@@ -1339,7 +1613,10 @@
       });
       if (tabName === 'duties') renderDutiesTable();
       if (tabName === 'bonuses') renderPendingRequestsList();
-      if (tabName === 'schedule') renderAdminDayScheduleEditor();
+      if (tabName === 'schedule') {
+        renderCampaignCalendar();
+        renderSelectedCalendarDayDetails(state.calendarSelectedDate);
+      }
       if (tabName === 'targets') populateTargetsInputs();
       if (tabName === 'stops') renderJourneyStopsAdmin();
       if (tabName === 'students') renderStudentsTable();
@@ -1396,7 +1673,7 @@
       if (!tbody) return;
 
       if (state.students.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400 font-bold">אין בחורים רשומים במערכת</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400 font-bold">אין בחורים רשומים במערכת</td></tr>`;
         return;
       }
 
@@ -1405,11 +1682,15 @@
         const studentInviteUrl = window.location.origin + '/?invite=' + st.id;
         const smsMessage = encodeURIComponent('שלום ' + st.name + ', כנס לקישור להפעלת חשבונך במבצע בקשו VIBE: ' + studentInviteUrl);
         const smsHref = 'sms:' + (st.phone || '') + '?body=' + smsMessage;
+        const attCount = (state.attendanceRecords || []).filter(r => r.studentId === st.id).length;
 
         return `
           <tr class="hover:bg-slate-50 transition">
             <td class="py-3 px-3">
-              <div class="font-black text-slate-900">${st.name}</div>
+              <button onclick="openStudentHistoryModal('${st.id}')" class="text-right font-black text-slate-900 hover:text-indigo-600 transition flex items-center gap-1.5 group" title="לחץ לצפייה בפירוט מתי היה וכמה נקודות">
+                <span>${st.name}</span>
+                <span class="text-[11px] text-indigo-400 group-hover:text-indigo-600">🔍</span>
+              </button>
               <div class="text-[10px] text-slate-400 font-mono sm:hidden" dir="ltr">${st.phone}</div>
             </td>
             <td class="py-3 px-3 text-center">
@@ -1423,6 +1704,12 @@
             </td>
             <td class="py-3 px-3 text-center font-black text-indigo-950 font-mono text-sm">
               ${st.score} נק׳
+            </td>
+            <td class="py-3 px-3 text-center">
+              <button onclick="openStudentHistoryModal('${st.id}')" class="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-950 border border-indigo-200 font-bold text-xs transition inline-flex items-center gap-1.5 shadow-sm" title="לחץ לפתיחת פירוט מלא של כל הסדרים בהם נכח">
+                <span>📋</span>
+                <span>${attCount} סדרים (מתי היה?)</span>
+              </button>
             </td>
             <td class="py-3 px-3 text-center">
               <span class="px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-950 font-mono font-black text-xs">
@@ -1553,7 +1840,818 @@
       }
     }
 
-    // Schedule Editor
+    // ====================================================
+    // 2. CAMPAIGN CALENDAR & SELECTED DAY INSPECTOR
+    // ====================================================
+    const HEBREW_MONTH_NAMES = [
+      'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
+      'יולי', 'אוגוסט', 'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר'
+    ];
+    const HEBREW_DAY_NAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת קודש'];
+
+    function renderCampaignCalendar() {
+      const grid = document.getElementById('campaignCalendarGrid');
+      const label = document.getElementById('calendarMonthLabel');
+      if (!grid) return;
+
+      const year = state.calendarViewingYear || 2026;
+      const month = state.calendarViewingMonth !== undefined ? state.calendarViewingMonth : 9;
+
+      if (label) {
+        label.textContent = HEBREW_MONTH_NAMES[month] + ' ' + year;
+      }
+
+      const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sun .. 6 = Sat
+      const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+      const todayStr = new Date().toISOString().slice(0, 10);
+
+      let html = '';
+
+      // Leading blank cells
+      for (let i = 0; i < firstDayIndex; i++) {
+        html += `<div class="min-h-[70px] sm:min-h-[82px] p-2 rounded-2xl bg-slate-50/40 border border-transparent opacity-30 select-none"></div>`;
+      }
+
+      // Day cells
+      for (let d = 1; d <= totalDaysInMonth; d++) {
+        const monthPad = String(month + 1).padStart(2, '0');
+        const dayPad = String(d).padStart(2, '0');
+        const dateStr = `${year}-${monthPad}-${dayPad}`;
+
+        const slots = getSlotsForDate(dateStr);
+        const slotsCount = slots.length;
+        const isSelected = dateStr === state.calendarSelectedDate;
+        const isToday = dateStr === todayStr;
+        const inCampaign = dateStr >= state.config.startDate && dateStr <= state.config.endDate;
+
+        const duty = state.dutiesRoster[dateStr] || {};
+        const hasWaker = Boolean(duty.wakerStudentId || duty.wakerStudentName);
+        const hasKitchen = Boolean(duty.kitchenStudentId || duty.kitchenStudentName);
+
+        const dayAttRecords = (state.attendanceRecords || []).filter(r => r.dateStr === dateStr);
+        const uniqueAttendeesCount = new Set(dayAttRecords.map(r => r.studentId)).size;
+        const threshold = state.config.groupFullThreshold || 18;
+        const hasFullSederDay = slots.some(sl => {
+          const count = dayAttRecords.filter(r => r.slotId === sl.id).length;
+          return count >= threshold;
+        });
+
+        let borderClass = 'border-slate-200 bg-white hover:border-indigo-300 hover:shadow-md';
+        if (isSelected) {
+          borderClass = 'border-indigo-600 bg-indigo-50/60 ring-2 ring-indigo-600 shadow-lg';
+        } else if (isToday) {
+          borderClass = 'border-amber-400 bg-amber-50/40 hover:border-amber-500 shadow-sm';
+        } else if (!inCampaign) {
+          borderClass = 'border-slate-100 bg-slate-50/60 opacity-60';
+        }
+
+        html += `
+          <div onclick="selectCalendarDate('${dateStr}')" class="min-h-[76px] sm:min-h-[88px] p-2 rounded-2xl border transition cursor-pointer flex flex-col justify-between select-none relative ${borderClass}">
+            <div class="flex items-center justify-between">
+              <span class="text-xs sm:text-sm font-black ${isSelected ? 'text-indigo-950 font-black' : isToday ? 'text-amber-800' : 'text-slate-800'}">${d}</span>
+              <div class="flex items-center gap-1">
+                ${isToday ? '<span class="text-[9px] bg-amber-500 text-slate-950 font-black px-1.5 py-0.5 rounded-full">היום</span>' : ''}
+                ${isSelected && !isToday ? '<span class="text-[9px] bg-indigo-600 text-white font-bold px-1.5 py-0.5 rounded-full">נבחר</span>' : ''}
+              </div>
+            </div>
+
+            <div class="my-1">
+              ${slotsCount > 0 ? `
+                <div class="text-[10px] font-bold px-1.5 py-0.5 rounded-lg ${hasFullSederDay ? 'bg-emerald-100 text-emerald-900 border border-emerald-300' : 'bg-indigo-50 text-indigo-900 border border-indigo-100'} flex items-center justify-between">
+                  <span>📖 ${slotsCount} סדרים</span>
+                  ${hasFullSederDay ? '<span>⭐</span>' : ''}
+                </div>
+              ` : `
+                <div class="text-[10px] text-slate-300 font-bold px-1">ללא סדרים</div>
+              `}
+            </div>
+
+            <div class="flex items-center justify-between text-[10px] pt-0.5">
+              <div class="flex items-center gap-1">
+                ${hasWaker ? '<span title="תורן מעורר שובץ">⏰</span>' : ''}
+                ${hasKitchen ? '<span title="תורן מטבח שובץ">🍳</span>' : ''}
+              </div>
+              ${uniqueAttendeesCount > 0 ? `
+                <span class="font-bold font-mono text-[10px] ${hasFullSederDay ? 'text-emerald-800 bg-emerald-100' : 'text-slate-700 bg-slate-100'} px-1 rounded" title="${uniqueAttendeesCount} בחורים דיווחו נוכחות היום">
+                  ${uniqueAttendeesCount}✓
+                </span>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      grid.innerHTML = html;
+    }
+
+    function navigateCalendarMonth(delta) {
+      state.calendarViewingMonth += delta;
+      if (state.calendarViewingMonth < 0) {
+        state.calendarViewingMonth = 11;
+        state.calendarViewingYear--;
+      } else if (state.calendarViewingMonth > 11) {
+        state.calendarViewingMonth = 0;
+        state.calendarViewingYear++;
+      }
+      renderCampaignCalendar();
+    }
+
+    function jumpCalendarToToday() {
+      const now = new Date();
+      state.calendarViewingYear = now.getFullYear();
+      state.calendarViewingMonth = now.getMonth();
+      state.calendarSelectedDate = now.toISOString().slice(0, 10);
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(state.calendarSelectedDate);
+    }
+
+    function selectCalendarDate(dateStr) {
+      state.calendarSelectedDate = dateStr;
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(dateStr);
+    }
+
+    function renderSelectedCalendarDayDetails(dateStr) {
+      if (!dateStr) dateStr = state.calendarSelectedDate || new Date().toISOString().slice(0, 10);
+      state.calendarSelectedDate = dateStr;
+
+      const titleEl = document.getElementById('selectedDayTitle');
+      const subtitleEl = document.getElementById('selectedDaySubtitle');
+      const todayBadge = document.getElementById('selectedDayTodayBadge');
+      const dutiesContainer = document.getElementById('selectedDayDutiesCardsContainer');
+      const sedarimListContainer = document.getElementById('selectedDaySedarimListContainer');
+      const thresholdBadge = document.getElementById('selectedDayFullSederThresholdNotice');
+
+      const dObj = new Date(dateStr + 'T12:00:00');
+      const dow = HEBREW_DAY_NAMES[dObj.getDay()];
+      const monthName = HEBREW_MONTH_NAMES[dObj.getMonth()];
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const isToday = dateStr === todayStr;
+
+      if (titleEl) {
+        titleEl.textContent = `יום ${dow}, ${dObj.getDate()} ב${monthName} ${dObj.getFullYear()}`;
+      }
+      if (todayBadge) {
+        todayBadge.classList.toggle('hidden', !isToday);
+      }
+
+      const slots = getSlotsForDate(dateStr);
+      let dayTotalPts = 0;
+      slots.forEach(s => dayTotalPts += (Number(s.points) || 0));
+
+      if (subtitleEl) {
+        subtitleEl.textContent = `${slots.length} סדרים נקבעו ליום זה | סה״כ שווי סדרים: ${dayTotalPts} נקודות`;
+      }
+      if (thresholdBadge) {
+        thresholdBadge.textContent = `סף סדר מלא: ${state.config.groupFullThreshold} בחורים (+${state.bonusConfig.groupFullBonus} נק׳ לנוכחים בלבד!)`;
+      }
+
+      // 1. Render Duties of the Selected Day
+      if (dutiesContainer) {
+        const duty = state.dutiesRoster[dateStr] || {
+          wakerStudentId: '', wakerStudentName: '', wakerDone: false,
+          kitchenStudentId: '', kitchenStudentName: '', kitchenDone: false
+        };
+
+        dutiesContainer.innerHTML = `
+          <!-- Duty 1: Waker -->
+          <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-lg">⏰</span>
+                  <span class="text-xs font-black text-slate-900">תורן מעורר לתפילה</span>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${duty.wakerDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                  ${duty.wakerDone ? '✓ בוצע (+2 נק׳)' : '⏳ טרם בוצע'}
+                </span>
+              </div>
+              <div class="mb-2">
+                <label class="block text-[10px] text-slate-500 font-bold mb-1">בחור משובץ:</label>
+                <select onchange="updateDutyAssignee('${dateStr}', 'waker', this.value); renderSelectedCalendarDayDetails('${dateStr}');" class="w-full text-xs font-bold p-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none">
+                  <option value="">-- טרם שובץ בחור --</option>
+                  ${state.students.map(s => `<option value="${s.id}" ${s.id === duty.wakerStudentId ? 'selected' : ''}>${s.name}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+              <button onclick="toggleDutyDone('${dateStr}', 'waker'); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 py-1.5 rounded-xl ${duty.wakerDone ? 'bg-slate-100 text-slate-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} font-black text-xs transition">
+                ${duty.wakerDone ? 'בטל אישור ביצוע' : '✓ אשר ביצוע תורנות'}
+              </button>
+              <button onclick="sendDutyReminderSms('${dateStr}', 'waker')" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition" title="שלח תזכורת SMS לתורן">
+                📱 תזכורת
+              </button>
+            </div>
+          </div>
+
+          <!-- Duty 2: Kitchen -->
+          <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-lg">🍳</span>
+                  <span class="text-xs font-black text-slate-900">תורן מטבח ערב</span>
+                </div>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${duty.kitchenDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                  ${duty.kitchenDone ? '✓ בוצע (+2 נק׳)' : '⏳ טרם בוצע'}
+                </span>
+              </div>
+              <div class="mb-2">
+                <label class="block text-[10px] text-slate-500 font-bold mb-1">בחור משובץ:</label>
+                <select onchange="updateDutyAssignee('${dateStr}', 'kitchen', this.value); renderSelectedCalendarDayDetails('${dateStr}');" class="w-full text-xs font-bold p-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none">
+                  <option value="">-- טרם שובץ בחור --</option>
+                  ${state.students.map(s => `<option value="${s.id}" ${s.id === duty.kitchenStudentId ? 'selected' : ''}>${s.name}</option>`).join('')}
+                </select>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+              <button onclick="toggleDutyDone('${dateStr}', 'kitchen'); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 py-1.5 rounded-xl ${duty.kitchenDone ? 'bg-slate-100 text-slate-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} font-black text-xs transition">
+                ${duty.kitchenDone ? 'בטל אישור ביצוע' : '✓ אשר ביצוע תורנות'}
+              </button>
+              <button onclick="sendDutyReminderSms('${dateStr}', 'kitchen')" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition" title="שלח תזכורת SMS לתורן">
+                📱 תזכורת
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      // 2. Render Sedarim List & Attendance Drilldown
+      if (sedarimListContainer) {
+        if (slots.length === 0) {
+          sedarimListContainer.innerHTML = `
+            <div class="p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50">
+              <span class="text-3xl block mb-2">🕊️</span>
+              <h4 class="text-sm font-black text-slate-800">לא נקבעו סדרים ליום זה</h4>
+              <p class="text-xs text-slate-400 mt-1 mb-3">ניתן להוסיף סדרים ספציפיים ליום זה בלחיצה על הכפתור</p>
+              <button onclick="openAddSlotModalForSelectedDate()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-sm">
+                + הוסף סדר חדש ליום זה
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        const threshold = state.config.groupFullThreshold || 18;
+        const fullBonusPts = state.bonusConfig.groupFullBonus || 4;
+
+        sedarimListContainer.innerHTML = slots.map((sl, idx) => {
+          const slotAtts = (state.attendanceRecords || []).filter(r => r.dateStr === dateStr && r.slotId === sl.id);
+          const attendedIds = new Set(slotAtts.map(r => r.studentId));
+          const attendees = state.students.filter(s => attendedIds.has(s.id));
+          const absentees = state.students.filter(s => !attendedIds.has(s.id));
+          const isFullSeder = slotAtts.length >= threshold;
+          const isExpanded = state.expandedSederSlotId === sl.id || (slots.length === 1 && state.expandedSederSlotId === null);
+
+          // Check if bonus already awarded
+          const bonusReason = `בונוס סדר מלא: ${sl.title} (${dateStr}) - לנוכחים בסדר בלבד`;
+          const isAlreadyAwarded = (state.bonusLogs || []).some(b => b.reason === bonusReason);
+
+          return `
+            <div class="rounded-2xl border ${isFullSeder ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200 bg-white'} shadow-sm overflow-hidden transition">
+              <!-- Seder Header Bar (Clickable Accordion) -->
+              <div onclick="toggleSederExpansion('${sl.id}')" class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition select-none">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl ${isFullSeder ? 'bg-emerald-600 text-white' : 'bg-indigo-50 border border-indigo-200 text-indigo-900'} font-black text-sm flex items-center justify-center shrink-0">
+                    ${idx + 1}
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h4 class="font-black text-slate-900 text-sm">${sl.title}</h4>
+                      <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-900 border border-indigo-200">
+                        ${sl.openTime} - ${sl.lockTime}
+                      </span>
+                      <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200">
+                        +${sl.points} נק׳
+                      </span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="text-xs font-bold ${isFullSeder ? 'text-emerald-700' : 'text-slate-600'}">
+                        👥 דיווחו נוכחות: <strong>${slotAtts.length}</strong> מתוך ${state.students.length} בחורים
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2 self-end sm:self-center">
+                  ${isFullSeder ? `
+                    <span class="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1 animate-pulse">
+                      <span>🎉</span>
+                      <span>סדר מלא! (+${fullBonusPts} נק׳ לנוכחים)</span>
+                    </span>
+                  ` : `
+                    <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                      עוד ${Math.max(0, threshold - slotAtts.length)} לסדר מלא
+                    </span>
+                  `}
+                  <span class="text-slate-400 font-bold text-xs p-1">
+                    ${isExpanded ? '▲ סגור פירוט' : '▼ הצג מי דיווח'}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Seder Expanded Details: Who Reported & Who Did Not -->
+              ${isExpanded ? `
+                <div class="p-4 pt-2 border-t border-slate-100 bg-white space-y-4">
+                  
+                  <!-- Full Seder Action Banner (Strict Rule: Bonus ONLY for Attendees!) -->
+                  <div class="p-3.5 rounded-2xl ${isFullSeder ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300' : 'bg-slate-50 border border-slate-200'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div class="flex items-center gap-1.5">
+                        <span class="text-base">${isFullSeder ? '🏆' : '🎯'}</span>
+                        <span class="text-xs font-black ${isFullSeder ? 'text-emerald-900' : 'text-slate-800'}">
+                          ${isFullSeder ? 'היעד הושג! ' + slotAtts.length + ' בחורים נוכחים בסדר' : 'יעד "סדר מלא" לסדר זה: ' + threshold + ' בחורים'}
+                        </span>
+                      </div>
+                      <p class="text-[11px] ${isFullSeder ? 'text-emerald-700' : 'text-slate-500'} mt-0.5">
+                        ${isFullSeder 
+                          ? '⭐ חלוקת הבונוס מבוצעת אך ורק לבחורים שהיו נוכחים בסדר זה (נעדרים אינם זכאים לבונוס)!'
+                          : 'נדרשים עוד ' + Math.max(0, threshold - slotAtts.length) + ' בחורים. הבונוס יינתן רק למי שנכח בסדר.'}
+                      </p>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                      ${isFullSeder ? `
+                        <button onclick="awardFullSederBonusForSlot('${dateStr}', '${sl.id}')" class="px-3.5 py-2 rounded-xl ${isAlreadyAwarded ? 'bg-slate-800' : 'bg-amber-500 hover:bg-amber-600'} text-white font-black text-xs transition shadow-md flex items-center gap-1.5">
+                          <span>⭐</span>
+                          <span>${isAlreadyAwarded ? 'הבונוס חולק ✓ (חלק שוב)' : 'חלק בונוס ' + fullBonusPts + ' נק׳ לנוכחים בלבד'}</span>
+                        </button>
+                      ` : ''}
+                      <button onclick="deleteDailySlotForDate('${dateStr}', ${idx})" class="p-2 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-bold transition" title="מחק סדר זה מהיום">
+                        🗑️ מחק סדר
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Two Columns: Attended vs Absent -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <!-- Column 1: מי דיווח נוכחות -->
+                    <div class="p-3.5 rounded-2xl bg-emerald-50/40 border border-emerald-200">
+                      <div class="flex items-center justify-between pb-2 mb-2 border-b border-emerald-100">
+                        <div class="flex items-center gap-1.5">
+                          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                          <span class="text-xs font-black text-emerald-950">מי דיווח נוכחות (${attendees.length})</span>
+                        </div>
+                        <span class="text-[10px] text-emerald-700 font-bold">זכאים לניקוד ולבונוס</span>
+                      </div>
+
+                      ${attendees.length === 0 ? `
+                        <div class="text-center py-6 text-slate-400 text-xs font-bold">
+                          טרם נרשמו דיווחי נוכחות לסדר זה
+                        </div>
+                      ` : `
+                        <div class="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                          ${attendees.map(st => {
+                            const att = slotAtts.find(r => r.studentId === st.id);
+                            const timeStr = att?.markedAt ? new Date(att.markedAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) : '09:00';
+                            return `
+                              <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-emerald-100 text-xs shadow-xs">
+                                <div>
+                                  <button onclick="openStudentHistoryModal('${st.id}')" class="font-black text-slate-900 hover:text-indigo-600 transition text-right">
+                                    ${st.name}
+                                  </button>
+                                  <div class="text-[10px] text-slate-400 font-mono" dir="ltr">${st.phone}</div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                  <span class="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                                    ✓ ${timeStr}
+                                  </span>
+                                  <button onclick="unmarkStudentAttendanceForSlot('${st.id}', '${sl.id}', '${dateStr}')" class="text-rose-500 hover:text-rose-700 text-[11px] font-bold p-1" title="בטל דיווח נוכחות">
+                                    ✕
+                                  </button>
+                                </div>
+                              </div>
+                            `;
+                          }).join('')}
+                        </div>
+                      `}
+                    </div>
+
+                    <!-- Column 2: מי לא דיווח (נעדרים) -->
+                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+                      <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+                        <div class="flex items-center gap-1.5">
+                          <span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+                          <span class="text-xs font-black text-slate-800">מי לא דיווח (${absentees.length})</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-bold">לא דיווחו בברקוד</span>
+                      </div>
+
+                      ${absentees.length === 0 ? `
+                        <div class="text-center py-6 text-emerald-700 text-xs font-black">
+                          🎉 כל הבחורים בישיבה דיווחו נוכחות בסדר זה!
+                        </div>
+                      ` : `
+                        <div class="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                          ${absentees.map(st => `
+                            <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200 text-xs shadow-xs">
+                              <div>
+                                <button onclick="openStudentHistoryModal('${st.id}')" class="font-bold text-slate-800 hover:text-indigo-600 transition text-right">
+                                  ${st.name}
+                                </button>
+                                <div class="text-[10px] text-slate-400 font-mono" dir="ltr">${st.phone}</div>
+                              </div>
+                              <button onclick="markStudentAttendanceForSlot('${st.id}', '${sl.id}', '${dateStr}')" class="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-[11px] transition shadow-xs flex items-center gap-1">
+                                <span>+</span>
+                                <span>סמן כנוכח</span>
+                              </button>
+                            </div>
+                          `).join('')}
+                        </div>
+                      `}
+                    </div>
+
+                  </div>
+                </div>
+              ` : ''}
+
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function toggleSederExpansion(slotId) {
+      if (state.expandedSederSlotId === slotId) {
+        state.expandedSederSlotId = null;
+      } else {
+        state.expandedSederSlotId = slotId;
+      }
+      renderSelectedCalendarDayDetails(state.calendarSelectedDate);
+    }
+
+    function markStudentAttendanceForSlot(studentId, slotId, dateStr) {
+      if (!studentId || !slotId) return;
+      const st = state.students.find(s => s.id === studentId);
+      if (!st) return;
+
+      const slots = getSlotsForDate(dateStr);
+      const slot = slots.find(s => s.id === slotId) || { title: 'סדר יומי', points: 1 };
+      const pts = Number(slot.points) || 1;
+
+      // Check if already marked
+      const existing = (state.attendanceRecords || []).find(r => r.studentId === studentId && r.slotId === slotId && r.dateStr === dateStr);
+      if (existing) {
+        showToast('הבחור כבר סומן כנוכח בסדר זה', '⚠️');
+        return;
+      }
+
+      const newRec = {
+        id: genUUID(),
+        studentId: st.id,
+        studentName: st.name,
+        dateStr: dateStr,
+        slotId: slotId,
+        slotTitle: slot.title,
+        markedAt: new Date().toISOString(),
+        status: 'approved',
+        points: pts,
+        markedBy: 'admin'
+      };
+
+      if (!state.attendanceRecords) state.attendanceRecords = [];
+      state.attendanceRecords.unshift(newRec);
+
+      // Award base points to student
+      st.score = (Number(st.score) || 0) + pts;
+
+      saveState();
+      renderStudentsTable();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(dateStr);
+      showToast(`נוכחות סומנה עבור ${st.name} (+${pts} נק׳)`, '✓');
+    }
+
+    function unmarkStudentAttendanceForSlot(studentId, slotId, dateStr) {
+      const idx = (state.attendanceRecords || []).findIndex(r => r.studentId === studentId && r.slotId === slotId && r.dateStr === dateStr);
+      if (idx === -1) return;
+
+      const rec = state.attendanceRecords[idx];
+      const st = state.students.find(s => s.id === studentId);
+      if (st) {
+        st.score = Math.max(0, (Number(st.score) || 0) - (Number(rec.points) || 1));
+      }
+
+      state.attendanceRecords.splice(idx, 1);
+      saveState();
+      renderStudentsTable();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(dateStr);
+      showToast('סימון הנוכחות בוטל', '🗑️');
+    }
+
+    // Award Full Seder Bonus strictly to attendees only!
+    function awardFullSederBonusForSlot(dateStr, slotId) {
+      const slotAtts = (state.attendanceRecords || []).filter(r => r.dateStr === dateStr && r.slotId === slotId);
+      const threshold = state.config.groupFullThreshold || 18;
+      const bonusPts = state.bonusConfig.groupFullBonus || 4;
+      const slots = getSlotsForDate(dateStr);
+      const slot = slots.find(s => s.id === slotId) || { title: 'סדר יומי' };
+
+      if (slotAtts.length < threshold) {
+        alert(`סף סדר מלא טרם הושג (${threshold} בחורים). כרגע דיווחו רק ${slotAtts.length} בחורים.`);
+        return;
+      }
+
+      const bonusReason = `בונוס סדר מלא: ${slot.title} (${dateStr}) - לנוכחים בסדר בלבד`;
+      const alreadyAwarded = (state.bonusLogs || []).some(b => b.reason === bonusReason);
+      if (alreadyAwarded) {
+        if (!confirm('הבונוס עבור סדר זה כבר חולק. האם לחלק אותו שוב לכל מי שנכח בסדר?')) {
+          return;
+        }
+      }
+
+      let count = 0;
+      // STRICT RULE: Award bonus ONLY to students who attended this seder!
+      slotAtts.forEach(att => {
+        const student = state.students.find(s => s.id === att.studentId);
+        if (student) {
+          student.score = (Number(student.score) || 0) + bonusPts;
+          count++;
+        }
+      });
+
+      state.bonusLogs.unshift({
+        id: genUUID(),
+        studentId: 'ALL_ATTENDEES',
+        studentName: `${count} נוכחים בסדר`,
+        points: bonusPts,
+        reason: bonusReason,
+        dateStr: new Date().toLocaleDateString('he-IL')
+      });
+
+      saveState();
+      renderStudentsTable();
+      renderSelectedCalendarDayDetails(dateStr);
+      showToast(`🎉 הוענקו +${bonusPts} נק׳ בונוס סדר מלא ל-${count} הבחורים שנכחו בסדר!`, '⭐');
+    }
+
+    function openAddSlotModalForSelectedDate() {
+      const picker = document.getElementById('adminScheduleDayPicker');
+      if (picker) picker.value = state.calendarSelectedDate;
+      openAddSlotModal();
+    }
+
+    function deleteDailySlotForDate(dateStr, slotIdx) {
+      if (!confirm('האם למחוק סדר זה מתאריך ' + dateStr + '?')) return;
+      if (!state.slotsByDate[dateStr]) {
+        state.slotsByDate[dateStr] = JSON.parse(JSON.stringify(getSlotsForDate(dateStr)));
+      }
+      state.slotsByDate[dateStr].splice(slotIdx, 1);
+      saveState();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(dateStr);
+      showToast('הסדר נמחק מיום זה', '🗑️');
+    }
+
+    function sendSederReminderSmsToAll() {
+      const dateStr = state.calendarSelectedDate;
+      const slots = getSlotsForDate(dateStr);
+      const slotTitles = slots.map(s => s.title + ' (' + s.openTime + ')').join(', ');
+      const msg = encodeURIComponent(`תזכורת למבצע בקשו VIBE: סדרי היום (${dateStr}): ${slotTitles}. היכנסו לדווח נוכחות בזמן: ${window.location.origin}`);
+      const phones = state.students.map(s => s.phone).filter(Boolean).join(',');
+      if (phones) {
+        window.location.href = `sms:${phones}?body=${msg}`;
+      } else {
+        alert('לא הוגדרו מספרי טלפון לבחורים בישיבה');
+      }
+    }
+
+    // ====================================================
+    // 3. STUDENT ATTENDANCE HISTORY DRILLDOWN ("מתי היה וכמה נקודות")
+    // ====================================================
+    function openStudentHistoryModal(studentId) {
+      state.currentHistStudentId = studentId;
+      state.currentHistTab = 'sedarim';
+      const modal = document.getElementById('studentAttendanceHistoryModal');
+      if (modal) modal.classList.remove('hidden');
+      renderStudentHistoryModal();
+    }
+
+    function closeStudentHistoryModal() {
+      document.getElementById('studentAttendanceHistoryModal')?.classList.add('hidden');
+      state.currentHistStudentId = null;
+    }
+
+    function switchStudentHistoryTab(tab) {
+      state.currentHistTab = tab;
+      const btnSedarim = document.getElementById('tabHistBtn-sedarim');
+      const btnBonuses = document.getElementById('tabHistBtn-bonuses');
+      const viewSedarim = document.getElementById('modalHistSedarimView');
+      const viewBonuses = document.getElementById('modalHistBonusesView');
+
+      if (tab === 'sedarim') {
+        btnSedarim?.classList.replace('bg-slate-100', 'bg-slate-900');
+        btnSedarim?.classList.replace('text-slate-700', 'text-white');
+        btnBonuses?.classList.replace('bg-slate-900', 'bg-slate-100');
+        btnBonuses?.classList.replace('text-white', 'text-slate-700');
+        viewSedarim?.classList.remove('hidden');
+        viewBonuses?.classList.add('hidden');
+      } else {
+        btnBonuses?.classList.replace('bg-slate-100', 'bg-slate-900');
+        btnBonuses?.classList.replace('text-slate-700', 'text-white');
+        btnSedarim?.classList.replace('bg-slate-900', 'bg-slate-100');
+        btnSedarim?.classList.replace('text-white', 'text-slate-700');
+        viewBonuses?.classList.remove('hidden');
+        viewSedarim?.classList.add('hidden');
+      }
+    }
+
+    function renderStudentHistoryModal() {
+      const student = state.students.find(s => s.id === state.currentHistStudentId);
+      if (!student) return;
+
+      const nameEl = document.getElementById('modalHistStudentName');
+      const phoneEl = document.getElementById('modalHistStudentPhone');
+      const totalPointsEl = document.getElementById('modalHistTotalPoints');
+      const sederCountEl = document.getElementById('modalHistSederCount');
+      const bonusPointsEl = document.getElementById('modalHistBonusPoints');
+      const rateEl = document.getElementById('modalHistAttendanceRate');
+      const sedarimTbody = document.getElementById('modalHistSedarimTableBody');
+      const bonusesTbody = document.getElementById('modalHistBonusesTableBody');
+
+      if (nameEl) nameEl.textContent = student.name;
+      if (phoneEl) phoneEl.textContent = student.phone || 'ללא מספר';
+      if (totalPointsEl) totalPointsEl.textContent = student.score;
+
+      const studentAtts = (state.attendanceRecords || [])
+        .filter(r => r.studentId === student.id)
+        .sort((a, b) => (b.dateStr + b.markedAt).localeCompare(a.dateStr + a.markedAt));
+
+      const studentBonuses = (state.bonusLogs || [])
+        .filter(b => b.studentId === student.id || (b.studentId === 'ALL_ATTENDEES' && studentAtts.some(a => b.reason.includes(a.dateStr))));
+
+      let totalBonusPts = 0;
+      studentBonuses.forEach(b => totalBonusPts += (Number(b.points) || 0));
+
+      if (sederCountEl) sederCountEl.textContent = studentAtts.length;
+      if (bonusPointsEl) bonusPointsEl.textContent = totalBonusPts;
+
+      // Rate calculation against days passed
+      const rate = Math.min(100, Math.round((studentAtts.length / Math.max(1, calculateCampaignTotalAchievablePoints() / 2)) * 100));
+      if (rateEl) rateEl.textContent = rate + '%';
+
+      // 1. Sedarim History Table
+      if (sedarimTbody) {
+        if (studentAtts.length === 0) {
+          sedarimTbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="text-center py-8 text-slate-400">
+                <span class="text-xl block mb-1">📋</span>
+                <span class="font-bold">טרם נרשמו דיווחי נוכחות לבחור זה</span>
+                <p class="text-[11px] text-slate-400 mt-1">לחץ 'סמן נוכחות בסדר קודם' למעלה כדי להזין נוכחות רטרואקטיבית</p>
+              </td>
+            </tr>
+          `;
+        } else {
+          sedarimTbody.innerHTML = studentAtts.map(rec => {
+            const timeFormatted = rec.markedAt ? new Date(rec.markedAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '09:00';
+            const d = new Date(rec.dateStr + 'T12:00:00');
+            const dayName = isNaN(d.getTime()) ? '' : HEBREW_DAY_NAMES[d.getDay()];
+
+            return `
+              <tr class="hover:bg-slate-50 transition">
+                <td class="py-2.5 px-3">
+                  <div class="font-bold text-slate-900">${rec.dateStr}</div>
+                  <div class="text-[10px] text-slate-400">${dayName ? 'יום ' + dayName : ''}</div>
+                </td>
+                <td class="py-2.5 px-3 font-bold text-slate-800">
+                  ${rec.slotTitle || 'סדר לימוד'}
+                </td>
+                <td class="py-2.5 px-3 text-center font-mono font-bold text-slate-600" dir="ltr">
+                  ${timeFormatted}
+                </td>
+                <td class="py-2.5 px-3 text-center font-black text-indigo-950 font-mono">
+                  +${rec.points || 1} נק׳
+                </td>
+                <td class="py-2.5 px-3 text-center">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    ✓ ${rec.markedBy === 'admin' ? 'הוזן ע״י מנהל' : 'דיווח ברקוד'}
+                  </span>
+                </td>
+                <td class="py-2.5 px-3 text-left">
+                  <button onclick="removeStudentAttendance('${rec.id}')" class="text-rose-600 hover:text-rose-800 text-xs font-bold transition p-1" title="בטל נוכחות זו והפחת נקודה">
+                    🗑️ בטל
+                  </button>
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+
+      // 2. Bonuses History Table
+      if (bonusesTbody) {
+        if (studentBonuses.length === 0) {
+          bonusesTbody.innerHTML = `
+            <tr>
+              <td colspan="3" class="text-center py-6 text-slate-400 font-bold">
+                לא נרשמו בונוסים מיוחדים לבחור זה עדיין
+              </td>
+            </tr>
+          `;
+        } else {
+          bonusesTbody.innerHTML = studentBonuses.map(b => `
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-2.5 px-3 font-mono text-slate-600 text-xs">${b.dateStr || ''}</td>
+              <td class="py-2.5 px-3 font-bold text-slate-900 text-xs">${b.reason || 'בונוס ראש הישיבה'}</td>
+              <td class="py-2.5 px-3 text-center font-black text-amber-700 font-mono text-xs">+${b.points} נק׳</td>
+            </tr>
+          `).join('');
+        }
+      }
+    }
+
+    function removeStudentAttendance(recordId) {
+      const idx = (state.attendanceRecords || []).findIndex(r => r.id === recordId);
+      if (idx === -1) return;
+      const rec = state.attendanceRecords[idx];
+      const student = state.students.find(s => s.id === rec.studentId);
+      if (student) {
+        student.score = Math.max(0, (Number(student.score) || 0) - (Number(rec.points) || 1));
+      }
+      state.attendanceRecords.splice(idx, 1);
+      saveState();
+      renderStudentsTable();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(state.calendarSelectedDate);
+      renderStudentHistoryModal();
+      showToast('הנוכחות בוטלה והניקוד עודכן בהתאם', '🗑️');
+    }
+
+    function openManualAddAttendanceForCurrentStudent() {
+      const student = state.students.find(s => s.id === state.currentHistStudentId);
+      if (!student) return;
+      const sub = document.getElementById('manualAddSubtitle');
+      if (sub) sub.textContent = `הזנת נוכחות רטרואקטיבית עבור ${student.name}`;
+      const dateInp = document.getElementById('manualAddDateInput');
+      if (dateInp) {
+        dateInp.value = state.calendarSelectedDate || new Date().toISOString().slice(0, 10);
+      }
+      populateManualAddSlotsSelect();
+      document.getElementById('manualAddAttendanceModal')?.classList.remove('hidden');
+    }
+
+    function closeManualAddAttendanceModal() {
+      document.getElementById('manualAddAttendanceModal')?.classList.add('hidden');
+    }
+
+    function populateManualAddSlotsSelect() {
+      const dateInp = document.getElementById('manualAddDateInput');
+      const sel = document.getElementById('manualAddSlotSelect');
+      if (!dateInp || !sel) return;
+      const dStr = dateInp.value;
+      const slots = getSlotsForDate(dStr);
+      sel.innerHTML = slots.map(sl => `
+        <option value="${sl.id}">${sl.title} (${sl.openTime} - ${sl.lockTime}) - ${sl.points} נק׳</option>
+      `).join('');
+    }
+
+    function saveManualStudentAttendance() {
+      const student = state.students.find(s => s.id === state.currentHistStudentId);
+      const dateInp = document.getElementById('manualAddDateInput');
+      const sel = document.getElementById('manualAddSlotSelect');
+      if (!student || !dateInp || !sel) return;
+
+      const dateStr = dateInp.value;
+      const slotId = sel.value;
+      const slots = getSlotsForDate(dateStr);
+      const slot = slots.find(s => s.id === slotId) || { title: 'סדר יומי', points: 1 };
+      const pts = Number(slot.points) || 1;
+
+      // Check if already present
+      const existing = (state.attendanceRecords || []).find(r => r.studentId === student.id && r.slotId === slotId && r.dateStr === dateStr);
+      if (existing) {
+        alert('הבחור כבר סומן כנוכח בסדר זה בתאריך זה!');
+        return;
+      }
+
+      state.attendanceRecords.unshift({
+        id: genUUID(),
+        studentId: student.id,
+        studentName: student.name,
+        dateStr: dateStr,
+        slotId: slotId,
+        slotTitle: slot.title,
+        markedAt: new Date().toISOString(),
+        status: 'approved',
+        points: pts,
+        markedBy: 'admin'
+      });
+
+      student.score = (Number(student.score) || 0) + pts;
+
+      saveState();
+      closeManualAddAttendanceModal();
+      renderStudentHistoryModal();
+      renderStudentsTable();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(dateStr);
+      showToast(`נוכחות בסדר ${slot.title} נרשמה בהצלחה ל-${student.name}!`, '✓');
+    }
+
+    // Schedule Editor Helpers
     function initSchedulePicker() {
       const picker = document.getElementById('adminScheduleDayPicker');
       if (picker) {
@@ -1654,8 +2752,8 @@
       const lockTime = document.getElementById('newSlotLockTime')?.value || '10:15';
       const points = parseInt(document.getElementById('newSlotPoints')?.value || '1', 10);
 
-      if (!title || !picker) return;
-      const selectedDate = picker.value;
+      if (!title) return;
+      const selectedDate = (picker && picker.value) ? picker.value : state.calendarSelectedDate;
       const makeSlot = () => ({
         id: 'slot_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         title, openTime, lockTime, points, isLocked: false
@@ -1683,19 +2781,22 @@
 
       saveState();
       closeAddSlotModal();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(state.calendarSelectedDate);
       renderAdminDayScheduleEditor();
       updateCampaignTotalPointsLive();
     }
 
     function deleteDailySlot(idx) {
       const picker = document.getElementById('adminScheduleDayPicker');
-      if (!picker) return;
-      const dStr = picker.value;
+      const dStr = (picker && picker.value) ? picker.value : state.calendarSelectedDate;
       if (!state.slotsByDate[dStr]) {
         state.slotsByDate[dStr] = JSON.parse(JSON.stringify(getSlotsForDate(dStr)));
       }
       state.slotsByDate[dStr].splice(idx, 1);
       saveState();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(dStr);
       renderAdminDayScheduleEditor();
       updateCampaignTotalPointsLive();
       showToast('הסדר נמחק מיום זה', '🗑️');
@@ -1703,8 +2804,7 @@
 
     function resetDayToTemplate() {
       const picker = document.getElementById('adminScheduleDayPicker');
-      if (!picker) return;
-      const dStr = picker.value;
+      const dStr = (picker && picker.value) ? picker.value : state.calendarSelectedDate;
       const d = new Date(dStr + 'T12:00:00');
       const day = d.getDay();
       if (day === 5) {
@@ -1715,6 +2815,8 @@
         state.slotsByDate[dStr] = JSON.parse(JSON.stringify(DEFAULT_SLOTS.weekday_template));
       }
       saveState();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(dStr);
       renderAdminDayScheduleEditor();
       updateCampaignTotalPointsLive();
       showToast('היום אופס לתבנית המקורית בהצלחה', '🔄');
@@ -1722,6 +2824,8 @@
 
     function saveDailyScheduleToSupabase() {
       saveState();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(state.calendarSelectedDate);
       updateCampaignTotalPointsLive();
       showToast('לוח הסדרים נשמר ומסונכרן בהצלחה!', '💾');
     }
@@ -2440,11 +3544,14 @@
     function initAdminDashboard() {
       renderStudentsTable();
       initSchedulePicker();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(state.calendarSelectedDate);
       populateTargetsInputs();
       populateBonusEngineInputs();
       renderDutiesTable();
       renderPendingRequestsList();
       renderJourneyStopsAdmin();
+
       const statReqs = document.getElementById('statPendingRequests');
       if (statReqs) {
         const pendingCount = (state.absenceRequests || []).filter(r => r.status === 'pending' || r.status === 'ממתין לאישור ראש הישיבה ⏳').length;
@@ -2452,6 +3559,13 @@
       }
       const statToday = document.getElementById('statTodaySlotsCount');
       if (statToday) statToday.textContent = getSlotsForDate(new Date().toISOString().slice(0, 10)).length;
+
+      const statTotalPoints = document.getElementById('statTotalPoints');
+      if (statTotalPoints) {
+        let total = 0;
+        state.students.forEach(s => total += (Number(s.score) || 0));
+        statTotalPoints.textContent = total;
+      }
     }
 
     window.onload = async function() {
