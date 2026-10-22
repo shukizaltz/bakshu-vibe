@@ -1023,6 +1023,30 @@
           localStorage.setItem(STORAGE_KEYS.BONUS_LOGS, JSON.stringify(state.bonusLogs));
         }
 
+        // 5. Fetch Schedule Slots directly from schedule_slots table
+        try {
+          const { data: dbSlots } = await supabaseClient.from('schedule_slots').select('*');
+          if (dbSlots && dbSlots.length > 0) {
+            dbSlots.forEach(sl => {
+              const d = sl.slot_date;
+              if (d) {
+                if (!state.slotsByDate[d]) state.slotsByDate[d] = [];
+                if (!state.slotsByDate[d].some(x => x.title === sl.title)) {
+                  state.slotsByDate[d].push({
+                    id: sl.id,
+                    title: sl.title,
+                    openTime: sl.time_window ? sl.time_window.split('-')[0].trim() : '09:00',
+                    lockTime: sl.time_window ? sl.time_window.split('-')[1].trim() : '10:15',
+                    points: Number(sl.base_points) || 1,
+                    isLocked: false
+                  });
+                }
+              }
+            });
+            localStorage.setItem(STORAGE_KEYS.SLOTS_BY_DATE, JSON.stringify(state.slotsByDate));
+          }
+        } catch(e) {}
+
         updateSupabaseStatusUI(true, 'מחובר ומסונכרן');
 
         // Re-render UI with fresh database data
@@ -1109,6 +1133,22 @@
           } catch(e) {
             console.warn('Snapshot sync error:', e);
           }
+
+          // 4. Sync current slots directly to schedule_slots table
+          try {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const activeSlots = getSlotsForDate(todayStr);
+            for (const sl of activeSlots) {
+              await supabaseClient.from('schedule_slots').insert({
+                slot_date: todayStr,
+                title: sl.title,
+                time_window: (sl.openTime || '') + ' - ' + (sl.lockTime || ''),
+                open_time: todayStr + 'T' + (sl.openTime || '09:00') + ':00Z',
+                lock_time: todayStr + 'T' + (sl.lockTime || '10:15') + ':00Z',
+                base_points: Number(sl.points) || 1
+              });
+            }
+          } catch(e) {}
 
           updateSupabaseStatusUI(true, 'נשמר ומסונכרן');
         } catch (e) {
