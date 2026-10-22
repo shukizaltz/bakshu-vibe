@@ -1097,6 +1097,91 @@
       }
     }
 
+    async function loadStateFromSupabase() {
+      if (!supabaseClient) return;
+      try {
+        // 1. Fetch Students from Supabase
+        const { data: dbUsers, error: uErr } = await supabaseClient.from('users').select('*').order('created_at', { ascending: true });
+        if (!uErr && dbUsers && dbUsers.length > 0) {
+          state.students = dbUsers.map(u => ({
+            id: u.id,
+            name: u.full_name,
+            phone: u.phone || '',
+            password: u.password || (u.phone ? u.phone.replace(/\D/g, '').slice(-4) : '1234') || '1234',
+            score: Number(u.score !== undefined && u.score !== null ? u.score : (u.manual_bonus_pts || 0)),
+            presentToday: Boolean(u.present_today),
+            persistenceCount: Number(u.persistence_count) || 0
+          }));
+          saveLocalStudents();
+
+          // Refresh current student
+          const savedLogId = localStorage.getItem('bakshu_logged_student_id');
+          const activeSt = (savedLogId ? state.students.find(s => s.id === savedLogId) : null) || state.students[0];
+          if (activeSt) {
+            state.currentStudent = {
+              ...activeSt,
+              presentCurrent: activeSt.presentToday || false,
+              baseScore: activeSt.score || 0
+            };
+          }
+        }
+
+        // 2. Fetch Campaign Config
+        const { data: dbCfg, error: cErr } = await supabaseClient.from('campaign_config').select('*').limit(1);
+        if (!cErr && dbCfg && dbCfg[0]) {
+          const c = dbCfg[0];
+          state.config.startDate = c.start_date || state.config.startDate;
+          state.config.endDate = c.end_date || state.config.endDate;
+          state.config.minTarget = Number(c.min_target_score) || state.config.minTarget;
+          state.config.groupFullThreshold = Number(c.full_seder_threshold) || state.config.groupFullThreshold;
+          state.config.groupFullBonus = Number(c.full_seder_bonus_pts) || state.config.groupFullBonus;
+          state.config.xyNeed = Number(c.xy_required_count) || state.config.xyNeed;
+          state.config.xyWindow = Number(c.xy_window_size) || state.config.xyWindow;
+          state.config.xyBonus = Number(c.xy_bonus_pts) || state.config.xyBonus;
+          if (c.admin_password) state.adminPasswordHash = c.admin_password;
+          if (c.targets_json) {
+            try { state.config.targets = typeof c.targets_json === 'string' ? JSON.parse(c.targets_json) : c.targets_json; } catch(e){}
+          }
+          if (c.duties_roster) state.dutiesRoster = c.duties_roster;
+          if (c.journey_stops) state.journeyStops = c.journey_stops;
+          if (c.bonus_config) state.bonusConfig = c.bonus_config;
+          if (c.qr_secret) state.qrSecret = c.qr_secret;
+          saveCampaignConfig(state.config);
+        }
+
+        // 3. Fetch Bonus Logs
+        const { data: dbBonus, error: bErr } = await supabaseClient.from('manager_bonus_logs').select('*').order('created_at', { ascending: false }).limit(50);
+        if (!bErr && dbBonus && dbBonus.length > 0) {
+          state.bonusLogs = dbBonus.map(b => ({
+            id: b.id,
+            studentId: b.user_id,
+            studentName: b.student_name || '',
+            points: b.points,
+            reason: b.reason,
+            dateStr: b.created_at ? new Date(b.created_at).toLocaleDateString('he-IL') : ''
+          }));
+          try { localStorage.setItem('bakshu_bonus_logs_v1', JSON.stringify(state.bonusLogs)); } catch(e){}
+        }
+
+        // 4. Try app_state
+        try {
+          const { data: appData } = await supabaseClient.from('app_state').select('*');
+          if (appData && appData.length > 0) {
+            appData.forEach(item => {
+              if (item.key === 'slots_by_date' && item.data) state.slotsByDate = item.data;
+              if (item.key === 'duties' && item.data) state.dutiesRoster = item.data;
+              if (item.key === 'journey_stops' && item.data) state.journeyStops = item.data;
+              if (item.key === 'bonus_config' && item.data) state.bonusConfig = item.data;
+            });
+          }
+        } catch(e) {}
+
+        renderAllViews();
+      } catch (err) {
+        console.warn('Supabase fetch error in index.html:', err);
+      }
+    }
+
     function loadAdminPassword() {
       try {
         const saved = localStorage.getItem('bakshu_admin_password_v1');
@@ -3511,12 +3596,22 @@ events.join('\n') + '\n' +
     async function saveAttendanceLogToSupabase(slotId, isPresent) {
       if (!supabaseClient) return;
       try {
-        await supabaseClient.from('attendance_logs').upsert({
-          slot_id: slotId,
-          status: isPresent ? 'approved' : 'pending'
+        const studentId = state.currentStudent?.id;
+        const validUserId = (studentId && /^[0-9a-f-]{36}$/i.test(studentId)) ? studentId : null;
+        await supabaseClient.from('attendance_logs').insert({
+          user_id: validUserId,
+          student_name: state.currentStudent?.name || '',
+          slot_title: slotId || 'סדר יומי',
+          status: isPresent ? 'approved' : 'pending',
+          marked_at: new Date().toISOString()
         });
+        if (validUserId) {
+          await supabaseClient.from('users').update({
+            manual_bonus_pts: Number(state.currentStudent.baseScore) || 0
+          }).eq('id', validUserId);
+        }
       } catch (err) {
-        console.warn('Supabase offline or syncing:', err);
+        console.warn('Supabase attendance sync:', err);
       }
     }
 
@@ -3556,11 +3651,10 @@ events.join('\n') + '\n' +
         try {
           await supabaseClient.from('campaign_config').upsert({
             id: 1,
-            campaign_name: state.config.campaignName,
+            campaign_name: state.config.campaignName || 'מבצע חורף תשפ״ז - עד הפסגה',
             start_date: start,
             end_date: end,
             min_target_score: minPts,
-            targets_json: JSON.stringify(state.config.targets),
             full_seder_threshold: thresh,
             full_seder_bonus_pts: fullBonus,
             xy_required_count: xyNeed,
@@ -3572,13 +3666,20 @@ events.join('\n') + '\n' +
         }
       }
 
-      showToast('כל 3 היעדים והגדרות המבצע נשמרו בהצלחה!', '💾');
+      showToast('כל 3 היעדים והגדרות המבצע נשמרו בהצלחה ב-Supabase!', '💾');
       renderAllViews();
     }
 
     async function saveDailyScheduleToSupabase() {
       saveScheduleSlots(state.slotsByDate);
-      showToast('סדרי היום נשמרו בהצלחה במסד הנתונים', '💾');
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('app_state').upsert([
+            { key: 'slots_by_date', data: state.slotsByDate }
+          ]);
+        } catch(e) {}
+      }
+      showToast('סדרי היום נשמרו בהצלחה במסד הנתונים Supabase', '💾');
       renderAllViews();
     }
 
@@ -4344,7 +4445,7 @@ END:VCALENDAR`;
       }
     }
 
-    window.onload = function () {
+    window.onload = async function () {
       checkUrlForStudentParam();
       initAdminScheduleDayPicker();
       checkSavedStudentLogin();
@@ -4354,6 +4455,25 @@ END:VCALENDAR`;
       renderLeaderboard();
       renderAdminRequestsAndStudents();
       checkUrlForAdminParam();
+
+      // Live Supabase Sync
+      await loadStateFromSupabase();
+
+      // Realtime Live Subscription
+      if (supabaseClient) {
+        try {
+          supabaseClient.channel('student_live_sync')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+              loadStateFromSupabase();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_config' }, () => {
+              loadStateFromSupabase();
+            })
+            .subscribe();
+        } catch(e) {
+          console.warn('Realtime error in index.html:', e);
+        }
+      }
     };
 
     // Live storage sync across tabs
