@@ -852,8 +852,18 @@
       friday_template: []
     };
 
+    function genUUID() {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
     const DEFAULT_DEMO_STUDENT = {
-      id: 'demo_student_1',
+      id: '770d3812-a625-46d5-8155-687747c34f97',
       name: 'ישראל ישראלי (בחור לדוגמה)',
       phone: '050-1234567',
       password: '1234',
@@ -963,18 +973,44 @@
           state.config.endDate = c.end_date || state.config.endDate;
           state.config.groupFullThreshold = Number(c.full_seder_threshold) || state.config.groupFullThreshold;
           if (c.admin_password) state.adminPassword = c.admin_password;
-          if (c.targets_json) {
-            try { state.config.targets = typeof c.targets_json === 'string' ? JSON.parse(c.targets_json) : c.targets_json; } catch(e){}
-          }
-          if (c.duties_roster) state.dutiesRoster = c.duties_roster;
-          if (c.journey_stops) state.journeyStops = c.journey_stops;
-          if (c.bonus_config) state.bonusConfig = c.bonus_config;
-          if (c.qr_secret) state.qrSecret = c.qr_secret;
           localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(state.config));
         }
 
-        // 3. Fetch Bonus Logs
-        const { data: dbBonus, error: bErr } = await supabaseClient.from('manager_bonus_logs').select('*').order('created_at', { ascending: false }).limit(50);
+        // 3. Fetch State Snapshot from manager_bonus_logs (points: -999)
+        try {
+          const { data: snapshots } = await supabaseClient.from('manager_bonus_logs')
+            .select('*')
+            .eq('points', -999)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (snapshots && snapshots.length > 0 && snapshots[0].reason && snapshots[0].reason.startsWith('APP_STATE_SNAPSHOT:')) {
+            const snap = JSON.parse(snapshots[0].reason.slice('APP_STATE_SNAPSHOT:'.length));
+            if (snap.slotsByDate) state.slotsByDate = snap.slotsByDate;
+            if (snap.config && snap.config.targets) state.config.targets = snap.config.targets;
+            if (snap.dutiesRoster) state.dutiesRoster = snap.dutiesRoster;
+            if (snap.journeyStops) state.journeyStops = snap.journeyStops;
+            if (snap.bonusConfig) state.bonusConfig = snap.bonusConfig;
+            if (snap.qrSecret) state.qrSecret = snap.qrSecret;
+            if (snap.absenceRequests) state.absenceRequests = snap.absenceRequests;
+            if (snap.adminPassword) state.adminPassword = snap.adminPassword;
+
+            localStorage.setItem(STORAGE_KEYS.SLOTS_BY_DATE, JSON.stringify(state.slotsByDate));
+            localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(state.config));
+            localStorage.setItem(STORAGE_KEYS.DUTIES, JSON.stringify(state.dutiesRoster));
+            localStorage.setItem(STORAGE_KEYS.JOURNEY_STOPS, JSON.stringify(state.journeyStops));
+            localStorage.setItem(STORAGE_KEYS.BONUS_CONFIG, JSON.stringify(state.bonusConfig));
+            localStorage.setItem(STORAGE_KEYS.QR_SECRET, state.qrSecret);
+          }
+        } catch(e) {
+          console.warn('Snapshot load error:', e);
+        }
+
+        // 4. Fetch Bonus Logs (points > 0)
+        const { data: dbBonus, error: bErr } = await supabaseClient.from('manager_bonus_logs')
+          .select('*')
+          .gt('points', 0)
+          .order('created_at', { ascending: false })
+          .limit(50);
         if (!bErr && dbBonus && dbBonus.length > 0) {
           state.bonusLogs = dbBonus.map(b => ({
             id: b.id,
@@ -986,21 +1022,6 @@
           }));
           localStorage.setItem(STORAGE_KEYS.BONUS_LOGS, JSON.stringify(state.bonusLogs));
         }
-
-        // 4. Try app_state (if available)
-        try {
-          const { data: appData } = await supabaseClient.from('app_state').select('*');
-          if (appData && appData.length > 0) {
-            appData.forEach(item => {
-              if (item.key === 'slots_by_date' && item.data) state.slotsByDate = item.data;
-              if (item.key === 'duties' && item.data) state.dutiesRoster = item.data;
-              if (item.key === 'journey_stops' && item.data) state.journeyStops = item.data;
-              if (item.key === 'absence_requests' && item.data) state.absenceRequests = item.data;
-              if (item.key === 'bonus_config' && item.data) state.bonusConfig = item.data;
-              if (item.key === 'qr_secret' && item.data && item.data.secret) state.qrSecret = item.data.secret;
-            });
-          }
-        } catch(e) {}
 
         updateSupabaseStatusUI(true, 'מחובר ומסונכרן');
 
@@ -1047,24 +1068,22 @@
             console.warn('Config upsert error:', e);
           }
 
-          // 2. Sync Students
+          // 2. Sync Students with UUIDs
           if (Array.isArray(state.students)) {
             for (const st of state.students) {
+              if (!st.id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(st.id)) {
+                st.id = genUUID();
+              }
               const uPayload = {
+                id: st.id,
                 full_name: st.name,
                 phone: st.phone || '',
                 role: 'student',
                 manual_bonus_pts: Number(st.score) || 0,
                 is_active: true
               };
-              if (st.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(st.id)) {
-                uPayload.id = st.id;
-              }
               try {
-                const { data: savedU } = await supabaseClient.from('users').upsert(uPayload).select();
-                if (savedU && savedU[0] && savedU[0].id) {
-                  st.id = savedU[0].id;
-                }
+                await supabaseClient.from('users').upsert(uPayload, { onConflict: 'id' });
               } catch(err) {
                 console.warn('User sync error:', err);
               }
@@ -1072,24 +1091,31 @@
             localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(state.students));
           }
 
-          // 3. Sync app_state snapshot if available
+          // 3. Save full state snapshot to manager_bonus_logs (points: -999)
           try {
-            await supabaseClient.from('app_state').upsert([
-              { key: 'slots_by_date', data: state.slotsByDate },
-              { key: 'duties', data: state.dutiesRoster },
-              { key: 'journey_stops', data: state.journeyStops },
-              { key: 'bonus_config', data: state.bonusConfig },
-              { key: 'qr_secret', data: { secret: state.qrSecret } },
-              { key: 'absence_requests', data: state.absenceRequests }
-            ]);
-          } catch(e) {}
+            await supabaseClient.from('manager_bonus_logs').insert({
+              points: -999,
+              reason: 'APP_STATE_SNAPSHOT:' + JSON.stringify({
+                slotsByDate: state.slotsByDate,
+                config: state.config,
+                dutiesRoster: state.dutiesRoster,
+                journeyStops: state.journeyStops,
+                bonusConfig: state.bonusConfig,
+                qrSecret: state.qrSecret,
+                absenceRequests: state.absenceRequests,
+                adminPassword: state.adminPassword
+              })
+            });
+          } catch(e) {
+            console.warn('Snapshot sync error:', e);
+          }
 
           updateSupabaseStatusUI(true, 'נשמר ומסונכרן');
         } catch (e) {
           console.warn('Supabase sync error:', e);
           updateSupabaseStatusUI(false, 'שגיאת סנכרון');
         }
-      }, 400);
+      }, 300);
     }
 
     function saveState() {
@@ -1316,7 +1342,7 @@
         return;
       }
       state.students.push({
-        id: 'st_' + Date.now(),
+        id: genUUID(),
         name,
         phone,
         password: pass || '1234',
@@ -1346,7 +1372,7 @@
           const name = parts[0];
           const phone = parts[1];
           state.students.push({
-            id: 'st_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+            id: genUUID(),
             name,
             phone,
             password: '1234',

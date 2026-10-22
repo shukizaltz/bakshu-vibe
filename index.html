@@ -1062,7 +1062,7 @@
     // 2. DEMO STUDENT DEFINITION & PERSISTENT STORAGE
     // ====================================================
     const DEFAULT_DEMO_STUDENT = {
-      id: 'demo_student_1',
+      id: '770d3812-a625-46d5-8155-687747c34f97',
       name: 'ישראל ישראלי (בחור לדוגמה)',
       phone: '050-1234567',
       password: '1234',
@@ -1134,23 +1134,40 @@
           state.config.endDate = c.end_date || state.config.endDate;
           state.config.minTarget = Number(c.min_target_score) || state.config.minTarget;
           state.config.groupFullThreshold = Number(c.full_seder_threshold) || state.config.groupFullThreshold;
-          state.config.groupFullBonus = Number(c.full_seder_bonus_pts) || state.config.groupFullBonus;
-          state.config.xyNeed = Number(c.xy_required_count) || state.config.xyNeed;
-          state.config.xyWindow = Number(c.xy_window_size) || state.config.xyWindow;
-          state.config.xyBonus = Number(c.xy_bonus_pts) || state.config.xyBonus;
           if (c.admin_password) state.adminPasswordHash = c.admin_password;
-          if (c.targets_json) {
-            try { state.config.targets = typeof c.targets_json === 'string' ? JSON.parse(c.targets_json) : c.targets_json; } catch(e){}
-          }
-          if (c.duties_roster) state.dutiesRoster = c.duties_roster;
-          if (c.journey_stops) state.journeyStops = c.journey_stops;
-          if (c.bonus_config) state.bonusConfig = c.bonus_config;
-          if (c.qr_secret) state.qrSecret = c.qr_secret;
           saveCampaignConfig(state.config);
         }
 
-        // 3. Fetch Bonus Logs
-        const { data: dbBonus, error: bErr } = await supabaseClient.from('manager_bonus_logs').select('*').order('created_at', { ascending: false }).limit(50);
+        // 3. Fetch State Snapshot from manager_bonus_logs (points: -999)
+        try {
+          const { data: snapshots } = await supabaseClient.from('manager_bonus_logs')
+            .select('*')
+            .eq('points', -999)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (snapshots && snapshots.length > 0 && snapshots[0].reason && snapshots[0].reason.startsWith('APP_STATE_SNAPSHOT:')) {
+            const snap = JSON.parse(snapshots[0].reason.slice('APP_STATE_SNAPSHOT:'.length));
+            if (snap.slotsByDate) state.slotsByDate = snap.slotsByDate;
+            if (snap.config && snap.config.targets) state.config.targets = snap.config.targets;
+            if (snap.dutiesRoster) state.dutiesRoster = snap.dutiesRoster;
+            if (snap.journeyStops) state.journeyStops = snap.journeyStops;
+            if (snap.bonusConfig) state.bonusConfig = snap.bonusConfig;
+            if (snap.qrSecret) state.qrSecret = snap.qrSecret;
+            if (snap.adminPassword) state.adminPasswordHash = snap.adminPassword;
+
+            saveScheduleSlots(state.slotsByDate);
+            saveCampaignConfig(state.config);
+          }
+        } catch(e) {
+          console.warn('Snapshot load error in index:', e);
+        }
+
+        // 4. Fetch Bonus Logs (points > 0)
+        const { data: dbBonus, error: bErr } = await supabaseClient.from('manager_bonus_logs')
+          .select('*')
+          .gt('points', 0)
+          .order('created_at', { ascending: false })
+          .limit(50);
         if (!bErr && dbBonus && dbBonus.length > 0) {
           state.bonusLogs = dbBonus.map(b => ({
             id: b.id,
@@ -1162,19 +1179,6 @@
           }));
           try { localStorage.setItem('bakshu_bonus_logs_v1', JSON.stringify(state.bonusLogs)); } catch(e){}
         }
-
-        // 4. Try app_state
-        try {
-          const { data: appData } = await supabaseClient.from('app_state').select('*');
-          if (appData && appData.length > 0) {
-            appData.forEach(item => {
-              if (item.key === 'slots_by_date' && item.data) state.slotsByDate = item.data;
-              if (item.key === 'duties' && item.data) state.dutiesRoster = item.data;
-              if (item.key === 'journey_stops' && item.data) state.journeyStops = item.data;
-              if (item.key === 'bonus_config' && item.data) state.bonusConfig = item.data;
-            });
-          }
-        } catch(e) {}
 
         renderAllViews();
       } catch (err) {
