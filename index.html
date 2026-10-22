@@ -1367,24 +1367,40 @@
       }
     }
 
+    function calculateSlotDurationText(openTime, lockTime) {
+      if (!openTime || !lockTime) return '';
+      const [h1, m1] = (openTime || '09:00').split(':').map(Number);
+      const [h2, m2] = (lockTime || '10:15').split(':').map(Number);
+      let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+      if (diff < 0) diff += 24 * 60;
+      const h = Math.floor(diff / 60);
+      const m = diff % 60;
+      if (h > 0 && m > 0) return `${h} שעות ו-${m} דק׳ (${diff} דק׳)`;
+      if (h > 0) return `${h} שעות (${diff} דק׳)`;
+      return `${diff} דקות`;
+    }
+
     function getSlotsForDate(dateStr) {
-      if (!dateStr) return state.slotsByDate['weekday_template'] || DEFAULT_SLOTS['weekday_template'];
-      if (state.slotsByDate && Array.isArray(state.slotsByDate[dateStr])) {
-        return state.slotsByDate[dateStr];
-      }
-      try {
-        const d = new Date(dateStr + 'T12:00:00');
-        const day = d.getDay(); // 0: Sun, 5: Fri, 6: Sat
-        if (day === 5) {
-          return state.slotsByDate['friday_template'] || [];
+      let raw;
+      if (!dateStr) raw = state.slotsByDate['weekday_template'] || DEFAULT_SLOTS['weekday_template'];
+      else if (state.slotsByDate && Array.isArray(state.slotsByDate[dateStr])) {
+        raw = state.slotsByDate[dateStr];
+      } else {
+        try {
+          const d = new Date(dateStr + 'T12:00:00');
+          const day = d.getDay(); // 0: Sun, 5: Fri, 6: Sat
+          if (day === 5) {
+            raw = state.slotsByDate['friday_template'] || [];
+          } else if (day === 6) {
+            raw = state.slotsByDate['shabbat_template'] || DEFAULT_SLOTS['shabbat_template'];
+          } else {
+            raw = state.slotsByDate['weekday_template'] || DEFAULT_SLOTS['weekday_template'];
+          }
+        } catch (e) {
+          raw = state.slotsByDate['weekday_template'] || DEFAULT_SLOTS['weekday_template'];
         }
-        if (day === 6) {
-          return state.slotsByDate['shabbat_template'] || DEFAULT_SLOTS['shabbat_template'];
-        }
-      } catch (e) {
-        console.warn('Error parsing date:', dateStr, e);
       }
-      return state.slotsByDate['weekday_template'] || DEFAULT_SLOTS['weekday_template'];
+      return [...(raw || [])].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
     }
 
     function getTodayDateStr() {
@@ -2707,15 +2723,24 @@ events.join('\n') + '\n' +
             </div>
           `;
         } else {
-          todaySlotsList.innerHTML = todaySlots.map((slot, i) => `
-            <div class="p-3 rounded-2xl border ${i === 0 ? 'bg-indigo-50/50 border-indigo-200' : 'bg-white border-slate-200'} flex items-center justify-between">
-              <div>
-                <div class="text-xs font-bold text-slate-900">${slot.title}</div>
-                <div class="text-[11px] text-slate-500 font-mono">${slot.openTime} - ${slot.lockTime}</div>
+          todaySlotsList.innerHTML = todaySlots.map((slot, i) => {
+            const dur = calculateSlotDurationText(slot.openTime, slot.lockTime);
+            return `
+              <div class="p-3 rounded-2xl border ${i === 0 ? 'bg-indigo-50/50 border-indigo-200 ring-1 ring-indigo-200' : 'bg-white border-slate-200'} flex items-center justify-between">
+                <div>
+                  <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded-md bg-indigo-100 text-indigo-950 font-black text-[10px] flex items-center justify-center">${i + 1}</span>
+                    <span>${slot.title}</span>
+                  </div>
+                  <div class="text-[11px] text-slate-500 font-mono mt-1 flex items-center gap-2 flex-wrap">
+                    <span>🕒 ${slot.openTime} - ${slot.lockTime}</span>
+                    ${dur ? `<span class="text-slate-400">⏱️ ${dur}</span>` : ''}
+                  </div>
+                </div>
+                <span class="text-xs font-black text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">+${slot.points}</span>
               </div>
-              <span class="text-xs font-black text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">+${slot.points}</span>
-            </div>
-          `).join('');
+            `;
+          }).join('');
         }
       }
     }

@@ -346,6 +346,9 @@
               </span>
             </div>
 
+            <!-- Custom Day Status Notice Container (Revert to template option) -->
+            <div id="selectedDayCustomNoticeContainer" class="mb-3"></div>
+
             <!-- List of Sedarim for this date -->
             <div id="selectedDaySedarimListContainer" class="space-y-4">
               <!-- Rendered dynamically by JS -->
@@ -546,18 +549,40 @@
       <!-- ========================================================== -->
       <div id="adminTabContent-duties" class="hidden space-y-6">
         <div class="soft-card p-5 sm:p-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-slate-100">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
             <div>
               <div class="flex items-center gap-2">
                 <span class="text-xl">⏰</span>
                 <h2 class="text-lg font-black text-slate-900">מערך שיבוץ תורנויות יומי</h2>
+                <span class="text-xs bg-indigo-50 text-indigo-700 font-bold px-2.5 py-0.5 rounded-full border border-indigo-200">שיבוץ אקראי חכם</span>
               </div>
-              <p class="text-xs text-slate-500">שיבוץ תורן מעורר ותורן מטבח בימי חול בלבד (ראשון עד חמישי — אין תורנויות בשישי ושבת), תזכורות SMS ואישור ביצוע</p>
+              <p class="text-xs text-slate-500 mt-1">שיבוץ תורן מעורר ותורן מטבח בימי חול בלבד (א׳ - ה׳). חלוקה שוויונית ללא חזרתיות, ללא אותו תורן בוקר וערב, וניתן לשיבוץ חוזר.</p>
             </div>
-            <button onclick="saveDutiesSchedule()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-sm flex items-center gap-1.5">
-              <span>💾</span>
-              <span>שמור שיבוץ תורנויות</span>
-            </button>
+            
+            <!-- Quick Actions for Duties -->
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="openRandomDutiesModal()" class="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-black text-xs transition shadow-md flex items-center gap-1.5">
+                <span>🎲</span>
+                <span>שיבוץ אקראי חכם</span>
+              </button>
+              <button onclick="quickReshuffleDuties()" class="px-3 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5" title="ערבב מחדש שיבוץ אקראי לכל ימי המבצע">
+                <span>🔄</span>
+                <span>שיבוץ חוזר</span>
+              </button>
+              <button onclick="clearAllDutiesRoster()" class="px-3 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition flex items-center gap-1.5" title="מחק את כל השיבוצים">
+                <span>🧹</span>
+                <span>נקה הכל</span>
+              </button>
+              <button onclick="saveDutiesSchedule()" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white font-black text-xs transition shadow-sm flex items-center gap-1.5">
+                <span>💾</span>
+                <span>שמור שיבוצים</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Duties Stats & Filter Bar -->
+          <div id="dutiesStatsContainer" class="mb-5">
+            <!-- Dynamically rendered by JS -->
           </div>
 
           <!-- Duties Table -->
@@ -770,6 +795,206 @@
           הוסף סדר למערכת
         </button>
         <button onclick="closeAddSlotModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Slot Modal (Calendar Event Style - Single vs Series) -->
+  <div id="editSlotModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right">
+      <input type="hidden" id="editSlotId" />
+      <input type="hidden" id="editSlotDateStr" />
+      
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-black text-slate-900">✏️ עריכת שעות ופרטי סדר</h3>
+          <p id="editSlotSubtitle" class="text-xs text-slate-500 mt-0.5">עריכת אירוע כחלק מסדרה או למופע זה בלבד</p>
+        </div>
+        <button onclick="closeEditSlotModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition">✕</button>
+      </div>
+
+      <div class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">שם הסדר / האירוע:</label>
+          <input type="text" id="editSlotTitle" class="w-full text-xs font-bold p-3 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">שעת פתיחה:</label>
+            <input type="time" id="editSlotOpenTime" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none" oninput="updateEditSlotDurationPreview()" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">שעת נעילה:</label>
+            <input type="time" id="editSlotLockTime" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none" oninput="updateEditSlotDurationPreview()" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100 text-xs">
+          <span class="text-slate-600 font-bold">משך פעילות מחושב:</span>
+          <span id="editSlotDurationPreview" class="font-black text-indigo-950 font-mono">75 דקות</span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">שווי נקודות לסדר:</label>
+          <input type="number" id="editSlotPoints" min="1" max="10" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:outline-none" />
+        </div>
+
+        <!-- Scope Selection: Single Event vs Entire Series (Like Calendar) -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+          <label class="block text-xs font-black text-slate-900 mb-2">📅 תחולת השינוי (בדומה ללוח שנה):</label>
+          <div class="space-y-2">
+            <label class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white transition cursor-pointer border border-transparent hover:border-slate-200">
+              <input type="radio" name="editSlotScope" id="editScopeSingle" value="single" checked class="mt-0.5 text-indigo-600" />
+              <div>
+                <span class="block text-xs font-bold text-slate-900">רק ביום זה בלבד (<span id="editScopeDateLabel" class="text-indigo-700 font-mono"></span>)</span>
+                <span class="text-[10px] text-slate-500">שינוי נקודתי שיחול רק על תאריך זה ללא השפעה על שאר ימי המבצע</span>
+              </div>
+            </label>
+            <label class="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white transition cursor-pointer border border-transparent hover:border-slate-200">
+              <input type="radio" name="editSlotScope" id="editScopeSeries" value="series" class="mt-0.5 text-indigo-600" />
+              <div>
+                <span class="block text-xs font-bold text-slate-900">בכל הסדרה במבצע (<span id="editScopeSeriesLabel" class="text-amber-800 font-bold">ימי חול</span>)</span>
+                <span class="text-[10px] text-slate-500">יעדכן את שעות ופרטי הסדר בכל התאריכים התואמים בסדרה</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="flex items-center gap-2 mt-5">
+        <button onclick="saveEditedSlot()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-sm">
+          שמור שינויים בסדר
+        </button>
+        <button onclick="closeEditSlotModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Slot Modal (Single vs Series) -->
+  <div id="deleteSlotConfirmModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right">
+      <input type="hidden" id="delSlotId" />
+      <input type="hidden" id="delSlotDateStr" />
+      
+      <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-2xl mx-auto mb-3">
+        🗑️
+      </div>
+
+      <h3 class="text-base font-black text-slate-900 text-center mb-1">הסרת סדר מהלוח</h3>
+      <p id="delSlotSubtitle" class="text-xs text-slate-500 text-center mb-4">בחר האם להסיר את הסדר מיום זה בלבד או מכל הסדרה</p>
+
+      <div class="p-3.5 rounded-2xl bg-rose-50/40 border border-rose-200 space-y-2 mb-4">
+        <label class="flex items-start gap-2.5 p-2 rounded-xl bg-white transition cursor-pointer border border-rose-200/80">
+          <input type="radio" name="delSlotScope" id="delScopeSingle" value="single" checked class="mt-0.5 text-rose-600" />
+          <div>
+            <span class="block text-xs font-bold text-slate-900">הסר מיום זה בלבד (<span id="delScopeDateLabel" class="text-rose-700 font-mono"></span>)</span>
+            <span class="text-[10px] text-slate-500">הסדר ימשיך להופיע כרגיל בשאר ימי הסדרה במבצע</span>
+          </div>
+        </label>
+        <label class="flex items-start gap-2.5 p-2 rounded-xl bg-white transition cursor-pointer border border-rose-200/80">
+          <input type="radio" name="delSlotScope" id="delScopeSeries" value="series" class="mt-0.5 text-rose-600" />
+          <div>
+            <span class="block text-xs font-bold text-rose-900">הסר מכל הסדרה במבצע (<span id="delScopeSeriesLabel" class="font-bold">ימי חול</span>)</span>
+            <span class="text-[10px] text-slate-500">הסדר יימחק מכל הימים הרלוונטיים במבצע</span>
+          </div>
+        </label>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="confirmExecuteDeleteSlot()" class="flex-1 py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs transition shadow-sm">
+          אשר הסרה מהלוח
+        </button>
+        <button onclick="closeDeleteSlotConfirmModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Random Duties Assignment Modal -->
+  <div id="randomDutiesModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 text-right">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🎲</span>
+          <div>
+            <h3 class="text-base font-black text-slate-900">שיבוץ אקראי חכם לכל התורנויות</h3>
+            <p class="text-xs text-slate-500">חלוקה שוויונית מלאה ללא חזרתיות וללא אותו תורן בוקר וערב</p>
+          </div>
+        </div>
+        <button onclick="closeRandomDutiesModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center transition">✕</button>
+      </div>
+
+      <!-- Quick Metrics Summary -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4 text-center">
+        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+          <span class="text-[10px] text-slate-500 block font-bold">ימי תורנות (חול)</span>
+          <span id="rdmMetricDays" class="text-sm font-black text-slate-900 font-mono">0</span>
+        </div>
+        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+          <span class="text-[10px] text-slate-500 block font-bold">סך תורנויות</span>
+          <span id="rdmMetricDuties" class="text-sm font-black text-slate-900 font-mono">0</span>
+        </div>
+        <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+          <span class="text-[10px] text-slate-500 block font-bold">בחורים לשיבוץ</span>
+          <span id="rdmMetricStudents" class="text-sm font-black text-slate-900 font-mono">0</span>
+        </div>
+        <div class="p-2.5 rounded-xl bg-indigo-50 border border-indigo-200">
+          <span class="text-[10px] text-indigo-700 block font-bold">ממוצע לבחור</span>
+          <span id="rdmMetricAvg" class="text-sm font-black text-indigo-950 font-mono">0</span>
+        </div>
+      </div>
+
+      <!-- Rules Callout -->
+      <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 mb-4 text-xs space-y-1.5 text-amber-950">
+        <div class="font-black flex items-center gap-1.5 text-amber-900">
+          <span>⚡</span>
+          <span>עקרונות השיבוץ המובטחים:</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px] text-amber-900">
+          <span class="text-emerald-600 font-bold">✓</span>
+          <span><strong>בלי חזרתיות:</strong> חלוקה מאוזנת (כל הבחורים מקבלים תורנות ראשונה לפני שמישהו מקבל שנייה).</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px] text-amber-900">
+          <span class="text-emerald-600 font-bold">✓</span>
+          <span><strong>בלי אותו תורן בוקר וערב:</strong> לעולם לא ישובץ אותו בחור למעורר בוקר ולמטבח ערב באותו יום!</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px] text-amber-900">
+          <span class="text-emerald-600 font-bold">✓</span>
+          <span><strong>שיבוץ חוזר:</strong> ניתן להריץ ערבוב אקראי מחדש בכל עת בלחיצת כפתור במקרה הצורך.</span>
+        </div>
+      </div>
+
+      <!-- Mode selection -->
+      <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 mb-4">
+        <label class="flex items-start gap-2.5 p-2 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300 transition">
+          <input type="radio" name="rdmMode" id="rdmModeFull" value="full" checked class="mt-0.5 text-indigo-600" />
+          <div>
+            <span class="block text-xs font-black text-slate-900">🎲 שיבוץ אקראי מלא מחדש לכל ימי המבצע</span>
+            <span class="text-[10px] text-slate-500">דורס שיבוצים קיימים ומייצר פריסה שוויונית מושלמת מאפס</span>
+          </div>
+        </label>
+        <label class="flex items-start gap-2.5 p-2 rounded-xl bg-white border border-slate-200 cursor-pointer hover:border-indigo-300 transition">
+          <input type="radio" name="rdmMode" id="rdmModeEmpty" value="empty" class="mt-0.5 text-indigo-600" />
+          <div>
+            <span class="block text-xs font-black text-slate-900">🧩 השלמת תורנויות ריקות בלבד</span>
+            <span class="text-[10px] text-slate-500">שומר על תורנים שכבר שובצו ידנית, ומשבץ אקראית רק בימים ריקים</span>
+          </div>
+        </label>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="executeRandomDutiesAssignment()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5">
+          <span>🎲</span>
+          <span>הפעל שיבוץ אקראי עכשיו</span>
+        </button>
+        <button onclick="closeRandomDutiesModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
           ביטול
         </button>
       </div>
@@ -1618,14 +1843,38 @@
       if (tabName === 'students') renderStudentsTable();
     }
 
-    // Seder Slots Resolution
+    // Duration Calculation Helper (Hours and Minutes)
+    function calculateSlotDurationText(openTime, lockTime) {
+      if (!openTime || !lockTime) return '';
+      const [h1, m1] = (openTime || '09:00').split(':').map(Number);
+      const [h2, m2] = (lockTime || '10:15').split(':').map(Number);
+      let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+      if (diff < 0) diff += 24 * 60;
+      const h = Math.floor(diff / 60);
+      const m = diff % 60;
+      if (h > 0 && m > 0) return `${h} שעות ו-${m} דק׳ (${diff} דק׳)`;
+      if (h > 0) return `${h} שעות (${diff} דק׳)`;
+      return `${diff} דקות`;
+    }
+
+    // Check if a specific date has custom individual slot overrides
+    function isCustomDaySchedule(dateStr) {
+      return Boolean(state.slotsByDate && Array.isArray(state.slotsByDate[dateStr]));
+    }
+
+    // Seder Slots Resolution - Strictly sorted by active hours (chronological timeline)
     function getSlotsForDate(dateStr) {
-      if (state.slotsByDate[dateStr]) return state.slotsByDate[dateStr];
-      const d = new Date(dateStr + 'T12:00:00');
-      const day = d.getDay();
-      if (day === 5) return state.slotsByDate['friday_template'] || [];
-      if (day === 6) return state.slotsByDate['shabbat_template'] || DEFAULT_SLOTS.shabbat_template;
-      return state.slotsByDate['weekday_template'] || DEFAULT_SLOTS.weekday_template;
+      let raw;
+      if (state.slotsByDate && Array.isArray(state.slotsByDate[dateStr])) {
+        raw = state.slotsByDate[dateStr];
+      } else {
+        const d = new Date(dateStr + 'T12:00:00');
+        const day = d.getDay();
+        if (day === 5) raw = state.slotsByDate['friday_template'] || [];
+        else if (day === 6) raw = state.slotsByDate['shabbat_template'] || DEFAULT_SLOTS.shabbat_template;
+        else raw = state.slotsByDate['weekday_template'] || DEFAULT_SLOTS.weekday_template;
+      }
+      return [...(raw || [])].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
     }
 
     function calculateCampaignTotalAchievablePoints() {
@@ -2175,14 +2424,38 @@
 
       // 2. Render Sedarim List & Attendance Drilldown
       if (sedarimListContainer) {
+        // Update Custom Day Notice Banner
+        const customNoticeEl = document.getElementById('selectedDayCustomNoticeContainer');
+        const isCustomDay = isCustomDaySchedule(dateStr);
+        if (customNoticeEl) {
+          if (isCustomDay) {
+            customNoticeEl.innerHTML = `
+              <div class="p-3 rounded-2xl bg-amber-50/80 border border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
+                <div class="flex items-center gap-2">
+                  <span class="text-base">⭐</span>
+                  <div>
+                    <span class="text-xs font-black text-amber-950">יום עם לוח סדרים ייחודי ומותאם אישית</span>
+                    <p class="text-[11px] text-amber-800">הסדרים ביום זה נערכו או הותאמו בנפרד מתבנית הסדרה הכללית של המבצע.</p>
+                  </div>
+                </div>
+                <button onclick="revertDayToSeriesTemplate('${dateStr}')" class="px-3 py-1.5 rounded-xl bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 font-black text-xs transition shadow-xs self-end sm:self-center shrink-0">
+                  🔄 שחזר לתבנית המקורית
+                </button>
+              </div>
+            `;
+          } else {
+            customNoticeEl.innerHTML = '';
+          }
+        }
+
         if (slots.length === 0) {
           sedarimListContainer.innerHTML = `
             <div class="p-8 text-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50">
               <span class="text-3xl block mb-2">🕊️</span>
               <h4 class="text-sm font-black text-slate-800">לא נקבעו סדרים ליום זה</h4>
-              <p class="text-xs text-slate-400 mt-1 mb-3">ניתן להוסיף סדרים ספציפיים ליום זה בלחיצה על הכפתור</p>
+              <p class="text-xs text-slate-400 mt-1 mb-3">ניתן להוסיף סדרים ספציפיים ליום זה או לכל הסדרה בלחיצה על הכפתור</p>
               <button onclick="openAddSlotModalForSelectedDate()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-sm">
-                + הוסף סדר חדש ליום זה
+                + הוסף סדר חדש
               </button>
             </div>
           `;
@@ -2191,6 +2464,8 @@
 
         const threshold = state.config.groupFullThreshold || 18;
         const fullBonusPts = state.bonusConfig.groupFullBonus || 4;
+        const dayOfWeek = dObj.getDay();
+        const seriesName = dayOfWeek === 5 ? 'סדרת שישי' : (dayOfWeek === 6 ? 'סדרת שבת' : 'סדרת ימי חול');
 
         sedarimListContainer.innerHTML = slots.map((sl, idx) => {
           const slotAtts = (state.attendanceRecords || []).filter(r => r.dateStr === dateStr && r.slotId === sl.id);
@@ -2199,6 +2474,7 @@
           const absentees = state.students.filter(s => !attendedIds.has(s.id));
           const isFullSeder = slotAtts.length >= threshold;
           const isExpanded = state.expandedSederSlotId === sl.id || (slots.length === 1 && state.expandedSederSlotId === null);
+          const durationText = calculateSlotDurationText(sl.openTime, sl.lockTime);
 
           // Check if bonus already awarded
           const bonusReason = `בונוס סדר מלא: ${sl.title} (${dateStr}) - לנוכחים בסדר בלבד`;
@@ -2215,11 +2491,23 @@
                   <div>
                     <div class="flex items-center gap-2 flex-wrap">
                       <h4 class="font-black text-slate-900 text-sm">${sl.title}</h4>
-                      <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-900 border border-indigo-200">
-                        ${sl.openTime} - ${sl.lockTime}
+                      <!-- Active Hours Badge -->
+                      <span class="text-xs font-mono font-black px-2.5 py-0.5 rounded-lg bg-indigo-50 text-indigo-900 border border-indigo-200">
+                        🕒 ${sl.openTime} - ${sl.lockTime}
                       </span>
+                      <!-- Duration Badge -->
+                      ${durationText ? `
+                        <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">
+                          ⏱️ ${durationText}
+                        </span>
+                      ` : ''}
+                      <!-- Points Badge -->
                       <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200">
                         +${sl.points} נק׳
+                      </span>
+                      <!-- Series vs Custom Tag -->
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isCustomDay ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-600 border border-slate-200'}">
+                        ${isCustomDay ? '✏️ מותאם אישית' : `🔄 ${seriesName}`}
                       </span>
                     </div>
                     <div class="flex items-center gap-2 mt-1">
@@ -2231,10 +2519,20 @@
                 </div>
 
                 <div class="flex items-center gap-2 self-end sm:self-center">
+                  <!-- Quick Edit & Delete Buttons -->
+                  <button onclick="event.stopPropagation(); openEditSlotModal('${dateStr}', '${sl.id}')" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-xs transition flex items-center gap-1 shadow-xs" title="ערוך שעות ופרטי סדר זה">
+                    <span>✏️</span>
+                    <span class="hidden sm:inline">ערוך שעות</span>
+                  </button>
+                  <button onclick="event.stopPropagation(); openDeleteSlotConfirmModal('${dateStr}', '${sl.id}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition flex items-center gap-1 shadow-xs" title="מחק סדר זה מהלוח">
+                    <span>🗑️</span>
+                    <span class="hidden sm:inline">מחק</span>
+                  </button>
+
                   ${isFullSeder ? `
                     <span class="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1 animate-pulse">
                       <span>🎉</span>
-                      <span>סדר מלא! (+${fullBonusPts} נק׳ לנוכחים)</span>
+                      <span>סדר מלא! (+${fullBonusPts} נק׳)</span>
                     </span>
                   ` : `
                     <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200">
@@ -2242,7 +2540,7 @@
                     </span>
                   `}
                   <span class="text-slate-400 font-bold text-xs p-1">
-                    ${isExpanded ? '▲ סגור פירוט' : '▼ הצג מי דיווח'}
+                    ${isExpanded ? '▲ סגור' : '▼ פירוט'}
                   </span>
                 </div>
               </div>
@@ -2251,7 +2549,7 @@
               ${isExpanded ? `
                 <div class="p-4 pt-2 border-t border-slate-100 bg-white space-y-4">
                   
-                  <!-- Full Seder Action Banner (Strict Rule: Bonus ONLY for Attendees!) -->
+                  <!-- Full Seder Action Banner -->
                   <div class="p-3.5 rounded-2xl ${isFullSeder ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-300' : 'bg-slate-50 border border-slate-200'} flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <div class="flex items-center gap-1.5">
@@ -2274,7 +2572,10 @@
                           <span>${isAlreadyAwarded ? 'הבונוס חולק ✓ (חלק שוב)' : 'חלק בונוס ' + fullBonusPts + ' נק׳ לנוכחים בלבד'}</span>
                         </button>
                       ` : ''}
-                      <button onclick="deleteDailySlotForDate('${dateStr}', ${idx})" class="p-2 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-bold transition" title="מחק סדר זה מהיום">
+                      <button onclick="openEditSlotModal('${dateStr}', '${sl.id}')" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 text-xs font-bold transition flex items-center gap-1">
+                        ✏️ ערוך שעות
+                      </button>
+                      <button onclick="openDeleteSlotConfirmModal('${dateStr}', '${sl.id}')" class="p-2 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-bold transition" title="מחק סדר זה מהיום או מהסדרה">
                         🗑️ מחק סדר
                       </button>
                     </div>
@@ -2889,10 +3190,13 @@
       const lockTime = document.getElementById('newSlotLockTime')?.value || '10:15';
       const points = parseInt(document.getElementById('newSlotPoints')?.value || '1', 10);
 
-      if (!title) return;
-      const selectedDate = (picker && picker.value) ? picker.value : state.calendarSelectedDate;
+      if (!title) {
+        alert('נא להזין כותרת לסדר');
+        return;
+      }
+      const selectedDate = (picker && picker.value) ? picker.value : (state.calendarSelectedDate || new Date().toISOString().slice(0, 10));
       const makeSlot = () => ({
-        id: 'slot_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+        id: 'slot_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
         title, openTime, lockTime, points, isLocked: false
       });
 
@@ -2901,19 +3205,51 @@
           state.slotsByDate[selectedDate] = JSON.parse(JSON.stringify(getSlotsForDate(selectedDate)));
         }
         state.slotsByDate[selectedDate].push(makeSlot());
-        showToast('סדר נוסף ליום זה', '✨');
+        state.slotsByDate[selectedDate].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+        showToast(`סדר "${title}" נוסף לתאריך ${selectedDate} בלבד`, '✨');
       } else if (recurrence === 'weekdays') {
         if (!state.slotsByDate['weekday_template']) {
           state.slotsByDate['weekday_template'] = JSON.parse(JSON.stringify(DEFAULT_SLOTS.weekday_template));
         }
         state.slotsByDate['weekday_template'].push(makeSlot());
-        showToast('סדר נוסף לכל ימי החול (א׳-ה׳)', '🔄');
+        state.slotsByDate['weekday_template'].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+        showToast(`סדר "${title}" נוסף לכל ימי החול (א׳-ה׳) בסדרה`, '🔄');
       } else if (recurrence === 'shabbat') {
         if (!state.slotsByDate['shabbat_template']) {
           state.slotsByDate['shabbat_template'] = JSON.parse(JSON.stringify(DEFAULT_SLOTS.shabbat_template));
         }
         state.slotsByDate['shabbat_template'].push(makeSlot());
-        showToast('סדר נוסף לכל השבתות', '🕯️');
+        state.slotsByDate['shabbat_template'].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+        showToast(`סדר "${title}" נוסף לכל השבתות בסדרה`, '🕯️');
+      } else if (recurrence === 'weekly_same_day') {
+        // Add to this specific day of week across the entire campaign
+        const targetDow = new Date(selectedDate + 'T12:00:00').getDay();
+        const start = new Date((state.config?.startDate || '2026-10-20') + 'T12:00:00');
+        const end = new Date((state.config?.endDate || '2026-11-30') + 'T12:00:00');
+        let curr = new Date(start);
+        let count = 0;
+        while (curr <= end) {
+          if (curr.getDay() === targetDow) {
+            const dStr = curr.toISOString().slice(0, 10);
+            if (!state.slotsByDate[dStr]) {
+              state.slotsByDate[dStr] = JSON.parse(JSON.stringify(getSlotsForDate(dStr)));
+            }
+            state.slotsByDate[dStr].push(makeSlot());
+            state.slotsByDate[dStr].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+            count++;
+          }
+          curr.setDate(curr.getDate() + 1);
+        }
+        showToast(`סדר "${title}" נוסף ל-${count} ימים בסדרה השבועית!`, '📅');
+      } else if (recurrence === 'all_days') {
+        ['weekday_template', 'shabbat_template', 'friday_template'].forEach(key => {
+          if (!state.slotsByDate[key]) {
+            state.slotsByDate[key] = JSON.parse(JSON.stringify(DEFAULT_SLOTS[key] || []));
+          }
+          state.slotsByDate[key].push(makeSlot());
+          state.slotsByDate[key].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+        });
+        showToast(`סדר "${title}" נוסף לכל ימי המבצע!`, '🌟');
       }
 
       saveState();
@@ -2924,33 +3260,243 @@
       updateCampaignTotalPointsLive();
     }
 
-    async function deleteDailySlot(idx) {
-      const picker = document.getElementById('adminScheduleDayPicker');
-      const dStr = (picker && picker.value) ? picker.value : state.calendarSelectedDate;
-      if (!state.slotsByDate[dStr]) {
-        state.slotsByDate[dStr] = JSON.parse(JSON.stringify(getSlotsForDate(dStr)));
+    // ====================================================
+    // EDIT SLOTS (CALENDAR EVENT STYLE: SINGLE VS SERIES)
+    // ====================================================
+    function openEditSlotModal(dateStr, slotId) {
+      const slots = getSlotsForDate(dateStr);
+      const slot = slots.find(s => s.id === slotId);
+      if (!slot) return;
+
+      const d = new Date(dateStr + 'T12:00:00');
+      const day = d.getDay();
+      let seriesName = 'ימי חול (א׳-ה׳)';
+      if (day === 5) seriesName = 'ימי שישי';
+      if (day === 6) seriesName = 'שבתות קודש';
+
+      const idInp = document.getElementById('editSlotId');
+      const dInp = document.getElementById('editSlotDateStr');
+      const tInp = document.getElementById('editSlotTitle');
+      const oInp = document.getElementById('editSlotOpenTime');
+      const lInp = document.getElementById('editSlotLockTime');
+      const pInp = document.getElementById('editSlotPoints');
+
+      if (idInp) idInp.value = slotId;
+      if (dInp) dInp.value = dateStr;
+      if (tInp) tInp.value = slot.title;
+      if (oInp) oInp.value = slot.openTime;
+      if (lInp) lInp.value = slot.lockTime;
+      if (pInp) pInp.value = slot.points;
+
+      const hDate = getHebrewDateString(dateStr);
+      const dLabel = document.getElementById('editScopeDateLabel');
+      const sLabel = document.getElementById('editScopeSeriesLabel');
+      const subEl = document.getElementById('editSlotSubtitle');
+
+      if (dLabel) dLabel.textContent = hDate.dayMonth ? `${hDate.dayMonth} (${dateStr})` : dateStr;
+      if (sLabel) sLabel.textContent = seriesName;
+      if (subEl) subEl.textContent = `עריכת "${slot.title}" (${slot.openTime} - ${slot.lockTime})`;
+
+      const singleRadio = document.getElementById('editScopeSingle');
+      if (singleRadio) singleRadio.checked = true;
+
+      updateEditSlotDurationPreview();
+      document.getElementById('editSlotModal')?.classList.remove('hidden');
+    }
+
+    function updateEditSlotDurationPreview() {
+      const o = document.getElementById('editSlotOpenTime')?.value;
+      const l = document.getElementById('editSlotLockTime')?.value;
+      const durEl = document.getElementById('editSlotDurationPreview');
+      if (durEl) durEl.textContent = calculateSlotDurationText(o, l);
+    }
+
+    function closeEditSlotModal() {
+      document.getElementById('editSlotModal')?.classList.add('hidden');
+    }
+
+    function saveEditedSlot() {
+      const slotId = document.getElementById('editSlotId')?.value;
+      const dateStr = document.getElementById('editSlotDateStr')?.value;
+      const title = (document.getElementById('editSlotTitle')?.value || '').trim();
+      const openTime = document.getElementById('editSlotOpenTime')?.value || '09:00';
+      const lockTime = document.getElementById('editSlotLockTime')?.value || '10:15';
+      const points = parseInt(document.getElementById('editSlotPoints')?.value || '1', 10);
+      const scope = document.querySelector('input[name="editSlotScope"]:checked')?.value || 'single';
+
+      if (!title) {
+        alert('נא להזין כותרת לסדר');
+        return;
       }
-      const removedSlot = state.slotsByDate[dStr][idx];
-      state.slotsByDate[dStr].splice(idx, 1);
+
+      const d = new Date(dateStr + 'T12:00:00');
+      const day = d.getDay();
+      const templateKey = day === 5 ? 'friday_template' : (day === 6 ? 'shabbat_template' : 'weekday_template');
+
+      if (scope === 'single') {
+        // Modify this specific date instance only (detach from template)
+        if (!state.slotsByDate[dateStr]) {
+          state.slotsByDate[dateStr] = JSON.parse(JSON.stringify(getSlotsForDate(dateStr)));
+        }
+        const target = state.slotsByDate[dateStr].find(s => s.id === slotId);
+        if (target) {
+          target.title = title;
+          target.openTime = openTime;
+          target.lockTime = lockTime;
+          target.points = points;
+        }
+        state.slotsByDate[dateStr].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+        showToast(`שעות הסדר עודכנו עבור יום ${dateStr} בלבד`, '✏️');
+      } else {
+        // Modify entire series (template + propagate)
+        if (!state.slotsByDate[templateKey]) {
+          state.slotsByDate[templateKey] = JSON.parse(JSON.stringify(DEFAULT_SLOTS[templateKey] || []));
+        }
+        const targetInTpl = state.slotsByDate[templateKey].find(s => s.id === slotId);
+        if (targetInTpl) {
+          targetInTpl.title = title;
+          targetInTpl.openTime = openTime;
+          targetInTpl.lockTime = lockTime;
+          targetInTpl.points = points;
+        }
+        state.slotsByDate[templateKey].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+
+        // Also update any dates that have this slot ID in their custom arrays
+        Object.keys(state.slotsByDate).forEach(dKey => {
+          if (Array.isArray(state.slotsByDate[dKey])) {
+            const sMatch = state.slotsByDate[dKey].find(s => s.id === slotId);
+            if (sMatch) {
+              sMatch.title = title;
+              sMatch.openTime = openTime;
+              sMatch.lockTime = lockTime;
+              sMatch.points = points;
+              state.slotsByDate[dKey].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+            }
+          }
+        });
+        showToast(`סדר "${title}" עודכן בכל ימי הסדרה במבצע!`, '🔄');
+      }
+
       saveState();
+      closeEditSlotModal();
       renderCampaignCalendar();
-      renderSelectedCalendarDayDetails(dStr);
+      renderSelectedCalendarDayDetails(dateStr);
       renderAdminDayScheduleEditor();
       updateCampaignTotalPointsLive();
-      showToast('הסדר נמחק מיום זה', '🗑️');
+    }
 
-      if (supabaseClient && removedSlot) {
-        try {
-          if (removedSlot.id && /^[0-9a-f-]{36}$/i.test(removedSlot.id)) {
-            await supabaseClient.from('schedule_slots').delete().eq('id', removedSlot.id);
+    // ====================================================
+    // DELETE SLOTS (SINGLE VS ENTIRE SERIES)
+    // ====================================================
+    function openDeleteSlotConfirmModal(dateStr, slotId) {
+      const slots = getSlotsForDate(dateStr);
+      const slot = slots.find(s => s.id === slotId);
+      if (!slot) return;
+
+      const d = new Date(dateStr + 'T12:00:00');
+      const day = d.getDay();
+      let seriesName = 'ימי חול (א׳-ה׳)';
+      if (day === 5) seriesName = 'ימי שישי';
+      if (day === 6) seriesName = 'שבתות קודש';
+
+      const idInp = document.getElementById('delSlotId');
+      const dInp = document.getElementById('delSlotDateStr');
+      if (idInp) idInp.value = slotId;
+      if (dInp) dInp.value = dateStr;
+
+      const hDate = getHebrewDateString(dateStr);
+      const dLabel = document.getElementById('delScopeDateLabel');
+      const sLabel = document.getElementById('delScopeSeriesLabel');
+      const subEl = document.getElementById('delSlotSubtitle');
+
+      if (dLabel) dLabel.textContent = hDate.dayMonth ? `${hDate.dayMonth} (${dateStr})` : dateStr;
+      if (sLabel) sLabel.textContent = seriesName;
+      if (subEl) subEl.textContent = `הסרת "${slot.title}" (${slot.openTime} - ${slot.lockTime})`;
+
+      const singleRadio = document.getElementById('delScopeSingle');
+      if (singleRadio) singleRadio.checked = true;
+
+      document.getElementById('deleteSlotConfirmModal')?.classList.remove('hidden');
+    }
+
+    function closeDeleteSlotConfirmModal() {
+      document.getElementById('deleteSlotConfirmModal')?.classList.add('hidden');
+    }
+
+    async function confirmExecuteDeleteSlot() {
+      const slotId = document.getElementById('delSlotId')?.value;
+      const dateStr = document.getElementById('delSlotDateStr')?.value;
+      const scope = document.querySelector('input[name="delSlotScope"]:checked')?.value || 'single';
+
+      const d = new Date(dateStr + 'T12:00:00');
+      const day = d.getDay();
+      const templateKey = day === 5 ? 'friday_template' : (day === 6 ? 'shabbat_template' : 'weekday_template');
+
+      if (scope === 'single') {
+        if (!state.slotsByDate[dateStr]) {
+          state.slotsByDate[dateStr] = JSON.parse(JSON.stringify(getSlotsForDate(dateStr)));
+        }
+        state.slotsByDate[dateStr] = state.slotsByDate[dateStr].filter(s => s.id !== slotId);
+        showToast('הסדר הוסר מיום זה בלבד', '🗑️');
+      } else {
+        // Remove from series template
+        if (!state.slotsByDate[templateKey]) {
+          state.slotsByDate[templateKey] = JSON.parse(JSON.stringify(DEFAULT_SLOTS[templateKey] || []));
+        }
+        state.slotsByDate[templateKey] = state.slotsByDate[templateKey].filter(s => s.id !== slotId);
+
+        // Also remove from any overridden dates that have this slot
+        Object.keys(state.slotsByDate).forEach(dKey => {
+          if (Array.isArray(state.slotsByDate[dKey])) {
+            state.slotsByDate[dKey] = state.slotsByDate[dKey].filter(s => s.id !== slotId);
           }
-          if (removedSlot.title) {
-            await supabaseClient.from('schedule_slots').delete().match({ slot_date: dStr, title: removedSlot.title });
+        });
+        showToast('הסדר הוסר מכל הסדרה במבצע', '🗑️');
+      }
+
+      saveState();
+      closeDeleteSlotConfirmModal();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(dateStr);
+      renderAdminDayScheduleEditor();
+      updateCampaignTotalPointsLive();
+
+      if (supabaseClient && slotId) {
+        try {
+          if (/^[0-9a-f-]{36}$/i.test(slotId)) {
+            await supabaseClient.from('schedule_slots').delete().eq('id', slotId);
           }
         } catch(err) {
           console.warn('Supabase slot delete error:', err);
         }
       }
+    }
+
+    function revertDayToSeriesTemplate(dateStr) {
+      if (!confirm(`האם לשחזר את יום ${dateStr} לתבנית הסדרה המקורית? כל השינויים הייחודיים שנקבעו ליום זה יבוטלו.`)) return;
+      if (state.slotsByDate && state.slotsByDate[dateStr]) {
+        delete state.slotsByDate[dateStr];
+      }
+      saveState();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(dateStr);
+      renderAdminDayScheduleEditor();
+      updateCampaignTotalPointsLive();
+      showToast('היום שוחזר לתבנית המקורית בהצלחה', '🔄');
+    }
+
+    function deleteDailySlotForDate(dateStr, slotIdx) {
+      const slots = getSlotsForDate(dateStr);
+      const slot = slots[slotIdx];
+      if (slot) {
+        openDeleteSlotConfirmModal(dateStr, slot.id);
+      }
+    }
+
+    function deleteDailySlot(idx) {
+      const picker = document.getElementById('adminScheduleDayPicker');
+      const dStr = (picker && picker.value) ? picker.value : state.calendarSelectedDate;
+      deleteDailySlotForDate(dStr, idx);
     }
 
     function resetDayToTemplate() {
@@ -3139,30 +3685,317 @@
       saveBonusEngineConfig();
     }
 
-    // Duties Roster - Strictly weekdays only (Sunday to Thursday; No Friday or Shabbat!)
-    function renderDutiesTable() {
-      const tbody = document.getElementById('adminDutiesTableBody');
-      if (!tbody) return;
+    // ====================================================
+    // 5. DUTIES ROSTER & SMART RANDOM ASSIGNMENT
+    // ====================================================
+    let dutiesFilterMode = 'all'; // 'all' | '14days' | 'currentWeek'
 
+    function setDutiesFilterMode(mode) {
+      dutiesFilterMode = mode;
+      renderDutiesTable();
+    }
+
+    // Helper: Get all weekday dates within campaign (Sun-Thu only; no Friday or Shabbat)
+    function getCampaignWeekdayDates() {
       const dates = [];
-      const today = new Date();
-      let added = 0;
-      let dayOffset = 0;
-      // Filter out Friday (5) and Saturday (6) - absolutely no duties on Friday and Shabbat!
-      while (added < 14 && dayOffset < 30) {
-        const d = new Date(today);
-        d.setDate(today.getDate() + dayOffset);
-        dayOffset++;
-        if (d.getDay() === 5 || d.getDay() === 6) continue;
-        dates.push(d.toISOString().slice(0, 10));
-        added++;
+      const start = new Date((state.config?.startDate || '2026-10-20') + 'T12:00:00');
+      const end = new Date((state.config?.endDate || '2026-11-30') + 'T12:00:00');
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+        // Fallback: 28 days from today
+        const now = new Date();
+        for (let i = 0; i < 28; i++) {
+          const d = new Date(now);
+          d.setDate(now.getDate() + i);
+          if (d.getDay() !== 5 && d.getDay() !== 6) {
+            dates.push(d.toISOString().slice(0, 10));
+          }
+        }
+        return dates;
       }
 
-      tbody.innerHTML = dates.map(dStr => {
+      let curr = new Date(start);
+      while (curr <= end) {
+        const day = curr.getDay();
+        if (day !== 5 && day !== 6) {
+          dates.push(curr.toISOString().slice(0, 10));
+        }
+        curr.setDate(curr.getDate() + 1);
+      }
+      return dates;
+    }
+
+    function openRandomDutiesModal() {
+      const modal = document.getElementById('randomDutiesModal');
+      if (!modal) return;
+
+      const weekdayDates = getCampaignWeekdayDates();
+      const studentsCount = (state.students || []).length;
+      const totalDuties = weekdayDates.length * 2;
+      const avgPerStudent = studentsCount > 0 ? (totalDuties / studentsCount).toFixed(1) : '0';
+
+      const mDays = document.getElementById('rdmMetricDays');
+      const mDuties = document.getElementById('rdmMetricDuties');
+      const mStudents = document.getElementById('rdmMetricStudents');
+      const mAvg = document.getElementById('rdmMetricAvg');
+
+      if (mDays) mDays.textContent = weekdayDates.length;
+      if (mDuties) mDuties.textContent = totalDuties;
+      if (mStudents) mStudents.textContent = studentsCount;
+      if (mAvg) mAvg.textContent = avgPerStudent;
+
+      const rFull = document.getElementById('rdmModeFull');
+      if (rFull) rFull.checked = true;
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeRandomDutiesModal() {
+      document.getElementById('randomDutiesModal')?.classList.add('hidden');
+    }
+
+    // Smart Random Duties Algorithm: Fair Round-Robin, Zero Morning/Evening Conflicts
+    function executeRandomDutiesAssignment() {
+      const mode = document.querySelector('input[name="rdmMode"]:checked')?.value || 'full';
+      const fillEmptyOnly = mode === 'empty';
+
+      const students = state.students || [];
+      if (students.length < 2) {
+        alert('נדרשים לפחות 2 בחורים רשומים במערכת על מנת לבצע שיבוץ תורנויות ללא כפילות בוקר וערב.');
+        return;
+      }
+
+      const weekdayDates = getCampaignWeekdayDates();
+      if (weekdayDates.length === 0) {
+        alert('לא נמצאו ימי חול בתקופת המבצע.');
+        return;
+      }
+
+      // Count existing assignments if preserving manual choices
+      const dutyCounts = {};
+      students.forEach(s => { dutyCounts[s.id] = 0; });
+
+      if (fillEmptyOnly && state.dutiesRoster) {
+        Object.keys(state.dutiesRoster).forEach(dStr => {
+          const day = state.dutiesRoster[dStr];
+          if (day.wakerStudentId && dutyCounts[day.wakerStudentId] !== undefined) dutyCounts[day.wakerStudentId]++;
+          if (day.kitchenStudentId && dutyCounts[day.kitchenStudentId] !== undefined) dutyCounts[day.kitchenStudentId]++;
+        });
+      } else {
+        state.dutiesRoster = {};
+      }
+
+      // Fisher-Yates Shuffle
+      function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+
+      let prevEveningKitchenStudentId = null;
+      let assignedCount = 0;
+
+      for (let i = 0; i < weekdayDates.length; i++) {
+        const dStr = weekdayDates[i];
+        if (!state.dutiesRoster[dStr]) {
+          state.dutiesRoster[dStr] = {
+            wakerStudentId: '', wakerStudentName: '', wakerDone: false, wakerReminderTime: '22:30',
+            kitchenStudentId: '', kitchenStudentName: '', kitchenDone: false, kitchenReminderTime: '19:30'
+          };
+        }
+        const dayObj = state.dutiesRoster[dStr];
+
+        const needWaker = !fillEmptyOnly || !dayObj.wakerStudentId;
+        const needKitchen = !fillEmptyOnly || !dayObj.kitchenStudentId;
+
+        if (!needWaker && !needKitchen) {
+          prevEveningKitchenStudentId = dayObj.kitchenStudentId;
+          continue;
+        }
+
+        // Return candidates sorted by dutyCount ascending (least assigned first = non-repetitive fairness)
+        function getCandidates(excludeIds = []) {
+          const shuffled = shuffle(students);
+          shuffled.sort((a, b) => (dutyCounts[a.id] || 0) - (dutyCounts[b.id] || 0));
+          return shuffled.filter(s => !excludeIds.includes(s.id));
+        }
+
+        // 1. Assign Waker (Morning)
+        if (needWaker) {
+          let cands = getCandidates(prevEveningKitchenStudentId ? [prevEveningKitchenStudentId] : []);
+          if (cands.length === 0) cands = getCandidates([]);
+          if (dayObj.kitchenStudentId) cands = cands.filter(s => s.id !== dayObj.kitchenStudentId);
+
+          const assignedWaker = cands[0] || students[0];
+          dayObj.wakerStudentId = assignedWaker.id;
+          dayObj.wakerStudentName = assignedWaker.name;
+          dutyCounts[assignedWaker.id] = (dutyCounts[assignedWaker.id] || 0) + 1;
+          assignedCount++;
+        }
+
+        // 2. Assign Kitchen (Evening) - Strictly not same as waker!
+        if (needKitchen) {
+          const excludeIds = [dayObj.wakerStudentId];
+          const cands = getCandidates(excludeIds);
+          const assignedKitchen = cands[0] || students.find(s => s.id !== dayObj.wakerStudentId) || students[0];
+
+          dayObj.kitchenStudentId = assignedKitchen.id;
+          dayObj.kitchenStudentName = assignedKitchen.name;
+          dutyCounts[assignedKitchen.id] = (dutyCounts[assignedKitchen.id] || 0) + 1;
+          assignedCount++;
+        }
+
+        prevEveningKitchenStudentId = dayObj.kitchenStudentId;
+      }
+
+      saveState();
+      closeRandomDutiesModal();
+      renderDutiesTable();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(state.calendarSelectedDate);
+      showToast(`🎉 שיבוץ אקראי הושלם בהצלחה! ${assignedCount} תורנויות שובצו באופן מאוזן ללא כפילויות`, '🎲');
+    }
+
+    // Quick Re-shuffle button ("שיבוץ חוזר במקרה הצורך")
+    function quickReshuffleDuties() {
+      if (!confirm('האם לבצע שיבוץ חוזר אקראי לכל ימי המבצע? השיבוץ יחולק מחדש באופן שוויוני ואקראי ללא כפילות בוקר וערב.')) return;
+      const students = state.students || [];
+      if (students.length < 2) {
+        alert('נדרשים לפחות 2 בחורים לשיבוץ תורנויות.');
+        return;
+      }
+      const rFull = document.getElementById('rdmModeFull');
+      if (rFull) rFull.checked = true;
+      executeRandomDutiesAssignment();
+    }
+
+    function clearAllDutiesRoster() {
+      if (!confirm('האם למחוק את כל שיבוצי התורנויות במבצע?')) return;
+      state.dutiesRoster = {};
+      saveState();
+      renderDutiesTable();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(state.calendarSelectedDate);
+      showToast('כל שיבוצי התורנויות נמחקו בהצלחה', '🧹');
+    }
+
+    // Render Duties Table with live stats and filter
+    function renderDutiesTable() {
+      const tbody = document.getElementById('adminDutiesTableBody');
+      const statsContainer = document.getElementById('dutiesStatsContainer');
+      if (!tbody) return;
+
+      const allDates = getCampaignWeekdayDates();
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const today = new Date();
+
+      // Filter dates according to active filter
+      let filteredDates = [...allDates];
+      if (dutiesFilterMode === '14days') {
+        filteredDates = allDates.filter(dStr => {
+          const diffDays = Math.round((new Date(dStr + 'T12:00:00') - today) / (1000 * 60 * 60 * 24));
+          return diffDays >= 0 && diffDays <= 14;
+        });
+      } else if (dutiesFilterMode === 'currentWeek') {
+        const d = new Date(today);
+        const dayOfWeek = d.getDay(); // 0 = Sun
+        const sunday = new Date(d);
+        sunday.setDate(d.getDate() - dayOfWeek);
+        const thursday = new Date(sunday);
+        thursday.setDate(sunday.getDate() + 4);
+        const sunStr = sunday.toISOString().slice(0, 10);
+        const thuStr = thursday.toISOString().slice(0, 10);
+        filteredDates = allDates.filter(dStr => dStr >= sunStr && dStr <= thuStr);
+      }
+
+      // Compute statistics across all campaign dates
+      let totalAssigned = 0;
+      let totalSlots = allDates.length * 2;
+      let conflictsCount = 0;
+      const studentDutyCounts = {};
+      (state.students || []).forEach(s => { studentDutyCounts[s.id] = 0; });
+
+      allDates.forEach(dStr => {
+        const duty = state.dutiesRoster[dStr];
+        if (duty) {
+          if (duty.wakerStudentId) {
+            totalAssigned++;
+            if (studentDutyCounts[duty.wakerStudentId] !== undefined) studentDutyCounts[duty.wakerStudentId]++;
+          }
+          if (duty.kitchenStudentId) {
+            totalAssigned++;
+            if (studentDutyCounts[duty.kitchenStudentId] !== undefined) studentDutyCounts[duty.kitchenStudentId]++;
+          }
+          if (duty.wakerStudentId && duty.kitchenStudentId && duty.wakerStudentId === duty.kitchenStudentId) {
+            conflictsCount++;
+          }
+        }
+      });
+
+      const studentsCount = (state.students || []).length;
+      const avgPerStudent = studentsCount > 0 ? (totalAssigned / studentsCount).toFixed(1) : '0';
+
+      if (statsContainer) {
+        statsContainer.innerHTML = `
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+              <span class="text-[10px] text-slate-400 font-bold block">ימי תורנות (חול) במבצע</span>
+              <span class="text-base font-black text-slate-900 font-mono">${allDates.length} ימים</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+              <span class="text-[10px] text-slate-400 font-bold block">תורנויות משובצות</span>
+              <span class="text-base font-black text-indigo-950 font-mono">${totalAssigned} / ${totalSlots}</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs">
+              <span class="text-[10px] text-slate-400 font-bold block">ממוצע תורנויות לבחור</span>
+              <span class="text-base font-black text-amber-900 font-mono">${avgPerStudent} תורנויות</span>
+            </div>
+            <div class="p-3.5 rounded-2xl ${conflictsCount === 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'} border shadow-xs">
+              <span class="text-[10px] ${conflictsCount === 0 ? 'text-emerald-700' : 'text-rose-700'} font-bold block">בדיקת כפילות בוקר וערב</span>
+              <span class="text-xs font-black ${conflictsCount === 0 ? 'text-emerald-950' : 'text-rose-950'} flex items-center gap-1 mt-1">
+                <span>${conflictsCount === 0 ? '✓' : '⚠️'}</span>
+                <span>${conflictsCount === 0 ? 'תקין! 0 כפילויות' : `${conflictsCount} כפילויות לתיקון!`}</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- View Filter Tabs -->
+          <div class="flex items-center justify-between gap-2 p-1.5 rounded-2xl bg-slate-100 border border-slate-200">
+            <div class="flex items-center gap-1 text-xs">
+              <button onclick="setDutiesFilterMode('all')" class="px-3 py-1.5 rounded-xl font-bold transition ${dutiesFilterMode === 'all' ? 'bg-white text-slate-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'}">
+                כל ימי המבצע (${allDates.length})
+              </button>
+              <button onclick="setDutiesFilterMode('14days')" class="px-3 py-1.5 rounded-xl font-bold transition ${dutiesFilterMode === '14days' ? 'bg-white text-slate-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'}">
+                14 ימים קרובים
+              </button>
+              <button onclick="setDutiesFilterMode('currentWeek')" class="px-3 py-1.5 rounded-xl font-bold transition ${dutiesFilterMode === 'currentWeek' ? 'bg-white text-slate-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'}">
+                השבוע הנוכחי
+              </button>
+            </div>
+            <span class="text-[11px] text-slate-500 font-bold px-2 hidden sm:inline">מוצגים ${filteredDates.length} ימים</span>
+          </div>
+        `;
+      }
+
+      if (filteredDates.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="text-center py-8 text-slate-400 font-bold">
+              לא נמצאו ימי תורנות לתצוגה שנבחרה
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filteredDates.map(dStr => {
         const d = new Date(dStr + 'T12:00:00');
         const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
         const dayName = 'יום ' + dayNames[d.getDay()];
-        const isToday = dStr === today.toISOString().slice(0, 10);
+        const isToday = dStr === todayStr;
 
         const duty = state.dutiesRoster[dStr] || {
           wakerStudentId: '',
@@ -3175,20 +4008,24 @@
           kitchenReminderTime: '19:30'
         };
 
+        const isConflict = Boolean(duty.wakerStudentId && duty.kitchenStudentId && duty.wakerStudentId === duty.kitchenStudentId);
         const hDate = getHebrewDateString(dStr);
 
         return `
-          <tr class="${isToday ? 'bg-amber-50/70 font-bold' : 'hover:bg-slate-50/60'} border-b border-slate-100 transition">
+          <tr class="${isToday ? 'bg-amber-50/70 font-bold' : isConflict ? 'bg-rose-50/50' : 'hover:bg-slate-50/60'} border-b border-slate-100 transition">
             <td class="py-3 px-3">
-              <div class="font-bold text-slate-900">${dayName} • <span class="text-amber-800 font-extrabold">${hDate.dayMonth}</span></div>
+              <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                <span>${dayName} • <span class="text-amber-800 font-extrabold">${hDate.dayMonth}</span></span>
+                ${isConflict ? '<span class="text-[10px] font-black px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-300">⚠️ כפילות!</span>' : ''}
+              </div>
               <div class="text-[10px] text-slate-400 font-mono">${dStr} ${isToday ? '⭐ היום' : ''}</div>
             </td>
             
             <!-- Waker duty -->
             <td class="py-3 px-3 border-r border-slate-100">
-              <select onchange="updateDutyAssignee('${dStr}', 'waker', this.value)" class="w-full text-xs font-bold p-1.5 rounded-lg border border-slate-200 bg-white">
+              <select onchange="updateDutyAssignee('${dStr}', 'waker', this.value)" class="w-full text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-white'}">
                 <option value="">-- בחר בחור מעורר --</option>
-                ${state.students.map(s => `<option value="${s.id}" ${duty.wakerStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+                ${(state.students || []).map(s => `<option value="${s.id}" ${duty.wakerStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
               </select>
             </td>
             <td class="py-3 px-2 text-center border-r border-slate-100">
@@ -3207,9 +4044,9 @@
 
             <!-- Kitchen duty -->
             <td class="py-3 px-3 border-r border-slate-100">
-              <select onchange="updateDutyAssignee('${dStr}', 'kitchen', this.value)" class="w-full text-xs font-bold p-1.5 rounded-lg border border-slate-200 bg-white">
+              <select onchange="updateDutyAssignee('${dStr}', 'kitchen', this.value)" class="w-full text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-white'}">
                 <option value="">-- בחר תורן מטבח --</option>
-                ${state.students.map(s => `<option value="${s.id}" ${duty.kitchenStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+                ${(state.students || []).map(s => `<option value="${s.id}" ${duty.kitchenStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
               </select>
             </td>
             <td class="py-3 px-2 text-center border-r border-slate-100">
@@ -3250,8 +4087,16 @@
         state.dutiesRoster[dateStr].kitchenStudentId = studentId;
         state.dutiesRoster[dateStr].kitchenStudentName = st ? st.name : '';
       }
+
+      // Check conflict notice
+      if (state.dutiesRoster[dateStr].wakerStudentId && state.dutiesRoster[dateStr].kitchenStudentId && state.dutiesRoster[dateStr].wakerStudentId === state.dutiesRoster[dateStr].kitchenStudentId) {
+        showToast('שים לב: נקבעה כפילות של אותו תורן בוקר וערב!', '⚠️');
+      } else {
+        showToast('השיבוץ עודכן בהצלחה', '📋');
+      }
+
       saveState();
-      showToast('השיבוץ עודכן בהצלחה', '📋');
+      renderDutiesTable();
     }
 
     function toggleDutyDone(dateStr, role) {
@@ -3304,7 +4149,8 @@
 
     function saveDutiesSchedule() {
       saveState();
-      showToast('לוח השיבוצים השבועי נשמר בהצלחה', '💾');
+      renderDutiesTable();
+      showToast('לוח השיבוצים השבועי נשמר ומסונכרן בהצלחה!', '💾');
     }
 
     // Absence Requests Management for Rosh HaYeshiva
