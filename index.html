@@ -1112,12 +1112,12 @@
 
           // Students only
           state.students = dbUsers
-            .filter(u => u.role !== 'admin' && u.id !== '00000000-0000-0000-0000-000000000001')
+            .filter(u => u.role !== 'admin' && u.role !== 'deleted' && u.is_active !== false && u.id !== '00000000-0000-0000-0000-000000000001')
             .map(u => ({
               id: u.id,
               name: u.full_name,
               phone: u.phone || '',
-              password: u.password || (u.phone ? u.phone.replace(/\D/g, '').slice(-4) : '1234') || '1234',
+              password: u.password || '1234',
               score: Number(u.score !== undefined && u.score !== null ? u.score : (u.manual_bonus_pts || 0)),
               presentToday: Boolean(u.present_today),
               persistenceCount: Number(u.persistence_count) || 0

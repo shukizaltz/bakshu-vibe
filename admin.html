@@ -552,7 +552,7 @@
                 <span class="text-xl">⏰</span>
                 <h2 class="text-lg font-black text-slate-900">מערך שיבוץ תורנויות יומי</h2>
               </div>
-              <p class="text-xs text-slate-500">שיבוץ תורן מעורר (תזכורת 22:30 לילה קודם) ותורן מטבח (תזכורת 19:30), שליחת SMS ישיר ואישור ביצוע</p>
+              <p class="text-xs text-slate-500">שיבוץ תורן מעורר ותורן מטבח בימי חול בלבד (ראשון עד חמישי — אין תורנויות בשישי ושבת), תזכורות SMS ואישור ביצוע</p>
             </div>
             <button onclick="saveDutiesSchedule()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-sm flex items-center gap-1.5">
               <span>💾</span>
@@ -1253,14 +1253,14 @@
             localStorage.setItem('bakshu_admin_password_v1', state.adminPassword);
           }
 
-          // Filter out admin from student list
+          // Filter out admin and deleted/inactive from student list
           state.students = dbUsers
-            .filter(u => u.role !== 'admin' && u.id !== ADMIN_USER_UUID)
+            .filter(u => u.role !== 'admin' && u.role !== 'deleted' && u.is_active !== false && u.id !== ADMIN_USER_UUID)
             .map(u => ({
               id: u.id,
               name: u.full_name,
               phone: u.phone || '',
-              password: u.password || (u.phone ? u.phone.replace(/\D/g, '').slice(-4) : '1234') || '1234',
+              password: u.password || '1234',
               score: Number(u.score !== undefined && u.score !== null ? u.score : (u.manual_bonus_pts || 0)),
               presentToday: Boolean(u.present_today)
             }));
@@ -1318,11 +1318,7 @@
             if (snap.qrSecret) state.qrSecret = snap.qrSecret;
             if (snap.absenceRequests) state.absenceRequests = snap.absenceRequests;
             if (snap.attendanceRecords && Array.isArray(snap.attendanceRecords)) {
-              snap.attendanceRecords.forEach(r => {
-                if (!state.attendanceRecords.some(x => x.id === r.id)) {
-                  state.attendanceRecords.push(r);
-                }
-              });
+              state.attendanceRecords = snap.attendanceRecords;
               localStorage.setItem(STORAGE_KEYS.ATTENDANCE_RECORDS, JSON.stringify(state.attendanceRecords));
             }
             if (snap.adminPassword && snap.adminPassword.trim()) {
@@ -1763,14 +1759,54 @@
       }
     }
 
-    function deleteStudent(studentId) {
+    async function deleteStudent(studentId) {
       const st = state.students.find(s => s.id === studentId);
       if (!st) return;
-      if (confirm('האם להסיר את הבחור ' + st.name + ' מהמערכת?')) {
-        state.students = state.students.filter(s => s.id !== studentId);
-        saveState();
-        renderStudentsTable();
-        showToast('הבחור הוסר מהמערכת', '🗑️');
+      if (!confirm('האם להסיר את הבחור ' + st.name + ' מהמערכת וממסד הנתונים?')) return;
+
+      // 1. Remove from local memory state immediately
+      state.students = state.students.filter(s => s.id !== studentId);
+      state.attendanceRecords = (state.attendanceRecords || []).filter(r => r.studentId !== studentId);
+      state.bonusLogs = (state.bonusLogs || []).filter(b => b.studentId !== studentId);
+
+      // 2. Clear from any duty assignments in dutiesRoster
+      if (state.dutiesRoster) {
+        Object.keys(state.dutiesRoster).forEach(d => {
+          if (state.dutiesRoster[d].wakerStudentId === studentId) {
+            state.dutiesRoster[d].wakerStudentId = '';
+            state.dutiesRoster[d].wakerStudentName = '';
+            state.dutiesRoster[d].wakerDone = false;
+          }
+          if (state.dutiesRoster[d].kitchenStudentId === studentId) {
+            state.dutiesRoster[d].kitchenStudentId = '';
+            state.dutiesRoster[d].kitchenStudentName = '';
+            state.dutiesRoster[d].kitchenDone = false;
+          }
+        });
+      }
+
+      // 3. Save local state & update UI immediately
+      saveState();
+      renderStudentsTable();
+      renderCampaignCalendar();
+      renderSelectedCalendarDayDetails(state.calendarSelectedDate);
+      showToast('הבחור ' + st.name + ' הוסר בהצלחה', '🗑️');
+
+      // 4. Delete permanently from Supabase
+      if (supabaseClient) {
+        try {
+          // Delete child rows first to satisfy foreign keys
+          await supabaseClient.from('attendance_logs').delete().eq('user_id', studentId);
+          await supabaseClient.from('manager_bonus_logs').delete().eq('user_id', studentId);
+          // Delete user row
+          const { error: delErr } = await supabaseClient.from('users').delete().eq('id', studentId);
+          if (delErr) {
+            console.warn('Direct user delete error, marking as inactive/deleted:', delErr);
+            await supabaseClient.from('users').update({ is_active: false, role: 'deleted' }).eq('id', studentId);
+          }
+        } catch(err) {
+          console.warn('Supabase delete error:', err);
+        }
       }
     }
 
@@ -1784,7 +1820,7 @@
     function saveNewStudent() {
       const name = (document.getElementById('newStudentName')?.value || '').trim();
       const phone = (document.getElementById('newStudentPhone')?.value || '').trim();
-      const pass = (document.getElementById('newStudentPass')?.value || '1234').trim();
+      const pass = (document.getElementById('newStudentPass')?.value || '').trim() || '1234';
       if (!name || !phone) {
         alert('אנא הזן שם מלא ומספר טלפון');
         return;
@@ -1800,7 +1836,7 @@
       saveState();
       closeAddStudentModal();
       renderStudentsTable();
-      showToast('הבחור ' + name + ' נוסף בהצלחה!', '✨');
+      showToast('הבחור ' + name + ' נוסף בהצלחה (סיסמה: ' + (pass || '1234') + ')!', '✨');
     }
 
     // Batch Add
@@ -1884,9 +1920,11 @@
         const isToday = dateStr === todayStr;
         const inCampaign = dateStr >= state.config.startDate && dateStr <= state.config.endDate;
 
-        const duty = state.dutiesRoster[dateStr] || {};
-        const hasWaker = Boolean(duty.wakerStudentId || duty.wakerStudentName);
-        const hasKitchen = Boolean(duty.kitchenStudentId || duty.kitchenStudentName);
+        const dayOfWeek = new Date(dateStr + 'T12:00:00').getDay();
+        const isWeekend = dayOfWeek === 5 || dayOfWeek === 6;
+        const duty = (!isWeekend && state.dutiesRoster[dateStr]) ? state.dutiesRoster[dateStr] : {};
+        const hasWaker = !isWeekend && Boolean(duty.wakerStudentId || duty.wakerStudentName);
+        const hasKitchen = !isWeekend && Boolean(duty.kitchenStudentId || duty.kitchenStudentName);
 
         const dayAttRecords = (state.attendanceRecords || []).filter(r => r.dateStr === dateStr);
         const uniqueAttendeesCount = new Set(dayAttRecords.map(r => r.studentId)).size;
@@ -2008,72 +2046,83 @@
 
       // 1. Render Duties of the Selected Day
       if (dutiesContainer) {
-        const duty = state.dutiesRoster[dateStr] || {
-          wakerStudentId: '', wakerStudentName: '', wakerDone: false,
-          kitchenStudentId: '', kitchenStudentName: '', kitchenDone: false
-        };
+        const dayOfWeek = dObj.getDay();
+        if (dayOfWeek === 5 || dayOfWeek === 6) {
+          dutiesContainer.innerHTML = `
+            <div class="col-span-full p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-center">
+              <span class="text-2xl block mb-1">🕊️🕯️</span>
+              <span class="font-black text-amber-950 text-xs">אין תורנויות מעורר ומטבח ביום ${dow}</span>
+              <p class="text-[11px] text-amber-800 mt-0.5">תורנויות משובצות לימי חול בלבד (ראשון עד חמישי)</p>
+            </div>
+          `;
+        } else {
+          const duty = state.dutiesRoster[dateStr] || {
+            wakerStudentId: '', wakerStudentName: '', wakerDone: false,
+            kitchenStudentId: '', kitchenStudentName: '', kitchenDone: false
+          };
 
-        dutiesContainer.innerHTML = `
-          <!-- Duty 1: Waker -->
-          <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-lg">⏰</span>
-                  <span class="text-xs font-black text-slate-900">תורן מעורר לתפילה</span>
+          dutiesContainer.innerHTML = `
+            <!-- Duty 1: Waker -->
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-lg">⏰</span>
+                    <span class="text-xs font-black text-slate-900">תורן מעורר לתפילה</span>
+                  </div>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${duty.wakerDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                    ${duty.wakerDone ? '✓ בוצע (+2 נק׳)' : '⏳ טרם בוצע'}
+                  </span>
                 </div>
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${duty.wakerDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
-                  ${duty.wakerDone ? '✓ בוצע (+2 נק׳)' : '⏳ טרם בוצע'}
-                </span>
+                <div class="mb-2">
+                  <label class="block text-[10px] text-slate-500 font-bold mb-1">בחור משובץ:</label>
+                  <select onchange="updateDutyAssignee('${dateStr}', 'waker', this.value); renderSelectedCalendarDayDetails('${dateStr}');" class="w-full text-xs font-bold p-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none">
+                    <option value="">-- טרם שובץ בחור --</option>
+                    ${state.students.map(s => `<option value="${s.id}" ${s.id === duty.wakerStudentId ? 'selected' : ''}>${s.name}</option>`).join('')}
+                  </select>
+                </div>
               </div>
-              <div class="mb-2">
-                <label class="block text-[10px] text-slate-500 font-bold mb-1">בחור משובץ:</label>
-                <select onchange="updateDutyAssignee('${dateStr}', 'waker', this.value); renderSelectedCalendarDayDetails('${dateStr}');" class="w-full text-xs font-bold p-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none">
-                  <option value="">-- טרם שובץ בחור --</option>
-                  ${state.students.map(s => `<option value="${s.id}" ${s.id === duty.wakerStudentId ? 'selected' : ''}>${s.name}</option>`).join('')}
-                </select>
+              <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+                <button onclick="toggleDutyDone('${dateStr}', 'waker'); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 py-1.5 rounded-xl ${duty.wakerDone ? 'bg-slate-100 text-slate-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} font-black text-xs transition">
+                  ${duty.wakerDone ? 'בטל אישור ביצוע' : '✓ אשר ביצוע תורנות'}
+                </button>
+                <button onclick="sendDutyReminderSms('${dateStr}', 'waker')" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition" title="שלח תזכורת SMS לתורן">
+                  📱 תזכורת
+                </button>
               </div>
             </div>
-            <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
-              <button onclick="toggleDutyDone('${dateStr}', 'waker'); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 py-1.5 rounded-xl ${duty.wakerDone ? 'bg-slate-100 text-slate-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} font-black text-xs transition">
-                ${duty.wakerDone ? 'בטל אישור ביצוע' : '✓ אשר ביצוע תורנות'}
-              </button>
-              <button onclick="sendDutyReminderSms('${dateStr}', 'waker')" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition" title="שלח תזכורת SMS לתורן">
-                📱 תזכורת
-              </button>
-            </div>
-          </div>
 
-          <!-- Duty 2: Kitchen -->
-          <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-lg">🍳</span>
-                  <span class="text-xs font-black text-slate-900">תורן מטבח ערב</span>
+            <!-- Duty 2: Kitchen -->
+            <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-lg">🍳</span>
+                    <span class="text-xs font-black text-slate-900">תורן מטבח ערב</span>
+                  </div>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${duty.kitchenDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                    ${duty.kitchenDone ? '✓ בוצע (+2 נק׳)' : '⏳ טרם בוצע'}
+                  </span>
                 </div>
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${duty.kitchenDone ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
-                  ${duty.kitchenDone ? '✓ בוצע (+2 נק׳)' : '⏳ טרם בוצע'}
-                </span>
+                <div class="mb-2">
+                  <label class="block text-[10px] text-slate-500 font-bold mb-1">בחור משובץ:</label>
+                  <select onchange="updateDutyAssignee('${dateStr}', 'kitchen', this.value); renderSelectedCalendarDayDetails('${dateStr}');" class="w-full text-xs font-bold p-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none">
+                    <option value="">-- טרם שובץ בחור --</option>
+                    ${state.students.map(s => `<option value="${s.id}" ${s.id === duty.kitchenStudentId ? 'selected' : ''}>${s.name}</option>`).join('')}
+                  </select>
+                </div>
               </div>
-              <div class="mb-2">
-                <label class="block text-[10px] text-slate-500 font-bold mb-1">בחור משובץ:</label>
-                <select onchange="updateDutyAssignee('${dateStr}', 'kitchen', this.value); renderSelectedCalendarDayDetails('${dateStr}');" class="w-full text-xs font-bold p-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none">
-                  <option value="">-- טרם שובץ בחור --</option>
-                  ${state.students.map(s => `<option value="${s.id}" ${s.id === duty.kitchenStudentId ? 'selected' : ''}>${s.name}</option>`).join('')}
-                </select>
+              <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+                <button onclick="toggleDutyDone('${dateStr}', 'kitchen'); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 py-1.5 rounded-xl ${duty.kitchenDone ? 'bg-slate-100 text-slate-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} font-black text-xs transition">
+                  ${duty.kitchenDone ? 'בטל אישור ביצוע' : '✓ אשר ביצוע תורנות'}
+                </button>
+                <button onclick="sendDutyReminderSms('${dateStr}', 'kitchen')" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition" title="שלח תזכורת SMS לתורן">
+                  📱 תזכורת
+                </button>
               </div>
             </div>
-            <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
-              <button onclick="toggleDutyDone('${dateStr}', 'kitchen'); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 py-1.5 rounded-xl ${duty.kitchenDone ? 'bg-slate-100 text-slate-700' : 'bg-emerald-600 hover:bg-emerald-700 text-white'} font-black text-xs transition">
-                ${duty.kitchenDone ? 'בטל אישור ביצוע' : '✓ אשר ביצוע תורנות'}
-              </button>
-              <button onclick="sendDutyReminderSms('${dateStr}', 'kitchen')" class="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-200 transition" title="שלח תזכורת SMS לתורן">
-                📱 תזכורת
-              </button>
-            </div>
-          </div>
-        `;
+          `;
+        }
       }
 
       // 2. Render Sedarim List & Attendance Drilldown
@@ -2323,7 +2372,7 @@
       showToast(`נוכחות סומנה עבור ${st.name} (+${pts} נק׳)`, '✓');
     }
 
-    function unmarkStudentAttendanceForSlot(studentId, slotId, dateStr) {
+    async function unmarkStudentAttendanceForSlot(studentId, slotId, dateStr) {
       const idx = (state.attendanceRecords || []).findIndex(r => r.studentId === studentId && r.slotId === slotId && r.dateStr === dateStr);
       if (idx === -1) return;
 
@@ -2339,6 +2388,18 @@
       renderCampaignCalendar();
       renderSelectedCalendarDayDetails(dateStr);
       showToast('סימון הנוכחות בוטל', '🗑️');
+
+      if (supabaseClient) {
+        try {
+          if (rec.id && /^[0-9a-f-]{36}$/i.test(rec.id)) {
+            await supabaseClient.from('attendance_logs').delete().eq('id', rec.id);
+          } else {
+            await supabaseClient.from('attendance_logs').delete().match({ user_id: studentId, slot_id: slotId });
+          }
+        } catch(e) {
+          console.warn('Supabase attendance delete error:', e);
+        }
+      }
     }
 
     // Award Full Seder Bonus strictly to attendees only!
@@ -2393,16 +2454,30 @@
       openAddSlotModal();
     }
 
-    function deleteDailySlotForDate(dateStr, slotIdx) {
+    async function deleteDailySlotForDate(dateStr, slotIdx) {
       if (!confirm('האם למחוק סדר זה מתאריך ' + dateStr + '?')) return;
       if (!state.slotsByDate[dateStr]) {
         state.slotsByDate[dateStr] = JSON.parse(JSON.stringify(getSlotsForDate(dateStr)));
       }
+      const removedSlot = state.slotsByDate[dateStr][slotIdx];
       state.slotsByDate[dateStr].splice(slotIdx, 1);
       saveState();
       renderCampaignCalendar();
       renderSelectedCalendarDayDetails(dateStr);
       showToast('הסדר נמחק מיום זה', '🗑️');
+
+      if (supabaseClient && removedSlot) {
+        try {
+          if (removedSlot.id && /^[0-9a-f-]{36}$/i.test(removedSlot.id)) {
+            await supabaseClient.from('schedule_slots').delete().eq('id', removedSlot.id);
+          }
+          if (removedSlot.title) {
+            await supabaseClient.from('schedule_slots').delete().match({ slot_date: dateStr, title: removedSlot.title });
+          }
+        } catch(err) {
+          console.warn('Supabase slot delete error:', err);
+        }
+      }
     }
 
     function sendSederReminderSmsToAll() {
@@ -2563,7 +2638,7 @@
       }
     }
 
-    function removeStudentAttendance(recordId) {
+    async function removeStudentAttendance(recordId) {
       const idx = (state.attendanceRecords || []).findIndex(r => r.id === recordId);
       if (idx === -1) return;
       const rec = state.attendanceRecords[idx];
@@ -2578,6 +2653,18 @@
       renderSelectedCalendarDayDetails(state.calendarSelectedDate);
       renderStudentHistoryModal();
       showToast('הנוכחות בוטלה והניקוד עודכן בהתאם', '🗑️');
+
+      if (supabaseClient) {
+        try {
+          if (rec.id && /^[0-9a-f-]{36}$/i.test(rec.id)) {
+            await supabaseClient.from('attendance_logs').delete().eq('id', rec.id);
+          } else if (rec.studentId) {
+            await supabaseClient.from('attendance_logs').delete().match({ user_id: rec.studentId, slot_id: rec.slotId });
+          }
+        } catch(e) {
+          console.warn('Supabase attendance delete error:', e);
+        }
+      }
     }
 
     function openManualAddAttendanceForCurrentStudent() {
@@ -2787,12 +2874,13 @@
       updateCampaignTotalPointsLive();
     }
 
-    function deleteDailySlot(idx) {
+    async function deleteDailySlot(idx) {
       const picker = document.getElementById('adminScheduleDayPicker');
       const dStr = (picker && picker.value) ? picker.value : state.calendarSelectedDate;
       if (!state.slotsByDate[dStr]) {
         state.slotsByDate[dStr] = JSON.parse(JSON.stringify(getSlotsForDate(dStr)));
       }
+      const removedSlot = state.slotsByDate[dStr][idx];
       state.slotsByDate[dStr].splice(idx, 1);
       saveState();
       renderCampaignCalendar();
@@ -2800,6 +2888,19 @@
       renderAdminDayScheduleEditor();
       updateCampaignTotalPointsLive();
       showToast('הסדר נמחק מיום זה', '🗑️');
+
+      if (supabaseClient && removedSlot) {
+        try {
+          if (removedSlot.id && /^[0-9a-f-]{36}$/i.test(removedSlot.id)) {
+            await supabaseClient.from('schedule_slots').delete().eq('id', removedSlot.id);
+          }
+          if (removedSlot.title) {
+            await supabaseClient.from('schedule_slots').delete().match({ slot_date: dStr, title: removedSlot.title });
+          }
+        } catch(err) {
+          console.warn('Supabase slot delete error:', err);
+        }
+      }
     }
 
     function resetDayToTemplate() {
@@ -2988,17 +3089,23 @@
       saveBonusEngineConfig();
     }
 
-    // Duties Roster
+    // Duties Roster - Strictly weekdays only (Sunday to Thursday; No Friday or Shabbat!)
     function renderDutiesTable() {
       const tbody = document.getElementById('adminDutiesTableBody');
       if (!tbody) return;
 
       const dates = [];
       const today = new Date();
-      for (let i = 0; i < 14; i++) {
+      let added = 0;
+      let dayOffset = 0;
+      // Filter out Friday (5) and Saturday (6) - absolutely no duties on Friday and Shabbat!
+      while (added < 14 && dayOffset < 30) {
         const d = new Date(today);
-        d.setDate(today.getDate() + i);
+        d.setDate(today.getDate() + dayOffset);
+        dayOffset++;
+        if (d.getDay() === 5 || d.getDay() === 6) continue;
         dates.push(d.toISOString().slice(0, 10));
+        added++;
       }
 
       tbody.innerHTML = dates.map(dStr => {
@@ -3072,6 +3179,11 @@
     }
 
     function updateDutyAssignee(dateStr, role, studentId) {
+      const d = new Date(dateStr + 'T12:00:00');
+      if (d.getDay() === 5 || d.getDay() === 6) {
+        alert('אין תורנויות מעורר ומטבח בימי שישי ושבת קודש');
+        return;
+      }
       if (!state.dutiesRoster[dateStr]) {
         state.dutiesRoster[dateStr] = {
           wakerStudentId: '', wakerStudentName: '', wakerDone: false, wakerReminderTime: '22:30',
