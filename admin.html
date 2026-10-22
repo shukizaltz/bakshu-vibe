@@ -969,6 +969,10 @@
           <span class="text-emerald-600 font-bold">✓</span>
           <span><strong>שיבוץ חוזר:</strong> ניתן להריץ ערבוב אקראי מחדש בכל עת בלחיצת כפתור במקרה הצורך.</span>
         </div>
+        <div class="flex items-center gap-1.5 text-[11px] text-amber-900">
+          <span class="text-emerald-600 font-bold">✓</span>
+          <span><strong>שיבוץ / החלפה לתורנות בודדת:</strong> כפתור 🎲 ליד כל תורנות בטבלה או ביומן להגרלה או החלפה נקודתית של תורן יחיד לפי אותו אלגוריתם שוויוני.</span>
+        </div>
       </div>
 
       <!-- Mode selection -->
@@ -2373,10 +2377,16 @@
                 </div>
                 <div class="mb-2">
                   <label class="block text-[10px] text-slate-500 font-bold mb-1">בחור משובץ:</label>
-                  <select onchange="updateDutyAssignee('${dateStr}', 'waker', this.value); renderSelectedCalendarDayDetails('${dateStr}');" class="w-full text-xs font-bold p-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none">
-                    <option value="">-- טרם שובץ בחור --</option>
-                    ${state.students.map(s => `<option value="${s.id}" ${s.id === duty.wakerStudentId ? 'selected' : ''}>${s.name}</option>`).join('')}
-                  </select>
+                  <div class="flex items-center gap-1.5">
+                    <select onchange="updateDutyAssignee('${dateStr}', 'waker', this.value); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 text-xs font-bold p-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none">
+                      <option value="">-- טרם שובץ בחור --</option>
+                      ${state.students.map(s => `<option value="${s.id}" ${s.id === duty.wakerStudentId ? 'selected' : ''}>${s.name}</option>`).join('')}
+                    </select>
+                    <button type="button" onclick="randomAssignSingleDuty('${dateStr}', 'waker')" class="px-2.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-black text-xs border border-amber-300 transition flex items-center gap-1 shrink-0" title="הגרל או החלף שיבוץ לתורנות מעורר ביום זה לפי האלגוריתם">
+                      <span>🎲</span>
+                      <span class="text-[11px]">הגרל</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
@@ -2403,10 +2413,16 @@
                 </div>
                 <div class="mb-2">
                   <label class="block text-[10px] text-slate-500 font-bold mb-1">בחור משובץ:</label>
-                  <select onchange="updateDutyAssignee('${dateStr}', 'kitchen', this.value); renderSelectedCalendarDayDetails('${dateStr}');" class="w-full text-xs font-bold p-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none">
-                    <option value="">-- טרם שובץ בחור --</option>
-                    ${state.students.map(s => `<option value="${s.id}" ${s.id === duty.kitchenStudentId ? 'selected' : ''}>${s.name}</option>`).join('')}
-                  </select>
+                  <div class="flex items-center gap-1.5">
+                    <select onchange="updateDutyAssignee('${dateStr}', 'kitchen', this.value); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 text-xs font-bold p-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none">
+                      <option value="">-- טרם שובץ בחור --</option>
+                      ${state.students.map(s => `<option value="${s.id}" ${s.id === duty.kitchenStudentId ? 'selected' : ''}>${s.name}</option>`).join('')}
+                    </select>
+                    <button type="button" onclick="randomAssignSingleDuty('${dateStr}', 'kitchen')" class="px-2.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-black text-xs border border-amber-300 transition flex items-center gap-1 shrink-0" title="הגרל או החלף שיבוץ לתורנות מטבח ביום זה לפי האלגוריתם">
+                      <span>🎲</span>
+                      <span class="text-[11px]">הגרל</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
@@ -3882,6 +3898,106 @@
       showToast('כל שיבוצי התורנויות נמחקו בהצלחה', '🧹');
     }
 
+    // Single Duty Random Assignment / Swap Algorithm
+    function randomAssignSingleDuty(dateStr, role) {
+      const d = new Date(dateStr + 'T12:00:00');
+      if (d.getDay() === 5 || d.getDay() === 6) {
+        alert('אין תורנויות מעורר ומטבח בימי שישי ושבת קודש');
+        return;
+      }
+
+      const students = (state.students || []).filter(s => s.status !== 'inactive');
+      if (students.length < 2) {
+        alert('נדרשים לפחות 2 בחורים פעילים במערכת על מנת לבצע שיבוץ ללא כפילות בוקר וערב.');
+        return;
+      }
+
+      if (!state.dutiesRoster) state.dutiesRoster = {};
+      if (!state.dutiesRoster[dateStr]) {
+        state.dutiesRoster[dateStr] = {
+          wakerStudentId: '', wakerStudentName: '', wakerDone: false, wakerReminderTime: '22:30',
+          kitchenStudentId: '', kitchenStudentName: '', kitchenDone: false, kitchenReminderTime: '19:30'
+        };
+      }
+
+      const dayObj = state.dutiesRoster[dateStr];
+      const currentAssignedId = role === 'waker' ? dayObj.wakerStudentId : dayObj.kitchenStudentId;
+      const otherRoleAssignedId = role === 'waker' ? dayObj.kitchenStudentId : dayObj.wakerStudentId;
+
+      // Count total duties assigned to each student across the whole campaign
+      const dutyCounts = {};
+      students.forEach(s => { dutyCounts[s.id] = 0; });
+      Object.keys(state.dutiesRoster).forEach(ds => {
+        const day = state.dutiesRoster[ds];
+        if (day.wakerStudentId && dutyCounts[day.wakerStudentId] !== undefined) dutyCounts[day.wakerStudentId]++;
+        if (day.kitchenStudentId && dutyCounts[day.kitchenStudentId] !== undefined) dutyCounts[day.kitchenStudentId]++;
+      });
+
+      // If replacing an existing assignment on this day, discount it so counts reflect current load excluding this slot
+      if (currentAssignedId && dutyCounts[currentAssignedId] > 0) {
+        dutyCounts[currentAssignedId]--;
+      }
+
+      // 1. Mandatory Conflict Rule: Can NEVER be the other duty assignee on the same date (Zero morning/evening conflict!)
+      let candidates = students.filter(s => s.id !== otherRoleAssignedId);
+
+      // 2. Change Rule: If there are other candidates, exclude current assignee so it performs a real swap/replacement
+      if (currentAssignedId && candidates.filter(s => s.id !== currentAssignedId).length > 0) {
+        candidates = candidates.filter(s => s.id !== currentAssignedId);
+      }
+
+      // 3. Ergonomic Soft Rule: Avoid back-to-back night kitchen -> next morning waker
+      let avoidAdjacentId = null;
+      if (role === 'waker') {
+        const prevDate = new Date(d);
+        prevDate.setDate(d.getDate() - 1);
+        const prevStr = prevDate.toISOString().slice(0, 10);
+        avoidAdjacentId = state.dutiesRoster[prevStr]?.kitchenStudentId || null;
+      } else if (role === 'kitchen') {
+        const nextDate = new Date(d);
+        nextDate.setDate(d.getDate() + 1);
+        const nextStr = nextDate.toISOString().slice(0, 10);
+        avoidAdjacentId = state.dutiesRoster[nextStr]?.wakerStudentId || null;
+      }
+
+      if (avoidAdjacentId && candidates.filter(s => s.id !== avoidAdjacentId).length > 0) {
+        candidates = candidates.filter(s => s.id !== avoidAdjacentId);
+      }
+
+      if (candidates.length === 0) {
+        alert('לא נמצאו בחורים מתאימים לשיבוץ תורנות זו.');
+        return;
+      }
+
+      // 4. Fair Round-Robin: Find minimum duty count among valid candidates
+      const minCount = Math.min(...candidates.map(s => dutyCounts[s.id] || 0));
+      const bestCandidates = candidates.filter(s => (dutyCounts[s.id] || 0) === minCount);
+
+      // Pick randomly from the lowest-load candidates
+      const chosenStudent = bestCandidates[Math.floor(Math.random() * bestCandidates.length)];
+
+      if (role === 'waker') {
+        dayObj.wakerStudentId = chosenStudent.id;
+        dayObj.wakerStudentName = chosenStudent.name;
+        dayObj.wakerDone = false;
+      } else {
+        dayObj.kitchenStudentId = chosenStudent.id;
+        dayObj.kitchenStudentName = chosenStudent.name;
+        dayObj.kitchenDone = false;
+      }
+
+      saveState();
+      renderDutiesTable();
+      renderCampaignCalendar();
+      if (state.calendarSelectedDate === dateStr) {
+        renderSelectedCalendarDayDetails(dateStr);
+      }
+
+      const roleTitle = role === 'waker' ? 'מעורר בוקר' : 'תורן מטבח ערב';
+      const roleEmoji = role === 'waker' ? '⏰' : '🍳';
+      showToast(`🎲 ${chosenStudent.name} שובץ לתורנות ${roleTitle} (${minCount} תורנויות קודמות)`, roleEmoji);
+    }
+
     // Render Duties Table with live stats and filter
     function renderDutiesTable() {
       const tbody = document.getElementById('adminDutiesTableBody');
@@ -4023,10 +4139,15 @@
             
             <!-- Waker duty -->
             <td class="py-3 px-3 border-r border-slate-100">
-              <select onchange="updateDutyAssignee('${dStr}', 'waker', this.value)" class="w-full text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-white'}">
-                <option value="">-- בחר בחור מעורר --</option>
-                ${(state.students || []).map(s => `<option value="${s.id}" ${duty.wakerStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
-              </select>
+              <div class="flex items-center gap-1.5">
+                <select onchange="updateDutyAssignee('${dStr}', 'waker', this.value)" class="flex-1 min-w-[125px] text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-white'}">
+                  <option value="">-- בחר בחור מעורר --</option>
+                  ${(state.students || []).map(s => `<option value="${s.id}" ${duty.wakerStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+                </select>
+                <button type="button" onclick="randomAssignSingleDuty('${dStr}', 'waker')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black transition shrink-0" title="שבץ / החלף באקראי תורנות מעורר ביום זה בלבד לפי האלגוריתם (הכי פחות תורנויות וללא כפילויות)">
+                  🎲
+                </button>
+              </div>
             </td>
             <td class="py-3 px-2 text-center border-r border-slate-100">
               <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">${duty.wakerReminderTime || '22:30'}</span>
@@ -4044,10 +4165,15 @@
 
             <!-- Kitchen duty -->
             <td class="py-3 px-3 border-r border-slate-100">
-              <select onchange="updateDutyAssignee('${dStr}', 'kitchen', this.value)" class="w-full text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-white'}">
-                <option value="">-- בחר תורן מטבח --</option>
-                ${(state.students || []).map(s => `<option value="${s.id}" ${duty.kitchenStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
-              </select>
+              <div class="flex items-center gap-1.5">
+                <select onchange="updateDutyAssignee('${dStr}', 'kitchen', this.value)" class="flex-1 min-w-[125px] text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-white'}">
+                  <option value="">-- בחר תורן מטבח --</option>
+                  ${(state.students || []).map(s => `<option value="${s.id}" ${duty.kitchenStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+                </select>
+                <button type="button" onclick="randomAssignSingleDuty('${dStr}', 'kitchen')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black transition shrink-0" title="שבץ / החלף באקראי תורנות מטבח ביום זה בלבד לפי האלגוריתם (הכי פחות תורנויות וללא כפילויות)">
+                  🎲
+                </button>
+              </div>
             </td>
             <td class="py-3 px-2 text-center border-r border-slate-100">
               <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">${duty.kitchenReminderTime || '19:30'}</span>
