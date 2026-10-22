@@ -179,9 +179,32 @@
               <p class="text-xs text-slate-600 mt-0.5" id="studentDutyReminderText">תזכורת נשלחה אליך לילה קודם (22:30)</p>
             </div>
           </div>
-          <button id="studentDutyActionBtn" onclick="handleDutyCompletionAction()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5">
-            <span>✓</span>
-            <span id="studentDutyBtnText">סמן ביצוע תורנות (+3 נק׳)</span>
+          <div class="flex items-center gap-2">
+            <button id="studentDutyGoogleBtn" onclick="addTodayDutyToGoogleCalendar()" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs border border-amber-300 transition shadow-xs flex items-center gap-1" title="הוסף תורנות זו ישירות ליומן Google Calendar שלך">
+              <span>📅</span>
+              <span class="hidden sm:inline">הוסף ליומן</span>
+            </button>
+            <button id="studentDutyActionBtn" onclick="handleDutyCompletionAction()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5">
+              <span>✓</span>
+              <span id="studentDutyBtnText">סמן ביצוע תורנות (+3 נק׳)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Duty Notice (Shown dynamically if student is on duty in future days) -->
+      <div id="studentUpcomingDutyCard" class="hidden p-3.5 rounded-2xl bg-amber-50/90 border border-amber-300 flex flex-wrap items-center justify-between gap-2 shadow-xs">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl" id="studentUpcomingDutyIcon">🗓️</span>
+          <div>
+            <div class="text-[10px] font-black uppercase text-amber-800 tracking-wider">התורנות הקרובה שלך במבצע</div>
+            <span class="text-xs font-black text-slate-900" id="studentUpcomingDutyTitle">תורנות משובצת</span>
+            <p class="text-[11px] text-amber-900 mt-0.5" id="studentUpcomingDutyDesc">מופיע מסומן בלוח השנה של המבצע • תזכורת תישלח לפני</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="switchTab('public')" class="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-black text-xs border border-amber-200 transition shadow-xs">
+            צפה בלוח השנה ←
           </button>
         </div>
       </div>
@@ -361,22 +384,26 @@
               <span class="text-xl">📅</span>
               <div>
                 <h3 class="text-base font-extrabold text-slate-900">לוח שנה אישי עם תזכורות</h3>
-                <p class="text-xs text-slate-500">סנכרן ליומן הטלפון עם תזכורת 10 דקות לפני כל סדר</p>
+                <p class="text-xs text-slate-500">סנכרון מלא ליומן הטלפון (Apple / Google / Outlook)</p>
               </div>
             </div>
             <p class="text-[11px] text-slate-500 my-2">
-              סנכרון ישיר ליומן Google Calendar יתקין ביומן הטלפון את שעות הסדרים עם תזכורת 10 דקות לפני וקישור ישיר לסימון נוכחות.
+              היומן כולל את כל שעות הסדרים וכן את כל התורנויות האישיות שלך (מעורר בוקר / מטבח ערב) עם תזכורות אוטומטיות מראש ישירות בטלפון.
             </p>
           </div>
 
           <div class="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-slate-100">
-            <button onclick="openGoogleCalendarSync()" class="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm">
+            <button onclick="downloadStudentCalendarIcs()" class="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 shadow-sm" title="הורד לוח שנה אישי מלא עם כל הסדרים והתורנויות שלך לטלפון">
+              <span>📥</span>
+              <span>הורד יומן אישי (.ics)</span>
+            </button>
+            <button onclick="openGoogleCalendarSync()" class="w-full sm:w-auto py-2.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold text-xs transition flex items-center justify-center gap-1 border border-blue-200" title="פתח ב-Google Calendar">
               <span>📅</span>
-              <span>סנכרן ליומן Google Calendar</span>
+              <span>Google Cal</span>
             </button>
             <button onclick="copyStudentDirectUrl()" class="w-full sm:w-auto py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1 border border-slate-200" title="העתק קישור ישיר מהיר">
               <span>📋</span>
-              <span>העתק קישור אישי</span>
+              <span>קישור</span>
             </button>
           </div>
         </div>
@@ -1178,7 +1205,10 @@
             const snap = JSON.parse(snapshots[0].reason.slice('APP_STATE_SNAPSHOT:'.length));
             if (snap.slotsByDate) state.slotsByDate = snap.slotsByDate;
             if (snap.config && snap.config.targets) state.config.targets = snap.config.targets;
-            if (snap.dutiesRoster) state.dutiesRoster = snap.dutiesRoster;
+            if (snap.dutiesRoster) {
+              state.dutiesRoster = snap.dutiesRoster;
+              saveDutiesRoster(state.dutiesRoster);
+            }
             if (snap.journeyStops) state.journeyStops = snap.journeyStops;
             if (snap.bonusConfig) state.bonusConfig = snap.bonusConfig;
             if (snap.qrSecret) state.qrSecret = snap.qrSecret;
@@ -1189,6 +1219,7 @@
 
             saveScheduleSlots(state.slotsByDate);
             saveCampaignConfig(state.config);
+            saveDutiesRoster(state.dutiesRoster);
           }
         } catch(e) {
           console.warn('Snapshot load error in index:', e);
@@ -1592,6 +1623,55 @@
 'END:VEVENT');
         });
 
+        // Check if student has duty assigned on dStr
+        const dayDuty = (state.dutiesRoster && state.dutiesRoster[dStr]) ? state.dutiesRoster[dStr] : null;
+        if (dayDuty) {
+          const isWaker = dayDuty.wakerStudentId === student.id || dayDuty.wakerStudentName === student.name;
+          const isKitchen = dayDuty.kitchenStudentId === student.id || dayDuty.kitchenStudentName === student.name;
+
+          if (isWaker) {
+            const dtStartWaker = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 6, 45);
+            const dtEndWaker = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 7, 30);
+            const uidWaker = 'bakshu_duty_waker_' + dStr + '_' + student.id + '@bakshu-vibe';
+            events.push('BEGIN:VEVENT\n' +
+'UID:' + uidWaker + '\n' +
+'DTSTAMP:' + formatIcsDate(new Date()) + 'Z\n' +
+'DTSTART:' + formatIcsDate(dtStartWaker) + '\n' +
+'DTEND:' + formatIcsDate(dtEndWaker) + '\n' +
+'SUMMARY:⏰ תורנות מעורר לתפילה - ישיבת בקשו\n' +
+'DESCRIPTION:שלום ' + student.name + ', הנך משובץ לתורנות מעורר לתפילה בישיבה. היכנס לאפליקציה לסימון ביצוע וקבלת בונוס: ' + directUrl + '\n' +
+'URL:' + directUrl + '\n' +
+'LOCATION:פנימייה ובית המדרש - ישיבת בקשו\n' +
+'BEGIN:VALARM\n' +
+'TRIGGER:-PT495M\n' +
+'ACTION:DISPLAY\n' +
+'DESCRIPTION:תזכורת: מחר בבוקר הנך תורן מעורר לתפילה בישיבת בקשו (השכמה ב-06:45)!\n' +
+'END:VALARM\n' +
+'END:VEVENT');
+          }
+
+          if (isKitchen) {
+            const dtStartKitchen = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 19, 30);
+            const dtEndKitchen = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 20, 30);
+            const uidKitchen = 'bakshu_duty_kitchen_' + dStr + '_' + student.id + '@bakshu-vibe';
+            events.push('BEGIN:VEVENT\n' +
+'UID:' + uidKitchen + '\n' +
+'DTSTAMP:' + formatIcsDate(new Date()) + 'Z\n' +
+'DTSTART:' + formatIcsDate(dtStartKitchen) + '\n' +
+'DTEND:' + formatIcsDate(dtEndKitchen) + '\n' +
+'SUMMARY:🍳 תורנות מטבח ערב - ישיבת בקשו\n' +
+'DESCRIPTION:שלום ' + student.name + ', הנך משובץ לתורנות מטבח ערב. היכנס לאפליקציה לסימון ביצוע וקבלת בונוס: ' + directUrl + '\n' +
+'URL:' + directUrl + '\n' +
+'LOCATION:חדר אוכל ומטבח - ישיבת בקשו\n' +
+'BEGIN:VALARM\n' +
+'TRIGGER:-PT30M\n' +
+'ACTION:DISPLAY\n' +
+'DESCRIPTION:תזכורת: בעוד 30 דקות מתחילה תורנות מטבח ערב בישיבת בקשו!\n' +
+'END:VALARM\n' +
+'END:VEVENT');
+          }
+        }
+
         curr.setDate(curr.getDate() + 1);
       }
 
@@ -1648,6 +1728,47 @@ events.join('\n') + '\n' +
       const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
       window.open(googleUrl, '_blank');
       showToast('נפתח יומן Google Calendar עם פרטי הסדר והתזכורת', '📅');
+    }
+
+    function addTodayDutyToGoogleCalendar() {
+      const todayStr = getTodayDateStr();
+      const duty = (state.dutiesRoster && state.dutiesRoster[todayStr]) ? state.dutiesRoster[todayStr] : null;
+      const curStudent = state.currentStudent;
+      if (!duty || !curStudent) {
+        showToast('אין תורנות משובצת להיום', 'ℹ️');
+        return;
+      }
+      const isWaker = duty.wakerStudentId === curStudent.id || duty.wakerStudentName === curStudent.name;
+      const isKitchen = duty.kitchenStudentId === curStudent.id || duty.kitchenStudentName === curStudent.name;
+      if (!isWaker && !isKitchen) {
+        showToast('אינך משובץ לתורנות היום', 'ℹ️');
+        return;
+      }
+
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      const formatGDate = (dt) => dt.getUTCFullYear() + pad(dt.getUTCMonth()+1) + pad(dt.getUTCDate()) + 'T' + pad(dt.getUTCHours()) + pad(dt.getUTCMinutes()) + '00Z';
+
+      let title = '';
+      let dStart, dEnd;
+      if (isWaker) {
+        title = encodeURIComponent('ישיבת בקשו - ⏰ תורנות מעורר לתפילה');
+        dStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 45);
+        dEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 30);
+      } else {
+        title = encodeURIComponent('ישיבת בקשו - 🍳 תורנות מטבח ערב');
+        dStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 30);
+        dEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 20, 30);
+      }
+
+      const directUrl = window.location.origin + '/?invite=' + encodeURIComponent(curStudent.id);
+      const dates = formatGDate(dStart) + '/' + formatGDate(dEnd);
+      const details = encodeURIComponent('תורנות ישיבת בקשו עבור ' + curStudent.name + '.\nסמן ביצוע באפליקציה לקבלת נקודות בונוס:\n' + directUrl);
+      const location = encodeURIComponent('ישיבת בקשו ירושלים');
+
+      const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+      window.open(googleUrl, '_blank');
+      showToast('נפתח יומן Google Calendar עם פרטי התורנות', '📅');
     }
 
     function openJourneyStopGoogleCalendar(stopId) {
@@ -2355,46 +2476,99 @@ events.join('\n') + '\n' +
 
     function renderTodayDutyCard() {
       const card = document.getElementById('studentTodayDutyCard');
-      if (!card) return;
-      const todayStr = getTodayDateStr();
-      const duty = (state.dutiesRoster && state.dutiesRoster[todayStr]) ? state.dutiesRoster[todayStr] : null;
+      const upcomingCard = document.getElementById('studentUpcomingDutyCard');
       const curStudent = state.currentStudent;
-      if (!duty || !curStudent) {
-        card.classList.add('hidden');
+      const todayStr = getTodayDateStr();
+
+      if (!curStudent) {
+        if (card) card.classList.add('hidden');
+        if (upcomingCard) upcomingCard.classList.add('hidden');
         return;
       }
 
-      const isWaker = duty.wakerStudentId === curStudent.id || duty.wakerStudentName === curStudent.name;
-      const isKitchen = duty.kitchenStudentId === curStudent.id || duty.kitchenStudentName === curStudent.name;
+      const duty = (state.dutiesRoster && state.dutiesRoster[todayStr]) ? state.dutiesRoster[todayStr] : null;
+      const isWaker = duty && (duty.wakerStudentId === curStudent.id || duty.wakerStudentName === curStudent.name);
+      const isKitchen = duty && (duty.kitchenStudentId === curStudent.id || duty.kitchenStudentName === curStudent.name);
 
-      if (!isWaker && !isKitchen) {
-        card.classList.add('hidden');
-        return;
-      }
+      if (card) {
+        if (isWaker || isKitchen) {
+          card.classList.remove('hidden');
+          const iconEl = document.getElementById('studentDutyIcon');
+          const titleEl = document.getElementById('studentDutyTitle');
+          const remTextEl = document.getElementById('studentDutyReminderText');
+          const btnEl = document.getElementById('studentDutyActionBtn');
+          const btnTextEl = document.getElementById('studentDutyBtnText');
 
-      card.classList.remove('hidden');
-      const iconEl = document.getElementById('studentDutyIcon');
-      const titleEl = document.getElementById('studentDutyTitle');
-      const remTextEl = document.getElementById('studentDutyReminderText');
-      const btnEl = document.getElementById('studentDutyActionBtn');
-      const btnTextEl = document.getElementById('studentDutyBtnText');
+          const isDone = isWaker ? duty.wakerDone : duty.kitchenDone;
+          const bonusPts = isWaker ? (state.bonusConfig.dutyWakerBonus || 3) : (state.bonusConfig.dutyKitchenBonus || 3);
 
-      const isDone = isWaker ? duty.wakerDone : duty.kitchenDone;
-      const bonusPts = isWaker ? (state.bonusConfig.dutyWakerBonus || 3) : (state.bonusConfig.dutyKitchenBonus || 3);
+          if (iconEl) iconEl.textContent = isWaker ? '⏰' : '🍳';
+          if (titleEl) titleEl.textContent = isWaker ? 'השכמת בוקר (מעורר לתפילה)' : 'ניקיון ושטיפת מטבח (ערב)';
+          if (remTextEl) remTextEl.textContent = isWaker ? 'תזכורת נשלחת ב-22:30 לילה קודם' : 'תזכורת נשלחת ב-19:30 לקראת ערב';
 
-      if (iconEl) iconEl.textContent = isWaker ? '⏰' : '🧹';
-      if (titleEl) titleEl.textContent = isWaker ? 'השכמת בוקר (מעורר לתפילה)' : 'ניקיון ושטיפת מטבח (ערב)';
-      if (remTextEl) remTextEl.textContent = isWaker ? 'תזכורת נשלחת ב-22:30 לילה קודם' : 'תזכורת נשלחת ב-19:30 לקראת ערב';
-
-      if (btnEl && btnTextEl) {
-        if (isDone) {
-          btnEl.disabled = true;
-          btnEl.className = 'px-4 py-2 rounded-xl bg-emerald-100 text-emerald-800 font-black text-xs transition border border-emerald-300 flex items-center gap-1.5 cursor-default';
-          btnTextEl.textContent = '✓ תורנות בוצעה (+ ' + bonusPts + ' נק׳)';
+          if (btnEl && btnTextEl) {
+            if (isDone) {
+              btnEl.disabled = true;
+              btnEl.className = 'px-4 py-2 rounded-xl bg-emerald-100 text-emerald-800 font-black text-xs transition border border-emerald-300 flex items-center gap-1.5 cursor-default';
+              btnTextEl.textContent = '✓ תורנות בוצעה (+ ' + bonusPts + ' נק׳)';
+            } else {
+              btnEl.disabled = false;
+              btnEl.className = 'px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer';
+              btnTextEl.textContent = 'סמן ביצוע תורנות (+' + bonusPts + ' נק׳)';
+            }
+          }
         } else {
-          btnEl.disabled = false;
-          btnEl.className = 'px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer';
-          btnTextEl.textContent = 'סמן ביצוע תורנות (+' + bonusPts + ' נק׳)';
+          card.classList.add('hidden');
+        }
+      }
+
+      // Check for future upcoming duties if not on duty today
+      if (upcomingCard) {
+        if (isWaker || isKitchen) {
+          upcomingCard.classList.add('hidden');
+        } else if (state.dutiesRoster) {
+          const futureDates = Object.keys(state.dutiesRoster).filter(d => d > todayStr).sort();
+          let nextDuty = null;
+          let nextRole = '';
+          let nextDateStr = '';
+          for (const fd of futureDates) {
+            const dObj = state.dutiesRoster[fd];
+            if (dObj.wakerStudentId === curStudent.id || dObj.wakerStudentName === curStudent.name) {
+              nextDuty = dObj;
+              nextRole = 'waker';
+              nextDateStr = fd;
+              break;
+            }
+            if (dObj.kitchenStudentId === curStudent.id || dObj.kitchenStudentName === curStudent.name) {
+              nextDuty = dObj;
+              nextRole = 'kitchen';
+              nextDateStr = fd;
+              break;
+            }
+          }
+
+          if (nextDuty) {
+            upcomingCard.classList.remove('hidden');
+            const d = new Date(nextDateStr + 'T12:00:00');
+            const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+            const dayName = 'יום ' + dayNames[d.getDay()];
+            let hDateStr = '';
+            try {
+              const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'short' }).formatToParts(d);
+              hDateStr = parts.map(p => p.value).join('');
+            } catch(e) {}
+
+            const roleName = nextRole === 'waker' ? 'השכמת בוקר (מעורר לתפילה)' : 'תורן מטבח ערב';
+            const icon = nextRole === 'waker' ? '⏰' : '🍳';
+            const titleEl = document.getElementById('studentUpcomingDutyTitle');
+            const iconEl = document.getElementById('studentUpcomingDutyIcon');
+            if (titleEl) titleEl.textContent = `${dayName} (${hDateStr || nextDateStr}) • ${roleName}`;
+            if (iconEl) iconEl.textContent = icon;
+          } else {
+            upcomingCard.classList.add('hidden');
+          }
+        } else {
+          upcomingCard.classList.add('hidden');
         }
       }
     }
@@ -2807,6 +2981,10 @@ events.join('\n') + '\n' +
     // ====================================================
     function changeCalendarWeek(delta) {
       state.calendarWeekOffset = Math.max(0, state.calendarWeekOffset + delta);
+      const weekLabel = document.getElementById('currentWeekRangeLabel');
+      if (weekLabel) {
+        weekLabel.textContent = state.calendarWeekOffset === 0 ? 'שבוע נוכחי' : `שבוע +${state.calendarWeekOffset}`;
+      }
       renderDynamicCalendar();
     }
 
@@ -2815,28 +2993,72 @@ events.join('\n') + '\n' +
       if (!grid) return;
 
       const hebrewDays = ['יום א׳', 'יום ב׳', 'יום ג׳', 'יום ד׳', 'יום ה׳', 'יום ו׳', 'שבת קודש'];
-      const sampleHebrewDates = [
-        'ח׳ חשוון', 'ט׳ חשוון', 'י׳ חשוון', 'י״א חשוון', 'י״ב חשוון', 'י״ג חשוון', 'י״ד חשוון'
-      ];
+      const curStudent = state.currentStudent;
+      const todayStr = getTodayDateStr();
+
+      // Compute start date of displayed week (Sunday)
+      const now = new Date();
+      const currentDayOfWeek = now.getDay(); // 0 = Sun
+      const sunday = new Date(now);
+      sunday.setDate(now.getDate() - currentDayOfWeek + (state.calendarWeekOffset * 7));
 
       grid.innerHTML = hebrewDays.map((dayName, idx) => {
-        const isToday = (idx === 0 && state.calendarWeekOffset === 0);
+        const cellDate = new Date(sunday);
+        cellDate.setDate(sunday.getDate() + idx);
+        const dStr = cellDate.toISOString().slice(0, 10);
+        const isToday = (dStr === todayStr);
         const isSelected = (idx === state.currentSelectedCalendarDayIndex);
-        const hDate = sampleHebrewDates[idx] || 'כ״ב חשוון';
         const isFri = (idx === 5);
         const isShabbat = (idx === 6);
+
+        // Accurate Hebrew Date via Intl
+        let hDate = '';
+        try {
+          const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'short' }).formatToParts(cellDate);
+          const dayP = parts.find(p => p.type === 'day')?.value || '';
+          const monthP = parts.find(p => p.type === 'month')?.value || '';
+          hDate = `${dayP} ${monthP}`;
+        } catch(e) {
+          hDate = '';
+        }
 
         let subLabel = '3 סדרים (4 נק׳)';
         if (isFri) subLabel = 'שישי ריק (0 נק׳)';
         if (isShabbat) subLabel = 'שבת מיוחדת (8 נק׳)';
 
+        // Check duty roster on this day
+        const dayDuty = (state.dutiesRoster && state.dutiesRoster[dStr]) ? state.dutiesRoster[dStr] : null;
+        const isMyWaker = dayDuty && curStudent && (dayDuty.wakerStudentId === curStudent.id || dayDuty.wakerStudentName === curStudent.name);
+        const isMyKitchen = dayDuty && curStudent && (dayDuty.kitchenStudentId === curStudent.id || dayDuty.kitchenStudentName === curStudent.name);
+
         return `
-          <div onclick="selectCalendarDay(${idx})" class="p-2.5 rounded-2xl border cursor-pointer transition text-center ${isSelected ? 'border-indigo-600 bg-indigo-50/80 shadow-sm' : isToday ? 'border-emerald-300 bg-emerald-50/40' : 'border-slate-200 bg-white hover:bg-slate-50'}">
+          <div onclick="selectCalendarDay(${idx})" class="p-2.5 rounded-2xl border cursor-pointer transition text-center relative ${isSelected ? 'border-indigo-600 bg-indigo-50/80 shadow-sm ring-2 ring-indigo-400/40' : isToday ? 'border-emerald-400 bg-emerald-50/50' : 'border-slate-200 bg-white hover:bg-slate-50'}">
             <div class="text-[10px] font-bold ${isToday ? 'text-emerald-700 font-black' : isFri ? 'text-amber-700' : isShabbat ? 'text-indigo-800 font-black' : 'text-slate-500'}">${dayName}</div>
-            <div class="text-xs font-black text-slate-900 mt-0.5">${hDate}</div>
+            <div class="text-xs font-black text-slate-900 mt-0.5">${hDate || dStr}</div>
             <div class="mt-1 text-[10px] font-extrabold ${isToday ? 'text-emerald-700' : isFri ? 'text-amber-700' : isShabbat ? 'text-indigo-700' : 'text-slate-400'}">
               ${isToday ? 'היום • ' + subLabel : subLabel}
             </div>
+
+            <!-- Student Duty Badge on this day -->
+            ${isMyWaker ? `
+              <div class="mt-1.5 px-1.5 py-0.5 rounded-lg bg-amber-100 border border-amber-300 text-amber-900 text-[10px] font-black flex items-center justify-center gap-1 shadow-xs animate-pulse">
+                <span>⏰</span>
+                <span>תורן מעורר!</span>
+              </div>
+            ` : ''}
+            ${isMyKitchen ? `
+              <div class="mt-1.5 px-1.5 py-0.5 rounded-lg bg-orange-100 border border-orange-300 text-orange-900 text-[10px] font-black flex items-center justify-center gap-1 shadow-xs animate-pulse">
+                <span>🍳</span>
+                <span>תורן מטבח!</span>
+              </div>
+            ` : ''}
+
+            <!-- Other assignees (subtle) if neither is me -->
+            ${(!isMyWaker && !isMyKitchen && dayDuty && (dayDuty.wakerStudentName || dayDuty.kitchenStudentName)) ? `
+              <div class="mt-1 text-[9px] text-slate-400 truncate">
+                ${dayDuty.wakerStudentName ? 'מעורר: ' + dayDuty.wakerStudentName.split(' ')[0] : ''}
+              </div>
+            ` : ''}
           </div>
         `;
       }).join('');
@@ -2858,6 +3080,16 @@ events.join('\n') + '\n' +
       const isFri = state.currentSelectedCalendarDayIndex === 5;
       const isShabbat = state.currentSelectedCalendarDayIndex === 6;
 
+      // Compute exact Gregorian date for the selected day in displayed week
+      const now = new Date();
+      const currentDayOfWeek = now.getDay();
+      const sunday = new Date(now);
+      sunday.setDate(now.getDate() - currentDayOfWeek + (state.calendarWeekOffset * 7));
+      const selectedDate = new Date(sunday);
+      selectedDate.setDate(sunday.getDate() + state.currentSelectedCalendarDayIndex);
+      const selectedDStr = selectedDate.toISOString().slice(0, 10);
+      const isToday = (selectedDStr === getTodayDateStr());
+
       let desc = '• 3 סדרי לימוד פעילים (סדר א׳, סדר ב׳, מעריב)';
       let ptsDesc = 'שווי יום זה: 4 נקודות';
       if (isFri) {
@@ -2868,21 +3100,48 @@ events.join('\n') + '\n' +
         ptsDesc = 'שווי שבת קודש: 8 נקודות';
       }
 
-      // Check duty roster for today
-      const todayStr = getTodayDateStr();
-      const duty = (state.dutiesRoster && state.dutiesRoster[todayStr]) ? state.dutiesRoster[todayStr] : null;
+      // Check duty roster for the SELECTED day
+      const curStudent = state.currentStudent;
+      const duty = (state.dutiesRoster && state.dutiesRoster[selectedDStr]) ? state.dutiesRoster[selectedDStr] : null;
+
+      const isMyWaker = duty && curStudent && (duty.wakerStudentId === curStudent.id || duty.wakerStudentName === curStudent.name);
+      const isMyKitchen = duty && curStudent && (duty.kitchenStudentId === curStudent.id || duty.kitchenStudentName === curStudent.name);
+
+      let myDutyCallout = '';
+      if (isMyWaker || isMyKitchen) {
+        const dutyTitle = isMyWaker ? 'השכמת בוקר (מעורר לתפילה)' : 'ניקיון מטבח ערב';
+        const dutyIcon = isMyWaker ? '⏰' : '🍳';
+        const remTime = isMyWaker ? '22:30 לילה קודם' : '19:30';
+        myDutyCallout = `
+          <div class="w-full p-3 rounded-2xl bg-amber-50 border-2 border-amber-300 flex items-center justify-between gap-2 shadow-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">${dutyIcon}</span>
+              <div>
+                <span class="text-xs font-black text-amber-950">התורנות שלך ביום זה: ${dutyTitle}!</span>
+                <p class="text-[11px] text-amber-800">תזכורת נשלחת ב-${remTime}. מזכה בבונוס מיוחד בסימון ביצוע.</p>
+              </div>
+            </div>
+            ${isToday ? `
+              <button onclick="switchTab('student')" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shrink-0">
+                לסימון ביצוע ←
+              </button>
+            ` : ''}
+          </div>
+        `;
+      }
+
       let dutyInfoHtml = '';
-      if (duty) {
+      if (duty && (duty.wakerStudentName || duty.kitchenStudentName)) {
         dutyInfoHtml = `
           <div class="w-full flex flex-wrap items-center gap-2 pt-2.5 mt-2 border-t border-indigo-100/80 text-xs">
-            <span class="font-extrabold text-slate-700">תורני היום בישיבה:</span>
-            <span class="px-2.5 py-1 rounded-xl bg-amber-100/80 text-amber-950 border border-amber-300 font-bold flex items-center gap-1">
+            <span class="font-extrabold text-slate-700">תורני יום זה בישיבה:</span>
+            <span class="px-2.5 py-1 rounded-xl ${isMyWaker ? 'bg-amber-200 text-amber-950 border border-amber-400 font-black ring-2 ring-amber-300' : 'bg-amber-100/80 text-amber-950 border border-amber-300 font-bold'} flex items-center gap-1">
               <span>⏰</span>
-              <span>מעורר (בוקר): <strong>${duty.wakerStudentName || 'טרם שובץ'}</strong></span>
+              <span>מעורר: <strong>${duty.wakerStudentName || 'טרם שובץ'}</strong> ${isMyWaker ? '(אתה!)' : ''}</span>
             </span>
-            <span class="px-2.5 py-1 rounded-xl bg-slate-100 text-slate-800 border border-slate-300 font-bold flex items-center gap-1">
+            <span class="px-2.5 py-1 rounded-xl ${isMyKitchen ? 'bg-orange-200 text-orange-950 border border-orange-400 font-black ring-2 ring-orange-300' : 'bg-slate-100 text-slate-800 border border-slate-300 font-bold'} flex items-center gap-1">
               <span>🧹</span>
-              <span>מטבח (ערב): <strong>${duty.kitchenStudentName || 'טרם שובץ'}</strong></span>
+              <span>מטבח: <strong>${duty.kitchenStudentName || 'טרם שובץ'}</strong> ${isMyKitchen ? '(אתה!)' : ''}</span>
             </span>
           </div>
         `;
@@ -2891,13 +3150,14 @@ events.join('\n') + '\n' +
       bar.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-3 w-full">
           <div>
-            <strong class="text-indigo-950 font-black">${dayName} במבצע</strong>
+            <strong class="text-indigo-950 font-black">${dayName} (${selectedDStr})</strong>
             <span class="text-slate-500 mr-1">${desc}</span>
           </div>
           <div class="flex items-center gap-2">
             <span class="bg-white border border-indigo-200 px-2.5 py-1 rounded-xl font-bold text-indigo-900">${ptsDesc}</span>
           </div>
         </div>
+        ${myDutyCallout}
         ${dutyInfoHtml}
       `;
     }
