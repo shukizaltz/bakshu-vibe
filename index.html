@@ -1100,18 +1100,28 @@
     async function loadStateFromSupabase() {
       if (!supabaseClient) return;
       try {
-        // 1. Fetch Students from Supabase
+        // 1. Fetch Students from Supabase & Rosh Yeshiva Admin
         const { data: dbUsers, error: uErr } = await supabaseClient.from('users').select('*').order('created_at', { ascending: true });
         if (!uErr && dbUsers && dbUsers.length > 0) {
-          state.students = dbUsers.map(u => ({
-            id: u.id,
-            name: u.full_name,
-            phone: u.phone || '',
-            password: u.password || (u.phone ? u.phone.replace(/\D/g, '').slice(-4) : '1234') || '1234',
-            score: Number(u.score !== undefined && u.score !== null ? u.score : (u.manual_bonus_pts || 0)),
-            presentToday: Boolean(u.present_today),
-            persistenceCount: Number(u.persistence_count) || 0
-          }));
+          // Check for admin user row
+          const adminRow = dbUsers.find(u => u.role === 'admin' || u.id === '00000000-0000-0000-0000-000000000001');
+          if (adminRow && adminRow.phone && adminRow.phone.trim()) {
+            state.adminPasswordHash = adminRow.phone.trim();
+            saveAdminPassword(state.adminPasswordHash);
+          }
+
+          // Students only
+          state.students = dbUsers
+            .filter(u => u.role !== 'admin' && u.id !== '00000000-0000-0000-0000-000000000001')
+            .map(u => ({
+              id: u.id,
+              name: u.full_name,
+              phone: u.phone || '',
+              password: u.password || (u.phone ? u.phone.replace(/\D/g, '').slice(-4) : '1234') || '1234',
+              score: Number(u.score !== undefined && u.score !== null ? u.score : (u.manual_bonus_pts || 0)),
+              presentToday: Boolean(u.present_today),
+              persistenceCount: Number(u.persistence_count) || 0
+            }));
           saveLocalStudents();
 
           // Refresh current student
@@ -1134,11 +1144,30 @@
           state.config.endDate = c.end_date || state.config.endDate;
           state.config.minTarget = Number(c.min_target_score) || state.config.minTarget;
           state.config.groupFullThreshold = Number(c.full_seder_threshold) || state.config.groupFullThreshold;
-          if (c.admin_password) state.adminPasswordHash = c.admin_password;
+          if (c.admin_password && c.admin_password.trim()) {
+            state.adminPasswordHash = c.admin_password.trim();
+            saveAdminPassword(state.adminPasswordHash);
+          }
           saveCampaignConfig(state.config);
         }
 
-        // 3. Fetch State Snapshot from manager_bonus_logs (points: -999)
+        // 3. Fetch Dedicated Admin Password row from manager_bonus_logs (points: -998)
+        try {
+          const { data: passRows } = await supabaseClient.from('manager_bonus_logs')
+            .select('*')
+            .eq('points', -998)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (passRows && passRows.length > 0 && passRows[0].reason && passRows[0].reason.startsWith('ADMIN_PASSWORD:')) {
+            const fetchedPass = passRows[0].reason.slice('ADMIN_PASSWORD:'.length).trim();
+            if (fetchedPass) {
+              state.adminPasswordHash = fetchedPass;
+              saveAdminPassword(state.adminPasswordHash);
+            }
+          }
+        } catch(e) {}
+
+        // 4. Fetch State Snapshot from manager_bonus_logs (points: -999)
         try {
           const { data: snapshots } = await supabaseClient.from('manager_bonus_logs')
             .select('*')
@@ -1153,7 +1182,10 @@
             if (snap.journeyStops) state.journeyStops = snap.journeyStops;
             if (snap.bonusConfig) state.bonusConfig = snap.bonusConfig;
             if (snap.qrSecret) state.qrSecret = snap.qrSecret;
-            if (snap.adminPassword) state.adminPasswordHash = snap.adminPassword;
+            if (snap.adminPassword && snap.adminPassword.trim()) {
+              state.adminPasswordHash = snap.adminPassword.trim();
+              saveAdminPassword(state.adminPasswordHash);
+            }
 
             saveScheduleSlots(state.slotsByDate);
             saveCampaignConfig(state.config);
@@ -2063,8 +2095,9 @@ events.join('\n') + '\n' +
       const input = document.getElementById('adminPasswordInput');
       const err = document.getElementById('adminPasswordError');
       const val = (input ? input.value : '').trim();
+      const activePass = (state.adminPasswordHash || '').trim() || 'bakshu2026';
 
-      if (val === state.adminPasswordHash || val === 'bakshu2026' || val === '1234') {
+      if (val === activePass) {
         state.isAdminUnlocked = true;
         closeAdminPasswordModal();
 
@@ -2122,7 +2155,8 @@ events.join('\n') + '\n' +
         err.textContent = '';
       }
 
-      if (curr !== state.adminPasswordHash && curr !== 'bakshu2026' && curr !== '1234') {
+      const activePass = (state.adminPasswordHash || '').trim() || 'bakshu2026';
+      if (curr !== activePass && curr !== 'bakshu2026' && curr !== '1234') {
         if (err) {
           err.textContent = 'הסיסמה הנוכחית שהוזנה שגויה!';
           err.classList.remove('hidden');
@@ -2150,14 +2184,38 @@ events.join('\n') + '\n' +
 
       if (supabaseClient) {
         try {
-          await supabaseClient.from('campaign_config').upsert({ id: 1, admin_password: np });
+          // 1. Direct Admin User in users table
+          await supabaseClient.from('users').upsert({
+            id: '00000000-0000-0000-0000-000000000001',
+            full_name: 'ראש הישיבה',
+            role: 'admin',
+            phone: np,
+            is_active: true
+          }, { onConflict: 'id' });
+
+          // 2. Direct log entry & state snapshot in manager_bonus_logs
+          await supabaseClient.from('manager_bonus_logs').insert([
+            { points: -998, reason: 'ADMIN_PASSWORD:' + np },
+            {
+              points: -999,
+              reason: 'APP_STATE_SNAPSHOT:' + JSON.stringify({
+                slotsByDate: state.slotsByDate,
+                config: state.config,
+                dutiesRoster: state.dutiesRoster,
+                journeyStops: state.journeyStops,
+                bonusConfig: state.bonusConfig,
+                qrSecret: state.qrSecret,
+                adminPassword: np
+              })
+            }
+          ]);
         } catch (e) {
           console.warn('Supabase password sync:', e);
         }
       }
 
       closeChangePasswordModal();
-      showToast('סיסמת ראש הישיבה עודכנה בהצלחה!', '🔐');
+      showToast('סיסמת ראש הישיבה עודכנה ונשמרה בענן!', '🔐');
     }
 
     async function saveNewAdminPasswordFromTab() {
@@ -2170,7 +2228,8 @@ events.join('\n') + '\n' +
       if (err) { err.classList.add('hidden'); err.textContent = ''; }
       if (succ) succ.classList.add('hidden');
 
-      if (curr !== state.adminPasswordHash && curr !== 'bakshu2026' && curr !== '1234') {
+      const activePass = (state.adminPasswordHash || '').trim() || 'bakshu2026';
+      if (curr !== activePass && curr !== 'bakshu2026' && curr !== '1234') {
         if (err) {
           err.textContent = 'הסיסמה הנוכחית שהוזנה שגויה!';
           err.classList.remove('hidden');
@@ -2198,7 +2257,31 @@ events.join('\n') + '\n' +
 
       if (supabaseClient) {
         try {
-          await supabaseClient.from('campaign_config').upsert({ id: 1, admin_password: np });
+          // 1. Direct Admin User in users table
+          await supabaseClient.from('users').upsert({
+            id: '00000000-0000-0000-0000-000000000001',
+            full_name: 'ראש הישיבה',
+            role: 'admin',
+            phone: np,
+            is_active: true
+          }, { onConflict: 'id' });
+
+          // 2. Direct log entry & state snapshot in manager_bonus_logs
+          await supabaseClient.from('manager_bonus_logs').insert([
+            { points: -998, reason: 'ADMIN_PASSWORD:' + np },
+            {
+              points: -999,
+              reason: 'APP_STATE_SNAPSHOT:' + JSON.stringify({
+                slotsByDate: state.slotsByDate,
+                config: state.config,
+                dutiesRoster: state.dutiesRoster,
+                journeyStops: state.journeyStops,
+                bonusConfig: state.bonusConfig,
+                qrSecret: state.qrSecret,
+                adminPassword: np
+              })
+            }
+          ]);
         } catch (e) {
           console.warn('Supabase password sync:', e);
         }
@@ -2208,12 +2291,29 @@ events.join('\n') + '\n' +
       document.getElementById('secCurrentPasswordInput').value = '';
       document.getElementById('secNewPasswordInput').value = '';
       document.getElementById('secConfirmPasswordInput').value = '';
-      showToast('סיסמת ראש הישיבה עודכנה בהצלחה!', '🔐');
+      showToast('סיסמת ראש הישיבה עודכנה ונשמרה בענן!', '🔐');
     }
 
-    function resetAdminPasswordToDefault() {
+    async function resetAdminPasswordToDefault() {
       if (confirm('האם לאפס את סיסמת ראש הישיבה לסיסמת ברירת המחדל ("bakshu2026")?')) {
         saveAdminPassword('bakshu2026');
+        if (supabaseClient) {
+          try {
+            await supabaseClient.from('users').upsert({
+              id: '00000000-0000-0000-0000-000000000001',
+              full_name: 'ראש הישיבה',
+              role: 'admin',
+              phone: 'bakshu2026',
+              is_active: true
+            }, { onConflict: 'id' });
+
+            await supabaseClient.from('manager_bonus_logs').insert([
+              { points: -998, reason: 'ADMIN_PASSWORD:bakshu2026' }
+            ]);
+          } catch(e) {
+            console.warn('Supabase reset sync:', e);
+          }
+        }
         const succ = document.getElementById('secPasswordSuccess');
         if (succ) {
           succ.textContent = 'הסיסמה אופסה לברירת המחדל (bakshu2026) ✓';

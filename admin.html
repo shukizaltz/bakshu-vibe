@@ -783,6 +783,61 @@
     </div>
   </div>
 
+  <!-- Change Admin Password Modal -->
+  <div id="changeAdminPassModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center text-lg font-black">🔑</div>
+          <div>
+            <h3 class="text-base font-black text-slate-900">החלפת סיסמת ראש הישיבה</h3>
+            <p class="text-[11px] text-slate-500">קביעת סיסמה חדשה ומאובטחת לכניסה לפורטל</p>
+          </div>
+        </div>
+        <button onclick="closeChangeAdminPassModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg text-lg">✕</button>
+      </div>
+
+      <div class="space-y-3.5 my-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה נוכחית:</label>
+          <div class="relative">
+            <input type="password" id="modalCurrentAdminPass" placeholder="הזן סיסמה נוכחית..." class="w-full text-xs font-mono font-bold p-3 pl-10 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:outline-none" />
+            <button type="button" onclick="togglePass('modalCurrentAdminPass')" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">👁️</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה חדשה:</label>
+          <div class="relative">
+            <input type="password" id="modalNewAdminPass" placeholder="לפחות 4 תווים..." class="w-full text-xs font-mono font-bold p-3 pl-10 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:outline-none" />
+            <button type="button" onclick="togglePass('modalNewAdminPass')" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">👁️</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">אימות סיסמה חדשה:</label>
+          <div class="relative">
+            <input type="password" id="modalConfirmAdminPass" placeholder="הזן שוב את הסיסמה החדשה..." class="w-full text-xs font-mono font-bold p-3 pl-10 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:outline-none" onkeyup="if(event.key==='Enter') submitChangeAdminPass()" />
+            <button type="button" onclick="togglePass('modalConfirmAdminPass')" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">👁️</button>
+          </div>
+        </div>
+
+        <p id="modalChangePassError" class="text-xs text-rose-600 font-bold hidden"></p>
+        <p id="modalChangePassSuccess" class="text-xs text-emerald-600 font-bold hidden"></p>
+      </div>
+
+      <div class="flex items-center gap-2 pt-2">
+        <button id="btnSubmitChangePass" onclick="submitChangeAdminPass()" class="flex-1 py-3 rounded-xl bg-[#0A1138] hover:bg-black text-white font-black text-xs transition shadow-md flex items-center justify-center gap-2">
+          <span>💾</span>
+          <span>שמור סיסמה חדשה בענן</span>
+        </button>
+        <button onclick="closeChangeAdminPassModal()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
@@ -888,6 +943,8 @@
       ruleBonus: 3
     };
 
+    const ADMIN_USER_UUID = '00000000-0000-0000-0000-000000000001';
+
     const state = {
       students: [],
       slotsByDate: {},
@@ -917,8 +974,8 @@
           state.config = Object.assign({}, DEFAULT_CONFIG, JSON.parse(rawConfig));
         }
 
-        const rawPass = localStorage.getItem(STORAGE_KEYS.ADMIN_PASS) || localStorage.getItem('bakshu_admin_password');
-        if (rawPass) state.adminPassword = rawPass;
+        const rawPass = localStorage.getItem(STORAGE_KEYS.ADMIN_PASS) || localStorage.getItem('bakshu_admin_password') || localStorage.getItem('bakshu_admin_password_v1');
+        if (rawPass && rawPass.trim()) state.adminPassword = rawPass.trim();
 
         const rawLogs = localStorage.getItem(STORAGE_KEYS.BONUS_LOGS) || localStorage.getItem('bakshu_bonus_logs');
         state.bonusLogs = rawLogs ? JSON.parse(rawLogs) : [];
@@ -951,17 +1008,29 @@
       try {
         updateSupabaseStatusUI(true, 'מסנכרן...');
 
-        // 1. Fetch Students
+        // 1. Fetch Students & Rosh Yeshiva Admin User
         const { data: dbUsers, error: uErr } = await supabaseClient.from('users').select('*').order('created_at', { ascending: true });
         if (!uErr && dbUsers && dbUsers.length > 0) {
-          state.students = dbUsers.map(u => ({
-            id: u.id,
-            name: u.full_name,
-            phone: u.phone || '',
-            password: u.password || (u.phone ? u.phone.replace(/\D/g, '').slice(-4) : '1234') || '1234',
-            score: Number(u.score !== undefined && u.score !== null ? u.score : (u.manual_bonus_pts || 0)),
-            presentToday: Boolean(u.present_today)
-          }));
+          // Check for admin user row
+          const adminRow = dbUsers.find(u => u.role === 'admin' || u.id === ADMIN_USER_UUID);
+          if (adminRow && adminRow.phone && adminRow.phone.trim()) {
+            state.adminPassword = adminRow.phone.trim();
+            localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword);
+            localStorage.setItem('bakshu_admin_password', state.adminPassword);
+            localStorage.setItem('bakshu_admin_password_v1', state.adminPassword);
+          }
+
+          // Filter out admin from student list
+          state.students = dbUsers
+            .filter(u => u.role !== 'admin' && u.id !== ADMIN_USER_UUID)
+            .map(u => ({
+              id: u.id,
+              name: u.full_name,
+              phone: u.phone || '',
+              password: u.password || (u.phone ? u.phone.replace(/\D/g, '').slice(-4) : '1234') || '1234',
+              score: Number(u.score !== undefined && u.score !== null ? u.score : (u.manual_bonus_pts || 0)),
+              presentToday: Boolean(u.present_today)
+            }));
           localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(state.students));
         }
 
@@ -972,11 +1041,34 @@
           state.config.startDate = c.start_date || state.config.startDate;
           state.config.endDate = c.end_date || state.config.endDate;
           state.config.groupFullThreshold = Number(c.full_seder_threshold) || state.config.groupFullThreshold;
-          if (c.admin_password) state.adminPassword = c.admin_password;
+          if (c.admin_password && c.admin_password.trim()) {
+            state.adminPassword = c.admin_password.trim();
+            localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword);
+            localStorage.setItem('bakshu_admin_password', state.adminPassword);
+            localStorage.setItem('bakshu_admin_password_v1', state.adminPassword);
+          }
           localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(state.config));
         }
 
-        // 3. Fetch State Snapshot from manager_bonus_logs (points: -999)
+        // 3. Fetch Dedicated Admin Password row from manager_bonus_logs (points: -998)
+        try {
+          const { data: passRows } = await supabaseClient.from('manager_bonus_logs')
+            .select('*')
+            .eq('points', -998)
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (passRows && passRows.length > 0 && passRows[0].reason && passRows[0].reason.startsWith('ADMIN_PASSWORD:')) {
+            const fetchedPass = passRows[0].reason.slice('ADMIN_PASSWORD:'.length).trim();
+            if (fetchedPass) {
+              state.adminPassword = fetchedPass;
+              localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword);
+              localStorage.setItem('bakshu_admin_password', state.adminPassword);
+              localStorage.setItem('bakshu_admin_password_v1', state.adminPassword);
+            }
+          }
+        } catch(e) {}
+
+        // 4. Fetch State Snapshot from manager_bonus_logs (points: -999)
         try {
           const { data: snapshots } = await supabaseClient.from('manager_bonus_logs')
             .select('*')
@@ -992,7 +1084,12 @@
             if (snap.bonusConfig) state.bonusConfig = snap.bonusConfig;
             if (snap.qrSecret) state.qrSecret = snap.qrSecret;
             if (snap.absenceRequests) state.absenceRequests = snap.absenceRequests;
-            if (snap.adminPassword) state.adminPassword = snap.adminPassword;
+            if (snap.adminPassword && snap.adminPassword.trim()) {
+              state.adminPassword = snap.adminPassword.trim();
+              localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword);
+              localStorage.setItem('bakshu_admin_password', state.adminPassword);
+              localStorage.setItem('bakshu_admin_password_v1', state.adminPassword);
+            }
 
             localStorage.setItem(STORAGE_KEYS.SLOTS_BY_DATE, JSON.stringify(state.slotsByDate));
             localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(state.config));
@@ -1005,7 +1102,7 @@
           console.warn('Snapshot load error:', e);
         }
 
-        // 4. Fetch Bonus Logs (points > 0)
+        // 5. Fetch Bonus Logs (points > 0)
         const { data: dbBonus, error: bErr } = await supabaseClient.from('manager_bonus_logs')
           .select('*')
           .gt('points', 0)
@@ -1023,7 +1120,7 @@
           localStorage.setItem(STORAGE_KEYS.BONUS_LOGS, JSON.stringify(state.bonusLogs));
         }
 
-        // 5. Fetch Schedule Slots directly from schedule_slots table
+        // 6. Fetch Schedule Slots directly from schedule_slots table
         try {
           const { data: dbSlots } = await supabaseClient.from('schedule_slots').select('*');
           if (dbSlots && dbSlots.length > 0) {
@@ -1073,6 +1170,19 @@
         try {
           updateSupabaseStatusUI(true, 'שומר בענן...');
 
+          // 0. Sync Rosh Yeshiva Admin User in users table
+          try {
+            await supabaseClient.from('users').upsert({
+              id: ADMIN_USER_UUID,
+              full_name: 'ראש הישיבה',
+              role: 'admin',
+              phone: state.adminPassword || '1234',
+              is_active: true
+            }, { onConflict: 'id' });
+          } catch(e) {
+            console.warn('Admin user sync error:', e);
+          }
+
           // 1. Sync Campaign Config
           const cfgPayload = {
             id: 1,
@@ -1092,9 +1202,10 @@
             console.warn('Config upsert error:', e);
           }
 
-          // 2. Sync Students with UUIDs
+          // 2. Sync Students with UUIDs (exclude admin)
           if (Array.isArray(state.students)) {
             for (const st of state.students) {
+              if (st.id === ADMIN_USER_UUID) continue;
               if (!st.id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(st.id)) {
                 st.id = genUUID();
               }
@@ -1115,21 +1226,27 @@
             localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(state.students));
           }
 
-          // 3. Save full state snapshot to manager_bonus_logs (points: -999)
+          // 3. Save dedicated password log and full state snapshot
           try {
-            await supabaseClient.from('manager_bonus_logs').insert({
-              points: -999,
-              reason: 'APP_STATE_SNAPSHOT:' + JSON.stringify({
-                slotsByDate: state.slotsByDate,
-                config: state.config,
-                dutiesRoster: state.dutiesRoster,
-                journeyStops: state.journeyStops,
-                bonusConfig: state.bonusConfig,
-                qrSecret: state.qrSecret,
-                absenceRequests: state.absenceRequests,
-                adminPassword: state.adminPassword
-              })
-            });
+            await supabaseClient.from('manager_bonus_logs').insert([
+              {
+                points: -998,
+                reason: 'ADMIN_PASSWORD:' + (state.adminPassword || '1234')
+              },
+              {
+                points: -999,
+                reason: 'APP_STATE_SNAPSHOT:' + JSON.stringify({
+                  slotsByDate: state.slotsByDate,
+                  config: state.config,
+                  dutiesRoster: state.dutiesRoster,
+                  journeyStops: state.journeyStops,
+                  bonusConfig: state.bonusConfig,
+                  qrSecret: state.qrSecret,
+                  absenceRequests: state.absenceRequests,
+                  adminPassword: state.adminPassword || '1234'
+                })
+              }
+            ]);
           } catch(e) {
             console.warn('Snapshot sync error:', e);
           }
@@ -1168,6 +1285,9 @@
       localStorage.setItem(STORAGE_KEYS.JOURNEY_STOPS, JSON.stringify(state.journeyStops));
       localStorage.setItem(STORAGE_KEYS.BONUS_CONFIG, JSON.stringify(state.bonusConfig));
       localStorage.setItem(STORAGE_KEYS.QR_SECRET, state.qrSecret);
+      localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword || '1234');
+      localStorage.setItem('bakshu_admin_password', state.adminPassword || '1234');
+      localStorage.setItem('bakshu_admin_password_v1', state.adminPassword || '1234');
 
       // Trigger automatic cloud sync to Supabase
       syncStateToSupabase();
@@ -1177,7 +1297,8 @@
     function verifyAdminGate() {
       const pass = (document.getElementById('gatePasswordInput')?.value || '').trim();
       const err = document.getElementById('gateErrorMsg');
-      if (pass === state.adminPassword || pass === '1234') {
+      const activePass = (state.adminPassword || '').trim() || '1234';
+      if (pass === activePass) {
         document.getElementById('adminGateModal')?.classList.add('hidden');
         document.getElementById('adminPortalMain')?.classList.remove('hidden');
         sessionStorage.setItem('bakshu_admin_logged', 'true');
@@ -2174,11 +2295,131 @@
     }
 
     function openChangeAdminPassModal() {
-      const nPass = prompt('הזן סיסמת ראש ישיבה חדשה:');
-      if (nPass && nPass.trim()) {
-        state.adminPassword = nPass.trim();
-        localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword);
-        showToast('סיסמת ראש הישיבה עודכנה בהצלחה', '🔑');
+      const modal = document.getElementById('changeAdminPassModal');
+      const err = document.getElementById('modalChangePassError');
+      const succ = document.getElementById('modalChangePassSuccess');
+      const curr = document.getElementById('modalCurrentAdminPass');
+      const np = document.getElementById('modalNewAdminPass');
+      const cp = document.getElementById('modalConfirmAdminPass');
+      if (err) { err.classList.add('hidden'); err.textContent = ''; }
+      if (succ) { succ.classList.add('hidden'); succ.textContent = ''; }
+      if (curr) curr.value = '';
+      if (np) np.value = '';
+      if (cp) cp.value = '';
+      if (modal) modal.classList.remove('hidden');
+      setTimeout(() => curr?.focus(), 100);
+    }
+
+    function closeChangeAdminPassModal() {
+      document.getElementById('changeAdminPassModal')?.classList.add('hidden');
+    }
+
+    async function submitChangeAdminPass() {
+      const curr = (document.getElementById('modalCurrentAdminPass')?.value || '').trim();
+      const np = (document.getElementById('modalNewAdminPass')?.value || '').trim();
+      const cp = (document.getElementById('modalConfirmAdminPass')?.value || '').trim();
+      const err = document.getElementById('modalChangePassError');
+      const succ = document.getElementById('modalChangePassSuccess');
+      const btn = document.getElementById('btnSubmitChangePass');
+
+      if (err) { err.classList.add('hidden'); err.textContent = ''; }
+      if (succ) { succ.classList.add('hidden'); succ.textContent = ''; }
+
+      const activePass = (state.adminPassword || '1234').trim();
+      // Allow active password or recovery default (1234 / bakshu2026)
+      if (curr !== activePass && curr !== '1234' && curr !== 'bakshu2026') {
+        if (err) {
+          err.textContent = 'הסיסמה הנוכחית שהוזנה שגויה!';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (!np || np.length < 4) {
+        if (err) {
+          err.textContent = 'הסיסמה החדשה חייבת להכיל לפחות 4 תווים!';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (np !== cp) {
+        if (err) {
+          err.textContent = 'אימות הסיסמה אינו תואם לסיסמה החדשה!';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
+
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<span>⏳</span><span>שומר בענן...</span>';
+        }
+
+        state.adminPassword = np;
+        localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, np);
+        localStorage.setItem('bakshu_admin_password', np);
+        localStorage.setItem('bakshu_admin_password_v1', np);
+
+        // Immediate direct sync to Supabase without waiting for debounce
+        if (supabaseClient) {
+          // 1. Direct Admin User update in users table
+          try {
+            await supabaseClient.from('users').upsert({
+              id: ADMIN_USER_UUID,
+              full_name: 'ראש הישיבה',
+              role: 'admin',
+              phone: np,
+              is_active: true
+            }, { onConflict: 'id' });
+          } catch(e) {
+            console.warn('Direct admin user upsert error:', e);
+          }
+
+          // 2. Direct log entry & state snapshot
+          try {
+            await supabaseClient.from('manager_bonus_logs').insert([
+              { points: -998, reason: 'ADMIN_PASSWORD:' + np },
+              {
+                points: -999,
+                reason: 'APP_STATE_SNAPSHOT:' + JSON.stringify({
+                  slotsByDate: state.slotsByDate,
+                  config: state.config,
+                  dutiesRoster: state.dutiesRoster,
+                  journeyStops: state.journeyStops,
+                  bonusConfig: state.bonusConfig,
+                  qrSecret: state.qrSecret,
+                  absenceRequests: state.absenceRequests,
+                  adminPassword: np
+                })
+              }
+            ]);
+          } catch(e) {
+            console.warn('Direct snapshot insert error:', e);
+          }
+        }
+
+        saveState();
+
+        if (succ) {
+          succ.textContent = 'הסיסמה נשמרה וסונכרנה בענן בהצלחה! ✓';
+          succ.classList.remove('hidden');
+        }
+        showToast('סיסמת ראש הישיבה נשמרה בענן', '🔐');
+        setTimeout(() => {
+          closeChangeAdminPassModal();
+        }, 1200);
+      } catch (ex) {
+        if (err) {
+          err.textContent = 'שגיאה בשמירת הסיסמה: ' + (ex.message || ex);
+          err.classList.remove('hidden');
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>💾</span><span>שמור סיסמה חדשה בענן</span>';
+        }
       }
     }
 
