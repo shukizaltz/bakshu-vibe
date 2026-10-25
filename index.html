@@ -1137,7 +1137,7 @@
     const SUPABASE_KEY = 'sb_publishable_DuJUmTpWwU4h3P8r1htVWw_24i-VjeG';
     const supabaseClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-    const SCHEMA_VERSION = '2026_10_25_v6';
+    const SCHEMA_VERSION = '2026_10_25_v8';
     let isCloudHydrated = false;
 
     const HEB_GEMATRIA_DAYS = [
@@ -1145,7 +1145,7 @@
       'י׳','י״א','י״ב','י״ג','י״ד','ט״ו','ט״ז','י״ז','י״ח','י״ט',
       'כ׳','כ״א','כ״ב','כ״ג','כ״ד','כ״ה','כ״ו','כ״ז','כ״ח','כ״ט','ל׳'
     ];
-    const HEB_DAY_NAMES = ['יום א׳','יום ב׳','יום ג׳','יום ד׳','יום ה׳','יום ו׳','שבת'];
+    const HEB_DAY_NAMES = ['יום א׳','יום ב׳','יום ג׳','יום ד׳','יום ה׳','יום ו׳','שבת קודש'];
 
     const DEFAULT_EVENTS_LIST = [
       { id: 'ev_shacharit', title: 'תפילת שחרית', timeWindow: '08:25 - 08:50', points: 1, type: 'קבוע', schedule: 'א׳–ו׳' },
@@ -1178,65 +1178,281 @@
     }
     const forceHebrewLetters = toHebrewLetters;
 
-    // 2. המרה מדויקת מתאריך לועזי לתאריך עברי באותיות גימטריה בלבד + תאריך לועזי קצר
-    function formatSyncedHebrewAndGregorian(dateObj) {
-      const safeNoon = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 12, 0, 0);
-      const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(safeNoon);
-      const dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
-      let rawMonth = parts.find(p => p.type === 'month')?.value || '';
+    // 2. מנוע תאריכים מרכזי אחד (Single Source of Truth עברי-לועזי)
+    function getDayMeta(isoDate) {
+      if (!isoDate) return null;
+      const cleanIso = String(isoDate).trim().slice(0, 10);
+      const safeNoon = new Date(cleanIso + 'T12:00:00');
+      if (isNaN(safeNoon.getTime())) return null;
+
+      const y = safeNoon.getFullYear();
+      const m = String(safeNoon.getMonth() + 1).padStart(2, '0');
+      const d = String(safeNoon.getDate()).padStart(2, '0');
+      const normalizedIso = `${y}-${m}-${d}`;
+      const gregShort = `${d}.${m}`;
+      const gregFull = `${d}.${m}.${y}`;
+      const dayOfWeek = safeNoon.getDay(); // 0..6
+      const dayNameHe = HEB_DAY_NAMES[dayOfWeek] || 'יום חול';
+
+      let dayNum = 1;
+      let rawMonth = '';
+      try {
+        const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(safeNoon);
+        dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
+        rawMonth = parts.find(p => p.type === 'month')?.value || '';
+      } catch (e) {
+        dayNum = safeNoon.getDate();
+      }
       if (rawMonth.startsWith('ב')) rawMonth = rawMonth.slice(1);
       const hebLetters = HEB_GEMATRIA_DAYS[dayNum] || String(dayNum);
-      const gregShort = `${String(safeNoon.getDate()).padStart(2, '0')}.${String(safeNoon.getMonth() + 1).padStart(2, '0')}`;
-      const hebrewDateStr = `${hebLetters} ${rawMonth}`.trim();
+      const hebrewDate = toHebrewLetters(`${hebLetters} ${rawMonth}`.trim());
+      const fullLabel = `${dayNameHe} • ${hebrewDate} (${gregShort})`;
+
       return {
-        hebrewDateStr: toHebrewLetters(hebrewDateStr),
-        gregorianShort: gregShort,
-        fullDisplay: toHebrewLetters(`${hebLetters} ${rawMonth} (${gregShort})`),
-        isoDate: `${safeNoon.getFullYear()}-${String(safeNoon.getMonth() + 1).padStart(2, '0')}-${String(safeNoon.getDate()).padStart(2, '0')}`,
-        dayOfWeek: safeNoon.getDay(),
-        dayName: HEB_DAY_NAMES[safeNoon.getDay()]
+        isoDate: normalizedIso,
+        gregShort,
+        gregFull,
+        dayOfWeek,
+        dayNameHe,
+        hebrewDate,
+        fullLabel
       };
     }
 
-    // 3. מקור אמת יחיד: אילו סדרים מתוך state.eventsList חלים ביום נתון
-    function getApplicableEventsForDate(dateObj, dayIdx) {
-      const info = formatSyncedHebrewAndGregorian(dateObj);
-      const dow = info.dayOfWeek; // 0 = א', 4 = ה', 5 = ו', 6 = שבת
-      const startStr = (typeof state !== 'undefined' && state.config?.startDate) ? state.config.startDate : '2026-10-25';
-      const isOpeningDay = (dayIdx === 0) || (info.isoDate === startStr) || (info.isoDate === '2026-10-25');
+    function resolveToIsoDate(inputStr, campaignDays) {
+      if (!inputStr) return '';
+      const raw = String(inputStr).trim();
 
+      // 1. Direct ISO match (YYYY-MM-DD)
+      const isoMatch = raw.match(/\b(202\d-\d{2}-\d{2})\b/);
+      if (isoMatch) return isoMatch[1];
+
+      // 2. Direct DD.MM match
+      const ddmMatch = raw.match(/\b(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?\b/);
+
+      // Pre-normalize input text (remove quotes, gershayim, extra spaces)
+      const cleanInput = raw.replace(/[״״"']/g, '').replace(/\s+/g, ' ').trim();
+
+      // Prepare days pool: first check campaignDays, then scan up to 180 days from config.startDate
+      let pool = [];
+      if (Array.isArray(campaignDays) && campaignDays.length > 0) {
+        pool = campaignDays.map(d => (typeof d === 'string' ? d : d.isoDate)).filter(Boolean);
+      }
+      if (pool.length === 0) {
+        const startStr = (typeof state !== 'undefined' && state.config?.startDate) ? state.config.startDate : '2026-10-25';
+        const [sy, sm, sd] = startStr.split('-').map(Number);
+        for (let i = 0; i < 180; i++) {
+          const c = new Date(sy, sm - 1, sd + i, 12, 0, 0);
+          const iy = c.getFullYear();
+          const im = String(c.getMonth() + 1).padStart(2, '0');
+          const id = String(c.getDate()).padStart(2, '0');
+          pool.push(`${iy}-${im}-${id}`);
+        }
+      }
+
+      for (const iso of pool) {
+        const meta = getDayMeta(iso);
+        if (!meta) continue;
+
+        if (raw.includes(meta.isoDate)) return meta.isoDate;
+
+        if (ddmMatch) {
+          const gD = String(parseInt(ddmMatch[1], 10)).padStart(2, '0');
+          const gM = String(parseInt(ddmMatch[2], 10)).padStart(2, '0');
+          if (meta.gregShort === `${gD}.${gM}`) return meta.isoDate;
+        }
+
+        const cleanHebrew = meta.hebrewDate.replace(/[״״"']/g, '').trim();
+        if (cleanInput.includes(cleanHebrew) || cleanHebrew.includes(cleanInput)) {
+          return meta.isoDate;
+        }
+
+        const [hDay, hMonth] = cleanHebrew.split(' ');
+        if (hDay && hMonth && cleanInput.includes(hDay) && cleanInput.includes(hMonth)) {
+          return meta.isoDate;
+        }
+      }
+
+      // Fallback: 180-day scan
+      const startStr = (typeof state !== 'undefined' && state.config?.startDate) ? state.config.startDate : '2026-10-25';
+      const [sy, sm, sd] = startStr.split('-').map(Number);
+      for (let i = 0; i < 180; i++) {
+        const c = new Date(sy, sm - 1, sd + i, 12, 0, 0);
+        const iy = c.getFullYear();
+        const im = String(c.getMonth() + 1).padStart(2, '0');
+        const id = String(c.getDate()).padStart(2, '0');
+        const iso = `${iy}-${im}-${id}`;
+        const meta = getDayMeta(iso);
+        if (!meta) continue;
+
+        const cleanHebrew = meta.hebrewDate.replace(/[״״"']/g, '').trim();
+        if (cleanInput.includes(cleanHebrew) || cleanHebrew.includes(cleanInput)) {
+          return meta.isoDate;
+        }
+        const [hDay, hMonth] = cleanHebrew.split(' ');
+        if (hDay && hMonth && cleanInput.includes(hDay) && cleanInput.includes(hMonth)) {
+          return meta.isoDate;
+        }
+      }
+
+      return '';
+    }
+
+    // Backward-compatible alias
+    function formatSyncedHebrewAndGregorian(dateObj) {
+      const d = (dateObj instanceof Date) ? dateObj : new Date(dateObj);
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const meta = getDayMeta(iso);
+      if (!meta) {
+        return {
+          hebrewDateStr: '',
+          gregorianShort: '',
+          fullDisplay: '',
+          isoDate: iso,
+          dayOfWeek: 0,
+          dayName: 'יום א׳'
+        };
+      }
+      return {
+        hebrewDateStr: meta.hebrewDate,
+        gregorianShort: meta.gregShort,
+        fullDisplay: meta.fullLabel,
+        isoDate: meta.isoDate,
+        dayOfWeek: meta.dayOfWeek,
+        dayName: meta.dayNameHe
+      };
+    }
+
+    // 3. מקור אמת יחיד: סדרים ונקודות לכל תאריך (Single Source of Truth)
+    function getSlotsForDate(isoDate) {
+      if (!isoDate) {
+        isoDate = getTodayDateStr();
+      }
+      const cleanIso = String(isoDate).trim().slice(0, 10);
+      const meta = getDayMeta(cleanIso);
+      if (!meta) return [];
+
+      const startStr = (typeof state !== 'undefined' && state.config?.startDate) ? state.config.startDate : '2026-10-25';
+      const isOpeningDay = (cleanIso === startStr) || (cleanIso === '2026-10-25');
+
+      // א. ביום הראשון של המבצע (מתחיל בערב): אך ורק 2 סדרי ערב ופתיחה (3 נקודות סה״כ)
       if (isOpeningDay) {
-        // ביום הראשון של המבצע (25.10 / י״ד חשוון מתחיל בערב): אך ורק 2 סדרי ערב ופתיחה (3 נקודות) ללא שחרית/בוקר/צהריים
         return [
-          { id: 'ev_maariv', title: 'תפילת מעריב (פתיחת המבצע)', timeWindow: '19:45 - 20:15', points: 1, type: 'פתיחה', schedule: '2026-10-25' },
-          { id: 'ev_seder_c', title: 'סדר ג׳ (לילה ופתיחה)', timeWindow: '20:30 - 21:45', points: 2, type: 'קבוע', schedule: 'א׳–ה׳' }
+          {
+            id: 'ev_maariv',
+            title: 'תפילת מעריב (פתיחת המבצע)',
+            timeWindow: '19:45 - 20:15',
+            openTime: '19:45',
+            lockTime: '20:15',
+            points: 1,
+            type: 'פתיחה',
+            schedule: startStr,
+            isLocked: false
+          },
+          {
+            id: 'ev_seder_c',
+            title: 'סדר ג׳ (לילה ופתיחה)',
+            timeWindow: '20:30 - 21:45',
+            openTime: '20:30',
+            lockTime: '21:45',
+            points: 2,
+            type: 'קבוע',
+            schedule: 'א׳–ה׳',
+            isLocked: false
+          }
         ];
       }
 
-      const events = (typeof state !== 'undefined' && state.eventsList && state.eventsList.length > 0) ? state.eventsList : DEFAULT_EVENTS_LIST;
-      return events.filter(ev => {
-        if (ev.id === 'ev_maariv') return false;
+      // התאמות אישיות שנקבעו ע״י המנהל לתאריך ספציפי זה ב-slotsByDate
+      if (typeof state !== 'undefined' && state.slotsByDate && Array.isArray(state.slotsByDate[cleanIso]) && state.slotsByDate[cleanIso].length > 0) {
+        return [...state.slotsByDate[cleanIso]].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+      }
+
+      // סינון לפי eventsList
+      const events = (typeof state !== 'undefined' && state.eventsList && state.eventsList.length > 0)
+        ? state.eventsList
+        : DEFAULT_EVENTS_LIST;
+
+      const dow = meta.dayOfWeek; // 0 = Sun, 5 = Fri, 6 = Shabbat
+
+      // ב. בדיקת אירועים מיוחדים לפי תאריך עברי או לועזי באמצעות resolveToIsoDate
+      const matchedEvents = events.filter(ev => {
+        if (ev.id === 'ev_maariv') return false; // Maariv opening is opening day only
+
         const sched = (ev.schedule || '') + ' ' + (ev.title || '');
-        if (sched.includes(info.hebrewDateStr) || sched.includes(info.gregorianShort) || sched.includes(info.isoDate)) return true;
-        if (dow === 6) return ev.type === 'שבת' || sched.includes('שבת');
-        if (dow === 5) return sched.includes('א׳–ו׳') || sched.includes('יום ו׳') || sched.includes('שישי');
-        if (sched.includes('א׳–ו׳') || sched.includes('א׳–ה׳') || ev.type === 'קבוע') {
-          if (sched.includes('רביעי') || sched.includes('יום ד׳')) return dow === 3;
-          if (sched.includes('ליל שישי') || sched.includes('יום ה׳')) return dow === 4;
+
+        if (sched.includes(meta.isoDate) || sched.includes(meta.gregShort) || sched.includes(meta.gregFull)) {
           return true;
         }
-        if ((sched.includes('רביעי') || sched.includes('יום ד׳')) && dow === 3) return true;
-        if ((sched.includes('ליל שישי') || sched.includes('יום ה׳')) && dow === 4) return true;
+
+        if (ev.schedule) {
+          const resolvedSchedIso = resolveToIsoDate(ev.schedule, state?.campaignDays);
+          if (resolvedSchedIso && resolvedSchedIso === meta.isoDate) {
+            return true;
+          }
+        }
+        if (sched.includes(meta.hebrewDate)) {
+          return true;
+        }
+
+        // ימי שישי ריקים כברירת מחדל (0 נקודות)
+        if (dow === 5) {
+          return sched.includes('יום ו׳') || sched.includes('שישי') || sched.includes('יום שישי');
+        }
+
+        // שבת קודש: סדרי שבת בלבד (8 נקודות)
+        if (dow === 6) {
+          return ev.type === 'שבת' || sched.includes('שבת');
+        }
+
+        // ימי חול: א׳ עד ה׳
+        if (ev.type === 'שבת') return false;
+
+        // משמר ליל שישי ביום חמישי בלבד
+        if (sched.includes('משמר') || sched.includes('ליל שישי')) {
+          return dow === 4;
+        }
+
+        if (sched.includes('א׳–ה׳') || sched.includes('א׳–ו׳') || ev.type === 'קבוע') {
+          return true;
+        }
+
         return false;
       });
+
+      return matchedEvents.map((ev, idx) => {
+        const timeWin = ev.timeWindow || `${ev.openTime || '09:00'} - ${ev.lockTime || '10:15'}`;
+        const [openTime, lockTime] = timeWin.split('-').map(s => s.trim());
+        return {
+          id: ev.id || `slot_${cleanIso}_${idx}`,
+          title: ev.title,
+          timeWindow: timeWin,
+          openTime: ev.openTime || openTime || '09:00',
+          lockTime: ev.lockTime || lockTime || '10:15',
+          points: Number(ev.points) || 1,
+          type: ev.type || 'קבוע',
+          schedule: ev.schedule || '',
+          isLocked: false
+        };
+      }).sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+    }
+
+    function getApplicableEventsForDate(dateObj, dayIdx) {
+      let cleanIso = '';
+      if (dateObj instanceof Date) {
+        cleanIso = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+      } else if (typeof dateObj === 'string') {
+        cleanIso = dateObj.slice(0, 10);
+      } else if (typeof dayIdx === 'number' && state?.campaignDays && state.campaignDays[dayIdx]) {
+        cleanIso = state.campaignDays[dayIdx].isoDate;
+      }
+      return getSlotsForDate(cleanIso);
     }
 
     // 4. ניקוי וסנכרון תורנויות - מחיקת תורנים לפני startDate וביטול מעורר בוקר ביום הפתיחה
     function cleanseAndSyncDutiesRoster() {
       if (!state) return;
       const startStr = state.config?.startDate || '2026-10-25';
-      const [sy, sm, sd] = startStr.split('-').map(Number);
-      const startDateNoon = new Date(sy, sm - 1, sd, 12, 0, 0);
 
       if (Array.isArray(state.dutiesRoster)) {
         state.dutiesRoster = state.dutiesRoster.filter(d => {
@@ -1248,17 +1464,12 @@
         });
 
         state.dutiesRoster.forEach(d => {
-          if (state.campaignDays && typeof d.dayIdx === 'number' && state.campaignDays[d.dayIdx]) {
-            const cDay = state.campaignDays[d.dayIdx];
-            d.dateStr = toHebrewLetters(cDay.fullDateLabel);
-            d.dayName = cDay.dayName.replace(' (היום)', '');
-            d.isoDate = cDay.isoDate;
-          } else if (d.isoDate) {
-            const [dy, dm, dd] = d.isoDate.split('-').map(Number);
-            const dObj = new Date(dy, dm - 1, dd, 12, 0, 0);
-            const dInfo = formatSyncedHebrewAndGregorian(dObj);
-            d.dateStr = dInfo.fullDisplay;
-            d.dayName = dInfo.dayName;
+          if (d.isoDate) {
+            const meta = getDayMeta(d.isoDate);
+            if (meta) {
+              d.dateStr = meta.fullLabel;
+              d.dayName = meta.dayNameHe;
+            }
           }
 
           // אל תשבץ אוטומטית מעורר בבוקר ביום הראשון (מתחיל בערב)
@@ -1273,10 +1484,10 @@
 
           if (d.role === 'מעורר') {
             d.reminderTime = '22:30 לילה קודם';
-            d.reminderText = toHebrewLetters(`מעורר ב-22:30 לילה קודם (${d.dateStr})`);
+            d.reminderText = `מעורר ב-22:30 לילה קודם (${d.dateStr})`;
           } else if (d.role === 'מטבח' || d.role === 'ניקיון מטבח') {
             d.reminderTime = '19:30 לקראת ערב';
-            d.reminderText = toHebrewLetters(`ניקיון מטבח ב-19:30 לקראת ערב (${d.dateStr})`);
+            d.reminderText = `ניקיון מטבח ב-19:30 לקראת ערב (${d.dateStr})`;
           }
         });
       } else if (state.dutiesRoster && typeof state.dutiesRoster === 'object') {
@@ -1285,12 +1496,10 @@
           if (k < startStr) return;
           const dObj = state.dutiesRoster[k];
           if (dObj) {
-            const [dy, dm, dd] = k.split('-').map(Number);
-            if (!isNaN(dy) && !isNaN(dm) && !isNaN(dd)) {
-              const dDate = new Date(dy, dm - 1, dd, 12, 0, 0);
-              const dInfo = formatSyncedHebrewAndGregorian(dDate);
-              dObj.dateStr = dInfo.fullDisplay;
-              dObj.dayName = dInfo.dayName;
+            const meta = getDayMeta(k);
+            if (meta) {
+              dObj.dateStr = meta.fullLabel;
+              dObj.dayName = meta.dayNameHe;
             }
             if (k === startStr || k === '2026-10-25') {
               dObj.wakerStudentId = null;
@@ -1386,41 +1595,73 @@
       };
     }
 
-    // 6. בניית לוח המבצע וסדרי היום מתוך startDate בזמן אמת ללא טעינת campaignDays ישן
+    // 6. בניית לוח המבצע ודפדוף השבועות דינמית לפי config.startDate עד config.endDate (ביטול מגבלת 28 יום / 4 שבועות)
     function rebuildSyncedCalendarAndToday() {
       if (typeof state === 'undefined' || !state.config) return;
       const startStr = state.config.startDate || '2026-10-25';
-      const duration = parseInt(state.config.durationDays, 10) || 28;
+      let endStr = state.config.endDate;
+      if (!endStr || endStr <= startStr) {
+        endStr = '2026-12-05';
+        state.config.endDate = endStr;
+      }
+
       const [sy, sm, sd] = startStr.split('-').map(Number);
+      const [ey, em, ed] = endStr.split('-').map(Number);
+      const startDateNoon = new Date(sy, sm - 1, sd, 12, 0, 0);
+      const endDateNoon = new Date(ey, em - 1, ed, 12, 0, 0);
+
+      state.calendarGridOffset = startDateNoon.getDay();
+
       const now = new Date();
       const todayNoon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
 
-      state.calendarGridOffset = new Date(sy, sm - 1, sd, 12, 0, 0).getDay();
-
       const updatedDays = [];
-      for (let i = 0; i < duration; i++) {
-        const curDate = new Date(sy, sm - 1, sd + i, 12, 0, 0);
-        const dInfo = formatSyncedHebrewAndGregorian(curDate);
-        const dayEvents = getApplicableEventsForDate(curDate, i);
-        const sedarimCount = dayEvents.length;
-        const pointsPool = dayEvents.reduce((sum, e) => sum + (Number(e.points) || 1), 0);
-        const specialEv = dayEvents.find(e => e.points >= 2 || e.type === 'בונוס' || e.type === 'מיוחד');
+      let curr = new Date(startDateNoon);
+      let dayIndex = 0;
+
+      let passedDaysCount = 0;
+      let passedSedarimCount = 0;
+      let passedPointsCount = 0;
+      let remainingDaysCount = 0;
+      let remainingSedarimCount = 0;
+      let remainingPointsCount = 0;
+
+      while (curr <= endDateNoon) {
+        const curIso = `${curr.getFullYear()}-${String(curr.getMonth() + 1).padStart(2, '0')}-${String(curr.getDate()).padStart(2, '0')}`;
+        const dMeta = getDayMeta(curIso);
+        const daySlots = getSlotsForDate(curIso);
+        const sedarimCount = daySlots.length;
+        const pointsPool = daySlots.reduce((sum, e) => sum + (Number(e.points) || 1), 0);
+        const specialEv = daySlots.find(e => e.points >= 2 || e.type === 'בונוס' || e.type === 'מיוחד');
 
         let status = 'upcoming';
-        if (curDate.getTime() < todayNoon.getTime()) status = 'passed';
-        else if (curDate.getTime() === todayNoon.getTime()) {
+        if (curr.getTime() < todayNoon.getTime()) {
+          status = 'passed';
+          passedDaysCount++;
+          passedSedarimCount += sedarimCount;
+          passedPointsCount += pointsPool;
+        } else if (curr.getTime() === todayNoon.getTime()) {
           status = 'today';
-          state.selectedCalendarDayIndex = i;
+          state.selectedCalendarDayIndex = dayIndex;
+          state.currentSelectedCalendarDayIndex = dayIndex;
+          remainingDaysCount++;
+          remainingSedarimCount += sedarimCount;
+          remainingPointsCount += pointsPool;
+        } else {
+          status = 'upcoming';
+          remainingDaysCount++;
+          remainingSedarimCount += sedarimCount;
+          remainingPointsCount += pointsPool;
         }
 
-        const prevDayObj = (state.campaignDays || [])[i] || {};
+        const prevDayObj = (state.campaignDays || [])[dayIndex] || {};
         updatedDays.push({
-          dayIndex: i,
-          isoDate: dInfo.isoDate,
-          gregorianShort: dInfo.gregorianShort,
-          dayName: status === 'today' ? `${dInfo.dayName} (היום)` : dInfo.dayName,
-          dateStr: toHebrewLetters(dInfo.hebrewDateStr),
-          fullDateLabel: toHebrewLetters(dInfo.fullDisplay),
+          dayIndex,
+          isoDate: dMeta.isoDate,
+          gregorianShort: dMeta.gregShort,
+          dayName: status === 'today' ? `${dMeta.dayNameHe} (היום)` : dMeta.dayNameHe,
+          dateStr: dMeta.hebrewDate,
+          fullDateLabel: dMeta.fullLabel,
           status,
           sedarim: sedarimCount,
           pointsPool,
@@ -1428,12 +1669,26 @@
           isBonus: !!specialEv || !!prevDayObj.isBonus,
           bonusLabel: specialEv ? specialEv.title : (prevDayObj.bonusLabel || '')
         });
+
+        curr.setDate(curr.getDate() + 1);
+        dayIndex++;
       }
+
       state.campaignDays = updatedDays;
 
-      if (typeof state.currentWeekIndex !== 'number') {
-        const todayDayIdx = (state.selectedCalendarDayIndex !== undefined) ? state.selectedCalendarDayIndex : 0;
-        state.currentWeekIndex = Math.floor(todayDayIdx / 7);
+      // עדכון דינמי של כותרת כמה עבר וכמה נשאר מתוך campaignDays
+      const totalDays = updatedDays.length;
+      const currentDayNum = state.selectedCalendarDayIndex !== undefined ? (state.selectedCalendarDayIndex + 1) : 1;
+      const subtitleEl = document.getElementById('campaignDurationSubtitle');
+      if (subtitleEl) {
+        subtitleEl.textContent = `היום: יום ${currentDayNum} מתוך ${totalDays} במבצע • עברו: ${passedDaysCount} ימים (${passedSedarimCount} סדרים, ${passedPointsCount} נק׳) | נשארו: ${remainingDaysCount} ימים (${remainingSedarimCount} סדרים, ${remainingPointsCount} נק׳)`;
+      }
+
+      // חישוב שבועות דינמי לחלוטין ללא הגבלת 4 שבועות
+      const totalWeeks = Math.max(1, Math.ceil(totalDays / 7));
+      if (typeof state.currentWeekIndex !== 'number' || state.currentWeekIndex >= totalWeeks) {
+        const todayIdx = (state.selectedCalendarDayIndex !== undefined) ? state.selectedCalendarDayIndex : 0;
+        state.currentWeekIndex = Math.min(totalWeeks - 1, Math.floor(todayIdx / 7));
       }
 
       cleanseAndSyncDutiesRoster();
@@ -1441,7 +1696,7 @@
       const sederInfo = getActiveOrNextSederInfo();
       const targetEvents = (sederInfo && sederInfo.applicableEvents && sederInfo.applicableEvents.length > 0)
         ? sederInfo.applicableEvents
-        : getApplicableEventsForDate(todayNoon, 0);
+        : getSlotsForDate(todayNoon.toISOString().slice(0, 10));
 
       state.todaySlots = targetEvents.map((ev, idx) => {
         const existing = (state.todaySlots || []).find(t => t.id === ev.id) || {};
@@ -1967,28 +2222,7 @@
       return `${diff} דקות`;
     }
 
-    function getSlotsForDate(dateStr) {
-      let raw;
-      if (!dateStr) raw = state.slotsByDate['weekday_template'] || DEFAULT_SLOTS['weekday_template'];
-      else if (state.slotsByDate && Array.isArray(state.slotsByDate[dateStr])) {
-        raw = state.slotsByDate[dateStr];
-      } else {
-        try {
-          const d = new Date(dateStr + 'T12:00:00');
-          const day = d.getDay(); // 0: Sun, 5: Fri, 6: Sat
-          if (day === 5) {
-            raw = state.slotsByDate['friday_template'] || [];
-          } else if (day === 6) {
-            raw = state.slotsByDate['shabbat_template'] || DEFAULT_SLOTS['shabbat_template'];
-          } else {
-            raw = state.slotsByDate['weekday_template'] || DEFAULT_SLOTS['weekday_template'];
-          }
-        } catch (e) {
-          raw = state.slotsByDate['weekday_template'] || DEFAULT_SLOTS['weekday_template'];
-        }
-      }
-      return [...(raw || [])].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
-    }
+    // (פונקציית הסדרים הראשית getSlotsForDate מוגדרת במנוע התאריכים המרכזי בראש הקוד)
 
     function getTodayDateStr() {
       const now = new Date();
@@ -2141,10 +2375,11 @@
     function generateStudentCalendarIcs(student) {
       const curStudent = student || state.currentStudent || { id: 'generic', name: 'בחור ישיבה' };
       const startStr = state.config?.startDate || '2026-10-25';
-      const endStr = state.config?.endDate || '2026-12-05';
+      let endStr = state.config?.endDate || '2026-12-05';
+      if (endStr <= startStr) endStr = '2026-12-05';
+
       const [sy, sm, sd] = startStr.split('-').map(Number);
       const [ey, em, ed] = endStr.split('-').map(Number);
-
       const start = new Date(sy, sm - 1, sd, 12, 0, 0);
       const end = new Date(ey, em - 1, ed, 12, 0, 0);
 
@@ -2154,15 +2389,52 @@
       const dtStamp = formatUtc(new Date());
 
       const events = [];
+
+      // 1. ייצוא נקודות העצירה במסע (כולל עצירה ראשונה: ט׳ כסליו התואם ל-2026-11-19)
+      const stops = (state.journeyStops && state.journeyStops.length > 0) ? state.journeyStops : [
+        { id: 'stop_1', title: 'עצירה 1 - פיתחו יומנים!', dateStr: 'יום ה׳ ט׳ כסליו', isDecided: true, note: 'האירוע הפותח של מסע החורף' }
+      ];
+
+      stops.forEach((stop, sIdx) => {
+        const rawDateStr = stop.isoDate || stop.dateStr || '';
+        const resolvedIso = resolveToIsoDate(rawDateStr, state.campaignDays);
+        if (resolvedIso) {
+          const [ry, rm, rd] = resolvedIso.split('-').map(Number);
+          const stopDate = new Date(ry, rm - 1, rd, 12, 0, 0);
+          const nextDate = new Date(ry, rm - 1, rd + 1, 12, 0, 0);
+          const stopDateStr = `${stopDate.getFullYear()}${pad(stopDate.getMonth() + 1)}${pad(stopDate.getDate())}`;
+          const nextDateStr = `${nextDate.getFullYear()}${pad(nextDate.getMonth() + 1)}${pad(nextDate.getDate())}`;
+          const stopMeta = getDayMeta(resolvedIso);
+          const displayTitle = `📍 מבצע בקשו - ${stop.title}`;
+          const displayDesc = `אירוע עצירה במסע מבצע בקשו VIBE: ${stop.note || ''}\\nמועד: ${stopMeta ? stopMeta.fullLabel : rawDateStr}.`;
+
+          events.push(
+            'BEGIN:VEVENT\n' +
+            'UID:bakshu_stop_' + (stop.id || sIdx) + '_' + stopDateStr + '@bakshu.org\n' +
+            'DTSTAMP:' + dtStamp + '\n' +
+            'DTSTART;VALUE=DATE:' + stopDateStr + '\n' +
+            'DTEND;VALUE=DATE:' + nextDateStr + '\n' +
+            'SUMMARY:' + displayTitle + '\n' +
+            'DESCRIPTION:' + displayDesc + '\n' +
+            'LOCATION:ישיבת בקשו ירושלים\n' +
+            'STATUS:CONFIRMED\n' +
+            'TRANSP:TRANSPARENT\n' +
+            'END:VEVENT'
+          );
+        }
+      });
+
+      // 2. ייצוא כל סדרי המבצע מ-startDate עד endDate בשעון ישראל עם תזכורת 10 דקות לפני
       let curr = new Date(start);
       let dayIdx = 0;
 
       while (curr <= end) {
-        const dInfo = formatSyncedHebrewAndGregorian(curr);
-        const dayEvents = getApplicableEventsForDate(curr, dayIdx);
+        const curIso = `${curr.getFullYear()}-${pad(curr.getMonth() + 1)}-${pad(curr.getDate())}`;
+        const meta = getDayMeta(curIso);
+        const daySlots = getSlotsForDate(curIso);
 
-        dayEvents.forEach((ev, eIdx) => {
-          const timeWin = ev.timeWindow || '09:00 - 10:15';
+        daySlots.forEach((slot, eIdx) => {
+          const timeWin = slot.timeWindow || `${slot.openTime || '09:00'} - ${slot.lockTime || '10:15'}`;
           const [oStr, lStr] = timeWin.split('-').map(x => x.trim());
           const [oh, om] = (oStr || '09:00').split(':').map(Number);
           const [lh, lm] = (lStr || '10:15').split(':').map(Number);
@@ -2170,9 +2442,9 @@
           const dtStart = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), oh || 0, om || 0, 0);
           const dtEnd = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), lh || 0, lm || 0, 0);
 
-          const uid = `bakshu_ev_${dInfo.isoDate}_${ev.id || eIdx}_${curStudent.id}@bakshu.org`;
-          const summary = `${ev.title} (${dInfo.hebrewDateStr}) - ${ev.points || 1} נק׳`;
-          const desc = `סדר מבצע בקשו VIBE עבור ${curStudent.name}.\\nשווי: ${ev.points || 1} נקודות.\\nתאריך עברי: ${dInfo.hebrewDateStr} (${dInfo.gregorianShort}).`;
+          const uid = `bakshu_seder_${curIso}_${slot.id || eIdx}_${curStudent.id}@bakshu.org`;
+          const summary = `${slot.title} (${meta.hebrewDate}) - ${slot.points || 1} נק׳`;
+          const desc = `סדר מבצע בקשו VIBE עבור ${curStudent.name}.\\nשווי: ${slot.points || 1} נקודות.\\nתאריך עברי: ${meta.hebrewDate} (${meta.gregShort}).`;
 
           events.push(
             'BEGIN:VEVENT\n' +
@@ -2186,16 +2458,16 @@
             'BEGIN:VALARM\n' +
             'TRIGGER:-PT10M\n' +
             'ACTION:DISPLAY\n' +
-            'DESCRIPTION:תזכורת: בעוד 10 דקות מתחיל ' + ev.title + ' בישיבת בקשו!\n' +
+            'DESCRIPTION:תזכורת: בעוד 10 דקות מתחיל ' + slot.title + ' בישיבת בקשו!\n' +
             'END:VALARM\n' +
             'END:VEVENT'
           );
         });
 
-        // Personal duty check for curr
+        // 3. תורנויות אישיות של הבחור המחובר (מעורר בלילה שלפני ב-22:30, מטבח באותו יום ב-19:30)
         const dayDuty = (Array.isArray(state.dutiesRoster))
-          ? state.dutiesRoster.find(dr => dr.dayIdx === dayIdx || dr.isoDate === dInfo.isoDate)
-          : ((state.dutiesRoster && state.dutiesRoster[dInfo.isoDate]) ? state.dutiesRoster[dInfo.isoDate] : null);
+          ? state.dutiesRoster.find(dr => dr.dayIdx === dayIdx || dr.isoDate === curIso)
+          : ((state.dutiesRoster && state.dutiesRoster[curIso]) ? state.dutiesRoster[curIso] : null);
 
         if (dayDuty) {
           const isWaker = Boolean(
@@ -2210,44 +2482,70 @@
           );
 
           if (isWaker) {
+            // תזכורת בלילה שלפני ב-22:30
+            const prevNight = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() - 1, 22, 30, 0);
+            const prevNightEnd = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate() - 1, 23, 0, 0);
+            const uidWakerNight = `bakshu_duty_waker_remind_${curIso}_${curStudent.id}@bakshu.org`;
+
+            events.push(
+              'BEGIN:VEVENT\n' +
+              'UID:' + uidWakerNight + '\n' +
+              'DTSTAMP:' + dtStamp + '\n' +
+              'DTSTART;TZID=Asia/Jerusalem:' + formatIcsDt(prevNight) + '\n' +
+              'DTEND;TZID=Asia/Jerusalem:' + formatIcsDt(prevNightEnd) + '\n' +
+              'SUMMARY:⏰ תזכורת: מחר בבוקר הנך תורן מעורר לתפילה! (' + meta.hebrewDate + ')\n' +
+              'DESCRIPTION:שלום ' + curStudent.name + ', הנך משובץ מחר בבוקר כתורן מעורר לתפילה בישיבת בקשו (השכמה ב-06:45).\\nבונוס תורנות: +' + (state.bonusConfig?.dutyWakerBonus || 3) + ' נקודות.\n' +
+              'LOCATION:פנימייה ובית המדרש - ישיבת בקשו\n' +
+              'BEGIN:VALARM\n' +
+              'TRIGGER:-PT15M\n' +
+              'ACTION:DISPLAY\n' +
+              'DESCRIPTION:תזכורת: מחר בבוקר הנך תורן מעורר בישיבת בקשו (השכמה ב-06:45)!\n' +
+              'END:VALARM\n' +
+              'END:VEVENT'
+            );
+
+            // אירוע ההשכמה בבוקר ב-06:45
             const dtStartWaker = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 6, 45, 0);
             const dtEndWaker = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 7, 30, 0);
-            const uidWaker = `bakshu_duty_waker_${dInfo.isoDate}_${curStudent.id}@bakshu.org`;
+            const uidWaker = `bakshu_duty_waker_${curIso}_${curStudent.id}@bakshu.org`;
+
             events.push(
               'BEGIN:VEVENT\n' +
               'UID:' + uidWaker + '\n' +
               'DTSTAMP:' + dtStamp + '\n' +
               'DTSTART;TZID=Asia/Jerusalem:' + formatIcsDt(dtStartWaker) + '\n' +
               'DTEND;TZID=Asia/Jerusalem:' + formatIcsDt(dtEndWaker) + '\n' +
-              'SUMMARY:⏰ תורן מעורר לתפילה (' + dInfo.hebrewDateStr + ') - ישיבת בקשו (שלך!)\n' +
-              'DESCRIPTION:שלום ' + curStudent.name + ', הנך משובץ כתורן מעורר לתפילה בישיבת בקשו. השכמה ב-06:45 בבוקר.\\nתזכורת נשלחת ב-22:30 לילה קודם.\\nבונוס תורנות: +' + (state.bonusConfig?.dutyWakerBonus || 3) + ' נקודות.\n' +
+              'SUMMARY:⏰ השכמת בוקר - תורן מעורר לתפילה (' + meta.hebrewDate + ')\n' +
+              'DESCRIPTION:שלום ' + curStudent.name + ', השכמת הפנימייה לתפילת שחרית בישיבת בקשו.\\nבונוס תורנות: +' + (state.bonusConfig?.dutyWakerBonus || 3) + ' נקודות.\n' +
               'LOCATION:פנימייה ובית המדרש - ישיבת בקשו\n' +
               'BEGIN:VALARM\n' +
-              'TRIGGER:-PT495M\n' +
+              'TRIGGER:-PT5M\n' +
               'ACTION:DISPLAY\n' +
-              'DESCRIPTION:תזכורת תורנות מעורר לתפילה: מחר בבוקר השכמה ב-06:45 בישיבת בקשו!\n' +
+              'DESCRIPTION:השכמה: בעוד 5 דקות השכמת בוקר בישיבת בקשו!\n' +
               'END:VALARM\n' +
               'END:VEVENT'
             );
           }
 
           if (isKitchen) {
+            // תורנות מטבח באותו יום בשעה 19:30
             const dtStartKitchen = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 19, 30, 0);
             const dtEndKitchen = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 20, 30, 0);
-            const uidKitchen = `bakshu_duty_kitchen_${dInfo.isoDate}_${curStudent.id}@bakshu.org`;
+            const uidKitchen = `bakshu_duty_kitchen_${curIso}_${curStudent.id}@bakshu.org`;
+
             events.push(
               'BEGIN:VEVENT\n' +
               'UID:' + uidKitchen + '\n' +
               'DTSTAMP:' + dtStamp + '\n' +
               'DTSTART;TZID=Asia/Jerusalem:' + formatIcsDt(dtStartKitchen) + '\n' +
               'DTEND;TZID=Asia/Jerusalem:' + formatIcsDt(dtEndKitchen) + '\n' +
-              'SUMMARY:🧹 תורן מטבח ערב (' + dInfo.hebrewDateStr + ') - ישיבת בקשו (שלך!)\n' +
-              'DESCRIPTION:שלום ' + curStudent.name + ', הנך משובץ לתורנות ניקיון ושטיפת מטבח וחדר אוכל לקראת ערב (19:30 - 20:30).\\nתזכורת נשלחת ב-19:30 בערב.\\nבונוס תורנות: +' + (state.bonusConfig?.dutyKitchenBonus || 3) + ' נקודות.\n' +
+              'SUMMARY:🧹 תורנות ניקיון ושטיפת מטבח ערב (' + meta.hebrewDate + ')\n' +
+              'DESCRIPTION:שלום ' + curStudent.name + ', הנך משובץ לתורנות ניקיון ושטיפת מטבח וחדר אוכל לקראת ערב (19:30 - 20:30).\\nבונוס תורנות: +' + (state.bonusConfig?.dutyKitchenBonus || 3) + ' נקודות.\n' +
               'LOCATION:חדר אוכל ומטבח - ישיבת בקשו\n' +
               'BEGIN:VALARM\n' +
-              'TRIGGER:-PT0M\n' +
+              'TRIGGER:-PT10M\n' +
               'ACTION:DISPLAY\n' +
-              'DESCRIPTION:תזכורת: כעת מתחילה תורנות ניקיון מטבח ערב בישיבת בקשו!\n' +
+              'DESCRIPTION:תזכורת: בעוד 10 דקות מתחילה תורנות ניקיון מטבח ערב בישיבת בקשו!\n' +
               'END:VALARM\n' +
               'END:VEVENT'
             );
@@ -2359,15 +2657,15 @@
 
     function openJourneyStopGoogleCalendar(stopId) {
       const stop = (state.journeyStops || []).find(s => s.id === stopId) || { title: 'עצירה 1 במסע החורף', dateStr: 'ט׳ כסליו' };
+      const resolvedIso = resolveToIsoDate(stop.isoDate || stop.dateStr, state.campaignDays) || '2026-11-19';
+      const meta = getDayMeta(resolvedIso);
       const title = encodeURIComponent('ישיבת בקשו - ' + stop.title);
-      const details = encodeURIComponent('אירוע עצירה מיוחד במסע מבצע בקשו VIBE: ' + (stop.note || 'האירוע הפותח של מסע החורף'));
+      const details = encodeURIComponent('אירוע עצירה מיוחד במסע מבצע בקשו VIBE: ' + (stop.note || 'האירוע הפותח של מסע החורף') + (meta ? '\nתאריך עברי: ' + meta.fullLabel : ''));
       const location = encodeURIComponent('ישיבת בקשו ירושלים');
-      
-      const d = new Date();
-      d.setDate(d.getDate() + 7);
-      d.setHours(20, 0, 0, 0);
-      const dEnd = new Date(d);
-      dEnd.setHours(22, 0, 0, 0);
+
+      const [ry, rm, rd] = resolvedIso.split('-').map(Number);
+      const d = new Date(ry, rm - 1, rd, 20, 0, 0);
+      const dEnd = new Date(ry, rm - 1, rd, 22, 0, 0);
 
       const pad = (n) => String(n).padStart(2, '0');
       const formatGDate = (dt) => dt.getUTCFullYear() + pad(dt.getUTCMonth()+1) + pad(dt.getUTCDate()) + 'T' + pad(dt.getUTCHours()) + pad(dt.getUTCMinutes()) + '00Z';
@@ -3977,13 +4275,21 @@
       if (Array.isArray(state.campaignDays) && state.campaignDays.length > 0) {
         picker.innerHTML = state.campaignDays.map(d => `<option value="${d.isoDate}">${d.dayName} • ${toHebrewLetters(d.fullDateLabel)}</option>`).join('');
       } else {
-        const startStr = state.config?.startDate || '2026-10-18';
+        const startStr = state.config?.startDate || '2026-10-25';
+        let endStr = state.config?.endDate || '2026-12-05';
+        if (endStr <= startStr) endStr = '2026-12-05';
         const [sy, sm, sd] = startStr.split('-').map(Number);
+        const [ey, em, ed] = endStr.split('-').map(Number);
+        let curr = new Date(sy, sm - 1, sd, 12, 0, 0);
+        const end = new Date(ey, em - 1, ed, 12, 0, 0);
         const days = [];
-        for (let i = 0; i < 28; i++) {
-          const cDate = new Date(sy, sm - 1, sd + i, 12, 0, 0);
-          const dInfo = formatSyncedHebrewAndGregorian(cDate);
-          days.push(`<option value="${dInfo.isoDate}">${dInfo.dayName} • ${toHebrewLetters(dInfo.fullDisplay)}</option>`);
+        while (curr <= end) {
+          const curIso = `${curr.getFullYear()}-${String(curr.getMonth() + 1).padStart(2, '0')}-${String(curr.getDate()).padStart(2, '0')}`;
+          const meta = getDayMeta(curIso);
+          if (meta) {
+            days.push(`<option value="${meta.isoDate}">${meta.fullLabel}</option>`);
+          }
+          curr.setDate(curr.getDate() + 1);
         }
         picker.innerHTML = days.join('');
       }
@@ -5421,8 +5727,17 @@
         { id: 'stop_summit', title: 'הפסגה - סיום המסע', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isDecided: false, note: 'האירוע המרכזי והחגיגי בסיום המבצע', icon: '🏔️' }
       ];
 
-      container.innerHTML = stops.map((stop, idx) => {
+      container.innerHTML = stops.map((stop) => {
         const isDecided = stop.isDecided;
+        let combinedDateText = stop.dateStr;
+        const resolvedIso = resolveToIsoDate(stop.isoDate || stop.dateStr, state.campaignDays);
+        if (resolvedIso) {
+          const meta = getDayMeta(resolvedIso);
+          if (meta) {
+            combinedDateText = `${meta.dayNameHe} • ${meta.hebrewDate} (${meta.gregShort})`;
+          }
+        }
+
         return `
           <div class="p-3.5 rounded-2xl border ${isDecided ? 'border-amber-300 bg-gradient-to-b from-amber-50/70 to-white shadow-sm' : 'border-slate-200 bg-slate-50/70'} flex flex-col justify-between transition hover:shadow-md">
             <div>
@@ -5435,7 +5750,7 @@
                   ${isDecided ? 'מועד סופי ✓' : 'ממתין לקביעה ⏳'}
                 </span>
               </div>
-              <div class="text-xs font-black text-indigo-950 mt-1">${stop.dateStr}</div>
+              <div class="text-xs font-black text-indigo-950 mt-1">${combinedDateText}</div>
               <p class="text-[10px] text-slate-500 mt-1">${stop.note || ''}</p>
             </div>
             ${isDecided ? `
