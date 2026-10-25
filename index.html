@@ -589,15 +589,15 @@
 
       </div>
 
-      <!-- Axis B: Journey Stops Stepper (תחנות העצירה במסע – עד הפסגה) -->
+      <!-- Axis B: Journey Stops Stepper (ציר ב׳ - נקודות העצירה במסע עם ?) -->
       <div class="soft-card p-4 sm:p-6 bg-white border border-slate-200">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-100">
           <div>
             <div class="flex items-center gap-2">
               <span class="text-xl">📍</span>
-              <h3 class="text-base font-black text-slate-900">תחנות העצירה במסע – עד הפסגה</h3>
+              <h3 class="text-base font-black text-slate-900">ציר ב׳: נקודות העצירה במסע</h3>
             </div>
-            <p class="text-xs text-slate-500" id="axisBSubtitle">📍 עצירה ראשונה: יום חמישי ט׳ כסליו – פיתחו יומנים!</p>
+            <p class="text-xs text-slate-500" id="axisBSubtitle">📍 עצירה ראשונה: טרם נקבע תאריך בפורטל הניהול (יוכרז בהמשך)</p>
           </div>
           <button onclick="openGoogleCalendarForStop(0)" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-black text-xs transition flex items-center gap-1.5 self-start sm:self-auto shadow-sm cursor-pointer" id="btnSyncStop1Calendar">
             <span>📅</span>
@@ -2184,10 +2184,8 @@
           }
         } else {
           st.isDecided = false;
-          st.dateLabel = (st.id === 'stop_1' || st === stopsToSync[0])
-            ? 'יום חמישי ט׳ כסליו – פיתחו יומנים!'
-            : 'התאריך ייחשף בהמשך המסע! 🎁';
-          st.dateStr = st.dateLabel;
+          st.dateLabel = 'ללא תאריך קבוע עדיין (יוכרז בהמשך)';
+          st.dateStr = 'יוכרז בהמשך';
         }
       });
       state.trailStops = stopsToSync;
@@ -3755,34 +3753,37 @@
       {
         id: 'stop_1',
         title: 'עצירה 1 - פיתחו יומנים!',
-        isoDate: '2026-11-19',
-        dateStr: 'יום חמישי ט׳ כסליו – פיתחו יומנים!',
-        dateLabel: 'יום חמישי ט׳ כסליו – פיתחו יומנים!',
-        isDecided: true,
+        isoDate: '',
+        dateStr: 'יוכרז בהמשך',
+        dateLabel: 'ללא תאריך קבוע עדיין (יוכרז בהמשך)',
+        points: 70,
+        isDecided: false,
         desc: 'עצירה ראשונה במסע החורף - סמנו ביומנים!',
         note: 'האירוע הפותח של מסע החורף - סמנו ביומנים!',
         icon: '📍'
       },
       {
         id: 'stop_2',
-        title: 'עצירה 2 – יעד נושא מתנה 🎁',
+        title: 'עצירה 2 - הדלקת נרות חנוכה',
         isoDate: '',
-        dateStr: 'התאריך ייחשף בהמשך המסע! 🎁',
-        dateLabel: 'התאריך ייחשף בהמשך המסע! 🎁',
+        dateStr: 'יוכרז בהמשך',
+        dateLabel: 'ללא תאריך קבוע עדיין (יוכרז בהמשך)',
+        points: 100,
         isDecided: false,
-        desc: 'עצירה 2 – יעד נושא מתנה 🎁',
-        note: 'עצירה 2 – יעד נושא מתנה 🎁',
-        icon: '🎁'
+        desc: 'עצירה שנייה במסע - אירוע חנוכה ישיבתי חגיגי',
+        note: 'אירוע חנוכה ישיבתי חגיגי',
+        icon: '🕯️'
       },
       {
         id: 'stop_summit',
-        title: 'הפסגה – המטרה הגדולה מחכה לנו! 🏔️🎁',
+        title: 'הפסגה - סיום המסע',
         isoDate: '',
-        dateStr: 'התאריך ייחשף בהמשך המסע! 🎁',
-        dateLabel: 'התאריך ייחשף בהמשך המסע! 🎁',
+        dateStr: 'סיום המבצע',
+        dateLabel: 'יום סיום המבצע',
+        points: 130,
         isDecided: false,
-        desc: 'הפסגה – המטרה הגדולה מחכה לנו! 🏔️🎁',
-        note: 'הפסגה – המטרה הגדולה מחכה לנו! 🏔️🎁',
+        desc: 'יעד הפסגה הגדול - מעמד הסיום החגיגי של כלל הישיבה!',
+        note: 'אירוע השיא והמעמד החגיגי של כלל הישיבה!',
         icon: '🏔️'
       }
     ];
@@ -3796,11 +3797,9 @@
             return parsed.map((s, idx) => ({
               ...DEFAULT_TRAIL_STOPS[idx],
               ...s,
-              title: DEFAULT_TRAIL_STOPS[idx].title,
-              isoDate: s.isoDate || DEFAULT_TRAIL_STOPS[idx].isoDate || '',
-              dateLabel: s.dateLabel || (s.isoDate ? s.dateLabel : DEFAULT_TRAIL_STOPS[idx].dateLabel),
-              desc: DEFAULT_TRAIL_STOPS[idx].desc,
-              note: DEFAULT_TRAIL_STOPS[idx].note
+              isoDate: s.isoDate || '',
+              dateLabel: s.dateLabel || (s.isoDate ? s.dateLabel : 'ללא תאריך קבוע עדיין (יוכרז בהמשך)'),
+              points: Number(s.points) || DEFAULT_TRAIL_STOPS[idx].points
             }));
           }
         }
@@ -3951,8 +3950,8 @@
     // 5. NAVIGATION & TABS (ROSH HAYESHIVA PROTECTED)
     // ====================================================
     function switchTab(tabId) {
-      if (tabId === 'admin') {
-        forceOpenRoshYeshivaAdmin();
+      if (tabId === 'admin' && !state.isAdminUnlocked) {
+        openAdminPasswordModal();
         return;
       }
 
@@ -4037,87 +4036,6 @@
       document.getElementById('adminPasswordModal')?.classList.add('hidden');
     }
 
-    function forceOpenRoshYeshivaAdmin() {
-      // 1. Activate all admin state flags
-      state.isAdminUnlocked = true;
-      state.adminUnlocked = true;
-      state.isAdmin = true;
-      state.currentRole = 'admin';
-      state.hermeticPortal = 'admin_portal';
-      state.activeTab = 'admin';
-
-      // 2. Hide all modals and student/public screens completely
-      const hideIds = [
-        'studentLoginModal',
-        'adminPasswordModal',
-        'changePasswordModal',
-        'barcodeScannerModal',
-        'adminPasswordGateCard',
-        'screen-student',
-        'screen-public',
-        'screen-requests'
-      ];
-      hideIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.classList.add('hidden');
-          el.style.display = 'none';
-        }
-      });
-
-      // 3. Show admin screens, navigation, and protected content directly
-      const showIds = [
-        'screen-admin',
-        'adminProtectedContent',
-        'adminNavContainer',
-        'adminLockBtn',
-        'dtab-admin',
-        'mtab-admin',
-        'supabaseSyncStatusBtn',
-        'hermeticSimulatorBar'
-      ];
-      showIds.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.classList.remove('hidden');
-          if (id === 'screen-admin' || id === 'adminProtectedContent' || id === 'adminNavContainer') {
-            el.style.display = 'block';
-          }
-        }
-      });
-
-      // 4. Update tab button styles
-      const dAdmin = document.getElementById('dtab-admin');
-      const mAdmin = document.getElementById('mtab-admin');
-      if (dAdmin) {
-        dAdmin.className = 'px-4 py-2 rounded-xl text-xs font-black transition bg-amber-500 text-white shadow-sm';
-      }
-      if (mAdmin) {
-        mAdmin.className = 'flex flex-col items-center py-2 px-3 text-amber-700 font-black transition';
-      }
-
-      ['student', 'public', 'requests'].forEach(t => {
-        const dBtn = document.getElementById('dtab-' + t);
-        const mBtn = document.getElementById('mtab-' + t);
-        if (dBtn) dBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900';
-        if (mBtn) mBtn.className = 'flex flex-col items-center py-2 px-3 text-slate-500 font-bold transition';
-      });
-
-      // 5. Render admin subviews
-      if (typeof switchAdminSubView === 'function') {
-        switchAdminSubView(state.adminSubView || 'students');
-      }
-      if (typeof renderAdminRequestsAndStudents === 'function') {
-        renderAdminRequestsAndStudents();
-      }
-      if (typeof renderAdminDayScheduleEditor === 'function') {
-        renderAdminDayScheduleEditor();
-      }
-      if (typeof populateCampaignConfigInputs === 'function') {
-        populateCampaignConfigInputs();
-      }
-    }
-
     function unlockAdminPortal() {
       const input = document.getElementById('adminPasswordInput');
       const err = document.getElementById('adminPasswordError');
@@ -4125,8 +4043,18 @@
       const activePass = ((state.config && state.config.adminPassword) || state.adminPasswordHash || 'bakshu2026').trim();
 
       if (val === activePass) {
+        state.isAdminUnlocked = true;
+        state.adminUnlocked = true;
+        closeAdminPasswordModal();
+
+        document.getElementById('adminLockBtn')?.classList.remove('hidden');
+        document.getElementById('dtab-admin')?.classList.remove('hidden');
+        document.getElementById('mtab-admin')?.classList.remove('hidden');
+        document.getElementById('supabaseSyncStatusBtn')?.classList.remove('hidden');
+        document.getElementById('hermeticSimulatorBar')?.classList.remove('hidden');
+
         showToast('פורטל ראש הישיבה נפתח בהצלחה', '🔓');
-        forceOpenRoshYeshivaAdmin();
+        switchHermeticPortal('admin_portal');
       } else {
         if (err) err.classList.remove('hidden');
       }
@@ -4136,8 +4064,6 @@
     function lockAdminPortal() {
       state.isAdminUnlocked = false;
       state.adminUnlocked = false;
-      state.isAdmin = false;
-      state.currentRole = 'student';
       
       document.getElementById('adminLockBtn')?.classList.add('hidden');
       document.getElementById('dtab-admin')?.classList.add('hidden');
@@ -4151,7 +4077,11 @@
 
     function switchHermeticPortal(portal) {
       if (portal === 'admin_portal' || portal === 'admin') {
-        forceOpenRoshYeshivaAdmin();
+        if (state.isAdminUnlocked) {
+          switchTab('admin');
+        } else {
+          openAdminPasswordModal();
+        }
       } else {
         switchTab('student');
       }
@@ -6412,10 +6342,6 @@
       if (nameGreeting && state.currentStudent) {
         nameGreeting.textContent = state.currentStudent.name;
       }
-      if (state.activeTab === 'admin' || window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin') {
-        forceOpenRoshYeshivaAdmin();
-        return;
-      }
       renderStudentScreen();
       renderDynamicCalendar();
       renderLeaderboard();
@@ -6775,9 +6701,6 @@
     }
 
     function checkSavedStudentLogin() {
-      if (window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin') {
-        return;
-      }
       const savedId = localStorage.getItem('bakshu_logged_student_id') || localStorage.getItem('bakshu_locked_student_id');
       const student = state.students.find(s => s.id === savedId || s.inviteCode === savedId);
       if (student) {
@@ -7178,24 +7101,13 @@
       if (container) {
         container.innerHTML = stops.map((stop, idx) => {
           const isDecided = stop.isDecided !== false && Boolean(stop.isoDate);
-          const defaultDate = (idx === 0) ? 'יום חמישי ט׳ כסליו – פיתחו יומנים!' : 'התאריך ייחשף בהמשך המסע! 🎁';
-          let combinedDateText = stop.dateLabel || stop.dateStr || defaultDate;
+          let combinedDateText = stop.dateLabel || stop.dateStr || 'יוכרז בהמשך';
           if (stop.isoDate) {
             const meta = getDayMeta(stop.isoDate);
             if (meta) {
               combinedDateText = `${meta.dayNameHe} • ${meta.hebrewDate} (${meta.gregShort})`;
             }
-          } else {
-            combinedDateText = defaultDate;
           }
-
-          let displayTitle = stop.title;
-          if (idx === 1) displayTitle = 'עצירה 2 – יעד נושא מתנה 🎁';
-          if (idx === 2) displayTitle = 'הפסגה – המטרה הגדולה מחכה לנו! 🏔️🎁';
-
-          let displayDesc = stop.desc || stop.note || '';
-          if (idx === 1) displayDesc = 'עצירה 2 – יעד נושא מתנה 🎁';
-          if (idx === 2) displayDesc = 'הפסגה – המטרה הגדולה מחכה לנו! 🏔️🎁';
 
           return `
             <div class="p-3.5 rounded-2xl border ${isDecided ? 'border-amber-300 bg-gradient-to-b from-amber-50/70 to-white shadow-sm' : 'border-slate-200 bg-slate-50/70'} flex flex-col justify-between transition hover:shadow-md">
@@ -7203,18 +7115,19 @@
                 <div class="flex items-center justify-between gap-1 mb-1">
                   <span class="text-xs font-black text-slate-900 flex items-center gap-1">
                     <span>${stop.icon || '📍'}</span>
-                    <span>${displayTitle}</span>
+                    <span>${stop.title}</span>
                   </span>
                   <span class="text-[9px] font-black px-2 py-0.5 rounded-full ${isDecided ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-200 text-slate-600'}">
-                    ${isDecided ? 'מועד סופי ✓' : 'יוכרז בהמשך 🎁'}
+                    ${isDecided ? 'מועד סופי ✓' : 'ממתין לקביעה ⏳'}
                   </span>
                 </div>
                 <div class="text-xs font-black text-indigo-950 mt-1">${combinedDateText}</div>
-                <p class="text-[10px] text-slate-500 mt-1">${displayDesc}</p>
+                <div class="text-[10px] text-amber-700 font-extrabold mt-0.5">יעד נקודות: ${stop.points || 70} נק׳</div>
+                <p class="text-[10px] text-slate-500 mt-1">${stop.desc || stop.note || ''}</p>
               </div>
-              <button onclick="openGoogleCalendarForStop(${idx})" class="mt-3 w-full py-2 px-2.5 rounded-xl ${(isDecided || idx === 0) ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer' : 'bg-slate-200 text-slate-500 cursor-not-allowed'} font-black text-[11px] transition flex items-center justify-center gap-1.5 shadow-xs">
+              <button onclick="openGoogleCalendarForStop(${idx})" class="mt-3 w-full py-2 px-2.5 rounded-xl ${isDecided ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer' : 'bg-slate-200 text-slate-500 cursor-not-allowed'} font-black text-[11px] transition flex items-center justify-center gap-1.5 shadow-xs">
                 <span>📅</span>
-                <span>${(isDecided || idx === 0) ? `📅 הוסף עצירה זו ל-Google Calendar (${combinedDateText})` : 'התאריך ייחשף בהמשך המסע! 🎁'}</span>
+                <span>${isDecided ? `📅 הוסף עצירה זו ל-Google Calendar (${combinedDateText})` : 'טרם נקבע תאריך בניהול'}</span>
               </button>
             </div>
           `;
@@ -7226,21 +7139,18 @@
       if (infoBar && stops.length > 0) {
         const sel = stops[0];
         const hasDate = Boolean(sel.isoDate);
-        const selDateText = hasDate 
-          ? (sel.dateLabel || sel.dateStr || 'יום חמישי ט׳ כסליו – פיתחו יומנים!')
-          : 'יום חמישי ט׳ כסליו – פיתחו יומנים!';
         infoBar.innerHTML = `
           <div class="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-950 via-indigo-900 to-[#0A1138] text-white border border-indigo-700/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shadow-md">
             <div class="flex items-center gap-2.5">
               <span class="text-xl">📍</span>
               <div>
                 <div class="font-black text-amber-300 text-sm">${sel.title}</div>
-                <div class="text-indigo-200 mt-0.5">תאריך: <strong class="text-white">${selDateText}</strong></div>
+                <div class="text-indigo-200 mt-0.5">תאריך: <strong class="text-white">${sel.dateLabel || sel.dateStr || 'יוכרז בהמשך'}</strong> • יעד כניסה: <strong class="text-amber-300">${sel.points || 70} נק׳</strong></div>
               </div>
             </div>
-            <button onclick="openGoogleCalendarForStop(0)" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 cursor-pointer font-black text-xs transition flex items-center gap-1.5 shadow-sm whitespace-nowrap self-stretch sm:self-auto justify-center">
+            <button onclick="openGoogleCalendarForStop(0)" class="px-3.5 py-2 rounded-xl ${hasDate ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 cursor-pointer' : 'bg-slate-700 text-slate-300 cursor-not-allowed'} font-black text-xs transition flex items-center gap-1.5 shadow-sm whitespace-nowrap self-stretch sm:self-auto justify-center">
               <span>📅</span>
-              <span>📅 הוסף עצירה זו ל-Google Calendar (${selDateText})</span>
+              <span>${hasDate ? `📅 הוסף עצירה זו ל-Google Calendar (${sel.dateLabel})` : 'טרם נקבע תאריך בפורטל הניהול'}</span>
             </button>
           </div>
         `;
@@ -7251,13 +7161,13 @@
       if (axisBSub && stops[0]) {
         axisBSub.textContent = stops[0].isoDate 
           ? `📍 עצירה ראשונה: ${stops[0].dateLabel || stops[0].dateStr}`
-          : '📍 עצירה ראשונה: יום חמישי ט׳ כסליו – פיתחו יומנים!';
+          : '📍 עצירה ראשונה: טרם נקבע תאריך בפורטל הניהול (יוכרז בהמשך)';
       }
       const syncBtnText = document.getElementById('btnSyncStop1CalendarText');
       if (syncBtnText && stops[0]) {
         syncBtnText.textContent = stops[0].isoDate 
           ? `סנכרן עצירה 1 ליומן Google (${stops[0].dateLabel || stops[0].dateStr})`
-          : 'סנכרן עצירה 1 (ט׳ כסליו) ליומן Google';
+          : 'עצירה 1: טרם נקבע תאריך בניהול';
       }
     }
     const renderRoyalTrail = renderJourneyStops;
@@ -7443,9 +7353,8 @@ END:VCALENDAR`;
     function checkUrlForAdminParam() {
       const urlParams = new URLSearchParams(window.location.search);
       const hash = window.location.hash;
-      const isPathAdmin = window.location.pathname.includes('admin') || urlParams.get('admin') === '1' || hash === '#admin';
-      if (isPathAdmin) {
-        forceOpenRoshYeshivaAdmin();
+      if (urlParams.get('admin') === '1' || hash === '#admin' || window.location.pathname.includes('admin')) {
+        openAdminPasswordModal();
       }
     }
 
@@ -7485,38 +7394,42 @@ END:VCALENDAR`;
         renderMyRequestsStatus();
       }
       if (state.activeTab === 'admin') {
-        forceOpenRoshYeshivaAdmin();
+        renderAdminRequestsAndStudents();
+        renderAdminDayScheduleEditor();
+        populateCampaignConfigInputs();
       }
     }
 
     window.onload = async function () {
-      const isNavAdmin = window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin';
-      if (isNavAdmin) {
-        forceOpenRoshYeshivaAdmin();
-      } else {
-        state.isAdminUnlocked = false;
-        state.adminUnlocked = false;
+      state.isAdminUnlocked = false;
+      state.adminUnlocked = false;
+      const urlParams = new URLSearchParams(window.location.search);
+      const isNavAdmin = window.location.pathname.includes('admin') || urlParams.get('admin') === '1' || window.location.hash === '#admin';
+
+      if (!isNavAdmin) {
         checkUrlForStudentParam();
       }
       initAdminScheduleDayPicker();
       if (!isNavAdmin) {
         checkSavedStudentLogin();
-        populateCampaignConfigInputs();
-        renderStudentScreen();
-        renderDynamicCalendar();
-        renderLeaderboard();
-        renderAdminRequestsAndStudents();
+      }
+      populateCampaignConfigInputs();
+      renderStudentScreen();
+      renderDynamicCalendar();
+      renderLeaderboard();
+      renderAdminRequestsAndStudents();
+
+      if (isNavAdmin) {
+        openAdminPasswordModal();
       } else {
-        populateCampaignConfigInputs();
-        forceOpenRoshYeshivaAdmin();
+        checkUrlForAdminParam();
       }
 
       // Live Supabase Sync
       await loadStateFromSupabase();
 
-      if (isNavAdmin || window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin') {
-        forceOpenRoshYeshivaAdmin();
-        setTimeout(forceOpenRoshYeshivaAdmin, 500);
+      if (isNavAdmin || window.location.pathname.includes('admin') || urlParams.get('admin') === '1' || window.location.hash === '#admin') {
+        openAdminPasswordModal();
       }
 
       // Realtime Live Subscription with debounce
