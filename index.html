@@ -260,9 +260,9 @@
         </div>
 
         <div>
-          <h2 id="activeSederTitle" class="text-xl sm:text-2xl font-black text-slate-900">סדר א׳ - לימוד בוקר</h2>
+          <h2 id="activeSederTitle" class="text-xl sm:text-2xl font-black text-slate-900">סדר פעיל</h2>
           <p id="activeSederWindow" class="text-xs sm:text-sm text-slate-500 mt-1">
-            <span id="currentHebrewDateDisplay">יום שלישי, ח׳ חשוון</span> • חלון סימון: <strong id="currentSlotTimeRange" class="text-slate-700 font-mono">09:00 - 10:15</strong>
+            <span id="currentHebrewDateDisplay">טוען תאריך...</span> • חלון סימון: <strong id="currentSlotTimeRange" class="text-slate-700 font-mono">--:-- - --:--</strong>
           </p>
         </div>
 
@@ -621,6 +621,11 @@
             <span id="currentWeekRangeLabel" class="text-xs font-bold text-indigo-950 font-mono">שבוע 1</span>
             <button onclick="changeCalendarWeek(1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700">›</button>
           </div>
+        </div>
+
+        <!-- Weekday Headers (Sun-Sat) -->
+        <div class="hidden md:grid md:grid-cols-7 gap-2 text-center text-xs font-black text-slate-500 mb-1">
+          <div>יום א׳</div><div>יום ב׳</div><div>יום ג׳</div><div>יום ד׳</div><div>יום ה׳</div><div>יום ו׳</div><div>שבת קודש</div>
         </div>
 
         <!-- Dynamic Days Grid -->
@@ -1148,38 +1153,49 @@
       return state.students.filter(s => s.presentToday || s.present_today || s.presentCurrent).length;
     }
 
-    // 1. המרה מדויקת מתאריך לועזי לתאריך עברי באותיות + תאריך לועזי קצר
+    // 1. המרה כפויה של כל תאריך עברי לאותיות גימטריה בלבד (הסרת 'ב' מתחילת החודש ואפס מספרים)
+    function toHebrewLetters(str) {
+      if (!str || typeof str !== 'string') return str;
+      const hebRegex = /(^|[^\d])([1-2]?\d|30)\s*ב?(תשרי|חשוון|חשון|מרחשוון|מרחשון|כסלו|כסליו|טבת|שבט|אדר|ניסן|אייר|סיוון|סיון|תמוז|אב|אלול)/g;
+      return str.replace(hebRegex, (match, prefix, num, month) => {
+        const n = parseInt(num, 10);
+        const gematria = HEB_GEMATRIA_DAYS[n] || num;
+        const cleanMonth = month.startsWith('ב') ? month.slice(1) : month;
+        return `${prefix}${gematria} ${cleanMonth}`;
+      });
+    }
+    const forceHebrewLetters = toHebrewLetters;
+
+    // 2. המרה מדויקת מתאריך לועזי לתאריך עברי באותיות גימטריה בלבד + תאריך לועזי קצר
     function formatSyncedHebrewAndGregorian(dateObj) {
       const safeNoon = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 12, 0, 0);
       const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(safeNoon);
       const dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
-      const monthName = parts.find(p => p.type === 'month')?.value || '';
+      let rawMonth = parts.find(p => p.type === 'month')?.value || '';
+      if (rawMonth.startsWith('ב')) rawMonth = rawMonth.slice(1);
       const hebLetters = HEB_GEMATRIA_DAYS[dayNum] || String(dayNum);
-      const gregShort = `${String(safeNoon.getDate()).padStart(2, '0')}/${String(safeNoon.getMonth() + 1).padStart(2, '0')}`;
+      const gregShort = `${String(safeNoon.getDate()).padStart(2, '0')}.${String(safeNoon.getMonth() + 1).padStart(2, '0')}`;
+      const hebrewDateStr = `${hebLetters} ${rawMonth}`.trim();
       return {
-        hebrewDateStr: `${hebLetters} ${monthName}`,
+        hebrewDateStr: toHebrewLetters(hebrewDateStr),
         gregorianShort: gregShort,
-        fullDisplay: `${hebLetters} ${monthName} (${gregShort})`,
+        fullDisplay: toHebrewLetters(`${hebLetters} ${rawMonth} (${gregShort})`),
         isoDate: `${safeNoon.getFullYear()}-${String(safeNoon.getMonth() + 1).padStart(2, '0')}-${String(safeNoon.getDate()).padStart(2, '0')}`,
         dayOfWeek: safeNoon.getDay(),
         dayName: HEB_DAY_NAMES[safeNoon.getDay()]
       };
     }
 
-    // 2. מקור אמת יחיד: אילו סדרים מתוך state.eventsList חלים ביום נתון
+    // 3. מקור אמת יחיד: אילו סדרים מתוך state.eventsList חלים ביום נתון
     function getApplicableEventsForDate(dateObj) {
       const info = formatSyncedHebrewAndGregorian(dateObj);
       const dow = info.dayOfWeek; // 0 = א', 4 = ה', 5 = ו', 6 = שבת
       const events = (typeof state !== 'undefined' && state.eventsList) ? state.eventsList : DEFAULT_EVENTS_LIST;
       return events.filter(ev => {
         const sched = (ev.schedule || '') + ' ' + (ev.title || '');
-        // התאמה לתאריך עברי או לועזי ספציפי אם צוין
         if (sched.includes(info.hebrewDateStr) || sched.includes(info.gregorianShort) || sched.includes(info.isoDate)) return true;
-        // שבת קודש
         if (dow === 6) return ev.type === 'שבת' || sched.includes('שבת');
-        // יום שישי
         if (dow === 5) return sched.includes('א׳–ו׳') || sched.includes('יום ו׳') || sched.includes('שישי');
-        // ימים א'–ה': סדרים קבועים + ימים מיוחדים (כמו רביעי או ליל שישי ביום ה')
         if (sched.includes('א׳–ו׳') || sched.includes('א׳–ה׳') || ev.type === 'קבוע') {
           if (sched.includes('רביעי') || sched.includes('יום ד׳')) return dow === 3;
           if (sched.includes('ליל שישי') || sched.includes('יום ה׳')) return dow === 4;
@@ -1191,7 +1207,141 @@
       });
     }
 
-    // 3. בניית לוח המבצע וסדרי היום מתוך startDate ללא מחיקת שיבוצים קיימים
+    // 4. ניקוי וסנכרון תורנויות - מחיקת תורנים לפני startDate ועדכון טקסט תזכורת
+    function cleanseAndSyncDutiesRoster() {
+      if (!state) return;
+      const startStr = state.config?.startDate || '2026-10-18';
+      const [sy, sm, sd] = startStr.split('-').map(Number);
+      const startDateNoon = new Date(sy, sm - 1, sd, 12, 0, 0);
+
+      if (Array.isArray(state.dutiesRoster)) {
+        state.dutiesRoster = state.dutiesRoster.filter(d => {
+          if (!d) return false;
+          if (typeof d.dayIdx === 'number' && d.dayIdx < 0) return false;
+          if (d.isoDate && d.isoDate < startStr) return false;
+          if (typeof d.dateStr === 'string' && (d.dateStr.includes('אתמול') || d.dateStr.includes('לפני תחילת'))) return false;
+          return true;
+        });
+
+        state.dutiesRoster.forEach(d => {
+          if (state.campaignDays && typeof d.dayIdx === 'number' && state.campaignDays[d.dayIdx]) {
+            const cDay = state.campaignDays[d.dayIdx];
+            d.dateStr = toHebrewLetters(cDay.fullDateLabel);
+            d.dayName = cDay.dayName.replace(' (היום)', '');
+            d.isoDate = cDay.isoDate;
+          } else if (d.isoDate) {
+            const [dy, dm, dd] = d.isoDate.split('-').map(Number);
+            const dObj = new Date(dy, dm - 1, dd, 12, 0, 0);
+            const dInfo = formatSyncedHebrewAndGregorian(dObj);
+            d.dateStr = dInfo.fullDisplay;
+            d.dayName = dInfo.dayName;
+          }
+          if (d.role === 'מעורר') {
+            d.reminderTime = '22:30 לילה קודם';
+            d.reminderText = toHebrewLetters(`מעורר ב-22:30 לילה קודם (${d.dateStr})`);
+          } else if (d.role === 'מטבח' || d.role === 'ניקיון מטבח') {
+            d.reminderTime = '19:30 לקראת ערב';
+            d.reminderText = toHebrewLetters(`ניקיון מטבח ב-19:30 לקראת ערב (${d.dateStr})`);
+          }
+        });
+      } else if (state.dutiesRoster && typeof state.dutiesRoster === 'object') {
+        const filtered = {};
+        Object.keys(state.dutiesRoster).forEach(k => {
+          if (k < startStr) return;
+          const dObj = state.dutiesRoster[k];
+          if (dObj) {
+            const [dy, dm, dd] = k.split('-').map(Number);
+            if (!isNaN(dy) && !isNaN(dm) && !isNaN(dd)) {
+              const dDate = new Date(dy, dm - 1, dd, 12, 0, 0);
+              const dInfo = formatSyncedHebrewAndGregorian(dDate);
+              dObj.dateStr = dInfo.fullDisplay;
+              dObj.dayName = dInfo.dayName;
+            }
+            filtered[k] = dObj;
+          }
+        });
+        state.dutiesRoster = filtered;
+      }
+    }
+
+    // 5. חישוב הסדר הפעיל / הסדר הבא בהתאמה לתאריך הפתיחה startDate
+    function getActiveOrNextSederInfo() {
+      if (!state || !state.config) return null;
+      const startStr = state.config.startDate || '2026-10-18';
+      const [sy, sm, sd] = startStr.split('-').map(Number);
+      const startDateNoon = new Date(sy, sm - 1, sd, 12, 0, 0);
+
+      const now = new Date();
+      const todayNoon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+
+      let targetDate = todayNoon;
+      let isPreCampaign = false;
+
+      if (todayNoon.getTime() < startDateNoon.getTime()) {
+        targetDate = startDateNoon;
+        isPreCampaign = true;
+      }
+
+      const applicableEvents = getApplicableEventsForDate(targetDate);
+      const dInfo = formatSyncedHebrewAndGregorian(targetDate);
+
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+      let activeSeder = null;
+      let nextSeder = null;
+      let allPassedToday = false;
+
+      if (isPreCampaign) {
+        activeSeder = applicableEvents[0] || null;
+        nextSeder = applicableEvents[1] || applicableEvents[0] || null;
+      } else {
+        for (let i = 0; i < applicableEvents.length; i++) {
+          const ev = applicableEvents[i];
+          const [openStr, lockStr] = (ev.timeWindow || '09:00 - 10:15').split('-').map(s => s.trim());
+          const [oh, om] = (openStr || '09:00').split(':').map(Number);
+          const [lh, lm] = (lockStr || '10:15').split(':').map(Number);
+          const openMin = oh * 60 + (om || 0);
+          const lockMin = lh * 60 + (lm || 0);
+
+          if (currentMinutes >= openMin && currentMinutes <= lockMin) {
+            activeSeder = ev;
+            nextSeder = applicableEvents[i + 1] || null;
+            break;
+          } else if (currentMinutes < openMin) {
+            if (!nextSeder) nextSeder = ev;
+          }
+        }
+
+        if (!activeSeder && !nextSeder && applicableEvents.length > 0) {
+          allPassedToday = true;
+          const tomorrowNoon = new Date(todayNoon.getFullYear(), todayNoon.getMonth(), todayNoon.getDate() + 1, 12, 0, 0);
+          const tomorrowEvents = getApplicableEventsForDate(tomorrowNoon);
+          const tomorrowInfo = formatSyncedHebrewAndGregorian(tomorrowNoon);
+          nextSeder = tomorrowEvents[0] || null;
+          return {
+            targetDate: tomorrowNoon,
+            dateInfo: tomorrowInfo,
+            activeSeder: null,
+            nextSeder,
+            applicableEvents: tomorrowEvents,
+            allPassedToday: true,
+            isPreCampaign: false
+          };
+        }
+      }
+
+      return {
+        targetDate,
+        dateInfo: dInfo,
+        activeSeder: activeSeder || nextSeder || applicableEvents[0] || null,
+        nextSeder,
+        applicableEvents,
+        allPassedToday: false,
+        isPreCampaign
+      };
+    }
+
+    // 6. בניית לוח המבצע וסדרי היום מתוך startDate בזמן אמת ללא טעינת campaignDays ישן
     function rebuildSyncedCalendarAndToday() {
       if (typeof state === 'undefined' || !state.config) return;
       const startStr = state.config.startDate || '2026-10-18';
@@ -1200,7 +1350,7 @@
       const now = new Date();
       const todayNoon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
 
-      state.calendarGridOffset = new Date(sy, sm - 1, sd, 12, 0, 0).getDay(); // מספר משבצות ריקות ליישור עמודות א'-שבת
+      state.calendarGridOffset = new Date(sy, sm - 1, sd, 12, 0, 0).getDay();
 
       const updatedDays = [];
       for (let i = 0; i < duration; i++) {
@@ -1224,8 +1374,8 @@
           isoDate: dInfo.isoDate,
           gregorianShort: dInfo.gregorianShort,
           dayName: status === 'today' ? `${dInfo.dayName} (היום)` : dInfo.dayName,
-          dateStr: dInfo.hebrewDateStr,
-          fullDateLabel: dInfo.fullDisplay,
+          dateStr: toHebrewLetters(dInfo.hebrewDateStr),
+          fullDateLabel: toHebrewLetters(dInfo.fullDisplay),
           status,
           sedarim: sedarimCount,
           pointsPool,
@@ -1233,27 +1383,17 @@
           isBonus: !!specialEv || !!prevDayObj.isBonus,
           bonusLabel: specialEv ? specialEv.title : (prevDayObj.bonusLabel || '')
         });
-
-        // עדכון תאריך עברי/לועזי תואם בטבלת התורנויות הקיימת מבלי למחוק את הבחורים המשובצים!
-        if (Array.isArray(state.dutiesRoster)) {
-          const dutyRow = state.dutiesRoster.find(dr => dr.dayIdx === i || dr.dateStr === dInfo.isoDate);
-          if (dutyRow) {
-            dutyRow.dateStr = dInfo.fullDisplay;
-            dutyRow.dayName = dInfo.dayName;
-          }
-        } else if (state.dutiesRoster && typeof state.dutiesRoster === 'object') {
-          const dutyObj = state.dutiesRoster[dInfo.isoDate];
-          if (dutyObj) {
-            dutyObj.dateStr = dInfo.fullDisplay;
-            dutyObj.dayName = dInfo.dayName;
-          }
-        }
       }
       state.campaignDays = updatedDays;
 
-      // עדכון הסדרים של היום (למסך הבחור) מתוך אותה פונקציה בדיוק!
-      const todayEvents = getApplicableEventsForDate(todayNoon);
-      state.todaySlots = todayEvents.map((ev, idx) => {
+      cleanseAndSyncDutiesRoster();
+
+      const sederInfo = getActiveOrNextSederInfo();
+      const targetEvents = (sederInfo && sederInfo.applicableEvents && sederInfo.applicableEvents.length > 0)
+        ? sederInfo.applicableEvents
+        : getApplicableEventsForDate(todayNoon);
+
+      state.todaySlots = targetEvents.map((ev, idx) => {
         const existing = (state.todaySlots || []).find(t => t.id === ev.id) || {};
         const [openTime, lockTime] = (ev.timeWindow || '09:00 - 10:15').split('-').map(s => s.trim());
         return {
@@ -1561,13 +1701,17 @@
           } catch(e) {}
         }
 
-        // Rebuild calendar and today's slots using unified source of truth
+        // Cleanse duties and rebuild calendar using unified real-time calculation
+        cleanseAndSyncDutiesRoster();
         if (typeof rebuildSyncedCalendarAndToday === 'function') {
           rebuildSyncedCalendarAndToday();
         }
 
         // Mark cloud as hydrated only after data is loaded and merged into state
         isCloudHydrated = true;
+
+        // Persist cleansed and synchronized state back to Supabase app_state
+        await syncStateToSupabase();
 
         renderAllViews();
       } catch (err) {
@@ -3078,19 +3222,12 @@ events.join('\n') + '\n' +
           if (nextDuty) {
             upcomingCard.classList.remove('hidden');
             const d = new Date(nextDateStr + 'T12:00:00');
-            const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-            const dayName = 'יום ' + dayNames[d.getDay()];
-            let hDateStr = '';
-            try {
-              const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'short' }).formatToParts(d);
-              hDateStr = parts.map(p => p.value).join('');
-            } catch(e) {}
-
-            const roleName = nextRole === 'waker' ? 'השכמת בוקר (מעורר לתפילה)' : 'תורן מטבח ערב';
+            const dInfo = formatSyncedHebrewAndGregorian(d);
+            const roleName = nextRole === 'waker' ? 'השכמת בוקר (מעורר ב-22:30 לילה קודם)' : 'תורן מטבח (ניקיון מטבח ב-19:30 לקראת ערב)';
             const icon = nextRole === 'waker' ? '⏰' : '🍳';
             const titleEl = document.getElementById('studentUpcomingDutyTitle');
             const iconEl = document.getElementById('studentUpcomingDutyIcon');
-            if (titleEl) titleEl.textContent = `${dayName} (${hDateStr || nextDateStr}) • ${roleName}`;
+            if (titleEl) titleEl.textContent = `${dInfo.dayName} (${dInfo.fullDisplay}) • ${roleName}`;
             if (iconEl) iconEl.textContent = icon;
           } else {
             upcomingCard.classList.add('hidden');
@@ -3397,53 +3534,70 @@ events.join('\n') + '\n' +
         `).join('');
       }
 
+      const sederInfo = getActiveOrNextSederInfo();
+      const hDateEl = document.getElementById('currentHebrewDateDisplay');
+      const titleEl = document.getElementById('activeSederTitle');
+      const timeEl = document.getElementById('currentSlotTimeRange');
+      const ptsEl = document.getElementById('activeSederPointsBadge');
       const todaySlotsList = document.getElementById('todaySlotsList');
-      const todaySlots = getTodaySlots();
-      if (todaySlots.length > 0) {
-        const activeSlot = todaySlots[0];
-        const titleEl = document.getElementById('activeSederTitle');
-        if (titleEl) titleEl.textContent = activeSlot.title;
-        const timeEl = document.getElementById('currentSlotTimeRange');
-        if (timeEl) timeEl.textContent = activeSlot.openTime + ' - ' + activeSlot.lockTime;
-        const ptsEl = document.getElementById('activeSederPointsBadge');
-        if (ptsEl) ptsEl.textContent = '+' + activeSlot.points + ' נק׳';
-      } else {
-        const titleEl = document.getElementById('activeSederTitle');
-        if (titleEl) titleEl.textContent = 'יום שישי - יום חופשי מסדרים';
-        const timeEl = document.getElementById('currentSlotTimeRange');
-        if (timeEl) timeEl.textContent = 'שבת שלום ומבורך!';
-        const ptsEl = document.getElementById('activeSederPointsBadge');
-        if (ptsEl) ptsEl.textContent = '0 נק׳';
-      }
 
-      if (todaySlotsList) {
-        if (todaySlots.length === 0) {
-          todaySlotsList.innerHTML = `
-            <div class="col-span-full p-4 rounded-2xl bg-amber-50/50 border border-amber-200 text-center text-xs">
-              <span class="text-xl block mb-1">🕊️</span>
-              <span class="font-bold text-amber-900">יום שישי ריק מסדרים כברירת מחדל</span>
-              <div class="text-[11px] text-amber-700 mt-0.5">סדרי שבת קודש ייפתחו לפי לוח שבת המיוחד</div>
-            </div>
-          `;
+      if (sederInfo) {
+        if (hDateEl) {
+          hDateEl.textContent = toHebrewLetters(`${sederInfo.dateInfo.dayName}, ${sederInfo.dateInfo.fullDisplay}`);
+        }
+
+        const currentOrNext = sederInfo.activeSeder || sederInfo.nextSeder;
+        if (currentOrNext) {
+          let prefix = '';
+          if (sederInfo.isPreCampaign) prefix = 'סדר פתיחת המבצע: ';
+          else if (sederInfo.allPassedToday) prefix = 'הסדר הבא (מחר): ';
+          else if (!sederInfo.activeSeder && sederInfo.nextSeder) prefix = 'הסדר הבא: ';
+
+          if (titleEl) titleEl.textContent = prefix ? `${prefix}${currentOrNext.title}` : currentOrNext.title;
+          const [oT, lT] = (currentOrNext.timeWindow || '09:00 - 10:15').split('-').map(x => x.trim());
+          if (timeEl) timeEl.textContent = `${oT || '09:00'} - ${lT || '10:15'}`;
+          if (ptsEl) ptsEl.textContent = `+${currentOrNext.points || 1} נק׳`;
         } else {
-          todaySlotsList.innerHTML = todaySlots.map((slot, i) => {
-            const dur = calculateSlotDurationText(slot.openTime, slot.lockTime);
-            return `
-              <div class="p-3 rounded-2xl border ${i === 0 ? 'bg-indigo-50/50 border-indigo-200 ring-1 ring-indigo-200' : 'bg-white border-slate-200'} flex items-center justify-between">
-                <div>
-                  <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                    <span class="w-5 h-5 rounded-md bg-indigo-100 text-indigo-950 font-black text-[10px] flex items-center justify-center">${i + 1}</span>
-                    <span>${slot.title}</span>
-                  </div>
-                  <div class="text-[11px] text-slate-500 font-mono mt-1 flex items-center gap-2 flex-wrap">
-                    <span>🕒 ${slot.openTime} - ${slot.lockTime}</span>
-                    ${dur ? `<span class="text-slate-400">⏱️ ${dur}</span>` : ''}
-                  </div>
-                </div>
-                <span class="text-xs font-black text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">+${slot.points}</span>
+          if (titleEl) titleEl.textContent = 'אין סדרים פעילים';
+          if (timeEl) timeEl.textContent = '--:-- - --:--';
+          if (ptsEl) ptsEl.textContent = '0 נק׳';
+        }
+
+        if (todaySlotsList) {
+          const slotsToRender = (sederInfo.applicableEvents && sederInfo.applicableEvents.length > 0)
+            ? sederInfo.applicableEvents
+            : (state.todaySlots || []);
+
+          if (slotsToRender.length === 0) {
+            todaySlotsList.innerHTML = `
+              <div class="col-span-full p-4 rounded-2xl bg-amber-50/50 border border-amber-200 text-center text-xs">
+                <span class="text-xl block mb-1">🕊️</span>
+                <span class="font-bold text-amber-900">יום ריק מסדרים כברירת מחדל</span>
+                <div class="text-[11px] text-amber-700 mt-0.5">סדרי שבת קודש ייפתחו לפי לוח שבת המיוחד</div>
               </div>
             `;
-          }).join('');
+          } else {
+            todaySlotsList.innerHTML = slotsToRender.map((slot, i) => {
+              const [oT, lT] = (slot.timeWindow || slot.time || '09:00 - 10:15').split('-').map(x => x.trim());
+              const dur = calculateSlotDurationText(oT, lT);
+              const isActive = (currentOrNext && currentOrNext.id === slot.id);
+              return `
+                <div class="p-3 rounded-2xl border ${isActive ? 'bg-indigo-50/50 border-indigo-200 ring-1 ring-indigo-200' : 'bg-white border-slate-200'} flex items-center justify-between">
+                  <div>
+                    <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                      <span class="w-5 h-5 rounded-md ${isActive ? 'bg-indigo-600 text-white' : 'bg-indigo-100 text-indigo-950'} font-black text-[10px] flex items-center justify-center">${i + 1}</span>
+                      <span>${slot.title}</span>
+                    </div>
+                    <div class="text-[11px] text-slate-500 font-mono mt-1 flex items-center gap-2 flex-wrap">
+                      <span>🕒 ${oT} - ${lT}</span>
+                      ${dur ? `<span class="text-slate-400">⏱️ ${dur}</span>` : ''}
+                    </div>
+                  </div>
+                  <span class="text-xs font-black text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">+${slot.points}</span>
+                </div>
+              `;
+            }).join('');
+          }
         }
       }
     }
@@ -3509,10 +3663,15 @@ events.join('\n') + '\n' +
     // 8. DYNAMIC CALENDAR GENERATION
     // ====================================================
     function changeCalendarWeek(delta) {
-      state.calendarWeekOffset = Math.max(0, state.calendarWeekOffset + delta);
+      if (!state.campaignDays || state.campaignDays.length === 0) return;
+      const curIdx = state.selectedCalendarDayIndex || 0;
+      const newIdx = Math.max(0, Math.min(state.campaignDays.length - 1, curIdx + delta * 7));
+      state.selectedCalendarDayIndex = newIdx;
+      state.currentSelectedCalendarDayIndex = newIdx;
+      const weekNum = Math.floor(newIdx / 7) + 1;
       const weekLabel = document.getElementById('currentWeekRangeLabel');
       if (weekLabel) {
-        weekLabel.textContent = state.calendarWeekOffset === 0 ? 'שבוע נוכחי' : `שבוע +${state.calendarWeekOffset}`;
+        weekLabel.textContent = `שבוע ${weekNum}`;
       }
       renderDynamicCalendar();
     }
@@ -3521,51 +3680,38 @@ events.join('\n') + '\n' +
       const grid = document.getElementById('dynamicCalendarGrid');
       if (!grid) return;
 
-      const hebrewDays = ['יום א׳', 'יום ב׳', 'יום ג׳', 'יום ד׳', 'יום ה׳', 'יום ו׳', 'שבת קודש'];
+      if (!state.campaignDays || state.campaignDays.length === 0) {
+        rebuildSyncedCalendarAndToday();
+      }
+
+      let blanksHtml = '';
+      for (let b = 0; b < (state.calendarGridOffset || 0); b++) {
+        blanksHtml += '<div class="hidden md:block p-2 rounded-2xl border border-transparent bg-slate-50/30"></div>';
+      }
+
       const curStudent = state.currentStudent;
-      const todayStr = getTodayDateStr();
+      const daysHtml = state.campaignDays.map((day, idx) => {
+        const isToday = (day.status === 'today');
+        const isSelected = (idx === (state.selectedCalendarDayIndex !== undefined ? state.selectedCalendarDayIndex : (state.currentSelectedCalendarDayIndex || 0)));
+        const isPassed = (day.status === 'passed');
+        const isFri = day.dayName.includes('שישי') || day.dayName.includes('ו׳');
+        const isShabbat = day.dayName.includes('שבת');
 
-      // Compute start date of displayed week (Sunday)
-      const now = new Date();
-      const currentDayOfWeek = now.getDay(); // 0 = Sun
-      const sunday = new Date(now);
-      sunday.setDate(now.getDate() - currentDayOfWeek + (state.calendarWeekOffset * 7));
+        const dayDuty = (Array.isArray(state.dutiesRoster))
+          ? state.dutiesRoster.find(dr => dr.dayIdx === idx || dr.isoDate === day.isoDate)
+          : ((state.dutiesRoster && state.dutiesRoster[day.isoDate]) ? state.dutiesRoster[day.isoDate] : null);
 
-      grid.innerHTML = hebrewDays.map((dayName, idx) => {
-        const cellDate = new Date(sunday);
-        cellDate.setDate(sunday.getDate() + idx);
-        const dStr = cellDate.toISOString().slice(0, 10);
-        const isToday = (dStr === todayStr);
-        const isSelected = (idx === state.currentSelectedCalendarDayIndex);
-        const isFri = (idx === 5);
-        const isShabbat = (idx === 6);
+        const isMyWaker = dayDuty && curStudent && (dayDuty.wakerStudentId === curStudent.id || dayDuty.wakerStudentName === curStudent.name || (dayDuty.studentId === curStudent.id && dayDuty.role === 'מעורר'));
+        const isMyKitchen = dayDuty && curStudent && (dayDuty.kitchenStudentId === curStudent.id || dayDuty.kitchenStudentName === curStudent.name || (dayDuty.studentId === curStudent.id && (dayDuty.role === 'מטבח' || dayDuty.role === 'ניקיון מטבח')));
 
-        // Accurate Hebrew Date via Intl
-        let hDate = '';
-        try {
-          const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'short' }).formatToParts(cellDate);
-          const dayP = parts.find(p => p.type === 'day')?.value || '';
-          const monthP = parts.find(p => p.type === 'month')?.value || '';
-          hDate = `${dayP} ${monthP}`;
-        } catch(e) {
-          hDate = '';
-        }
-
-        let subLabel = '3 סדרים (4 נק׳)';
-        if (isFri) subLabel = 'שישי ריק (0 נק׳)';
-        if (isShabbat) subLabel = 'שבת מיוחדת (8 נק׳)';
-
-        // Check duty roster on this day
-        const dayDuty = (state.dutiesRoster && state.dutiesRoster[dStr]) ? state.dutiesRoster[dStr] : null;
-        const isMyWaker = dayDuty && curStudent && (dayDuty.wakerStudentId === curStudent.id || dayDuty.wakerStudentName === curStudent.name);
-        const isMyKitchen = dayDuty && curStudent && (dayDuty.kitchenStudentId === curStudent.id || dayDuty.kitchenStudentName === curStudent.name);
+        const pointsText = `${day.sedarim} סדרים (${day.pointsPool} נק׳)`;
 
         return `
-          <div onclick="selectCalendarDay(${idx})" class="p-2.5 rounded-2xl border cursor-pointer transition text-center relative ${isSelected ? 'border-indigo-600 bg-indigo-50/80 shadow-sm ring-2 ring-indigo-400/40' : isToday ? 'border-emerald-400 bg-emerald-50/50' : 'border-slate-200 bg-white hover:bg-slate-50'}">
-            <div class="text-[10px] font-bold ${isToday ? 'text-emerald-700 font-black' : isFri ? 'text-amber-700' : isShabbat ? 'text-indigo-800 font-black' : 'text-slate-500'}">${dayName}</div>
-            <div class="text-xs font-black text-slate-900 mt-0.5">${hDate || dStr}</div>
-            <div class="mt-1 text-[10px] font-extrabold ${isToday ? 'text-emerald-700' : isFri ? 'text-amber-700' : isShabbat ? 'text-indigo-700' : 'text-slate-400'}">
-              ${isToday ? 'היום • ' + subLabel : subLabel}
+          <div onclick="selectCalendarDay(${idx})" class="p-2.5 rounded-2xl border cursor-pointer transition text-center relative ${isSelected ? 'border-indigo-600 bg-indigo-50/80 shadow-sm ring-2 ring-indigo-400/40' : isToday ? 'border-emerald-400 bg-emerald-50/60 ring-2 ring-emerald-300' : isPassed ? 'border-slate-200 bg-slate-50/60 opacity-80' : 'border-slate-200 bg-white hover:bg-slate-50'}">
+            <div class="text-[10px] font-bold ${isToday ? 'text-emerald-700 font-black' : isFri ? 'text-amber-700' : isShabbat ? 'text-indigo-800 font-black' : 'text-slate-500'}">${day.dayName}</div>
+            <div class="text-xs font-black text-slate-900 mt-0.5">${toHebrewLetters(day.dateStr)} <span class="text-[10px] text-slate-400 font-mono">(${day.gregorianShort})</span></div>
+            <div class="mt-1 text-[10px] font-extrabold ${isToday ? 'text-emerald-700' : isFri ? 'text-amber-700' : isShabbat ? 'text-indigo-700' : 'text-slate-500'}">
+              ${isToday ? 'היום • ' + pointsText : pointsText}
             </div>
 
             <!-- Student Duty Badge on this day -->
@@ -3583,19 +3729,21 @@ events.join('\n') + '\n' +
             ` : ''}
 
             <!-- Other assignees (subtle) if neither is me -->
-            ${(!isMyWaker && !isMyKitchen && dayDuty && (dayDuty.wakerStudentName || dayDuty.kitchenStudentName)) ? `
+            ${(!isMyWaker && !isMyKitchen && dayDuty && (dayDuty.wakerStudentName || dayDuty.kitchenStudentName || dayDuty.studentName)) ? `
               <div class="mt-1 text-[9px] text-slate-400 truncate">
-                ${dayDuty.wakerStudentName ? 'מעורר: ' + dayDuty.wakerStudentName.split(' ')[0] : ''}
+                ${dayDuty.wakerStudentName ? 'מעורר: ' + dayDuty.wakerStudentName.split(' ')[0] : (dayDuty.studentName ? dayDuty.studentName.split(' ')[0] : '')}
               </div>
             ` : ''}
           </div>
         `;
       }).join('');
 
+      grid.innerHTML = blanksHtml + daysHtml;
       renderSelectedDayDetails();
     }
 
     function selectCalendarDay(idx) {
+      state.selectedCalendarDayIndex = idx;
       state.currentSelectedCalendarDayIndex = idx;
       renderDynamicCalendar();
     }
@@ -3604,43 +3752,31 @@ events.join('\n') + '\n' +
       const bar = document.getElementById('selectedDayDetailsBar');
       if (!bar) return;
 
-      const hebrewDays = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת קודש'];
-      const dayName = hebrewDays[state.currentSelectedCalendarDayIndex] || 'יום נבחר';
-      const isFri = state.currentSelectedCalendarDayIndex === 5;
-      const isShabbat = state.currentSelectedCalendarDayIndex === 6;
+      const idx = (state.selectedCalendarDayIndex !== undefined) ? state.selectedCalendarDayIndex : (state.currentSelectedCalendarDayIndex || 0);
+      const day = (state.campaignDays && state.campaignDays[idx]) ? state.campaignDays[idx] : null;
+      if (!day) return;
 
-      // Compute exact Gregorian date for the selected day in displayed week
-      const now = new Date();
-      const currentDayOfWeek = now.getDay();
-      const sunday = new Date(now);
-      sunday.setDate(now.getDate() - currentDayOfWeek + (state.calendarWeekOffset * 7));
-      const selectedDate = new Date(sunday);
-      selectedDate.setDate(sunday.getDate() + state.currentSelectedCalendarDayIndex);
-      const selectedDStr = selectedDate.toISOString().slice(0, 10);
-      const isToday = (selectedDStr === getTodayDateStr());
+      const [dy, dm, dd] = day.isoDate.split('-').map(Number);
+      const dayDate = new Date(dy, dm - 1, dd, 12, 0, 0);
+      const dayEvents = getApplicableEventsForDate(dayDate);
+      const isToday = (day.status === 'today');
 
-      let desc = '• 3 סדרי לימוד פעילים (סדר א׳, סדר ב׳, מעריב)';
-      let ptsDesc = 'שווי יום זה: 4 נקודות';
-      if (isFri) {
-        desc = '• יום שישי ריק מסדרים כברירת מחדל';
-        ptsDesc = 'יום מנוחה והכנה: 0 נקודות';
-      } else if (isShabbat) {
-        desc = '• 4 סדרי שבת קודש מיוחדים (ליל שבת, שחרית, רעוא דרעווין, מוצ״ש)';
-        ptsDesc = 'שווי שבת קודש: 8 נקודות';
-      }
+      let desc = dayEvents.length > 0 ? `• ${dayEvents.map(e => e.title).join(' • ')}` : '• אין סדרים ביום זה';
+      let ptsDesc = `סך ניקוד יומי: ${day.pointsPool} נק׳ (${dayEvents.length} סדרים)`;
 
-      // Check duty roster for the SELECTED day
       const curStudent = state.currentStudent;
-      const duty = (state.dutiesRoster && state.dutiesRoster[selectedDStr]) ? state.dutiesRoster[selectedDStr] : null;
+      const duty = (Array.isArray(state.dutiesRoster))
+        ? state.dutiesRoster.find(dr => dr.dayIdx === idx || dr.isoDate === day.isoDate)
+        : ((state.dutiesRoster && state.dutiesRoster[day.isoDate]) ? state.dutiesRoster[day.isoDate] : null);
 
-      const isMyWaker = duty && curStudent && (duty.wakerStudentId === curStudent.id || duty.wakerStudentName === curStudent.name);
-      const isMyKitchen = duty && curStudent && (duty.kitchenStudentId === curStudent.id || duty.kitchenStudentName === curStudent.name);
+      const isMyWaker = duty && curStudent && (duty.wakerStudentId === curStudent.id || duty.wakerStudentName === curStudent.name || (duty.studentId === curStudent.id && duty.role === 'מעורר'));
+      const isMyKitchen = duty && curStudent && (duty.kitchenStudentId === curStudent.id || duty.kitchenStudentName === curStudent.name || (duty.studentId === curStudent.id && (duty.role === 'מטבח' || duty.role === 'ניקיון מטבח')));
 
       let myDutyCallout = '';
       if (isMyWaker || isMyKitchen) {
         const dutyTitle = isMyWaker ? 'השכמת בוקר (מעורר לתפילה)' : 'ניקיון מטבח ערב';
         const dutyIcon = isMyWaker ? '⏰' : '🍳';
-        const remTime = isMyWaker ? '22:30 לילה קודם' : '19:30';
+        const remTime = isMyWaker ? '22:30 לילה קודם' : '19:30 לקראת ערב';
         myDutyCallout = `
           <div class="w-full p-3 rounded-2xl bg-amber-50 border-2 border-amber-300 flex items-center justify-between gap-2 shadow-xs">
             <div class="flex items-center gap-2">
@@ -3660,18 +3796,24 @@ events.join('\n') + '\n' +
       }
 
       let dutyInfoHtml = '';
-      if (duty && (duty.wakerStudentName || duty.kitchenStudentName)) {
+      if (duty && (duty.wakerStudentName || duty.kitchenStudentName || duty.studentName)) {
+        const wName = duty.wakerStudentName || (duty.role === 'מעורר' ? duty.studentName : '');
+        const kName = duty.kitchenStudentName || ((duty.role === 'מטבח' || duty.role === 'ניקיון מטבח') ? duty.studentName : '');
         dutyInfoHtml = `
           <div class="w-full flex flex-wrap items-center gap-2 pt-2.5 mt-2 border-t border-indigo-100/80 text-xs">
             <span class="font-extrabold text-slate-700">תורני יום זה בישיבה:</span>
-            <span class="px-2.5 py-1 rounded-xl ${isMyWaker ? 'bg-amber-200 text-amber-950 border border-amber-400 font-black ring-2 ring-amber-300' : 'bg-amber-100/80 text-amber-950 border border-amber-300 font-bold'} flex items-center gap-1">
-              <span>⏰</span>
-              <span>מעורר: <strong>${duty.wakerStudentName || 'טרם שובץ'}</strong> ${isMyWaker ? '(אתה!)' : ''}</span>
-            </span>
-            <span class="px-2.5 py-1 rounded-xl ${isMyKitchen ? 'bg-orange-200 text-orange-950 border border-orange-400 font-black ring-2 ring-orange-300' : 'bg-slate-100 text-slate-800 border border-slate-300 font-bold'} flex items-center gap-1">
-              <span>🧹</span>
-              <span>מטבח: <strong>${duty.kitchenStudentName || 'טרם שובץ'}</strong> ${isMyKitchen ? '(אתה!)' : ''}</span>
-            </span>
+            ${wName ? `
+              <span class="px-2.5 py-1 rounded-xl ${isMyWaker ? 'bg-amber-200 text-amber-950 border border-amber-400 font-black ring-2 ring-amber-300' : 'bg-amber-100/80 text-amber-950 border border-amber-300 font-bold'} flex items-center gap-1">
+                <span>⏰</span>
+                <span>מעורר: <strong>${wName}</strong> ${isMyWaker ? '(אתה!)' : ''}</span>
+              </span>
+            ` : ''}
+            ${kName ? `
+              <span class="px-2.5 py-1 rounded-xl ${isMyKitchen ? 'bg-orange-200 text-orange-950 border border-orange-400 font-black ring-2 ring-orange-300' : 'bg-slate-100 text-slate-800 border border-slate-300 font-bold'} flex items-center gap-1">
+                <span>⏰</span>
+                <span>מטבח: <strong>${kName}</strong> ${isMyKitchen ? '(אתה!)' : ''}</span>
+              </span>
+            ` : ''}
           </div>
         `;
       }
@@ -3679,7 +3821,7 @@ events.join('\n') + '\n' +
       bar.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-3 w-full">
           <div>
-            <strong class="text-indigo-950 font-black">${dayName} (${selectedDStr})</strong>
+            <strong class="text-indigo-950 font-black">${day.dayName} • ${toHebrewLetters(day.fullDateLabel)}</strong>
             <span class="text-slate-500 mr-1">${desc}</span>
           </div>
           <div class="flex items-center gap-2">
@@ -3698,36 +3840,19 @@ events.join('\n') + '\n' +
       const picker = document.getElementById('adminScheduleDayPicker');
       if (!picker) return;
 
-      const hebrewDays = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת קודש'];
-      const days = [];
-      const start = new Date(state.config.startDate + 'T12:00:00');
-      const end = new Date(state.config.endDate + 'T12:00:00');
-
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && start <= end) {
-        let curr = new Date(start);
-        while (curr <= end) {
-          const dStr = curr.toISOString().slice(0, 10);
-          const dayName = hebrewDays[curr.getDay()];
-          const isFri = curr.getDay() === 5;
-          const isShabbat = curr.getDay() === 6;
-          const tag = isFri ? ' [שישי ריק]' : isShabbat ? ' [שבת מיוחדת]' : '';
-          days.push({
-            val: dStr,
-            label: `${dayName} (${dStr.slice(5)})${tag}`
-          });
-          curr.setDate(curr.getDate() + 1);
-        }
+      if (Array.isArray(state.campaignDays) && state.campaignDays.length > 0) {
+        picker.innerHTML = state.campaignDays.map(d => `<option value="${d.isoDate}">${d.dayName} • ${toHebrewLetters(d.fullDateLabel)}</option>`).join('');
       } else {
-        days.push(
-          { val: '2026-10-20', label: 'יום שלישי • ח׳ חשוון' },
-          { val: '2026-10-21', label: 'יום רביעי • ט׳ חשוון' },
-          { val: '2026-10-22', label: 'יום חמישי • י׳ חשוון' },
-          { val: '2026-10-23', label: 'יום שישי [ריק] • י״א חשוון' },
-          { val: '2026-10-24', label: 'שבת קודש [מיוחדת] • י״ב חשוון' }
-        );
+        const startStr = state.config?.startDate || '2026-10-18';
+        const [sy, sm, sd] = startStr.split('-').map(Number);
+        const days = [];
+        for (let i = 0; i < 28; i++) {
+          const cDate = new Date(sy, sm - 1, sd + i, 12, 0, 0);
+          const dInfo = formatSyncedHebrewAndGregorian(cDate);
+          days.push(`<option value="${dInfo.isoDate}">${dInfo.dayName} • ${toHebrewLetters(dInfo.fullDisplay)}</option>`);
+        }
+        picker.innerHTML = days.join('');
       }
-
-      picker.innerHTML = days.map(d => `<option value="${d.val}">${d.label}</option>`).join('');
       renderAdminDayScheduleEditor();
     }
 

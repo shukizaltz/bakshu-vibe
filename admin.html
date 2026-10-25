@@ -1434,22 +1434,98 @@
       return state.students.filter(s => s.presentToday || s.present_today || s.presentCurrent).length;
     }
 
+    function forceHebrewLetters(str) {
+      if (!str || typeof str !== 'string') return str || '';
+      const regex = /(^|[^\d])([1-2]?\d|30)\s*ב?(תשרי|חשוון|חשון|מרחשוון|מרחשון|כסלו|כסליו|טבת|שבט|אדר|ניסן|אייר|סיוון|סיון|תמוז|אב|אלול)/g;
+      return str.replace(regex, (m, prefix, day, month) => {
+        const n = parseInt(day, 10);
+        const l = HEB_GEMATRIA_DAYS[n] || day;
+        let c = month;
+        if (c.startsWith('ב') && c.length > 2) c = c.slice(1);
+        return prefix + l + ' ' + c;
+      });
+    }
+
     // 1. המרה מדויקת מתאריך לועזי לתאריך עברי באותיות + תאריך לועזי קצר
     function formatSyncedHebrewAndGregorian(dateObj) {
       const safeNoon = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 12, 0, 0);
       const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(safeNoon);
       const dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
-      const monthName = parts.find(p => p.type === 'month')?.value || '';
+      let monthName = (parts.find(p => p.type === 'month')?.value || '').trim();
+      if (monthName.startsWith('ב') && monthName.length > 2) monthName = monthName.slice(1);
       const hebLetters = HEB_GEMATRIA_DAYS[dayNum] || String(dayNum);
-      const gregShort = `${String(safeNoon.getDate()).padStart(2, '0')}/${String(safeNoon.getMonth() + 1).padStart(2, '0')}`;
+      const gregShort = `${String(safeNoon.getDate()).padStart(2, '0')}.${String(safeNoon.getMonth() + 1).padStart(2, '0')}`;
+      const hebrewDateStr = forceHebrewLetters(`${hebLetters} ${monthName}`);
+      const fullDisplay = `${hebrewDateStr} (${gregShort})`;
       return {
-        hebrewDateStr: `${hebLetters} ${monthName}`,
+        hebrewDateStr,
         gregorianShort: gregShort,
-        fullDisplay: `${hebLetters} ${monthName} (${gregShort})`,
+        fullDisplay,
         isoDate: `${safeNoon.getFullYear()}-${String(safeNoon.getMonth() + 1).padStart(2, '0')}-${String(safeNoon.getDate()).padStart(2, '0')}`,
         dayOfWeek: safeNoon.getDay(),
         dayName: HEB_DAY_NAMES[safeNoon.getDay()]
       };
+    }
+
+    // ניקוי מוחלט של תורנויות לפני תחילת המבצע וסנכרון תאריכים ותזכורות
+    function cleanseAndSyncDutiesRoster() {
+      if (typeof state === 'undefined' || !state.dutiesRoster) return false;
+      const startStr = state.config?.startDate || '2026-10-18';
+      let modified = false;
+
+      // 1. אם dutiesRoster הוא מערך
+      if (Array.isArray(state.dutiesRoster)) {
+        const originalLen = state.dutiesRoster.length;
+        state.dutiesRoster = state.dutiesRoster.filter(d => {
+          if (d.dayIdx !== undefined && d.dayIdx < 0) return false;
+          if (d.isoDate && d.isoDate < startStr) return false;
+          if (d.dateStr && (d.dateStr.includes('אתמול') || d.dateStr < startStr)) {
+            if (!d.isoDate || d.isoDate < startStr) return false;
+          }
+          return true;
+        });
+        if (state.dutiesRoster.length !== originalLen) modified = true;
+
+        state.dutiesRoster.forEach(dr => {
+          let cDay = null;
+          if (dr.dayIdx !== undefined && state.campaignDays && state.campaignDays[dr.dayIdx]) {
+            cDay = state.campaignDays[dr.dayIdx];
+          } else if (dr.isoDate && state.campaignDays) {
+            cDay = state.campaignDays.find(cd => cd.isoDate === dr.isoDate);
+          }
+          if (cDay) {
+            dr.dateStr = forceHebrewLetters(cDay.fullDateLabel);
+            dr.dayName = cDay.dayName;
+            dr.wakerReminderText = `מעורר ב-22:30 לילה קודם (${dr.dateStr})`;
+            dr.kitchenReminderText = `ניקיון מטבח ב-19:30 לקראת ערב (${dr.dateStr})`;
+          }
+        });
+      }
+
+      // 2. אם dutiesRoster הוא אובייקט
+      if (state.dutiesRoster && typeof state.dutiesRoster === 'object' && !Array.isArray(state.dutiesRoster)) {
+        Object.keys(state.dutiesRoster).forEach(dStr => {
+          if (dStr < startStr || dStr.includes('אתמול')) {
+            delete state.dutiesRoster[dStr];
+            modified = true;
+          } else {
+            const duty = state.dutiesRoster[dStr];
+            const cDay = (state.campaignDays || []).find(cd => cd.isoDate === dStr);
+            if (cDay) {
+              duty.dateStr = forceHebrewLetters(cDay.fullDateLabel);
+              duty.dayName = cDay.dayName;
+              duty.wakerReminderText = `מעורר ב-22:30 לילה קודם (${duty.dateStr})`;
+              duty.kitchenReminderText = `ניקיון מטבח ב-19:30 לקראת ערב (${duty.dateStr})`;
+            }
+          }
+        });
+      }
+
+      try {
+        localStorage.setItem(STORAGE_KEYS.DUTIES, JSON.stringify(state.dutiesRoster));
+      } catch(e) {}
+
+      return modified;
     }
 
     // 2. מקור אמת יחיד: אילו סדרים מתוך state.eventsList חלים ביום נתון
@@ -1476,9 +1552,122 @@
       });
     }
 
+    // חישוב הסדר הפעיל / הסדר הבא בהתאמה לתחילת המבצע ולנעילת סדרים
+    function getActiveOrNextSederInfo() {
+      const startStr = state.config?.startDate || '2026-10-18';
+      const [sy, sm, sd] = startStr.split('-').map(Number);
+      const now = new Date();
+      const todayNoon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+      const startNoon = new Date(sy, sm - 1, sd, 12, 0, 0);
+
+      const curHHMM = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+      // מקרה 1: לפני תחילת המבצע (today < startDate)
+      if (todayNoon.getTime() < startNoon.getTime()) {
+        const startInfo = formatSyncedHebrewAndGregorian(startNoon);
+        const startEvents = getApplicableEventsForDate(startNoon);
+        const firstSeder = startEvents[0] || { title: 'סדר א׳ - לימוד בוקר', timeWindow: '09:00 - 10:15', points: 1 };
+        const [openTime, lockTime] = (firstSeder.timeWindow || '09:00 - 10:15').split('-').map(s => s.trim());
+        return {
+          mode: 'pre_campaign',
+          dateLabel: forceHebrewLetters(`${startInfo.dayName}, ${startInfo.fullDisplay} • פתיחת המבצע`),
+          shortDateLabel: forceHebrewLetters(startInfo.fullDisplay),
+          sederTitle: firstSeder.title,
+          timeRange: `${openTime || '09:00'} - ${lockTime || '10:15'}`,
+          points: Number(firstSeder.points) || 1,
+          slotsList: startEvents,
+          statusText: `המבצע ייפתח ב-${startInfo.dayName} (${forceHebrewLetters(startInfo.hebrewDateStr)})`,
+          canCheckIn: false
+        };
+      }
+
+      // מקרה 2: המבצע פעיל (today >= startDate)
+      const todayInfo = formatSyncedHebrewAndGregorian(todayNoon);
+      const todayEvents = getApplicableEventsForDate(todayNoon);
+
+      if (todayEvents.length === 0) {
+        const tomorrowNoon = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12, 0, 0);
+        const tomorrowInfo = formatSyncedHebrewAndGregorian(tomorrowNoon);
+        const tomorrowEvents = getApplicableEventsForDate(tomorrowNoon);
+        const nextSeder = tomorrowEvents[0] || { title: 'סדר שבת קודש', timeWindow: '19:30 - 20:30', points: 2 };
+        const [openTime, lockTime] = (nextSeder.timeWindow || '19:30 - 20:30').split('-').map(s => s.trim());
+        return {
+          mode: 'next_tomorrow',
+          dateLabel: forceHebrewLetters(`${todayInfo.dayName}, ${todayInfo.fullDisplay} (יום חופשי)`),
+          shortDateLabel: forceHebrewLetters(todayInfo.fullDisplay),
+          sederTitle: nextSeder.title,
+          timeRange: `${openTime || '19:30'} - ${lockTime || '20:30'}`,
+          points: Number(nextSeder.points) || 1,
+          slotsList: [],
+          statusText: `הסדר הבא: ${tomorrowInfo.dayName} (${forceHebrewLetters(tomorrowInfo.hebrewDateStr)}) בשעה ${openTime || '19:30'}`,
+          canCheckIn: false
+        };
+      }
+
+      // בדיקה האם כל הסדרים של היום כבר ננעלו (curHHMM > lastSlot.lockTime)
+      const lastSlot = todayEvents[todayEvents.length - 1];
+      const lastLock = (lastSlot.timeWindow || '23:59').split('-')[1]?.trim() || '23:59';
+      const allLocked = curHHMM > lastLock;
+
+      if (allLocked) {
+        // הצגת הסדר הראשון של מחר
+        const tomorrowNoon = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 12, 0, 0);
+        const tomorrowInfo = formatSyncedHebrewAndGregorian(tomorrowNoon);
+        const tomorrowEvents = getApplicableEventsForDate(tomorrowNoon);
+        const nextSeder = tomorrowEvents[0] || { title: 'סדר בוקר', timeWindow: '09:00 - 10:15', points: 1 };
+        const [openTime, lockTime] = (nextSeder.timeWindow || '09:00 - 10:15').split('-').map(s => s.trim());
+        return {
+          mode: 'next_tomorrow',
+          dateLabel: forceHebrewLetters(`הסדר הבא: ${tomorrowInfo.dayName}, ${tomorrowInfo.fullDisplay}`),
+          shortDateLabel: forceHebrewLetters(tomorrowInfo.fullDisplay),
+          sederTitle: nextSeder.title,
+          timeRange: `${openTime || '09:00'} - ${lockTime || '10:15'}`,
+          points: Number(nextSeder.points) || 1,
+          slotsList: todayEvents,
+          statusText: `כל סדרי היום ננעלו. הסדר הבא: מחר בשעה ${openTime || '09:00'}`,
+          canCheckIn: false
+        };
+      }
+
+      // איתור הסדר הפעיל כעת או הסדר הבא הקרוב היום
+      let currentActive = null;
+      for (const s of todayEvents) {
+        const [o, l] = (s.timeWindow || '09:00 - 10:15').split('-').map(str => str.trim());
+        if (curHHMM >= o && curHHMM <= l) {
+          currentActive = { ...s, openTime: o, lockTime: l, state: 'active' };
+          break;
+        }
+      }
+      if (!currentActive) {
+        for (const s of todayEvents) {
+          const [o, l] = (s.timeWindow || '09:00 - 10:15').split('-').map(str => str.trim());
+          if (curHHMM < o) {
+            currentActive = { ...s, openTime: o, lockTime: l, state: 'upcoming' };
+            break;
+          }
+        }
+      }
+      if (!currentActive) {
+        const [o, l] = (todayEvents[0].timeWindow || '09:00 - 10:15').split('-').map(str => str.trim());
+        currentActive = { ...todayEvents[0], openTime: o, lockTime: l, state: 'active' };
+      }
+
+      return {
+        mode: 'today',
+        dateLabel: forceHebrewLetters(`${todayInfo.dayName}, ${todayInfo.fullDisplay}`),
+        shortDateLabel: forceHebrewLetters(todayInfo.fullDisplay),
+        sederTitle: currentActive.title,
+        timeRange: `${currentActive.openTime} - ${currentActive.lockTime}`,
+        points: Number(currentActive.points) || 1,
+        slotsList: todayEvents,
+        statusText: currentActive.state === 'active' ? 'חלון סימון פתוח כעת!' : `ייפתח בשעה ${currentActive.openTime}`,
+        canCheckIn: currentActive.state === 'active'
+      };
+    }
+
     // 3. בניית לוח המבצע וסדרי היום מתוך startDate ללא מחיקת שיבוצים קיימים
     function rebuildSyncedCalendarAndToday() {
-      const startStr = state.config.startDate || '2026-10-18';
+      const startStr = state.config?.startDate || '2026-10-18';
       const duration = parseInt(state.config.durationDays, 10) || 28;
       const [sy, sm, sd] = startStr.split('-').map(Number);
       const now = new Date();
@@ -1508,8 +1697,8 @@
           isoDate: dInfo.isoDate,
           gregorianShort: dInfo.gregorianShort,
           dayName: status === 'today' ? `${dInfo.dayName} (היום)` : dInfo.dayName,
-          dateStr: dInfo.hebrewDateStr,
-          fullDateLabel: dInfo.fullDisplay,
+          dateStr: forceHebrewLetters(dInfo.hebrewDateStr),
+          fullDateLabel: forceHebrewLetters(dInfo.fullDisplay),
           status,
           sedarim: sedarimCount,
           pointsPool,
@@ -1517,27 +1706,15 @@
           isBonus: !!specialEv || !!prevDayObj.isBonus,
           bonusLabel: specialEv ? specialEv.title : (prevDayObj.bonusLabel || '')
         });
-
-        // עדכון תאריך עברי/לועזי תואם בטבלת התורנויות הקיימת מבלי למחוק את הבחורים המשובצים!
-        if (Array.isArray(state.dutiesRoster)) {
-          const dutyRow = state.dutiesRoster.find(dr => dr.dayIdx === i || dr.dateStr === dInfo.isoDate);
-          if (dutyRow) {
-            dutyRow.dateStr = dInfo.fullDisplay;
-            dutyRow.dayName = dInfo.dayName;
-          }
-        } else if (state.dutiesRoster && typeof state.dutiesRoster === 'object') {
-          const dutyObj = state.dutiesRoster[dInfo.isoDate];
-          if (dutyObj) {
-            dutyObj.dateStr = dInfo.fullDisplay;
-            dutyObj.dayName = dInfo.dayName;
-          }
-        }
       }
       state.campaignDays = updatedDays;
 
-      // עדכון הסדרים של היום (למסך הבחור) מתוך אותה פונקציה בדיוק!
-      const todayEvents = getApplicableEventsForDate(todayNoon);
-      state.todaySlots = todayEvents.map((ev, idx) => {
+      // ניקוי תורנויות לפני תחילת המבצע וסנכרון לתאריכים עבריים
+      cleanseAndSyncDutiesRoster();
+
+      // עדכון הסדרים של היום מתוך getActiveOrNextSederInfo()
+      const activeSederInfo = getActiveOrNextSederInfo();
+      state.todaySlots = (activeSederInfo.slotsList || []).map((ev, idx) => {
         const existing = (state.todaySlots || []).find(t => t.id === ev.id) || {};
         const [openTime, lockTime] = (ev.timeWindow || '09:00 - 10:15').split('-').map(s => s.trim());
         return {
@@ -1547,7 +1724,7 @@
           timeWindow: ev.timeWindow,
           openTime: openTime || '09:00',
           lockTime: lockTime || '10:15',
-          points: ev.points,
+          points: Number(ev.points) || 1,
           status: idx === 0 ? 'active' : 'upcoming',
           noPhone: !!existing.noPhone,
           requestSent: !!existing.requestSent
@@ -1852,6 +2029,9 @@
         // 5. Turn ON cloud hydration flag - saving is only allowed from this point onwards!
         isCloudHydrated = true;
 
+        // 6. Save cleansed & synced state to Supabase immediately so pre-start duties are purged in cloud
+        await syncStateToSupabaseNow();
+
         updateSupabaseStatusUI(true, 'מחובר ומסונכרן (app_state)');
 
         // Render dashboard
@@ -1863,6 +2043,35 @@
       } catch (err) {
         console.warn('Supabase fetch error in admin.html:', err);
         isCloudHydrated = true; // Allow local operations even if offline
+      }
+    }
+
+    // Direct Immediate Sync to Supabase
+    async function syncStateToSupabaseNow() {
+      if (!isCloudHydrated || !supabaseClient) return;
+      try {
+        updateSupabaseStatusUI(true, 'שומר ב-app_state...');
+        const payload = {
+          students: state.students,
+          eventsList: state.eventsList,
+          dutiesRoster: state.dutiesRoster,
+          pendingRequests: state.absenceRequests || [],
+          auditLogs: state.bonusLogs || [],
+          qrSecretCode: state.qrSecret || 'BK-892',
+          config: state.config,
+          campaignDays: state.campaignDays,
+          todaySlots: state.todaySlots
+        };
+        await supabaseClient.from('app_state').upsert([
+          {
+            key: 'main_app_state',
+            data: payload,
+            updated_at: new Date().toISOString()
+          }
+        ], { onConflict: 'key' });
+        updateSupabaseStatusUI(true, 'מחובר ומסונכרן (app_state)');
+      } catch(e) {
+        console.warn('syncStateToSupabaseNow error in admin.html:', e);
       }
     }
 
@@ -2333,20 +2542,23 @@
     function getHebrewDateString(date) {
       try {
         const d = typeof date === 'string' ? new Date(date + (date.length <= 10 ? 'T12:00:00' : '')) : date;
+        const info = formatSyncedHebrewAndGregorian(d);
+        const dayMonth = forceHebrewLetters(info.hebrewDateStr);
         const parts = new Intl.DateTimeFormat('he-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' }).formatToParts(d);
-        let dayNum = 1, monthName = '', yearNum = 5787;
+        let yearNum = 5787;
         parts.forEach(p => {
-          if (p.type === 'day') dayNum = parseInt(p.value, 10);
-          if (p.type === 'month') monthName = p.value;
           if (p.type === 'year') yearNum = parseInt(p.value, 10);
         });
-        const hebrewDay = HEBREW_NUMERALS[dayNum] || (dayNum + '׳');
+        const dayP = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
+        const hebrewDay = HEB_GEMATRIA_DAYS[dayP] || (dayP + '׳');
+        let monthName = (parts.find(p => p.type === 'month')?.value || '').trim();
+        if (monthName.startsWith('ב') && monthName.length > 2) monthName = monthName.slice(1);
         const hebrewYear = HEBREW_YEARS[yearNum] || ('תשפ״ז');
         return {
-          dayMonth: hebrewDay + ' ' + monthName,
-          full: hebrewDay + ' ' + monthName + ' ' + hebrewYear,
+          dayMonth,
+          full: `${dayMonth} ${hebrewYear}`,
           hebrewDay,
-          dayNum,
+          dayNum: dayP,
           monthName,
           hebrewYear
         };
@@ -4216,14 +4428,14 @@
       }
 
       const d = new Date(dateStr + 'T12:00:00');
-      const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-      const dayName = 'יום ' + dayNames[d.getDay()];
-      const hDate = getHebrewDateString(dateStr);
-      const roleTitle = role === 'waker' ? 'השכמה (מעורר בוקר ⏰)' : 'נקיון מטבח ערב 🧹';
+      const dInfo = formatSyncedHebrewAndGregorian(d);
+      const roleTitle = role === 'waker' ? 'השכמה (מעורר לתפילה ⏰)' : 'נקיון מטבח ערב 🧹';
+      const reminderTiming = role === 'waker' ? 'מעורר ב-22:30 לילה קודם' : 'ניקיון מטבח ב-19:30 לקראת ערב';
 
       const cleanPhone = formatIsraeliPhoneForWhatsApp(student.phone);
       const msg = `שלום ${student.name} היקר! 🌺
-תזכורת מישיבת בקשו: אתה משובץ לתורנות *${roleTitle}* ל${dayName} (${hDate.dayMonth}, ${dateStr}).
+תזכורת מישיבת בקשו: אתה משובץ לתורנות *${roleTitle}* ל${dInfo.dayName} (${forceHebrewLetters(dInfo.fullDisplay)}).
+תזכורת לתורן: ${reminderTiming}.
 תודה רבה מקרב לב על העזרה לכל בני הישיבה! עלה והצלח! ✨`;
 
       if (cleanPhone) {
@@ -4250,11 +4462,9 @@
         return;
       }
       const d = new Date(dateStr + 'T12:00:00');
-      const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-      const dayName = 'יום ' + dayNames[d.getDay()];
-      const hDate = getHebrewDateString(dateStr);
-      const roleName = role === 'waker' ? 'מעורר בוקר' : 'נקיון מטבח ערב';
-      const text = encodeURIComponent(`שלום ${student.name} היקר, תזכורת מישיבת בקשו: אתה משובץ לתורנות ${roleName} ל${dayName} (${hDate.dayMonth}, ${dateStr}). נא להיערך. תודה ובהצלחה!`);
+      const dInfo = formatSyncedHebrewAndGregorian(d);
+      const roleName = role === 'waker' ? 'מעורר לתפילה (מעורר ב-22:30 לילה קודם)' : 'נקיון מטבח ערב (ב-19:30 לקראת ערב)';
+      const text = encodeURIComponent(`שלום ${student.name} היקר, תזכורת מישיבת בקשו: אתה משובץ לתורנות ${roleName} ל${dInfo.dayName} (${forceHebrewLetters(dInfo.fullDisplay)}). נא להיערך. תודה ובהצלחה!`);
       const phone = (student.phone || '').replace(/[^0-9]/g, '');
       if (phone) {
         window.open(`sms:${phone}?body=${text}`, '_blank');
@@ -4313,7 +4523,7 @@
           icsLines.push(`DTSTART:${prevStr}T223000`);
           icsLines.push(`DTEND:${prevStr}T224500`);
           icsLines.push(`SUMMARY:תזכורת לתורן מעורר: ${stName} (למחר בבוקר)`);
-          icsLines.push(`DESCRIPTION:תורן השכמה ל${dayName} (${hDate.dayMonth}, ${dStr}): ${stName}\\nטלפון: ${stPhone || 'לא הוזן'}\\nוואטסאפ: ${waLink}`);
+          icsLines.push(`DESCRIPTION:תורן השכמה ל${dayName} (${forceHebrewLetters(hDate.dayMonth)}, ${dStr}) - מעורר ב-22:30 לילה קודם: ${stName}\\nטלפון: ${stPhone || 'לא הוזן'}\\nוואטסאפ: ${waLink}`);
           icsLines.push('BEGIN:VALARM');
           icsLines.push('ACTION:DISPLAY');
           icsLines.push(`DESCRIPTION:תזכורת לשלוח הודעה למעורר: ${stName}`);
@@ -4339,7 +4549,7 @@
           icsLines.push(`DTSTART:${dClean}T191500`);
           icsLines.push(`DTEND:${dClean}T193000`);
           icsLines.push(`SUMMARY:תזכורת לתורן מטבח: ${stName} (הערב)`);
-          icsLines.push(`DESCRIPTION:תורן מטבח ערב ל${dayName} (${hDate.dayMonth}, ${dStr}): ${stName}\\nטלפון: ${stPhone || 'לא הוזן'}\\nוואטסאפ: ${waLink}`);
+          icsLines.push(`DESCRIPTION:תורן מטבח ערב ל${dayName} (${forceHebrewLetters(hDate.dayMonth)}, ${dStr}) - ניקיון מטבח ב-19:30: ${stName}\\nטלפון: ${stPhone || 'לא הוזן'}\\nוואטסאפ: ${waLink}`);
           icsLines.push('BEGIN:VALARM');
           icsLines.push('ACTION:DISPLAY');
           icsLines.push(`DESCRIPTION:תזכורת לשלוח הודעה לתורן מטבח: ${stName}`);
@@ -4505,7 +4715,7 @@
                         <span class="text-2xl">${item.roleEmoji}</span>
                         <div>
                           <div class="font-black text-white text-sm">${item.roleTitle}</div>
-                          <div class="text-[11px] font-bold text-amber-300">${item.relativeLabel} • ${item.dayName} (${item.hDate.dayMonth}, ${item.dateStr})</div>
+                          <div class="text-[11px] font-bold text-amber-300">${item.relativeLabel} • ${item.dayName} (${forceHebrewLetters(item.hDate.dayMonth)}, ${item.dateStr})</div>
                         </div>
                       </div>
                       <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full ${item.isDone ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' : 'bg-amber-400/20 text-amber-300 border border-amber-400/40'}">
@@ -4593,7 +4803,7 @@
                   <div>
                     <div class="flex items-center gap-1.5">
                       <span class="font-black text-slate-900 text-sm">${dayName}</span>
-                      <span class="text-xs font-extrabold text-amber-800">${hDate.dayMonth}</span>
+                      <span class="text-xs font-extrabold text-amber-800">${forceHebrewLetters(hDate.dayMonth)}</span>
                       ${isToday ? '<span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 shadow-xs">⭐ היום</span>' : isPast ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-600">עבר</span>' : ''}
                     </div>
                     <div class="text-[10px] text-slate-400 font-mono">${dStr}</div>
