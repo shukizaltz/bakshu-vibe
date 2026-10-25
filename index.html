@@ -9095,5 +9095,157 @@ END:VCALENDAR`;
   setTimeout(isoAdmin, 100);
 })();
 </script>
+<script id="live-seder-time-sync-fix">
+(function(){
+  function getIsraelTodayIso(){
+    const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function toMin(t){
+    if(!t || typeof t !== "string") return -1;
+    const m = t.trim().match(/^(\d{1,2}):(\d{2})$/);
+    if(!m) return -1;
+    return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+  }
+
+  function extractOpenLock(slot){
+    let o = slot.openTime || slot.open_time || "";
+    let l = slot.lockTime || slot.lock_time || "";
+    if((!o || !l) && slot.timeWindow){
+      const parts = String(slot.timeWindow).split(/[–\-]/);
+      if(parts.length >= 2){
+        if(!o) o = parts[0].trim();
+        if(!l) l = parts[1].trim();
+      }
+    }
+    return { open: o || "09:00", lock: l || "23:59" };
+  }
+
+  function syncTodaySedarimLive(){
+    if(typeof state === "undefined") return;
+    const todayIso = (typeof TODAY_ISO !== "undefined" && TODAY_ISO) || (typeof getTodayDateStr === "function" && getTodayDateStr()) || getIsraelTodayIso();
+    const slots = (typeof getSlotsForDate === "function" ? getSlotsForDate(todayIso) : (typeof getScheduleForDate === "function" ? getScheduleForDate(todayIso) : (state.slotsByDate && state.slotsByDate[todayIso]))) || [];
+    if(!slots.length) return;
+
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+
+    let activeSlot = null;
+    let upcomingSlot = null;
+
+    slots.forEach(s => {
+      const times = extractOpenLock(s);
+      s.openTime = times.open;
+      s.lockTime = times.lock;
+      s.timeWindow = times.open + " – " + times.lock;
+      const oM = toMin(times.open);
+      let lM = toMin(times.lock);
+      if(lM !== -1 && oM !== -1 && lM < oM) lM += 1440;
+      if(oM !== -1 && lM !== -1){
+        if(nowMin >= oM && nowMin <= lM && !activeSlot){
+          activeSlot = s;
+        } else if(nowMin < oM && !upcomingSlot){
+          upcomingSlot = s;
+        }
+      }
+    });
+
+    const chosen = activeSlot || upcomingSlot;
+    if(!chosen) return;
+
+    const isOpenNow = !!activeSlot;
+    const pill = document.getElementById("sederStatusPill") || document.getElementById("activeSederStatusBadge");
+    const titleEl = document.getElementById("activeSederTitle");
+    const metaEl = document.getElementById("activeSederMeta") || document.getElementById("activeSederWindow");
+    const ptsEl = document.getElementById("activeSederPtsBadge") || document.getElementById("activeSederPointsBadge");
+    const btn = document.getElementById("mainCheckInBtn");
+    const btnSub = document.getElementById("mainCheckInSubtext");
+
+    if(titleEl) titleEl.textContent = chosen.title;
+    if(ptsEl) ptsEl.textContent = "+" + (chosen.points || chosen.base_points || 2) + " נק׳";
+
+    const dayObj = (typeof CAMPAIGN_DAYS !== "undefined" && Array.isArray(CAMPAIGN_DAYS) && CAMPAIGN_DAYS.find(d => d.iso === todayIso)) || (typeof getDayMeta === "function" ? getDayMeta(todayIso) : null);
+    const hebLabel = dayObj ? (dayObj.dayName || dayObj.dayNameHe || "") + " • " + (dayObj.hebrewDate || "") : "היום";
+    if(metaEl) metaEl.textContent = hebLabel + " • חלון סימון: " + chosen.openTime + " – " + chosen.lockTime;
+
+    if(pill){
+      if(isOpenNow){
+        let lockMin = toMin(chosen.lockTime);
+        if(lockMin < toMin(chosen.openTime)) lockMin += 1440;
+        const left = Math.max(1, lockMin - nowMin);
+        pill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200";
+        pill.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span><span>🟢 סדר פעיל כעת (' + chosen.openTime + '–' + chosen.lockTime + ') • נותרו ' + left + ' דק׳ לסימון</span>';
+      } else {
+        const wait = Math.max(1, toMin(chosen.openTime) - nowMin);
+        const h = Math.floor(wait / 60), m = wait % 60;
+        pill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200";
+        pill.innerHTML = '<span>⏳</span><span>הסדר הקרוב היום: ' + chosen.title + ' (ייפתח בעוד ' + (h > 0 ? h + ' שעות ו-' : '') + m + ' דק׳ ב-' + chosen.openTime + ')</span>';
+      }
+    }
+
+    if(btn){
+      const st = state.currentStudent;
+      const stId = state.currentStudentId || state.activeStudentId || st?.id;
+      const isPresent = st?.presentCurrent || (typeof isStudentPresentInSlot === "function" && isStudentPresentInSlot(stId, chosen, todayIso));
+
+      if(isPresent){
+        btn.disabled = false;
+        btn.className = "w-full py-4 px-6 rounded-2xl bg-emerald-600 text-white font-black text-base sm:text-lg shadow-md flex items-center justify-center gap-2";
+        btn.innerHTML = '<span>✅</span><span>נוכחותך בסדר זה סומנה בהצלחה! (' + chosen.title + ')</span>';
+      } else if(isOpenNow){
+        btn.disabled = false;
+        btn.removeAttribute("disabled");
+        btn.className = "w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base sm:text-lg shadow-lg transition flex items-center justify-center gap-2 cursor-pointer";
+        btn.innerHTML = '<span>📸</span><span>סרוק QR / סמן נוכחות כעת ב' + chosen.title + ' (פתוח עד ' + chosen.lockTime + ')</span>';
+        btn.onclick = function(){
+          if(typeof openBarcodeScannerModal === "function") openBarcodeScannerModal();
+          else if(typeof handleStudentCheckIn === "function") handleStudentCheckIn(todayIso, chosen.id);
+          else if(typeof openQrScannerModal === "function") openQrScannerModal();
+        };
+        if(btnSub) btnSub.textContent = "חלון הסימון פתוח כעת (" + chosen.openTime + " – " + chosen.lockTime + ")";
+      } else {
+        btn.disabled = true;
+        btn.className = "w-full py-4 px-6 rounded-2xl bg-slate-200 text-slate-500 font-black text-sm sm:text-base cursor-not-allowed flex items-center justify-center gap-2";
+        btn.innerHTML = '<span>🔒</span><span>הסימון ל' + chosen.title + ' ייפתח בשעה ' + chosen.openTime + '</span>';
+      }
+    }
+  }
+
+  const origUpdateSlot = window.updateScheduleSlotField;
+  if(typeof origUpdateSlot === "function"){
+    window.updateScheduleSlotField = function(idx, field, val){
+      const r = origUpdateSlot.apply(this, arguments);
+      syncTodaySedarimLive();
+      return r;
+    };
+  }
+  const origUpdateSlotTime = window.updateSlotTime;
+  if(typeof origUpdateSlotTime === "function"){
+    window.updateSlotTime = function(date, idx, field, val){
+      const r = origUpdateSlotTime.apply(this, arguments);
+      syncTodaySedarimLive();
+      return r;
+    };
+  }
+  const origRenderStudent = window.renderStudentScreen;
+  if(typeof origRenderStudent === "function"){
+    window.renderStudentScreen = function(){
+      const r = origRenderStudent.apply(this, arguments);
+      syncTodaySedarimLive();
+      return r;
+    };
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    setTimeout(syncTodaySedarimLive, 250);
+    setInterval(syncTodaySedarimLive, 2000);
+  });
+  setTimeout(syncTodaySedarimLive, 150);
+})();
+</script>
 </body>
 </html>
