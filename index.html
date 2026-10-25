@@ -335,7 +335,7 @@
               </div>
               <div class="text-left">
                 <span id="studentTotalScoreBig" class="text-3xl font-black text-indigo-950">0</span>
-                <span class="text-xs font-bold text-slate-400"> / <span id="studentTotalAchievableMax">160</span> נק׳ בקופה</span>
+                <span class="text-xs font-bold text-slate-400"> / <span id="studentTotalAchievableMax">130</span> נק׳ ליעד הזהב</span>
               </div>
             </div>
 
@@ -404,13 +404,18 @@
                 <span class="text-slate-600">נקודות שנצברו עד כה:</span>
                 <strong id="studentRangeCurrentPts" class="font-black text-slate-900 font-mono">0 נק׳</strong>
               </div>
-              <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
-                <span class="text-slate-600">נקודות נוספות שנותרו בקופה:</span>
-                <strong id="studentRangeRemainingPts" class="font-black text-emerald-700 font-mono">160 נק׳</strong>
+              <div class="p-2 rounded-xl bg-slate-50 border border-slate-100">
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-600">נקודות נוספות שנותרו בקופה:</span>
+                  <strong id="studentRangeRemainingPts" class="font-black text-emerald-700 font-mono">0 נק׳</strong>
+                </div>
+                <div id="studentRangeRemainingBreakdown" class="text-[10px] text-slate-500 font-medium mt-0.5">
+                  (📖 סדרים בלוח: 0 • ⏰ תורנויות שלך: 0 • 🔥 בונוסים: 0)
+                </div>
               </div>
               <div class="flex items-center justify-between p-2 rounded-xl bg-amber-50/60 border border-amber-200">
                 <span class="text-amber-900 font-bold">מקסימום אישי שתוכל להגיע אליו:</span>
-                <strong id="studentRangeMaxPossiblePts" class="font-black text-amber-900 font-mono">160 נק׳</strong>
+                <strong id="studentRangeMaxPossiblePts" class="font-black text-amber-900 font-mono">0 נק׳ (יעד הפסגה/זהב: 130 נק׳)</strong>
               </div>
             </div>
           </div>
@@ -1577,9 +1582,21 @@
       { id: 'ev_motzei_shabbat', title: 'סדר מוצאי שבת קודש', timeWindow: '19:30 - 21:00', points: 2, type: 'שבת', schedule: 'שבת' }
     ];
 
+    function getRealStudents() {
+      if (typeof state === 'undefined' || !state.students || !Array.isArray(state.students)) return [];
+      return state.students.filter(s => {
+        if (!s) return false;
+        if (s.isDemo || s.id === 999 || s.id === 'demo_student_1') return false;
+        const nameStr = String(s.name || '');
+        if (nameStr.includes('לדוגמה') || nameStr.includes('ישראל ישראלי')) return false;
+        return true;
+      });
+    }
+
     function getPresentCount() {
-      if (typeof state === 'undefined' || !state.students || !state.students.length) return 0;
-      return state.students.filter(s => s.presentToday || s.present_today || s.presentCurrent).length;
+      const real = getRealStudents();
+      if (!real || !real.length) return 0;
+      return real.filter(s => s.presentToday || s.present_today || s.presentCurrent).length;
     }
 
     // המרה כפויה של כל תאריך עברי לאותיות גימטריה בלבד
@@ -2218,13 +2235,20 @@
     // 2. DEMO STUDENT DEFINITION & PERSISTENT STORAGE
     // ====================================================
     const DEFAULT_DEMO_STUDENT = {
-      id: '770d3812-a625-46d5-8155-687747c34f97',
+      id: 999,
+      isDemo: true,
       name: 'ישראל ישראלי (בחור לדוגמה)',
       phone: '050-1234567',
       password: '1234',
-      score: 12,
+      baseScore: 0,
+      score: 0,
+      sedarimPoints: 0,
+      dutiesPoints: 0,
+      bonusPoints: 0,
+      presentCurrent: false,
       presentToday: false,
-      persistenceCount: 3
+      persistenceCount: 0,
+      last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     };
 
     function loadInitialStudents() {
@@ -2233,21 +2257,24 @@
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed.map(st => ({
-              ...st,
-              password: st.password || '1234'
-            }));
+            return parsed
+              .filter(st => !st.isDemo && st.id !== 999 && st.id !== 'demo_student_1' && !String(st.name || '').includes('לדוגמה') && !String(st.name || '').includes('ישראל ישראלי'))
+              .map(st => ({
+                ...st,
+                password: st.password || '1234'
+              }));
           }
         }
       } catch (e) {
         console.warn('Could not read saved students list:', e);
       }
-      return [{ ...DEFAULT_DEMO_STUDENT }];
+      return [];
     }
 
     function saveLocalStudents() {
       try {
-        localStorage.setItem('bakshu_students_list_v3', JSON.stringify(state.students));
+        const real = getRealStudents();
+        localStorage.setItem('bakshu_students_list_v3', JSON.stringify(real));
       } catch (e) {
         console.warn('Could not save students list:', e);
       }
@@ -2369,7 +2396,7 @@
             // Students only - non destructive merge
             const currentMap = new Map((state.students || []).map(s => [s.id, s]));
             dbUsers
-              .filter(u => u.role !== 'admin' && u.role !== 'deleted' && u.is_active !== false && u.id !== '00000000-0000-0000-0000-000000000001')
+              .filter(u => u.role !== 'admin' && u.role !== 'deleted' && u.is_active !== false && u.id !== '00000000-0000-0000-0000-000000000001' && u.id !== '999' && !String(u.full_name || '').includes('לדוגמה') && !String(u.full_name || '').includes('ישראל ישראלי'))
               .forEach(u => {
                 const ex = currentMap.get(u.id);
                 currentMap.set(u.id, {
@@ -2384,7 +2411,7 @@
                   deviceLocked: ex?.deviceLocked
                 });
               });
-            state.students = Array.from(currentMap.values());
+            state.students = Array.from(currentMap.values()).filter(s => !s.isDemo && s.id !== 999 && !String(s.name || '').includes('לדוגמה') && !String(s.name || '').includes('ישראל ישראלי'));
             saveLocalStudents();
 
             // Refresh current student
@@ -2544,6 +2571,9 @@
         cleanseAndSyncDutiesRoster();
         if (typeof rebuildSyncedCalendarAndToday === 'function') {
           rebuildSyncedCalendarAndToday();
+        }
+        if (typeof syncTargetsWithCalendar === 'function') {
+          syncTargetsWithCalendar();
         }
 
         // Mark cloud as hydrated only after data is loaded and merged into state
@@ -2954,29 +2984,71 @@
       return getCampaignPointsPotential().maxSedarimPoints;
     }
 
-    function calculateStudentProjectedRange(student) {
-      const pot = getCampaignPointsPotential();
-      const campaignTotal = pot.maxSedarimPoints;
-      const bd = getStudentScoreBreakdown(student);
-      const current = bd.totalScore;
-      
-      const now = new Date();
-      const endDate = new Date(state.config.endDate + 'T12:00:00');
-      
-      let remaining = 0;
-      if (!isNaN(endDate.getTime())) {
-        let curr = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
-        while (curr <= endDate) {
-          const dStr = curr.toISOString().slice(0, 10);
-          const slots = getSlotsForDate(dStr);
-          slots.forEach(s => {
-            remaining += (Number(s.points) || 0);
-          });
-          curr.setDate(curr.getDate() + 1);
-        }
+    // Canonical Function: getStudentCampaignPotential(student)
+    // Used by BOTH the Right Card and Left Card so point pool numbers are 100% unified
+    function getStudentCampaignPotential(student) {
+      const s = student || state.currentStudent || state.demoStudentProfile || { id: 999, name: 'ישראל ישראלי' };
+      const bd = getStudentScoreBreakdown(s);
+      const earnedSoFar = bd.totalScore;
+      const sedarimPts = bd.sedarimPts;
+      const dutiesPts = bd.dutiesPts;
+      const bonusPts = bd.bonusesPts;
+
+      // 1. remainingSedarimPool strictly from upcoming/today days in state.campaignDays (d.status !== 'passed')
+      const days = (state && Array.isArray(state.campaignDays)) ? state.campaignDays : [];
+      const remainingDays = days.filter(d => d.status !== 'passed');
+      const remainingSedarimPool = remainingDays.reduce((sum, d) => sum + (Number(d.pointsPool) || Number(d.points_pool) || 0), 0);
+
+      // 2. remainingMyDutiesPool strictly from upcoming duties in state.dutiesRoster
+      const dutyBonus = Number(state.config?.dutyBonusPts || 3);
+      let remainingMyDutiesCount = 0;
+      if (state.dutiesRoster && s.id) {
+        const rosterItems = Array.isArray(state.dutiesRoster)
+          ? state.dutiesRoster
+          : Object.values(state.dutiesRoster);
+        rosterItems.forEach(dr => {
+          if (!dr) return;
+          const isWakerMatch = (dr.wakeupStudentId === s.id || dr.wakerStudentId === s.id);
+          const wakerDone = Boolean(dr.wakeupDone || dr.wakerDone);
+          if (isWakerMatch && !wakerDone) remainingMyDutiesCount++;
+
+          const isKitchenMatch = (dr.kitchenStudentId === s.id);
+          const kitchenDone = Boolean(dr.kitchenDone);
+          if (isKitchenMatch && !kitchenDone) remainingMyDutiesCount++;
+        });
       }
-      
-      const maxPossible = current + remaining;
+      const remainingMyDutiesPool = remainingMyDutiesCount * dutyBonus;
+
+      // 3. remainingBonusPool realistically from remaining weeks' persistence bonus
+      const remainingWeeks = Math.max(0, Math.ceil(remainingDays.length / 7));
+      const xyBonus = Number(state.config?.xyBonus || 3);
+      const remainingBonusPool = remainingWeeks * xyBonus;
+
+      const remainingTotalInPool = remainingSedarimPool + remainingMyDutiesPool + remainingBonusPool;
+      const maxPersonalPotential = earnedSoFar + remainingTotalInPool;
+
+      const goldTarget = Number(
+        state.config?.goldTarget ||
+        state.config?.targets?.max?.points ||
+        130
+      );
+
+      return {
+        earnedSoFar,
+        sedarimPts,
+        dutiesPts,
+        bonusPts,
+        remainingSedarimPool,
+        remainingMyDutiesPool,
+        remainingBonusPool,
+        remainingTotalInPool,
+        maxPersonalPotential,
+        goldTarget
+      };
+    }
+
+    function calculateStudentProjectedRange(student) {
+      const pot = getStudentCampaignPotential(student);
       const targets = state.config.targets || {
         min: { points: 70, name: 'יעד כניסה להגרלה' },
         mid: { points: 100, name: 'יעד פרס כספי' },
@@ -2987,27 +3059,27 @@
       let statusText = 'עדיין לא הגיע ליעד';
       let icon = '🎯';
 
-      if (current >= targets.max.points) {
+      if (pot.earnedSoFar >= targets.max.points) {
         tier = 'max_achieved';
         statusText = '🏆 השלים את ' + targets.max.name + '!';
         icon = '🏆';
-      } else if (current >= targets.mid.points) {
+      } else if (pot.earnedSoFar >= targets.mid.points) {
         tier = 'mid_achieved';
         statusText = '🥈 השלים את ' + targets.mid.name + '!';
         icon = '🥈';
-      } else if (current >= targets.min.points) {
+      } else if (pot.earnedSoFar >= targets.min.points) {
         tier = 'min_achieved';
         statusText = '🥉 השלים את ' + targets.min.name + '!';
         icon = '🥉';
-      } else if (maxPossible >= targets.max.points) {
+      } else if (pot.maxPersonalPotential >= targets.max.points) {
         tier = 'max_possible';
         statusText = '🥇 מסלול ' + targets.max.name + ' פתוח ומובטח';
         icon = '🥇';
-      } else if (maxPossible >= targets.mid.points) {
+      } else if (pot.maxPersonalPotential >= targets.mid.points) {
         tier = 'mid_possible';
         statusText = '🥈 מסלול ' + targets.mid.name + ' בהישג יד';
         icon = '🥈';
-      } else if (maxPossible >= targets.min.points) {
+      } else if (pot.maxPersonalPotential >= targets.min.points) {
         tier = 'min_possible';
         statusText = '🥉 מסלול ' + targets.min.name + ' בהישג יד';
         icon = '🥉';
@@ -3018,13 +3090,14 @@
       }
 
       return {
-        campaignTotal,
-        current,
-        remaining,
-        maxPossible,
+        campaignTotal: pot.remainingTotalInPool,
+        current: pot.earnedSoFar,
+        remaining: pot.remainingTotalInPool,
+        maxPossible: pot.maxPersonalPotential,
         tier,
         statusText,
-        icon
+        icon,
+        ...pot
       };
     }
 
@@ -3776,7 +3849,24 @@
       adminSubView: 'schedule',
       isAdminUnlocked: false,
       adminUnlocked: false,
-      activeStudentId: (initialStudentsList[0] && initialStudentsList[0].id) ? initialStudentsList[0].id : 1,
+      isDemoUser: false,
+      demoStudentProfile: {
+        id: 999,
+        isDemo: true,
+        name: 'ישראל ישראלי (בחור לדוגמה)',
+        phone: '050-1234567',
+        password: '1234',
+        baseScore: 0,
+        score: 0,
+        sedarimPoints: 0,
+        dutiesPoints: 0,
+        bonusPoints: 0,
+        presentCurrent: false,
+        presentToday: false,
+        persistenceCount: 0,
+        last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      },
+      activeStudentId: (initialStudentsList[0] && initialStudentsList[0].id) ? initialStudentsList[0].id : 999,
       adminPasswordHash: loadAdminPassword(),
       currentSelectedCalendarDayIndex: 0,
       calendarWeekOffset: 0,
@@ -3792,8 +3882,8 @@
       graphMode: 'collective',
       activeSederNoPhone: false,
 
-      // Yeshiva Students List
-      students: initialStudentsList,
+      // Yeshiva Students List (Contains real students ONLY - never demo student!)
+      students: initialStudentsList.filter(s => !s.isDemo && s.id !== 999 && !String(s.name || '').includes('לדוגמה') && !String(s.name || '').includes('ישראל ישראלי')),
 
       // Single source of truth for events and canonical campaign_calendar
       campaignCalendar: JSON.parse(JSON.stringify(STATIC_CALENDAR_5787)),
@@ -3802,13 +3892,28 @@
       todaySlots: [],
 
       // Current Student
-      currentStudent: {
+      currentStudent: initialStudentsList.length > 0 ? {
         id: initialStudentsList[0].id,
         name: initialStudentsList[0].name,
         phone: initialStudentsList[0].phone,
         password: initialStudentsList[0].password || '1234',
         presentCurrent: initialStudentsList[0].presentToday || false,
         baseScore: initialStudentsList[0].score || 0,
+        last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      } : {
+        id: 999,
+        isDemo: true,
+        name: 'ישראל ישראלי (בחור לדוגמה)',
+        phone: '050-1234567',
+        password: '1234',
+        baseScore: 0,
+        score: 0,
+        sedarimPoints: 0,
+        dutiesPoints: 0,
+        bonusPoints: 0,
+        presentCurrent: false,
+        presentToday: false,
+        persistenceCount: 0,
         last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       },
 
@@ -4509,6 +4614,34 @@
     }
 
     function handleStudentCheckIn() {
+      // Isolate demo student in memory
+      if (state.isDemoUser || state.currentStudent?.id === 999 || state.currentStudent?.isDemo) {
+        state.demoStudentProfile.presentCurrent = !state.demoStudentProfile.presentCurrent;
+        if (state.demoStudentProfile.presentCurrent) {
+          const noPhoneBonus = state.activeSederNoPhone ? (state.bonusConfig?.noPhoneBonus || 1) : 0;
+          const totalPointsEarned = 1 + noPhoneBonus;
+          state.demoStudentProfile.baseScore += totalPointsEarned;
+          state.demoStudentProfile.sedarimPoints = (state.demoStudentProfile.sedarimPoints || 0) + 1;
+          if (noPhoneBonus) state.demoStudentProfile.bonusPoints = (state.demoStudentProfile.bonusPoints || 0) + noPhoneBonus;
+          state.demoStudentProfile.last10.shift();
+          state.demoStudentProfile.last10.push(1);
+          let msg = 'נוכחות סומנה בהצלחה (לדוגמה)! +' + totalPointsEarned + ' נקודות';
+          if (noPhoneBonus > 0) msg += ' (כולל בונוס ללא טלפון 📵)';
+          showToast(msg, '🎉');
+          state.activeSederNoPhone = false;
+        } else {
+          state.demoStudentProfile.baseScore = Math.max(0, state.demoStudentProfile.baseScore - 1);
+          state.demoStudentProfile.sedarimPoints = Math.max(0, (state.demoStudentProfile.sedarimPoints || 0) - 1);
+          state.demoStudentProfile.last10.pop();
+          state.demoStudentProfile.last10.unshift(0);
+          showToast('סימון הנוכחות בוטל (לדוגמה)', 'ℹ️');
+        }
+        state.currentStudent = state.demoStudentProfile;
+        recalculateScheduleAndPointsBars();
+        renderStudentScreen();
+        return;
+      }
+
       state.currentStudent.presentCurrent = !state.currentStudent.presentCurrent;
       
       if (state.currentStudent.presentCurrent) {
@@ -4712,20 +4845,44 @@
       }
 
       // Unified Scoring Engine Breakdown for Current Student
-      const scoreBreakdown = getStudentScoreBreakdown(s);
-      s.baseScore = scoreBreakdown.totalScore;
-      if (s.score !== undefined) s.score = scoreBreakdown.totalScore;
+      const pot = getStudentCampaignPotential(s);
+      s.baseScore = pot.earnedSoFar;
+      if (s.score !== undefined) s.score = pot.earnedSoFar;
 
+      // Right Card: הניקוד המצטבר שלי
       const totalScoreEl = document.getElementById('studentTotalScoreBig');
-      if (totalScoreEl) totalScoreEl.textContent = scoreBreakdown.totalScore;
+      if (totalScoreEl) totalScoreEl.textContent = pot.earnedSoFar;
 
-      // Update the 3 unified score breakdown badges
+      const studentAchievableEl = document.getElementById('studentTotalAchievableMax');
+      if (studentAchievableEl) studentAchievableEl.textContent = pot.goldTarget;
+
+      // Update the 3 unified score breakdown badges (ensuring sum equals earnedSoFar)
       const bSedarim = document.getElementById('badgeStudentSedarimPts');
       const bDuties = document.getElementById('badgeStudentDutiesPts');
       const bBonuses = document.getElementById('badgeStudentBonusesPts');
-      if (bSedarim) bSedarim.innerHTML = `📖 סדרים: <strong class="font-black text-blue-950">${scoreBreakdown.sedarimPts}</strong> נק׳`;
-      if (bDuties) bDuties.innerHTML = `⏰ תורנויות: <strong class="font-black text-purple-950">${scoreBreakdown.dutiesPts}</strong> נק׳`;
-      if (bBonuses) bBonuses.innerHTML = `🔥 בונוסים: <strong class="font-black text-amber-950">${scoreBreakdown.bonusesPts}</strong> נק׳`;
+      if (bSedarim) bSedarim.innerHTML = `📖 סדרים: <strong class="font-black text-blue-950">${pot.sedarimPts}</strong> נק׳`;
+      if (bDuties) bDuties.innerHTML = `⏰ תורנויות: <strong class="font-black text-purple-950">${pot.dutiesPts}</strong> נק׳`;
+      if (bBonuses) bBonuses.innerHTML = `🔥 בונוסים: <strong class="font-black text-amber-950">${pot.bonusPts}</strong> נק׳`;
+
+      // Left Card: פוטנציאל אישי - טווח הנקודות שלך במבצע
+      const rangeBadge = document.getElementById('studentRangeBadge');
+      if (rangeBadge) rangeBadge.textContent = `${pot.earnedSoFar} - ${pot.maxPersonalPotential} נק׳`;
+
+      const rangeCurrentPts = document.getElementById('studentRangeCurrentPts');
+      if (rangeCurrentPts) rangeCurrentPts.textContent = `${pot.earnedSoFar} נק׳`;
+
+      const rangeRemainingPts = document.getElementById('studentRangeRemainingPts');
+      if (rangeRemainingPts) rangeRemainingPts.textContent = `${pot.remainingTotalInPool} נק׳`;
+
+      const rangeBreakdownEl = document.getElementById('studentRangeRemainingBreakdown');
+      if (rangeBreakdownEl) {
+        rangeBreakdownEl.textContent = `(📖 סדרים בלוח: ${pot.remainingSedarimPool} • ⏰ תורנויות שלך: ${pot.remainingMyDutiesPool} • 🔥 בונוסים: ${pot.remainingBonusPool})`;
+      }
+
+      const rangeMaxPossiblePts = document.getElementById('studentRangeMaxPossiblePts');
+      if (rangeMaxPossiblePts) {
+        rangeMaxPossiblePts.textContent = `${pot.maxPersonalPotential} נק׳ (יעד הפסגה/זהב: ${pot.goldTarget} נק׳)`;
+      }
 
       // Render Explanation Map Banners
       const bannerHtml = getCampaignScoringMapBannerHtml();
@@ -4821,22 +4978,6 @@
 
       const studentMinTargetEl = document.getElementById('studentMinTargetText');
       if (studentMinTargetEl) studentMinTargetEl.textContent = targets.min.points;
-
-      const range = calculateStudentProjectedRange(s);
-      const studentAchievableEl = document.getElementById('studentTotalAchievableMax');
-      if (studentAchievableEl) studentAchievableEl.textContent = range.campaignTotal;
-
-      const rangeBadge = document.getElementById('studentRangeBadge');
-      if (rangeBadge) rangeBadge.textContent = range.current + ' - ' + range.maxPossible + ' נק׳';
-
-      const rangeCurrentPts = document.getElementById('studentRangeCurrentPts');
-      if (rangeCurrentPts) rangeCurrentPts.textContent = range.current + ' נק׳';
-
-      const rangeRemainingPts = document.getElementById('studentRangeRemainingPts');
-      if (rangeRemainingPts) rangeRemainingPts.textContent = range.remaining + ' נק׳';
-
-      const rangeMaxPossiblePts = document.getElementById('studentRangeMaxPossiblePts');
-      if (rangeMaxPossiblePts) rangeMaxPossiblePts.textContent = range.maxPossible + ' נק׳';
 
 
 
@@ -5160,6 +5301,17 @@
           dutyBadges += `<div class="mt-1 px-1.5 py-0.5 rounded-lg bg-orange-100 text-orange-950 border border-orange-300 text-[9px] font-black inline-block shadow-xs">🧹 תורן מטבח שלך!</div>`;
         }
 
+        // Trail Stop Badge rendered prominently inside matching day cell
+        let trailStopBadge = '';
+        if (day.trailStop) {
+          trailStopBadge = `
+            <div class="mt-1 px-1.5 py-0.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-[9px] shadow-sm flex items-center justify-center gap-1">
+              <span>${day.trailStop.badge}</span>
+              <span>(${day.trailStop.points} נק׳)</span>
+            </div>
+          `;
+        }
+
         const pointsText = `${day.sedarim} סדרים (${day.pointsPool} נק׳)`;
 
         return `
@@ -5169,6 +5321,7 @@
             <div class="mt-1 text-[10px] font-extrabold ${isToday ? 'text-emerald-700' : isFri ? 'text-amber-700' : isShabbat ? 'text-indigo-700' : 'text-slate-500'}">
               ${isToday ? 'היום • ' + pointsText : pointsText}
             </div>
+            ${trailStopBadge}
             ${dutyBadges}
           </div>
         `;
@@ -5185,7 +5338,7 @@
     }
 
     function renderSelectedDayDetails() {
-      const bar = document.getElementById('selectedDayDetailsBar');
+      const bar = document.getElementById('selectedDayDetailsBar') || document.getElementById('selectedDayDetails');
       if (!bar) return;
 
       const idx = (state.selectedCalendarDayIndex !== undefined) ? state.selectedCalendarDayIndex : (state.currentSelectedCalendarDayIndex || 0);
@@ -5249,6 +5402,25 @@
         `;
       }
 
+      // Trail Stop notice inside selectedDayDetails with working Google Calendar button
+      let trailStopNoticeHtml = '';
+      if (day.trailStop) {
+        trailStopNoticeHtml = `
+          <div class="mt-2.5 p-3 rounded-xl bg-gradient-to-r from-amber-500/20 via-amber-400/10 to-indigo-900/10 border border-amber-300 text-slate-900 flex flex-wrap items-center justify-between gap-2.5 w-full text-xs shadow-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">🎯</span>
+              <div>
+                <strong class="font-black text-amber-900 text-xs sm:text-sm">${day.trailStop.badge} - ${day.trailStop.title}</strong>
+                <div class="text-[11px] text-slate-600">יעד עצירה בלוח המבצע • סף: <strong class="font-bold text-amber-800">${day.trailStop.points} נק׳</strong></div>
+              </div>
+            </div>
+            <button onclick="openGoogleCalendarForStop(${day.trailStop.idx})" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs transition shadow-sm flex items-center gap-1 cursor-pointer">
+              <span>📅 הוסף יעד ל-Google Calendar</span>
+            </button>
+          </div>
+        `;
+      }
+
       bar.innerHTML = `
         <div class="flex flex-col w-full">
           <div class="flex flex-wrap items-center justify-between gap-3 w-full">
@@ -5260,6 +5432,7 @@
               <span class="bg-white border border-indigo-200 px-2.5 py-1 rounded-xl font-bold text-indigo-900">${ptsDesc}</span>
             </div>
           </div>
+          ${trailStopNoticeHtml}
           ${dutyNoticeHtml}
         </div>
       `;
@@ -5880,10 +6053,10 @@
         rebuildSyncedCalendarAndToday();
       }
 
-      let optionsHtml = '<option value="">ללא תאריך קבוע עדיין (יוכרז בהמשך)</option>';
-      (state.campaignDays || []).forEach(day => {
-        const gregShort = day.gregorianShort || (day.isoDate ? day.isoDate.slice(5) : '');
-        optionsHtml += `<option value="${day.isoDate}">${day.dayName} • ${toHebrewLetters(day.dateStr)} (${gregShort})</option>`;
+      let optionsHtml = '<option value="">-- טרם נקבע תאריך בלוח --</option>';
+      (state.campaignDays || []).forEach(d => {
+        const dmy = d.isoDate.split('-').reverse().join('/');
+        optionsHtml += `<option value="${d.isoDate}">${d.dayName} • ${d.dateStr} (${dmy})</option>`;
       });
 
       const trailStops = (state.trailStops && state.trailStops.length >= 3) ? state.trailStops : (state.journeyStops || DEFAULT_TRAIL_STOPS);
@@ -5891,86 +6064,139 @@
       const selIds = ['adminStop1DateSelect', 'adminStop2DateSelect', 'adminStop3DateSelect'];
       const lblIds = ['stop1DateLabelDisplay', 'stop2DateLabelDisplay', 'stop3DateLabelDisplay'];
       const cfgDates = [
-        state.config?.stop1IsoDate !== undefined ? state.config.stop1IsoDate : (trailStops[0]?.isoDate || ''),
+        state.config?.stop1IsoDate !== undefined ? state.config.stop1IsoDate : (trailStops[0]?.isoDate || '2026-11-19'),
         state.config?.stop2IsoDate !== undefined ? state.config.stop2IsoDate : (trailStops[1]?.isoDate || ''),
-        state.config?.stop3IsoDate !== undefined ? state.config.stop3IsoDate : (trailStops[2]?.isoDate || state.config?.endDate || '')
+        state.config?.stop3IsoDate !== undefined ? state.config.stop3IsoDate : (trailStops[2]?.isoDate || '')
       ];
 
       [0, 1, 2].forEach(idx => {
         const sel = document.getElementById(selIds[idx]) || document.getElementById(`stop${idx + 1}DateSelect`);
         const lbl = document.getElementById(lblIds[idx]);
-        const stop = trailStops[idx];
-        const val = cfgDates[idx] || (stop ? stop.isoDate : '');
+        const val = cfgDates[idx] || '';
 
         if (sel) {
           sel.innerHTML = optionsHtml;
-          sel.value = val || '';
+          sel.value = val;
         }
         if (lbl) {
-          if (val) {
-            const mDay = (state.campaignDays || []).find(d => d.isoDate === val);
-            if (mDay) {
-              lbl.textContent = `${mDay.dayName} ${toHebrewLetters(mDay.dateStr)} (${mDay.gregorianShort})`;
-            } else {
-              const meta = getDayMeta(val);
-              lbl.textContent = meta ? `${meta.dayNameHe} ${meta.hebrewDate} (${meta.gregShort})` : val;
-            }
-          } else {
-            lbl.textContent = 'ללא תאריך קבוע עדיין (יוכרז בהמשך)';
-          }
+          lbl.textContent = formatStopDisplayLabel(val);
         }
       });
     }
 
-    function onStopDateSelectChange(stopIdx, val) {
-      const trailStops = (state.trailStops && state.trailStops.length >= 3) ? state.trailStops : (state.journeyStops || DEFAULT_TRAIL_STOPS);
-      const stop = trailStops[stopIdx];
-      if (!stop) return;
+    function formatStopDisplayLabel(iso) {
+      if (!iso) return 'טרם נקבע תאריך בלוח';
+      const mDay = (state.campaignDays || []).find(d => d.isoDate === iso);
+      if (mDay) {
+        return `${mDay.dayName} • ${mDay.dateStr} (${iso.split('-').reverse().join('/')})`;
+      }
+      const meta = getDayMeta(iso);
+      if (meta) {
+        return `${meta.dayNameHe} • ${meta.hebrewDate} (${iso.split('-').reverse().join('/')})`;
+      }
+      return iso;
+    }
 
-      if (!val) {
-        stop.isoDate = '';
-        stop.dateLabel = 'ללא תאריך קבוע עדיין (יוכרז בהמשך)';
-        stop.dateStr = 'יוכרז בהמשך';
-        stop.isDecided = false;
-        if (stopIdx === 0) state.config.stop1IsoDate = '';
-        if (stopIdx === 1) state.config.stop2IsoDate = '';
-        if (stopIdx === 2) state.config.stop3IsoDate = '';
-      } else {
-        stop.isoDate = val;
-        stop.isDecided = true;
-        const mDay = (state.campaignDays || []).find(d => d.isoDate === val);
-        if (mDay) {
-          stop.dateLabel = `${mDay.dayName} ${toHebrewLetters(mDay.dateStr)} (${mDay.gregorianShort})`;
-          stop.dateStr = `${mDay.dayName} ${toHebrewLetters(mDay.dateStr)}`;
-        } else {
-          const meta = getDayMeta(val);
-          stop.dateLabel = meta ? `${meta.dayNameHe} ${meta.hebrewDate} (${meta.gregShort})` : val;
-          stop.dateStr = meta ? `${meta.dayNameHe} ${meta.hebrewDate}` : val;
-        }
-        if (stopIdx === 0) state.config.stop1IsoDate = val;
-        if (stopIdx === 1) state.config.stop2IsoDate = val;
-        if (stopIdx === 2) state.config.stop3IsoDate = val;
+    // Canonical Function: syncTargetsWithCalendar()
+    // Called in saveAdminRules(), applySavedStateObject(), and at start of renderAll()
+    function syncTargetsWithCalendar() {
+      if (!state.config) state.config = {};
+      const bronzeTarget = Number(state.config.bronzeTarget || state.config.targets?.min?.points || 70);
+      const minTarget = Number(state.config.minTarget || state.config.targets?.mid?.points || 100);
+      const goldTarget = Number(state.config.goldTarget || state.config.targets?.max?.points || 130);
+
+      state.config.bronzeTarget = bronzeTarget;
+      state.config.minTarget = minTarget;
+      state.config.goldTarget = goldTarget;
+
+      if (!state.config.targets) state.config.targets = {};
+      state.config.targets.min = { points: bronzeTarget, name: state.config.targets.min?.name || 'יעד כניסה להגרלה (ארד)' };
+      state.config.targets.mid = { points: minTarget, name: state.config.targets.mid?.name || 'יעד פרס כספי (כסף)' };
+      state.config.targets.max = { points: goldTarget, name: state.config.targets.max?.name || 'יעד נסיעה ופרס ענק (הפסגה/זהב)' };
+
+      const stop1Iso = state.config.stop1IsoDate !== undefined ? state.config.stop1IsoDate : '2026-11-19';
+      const stop2Iso = state.config.stop2IsoDate !== undefined ? state.config.stop2IsoDate : '';
+      const stop3Iso = state.config.stop3IsoDate !== undefined ? state.config.stop3IsoDate : '';
+
+      state.config.stop1IsoDate = stop1Iso;
+      state.config.stop2IsoDate = stop2Iso;
+      state.config.stop3IsoDate = stop3Iso;
+
+      if (!state.trailStops || state.trailStops.length < 3) {
+        state.trailStops = JSON.parse(JSON.stringify(DEFAULT_TRAIL_STOPS));
       }
 
-      const lbl = document.getElementById(`stop${stopIdx + 1}DateLabelDisplay`);
-      if (lbl) lbl.textContent = stop.dateLabel;
+      const stopDefs = [
+        { idx: 0, badge: '🥉 עצירה 1 (ארד)', title: 'עצירה 1 - יעד ארד', points: bronzeTarget, isoDate: stop1Iso },
+        { idx: 1, badge: '🥈 עצירה 2 (כסף)', title: 'עצירה 2 - יעד כסף', points: minTarget, isoDate: stop2Iso },
+        { idx: 2, badge: '🥇 הפסגה (זהב)', title: 'הפסגה - יעד זהב', points: goldTarget, isoDate: stop3Iso }
+      ];
 
-      state.trailStops = trailStops;
-      state.journeyStops = trailStops;
-      saveJourneyStops(trailStops);
-      saveCampaignConfig(state.config);
-
-      // Update stationTitle in state.campaignDays: stops appear ONLY on days chosen by admin!
-      if (state.campaignDays && Array.isArray(state.campaignDays)) {
-        state.campaignDays.forEach(day => {
-          day.stationTitle = '';
-          trailStops.forEach(st => {
-            if (st.isoDate && st.isoDate === day.isoDate) {
-              day.stationTitle = st.title;
+      stopDefs.forEach(def => {
+        const st = state.trailStops[def.idx];
+        if (st) {
+          st.idx = def.idx;
+          st.badge = def.badge;
+          st.title = def.title;
+          st.points = def.points;
+          st.isoDate = def.isoDate;
+          st.isDecided = Boolean(def.isoDate);
+          if (def.isoDate) {
+            const mDay = (state.campaignDays || []).find(d => d.isoDate === def.isoDate);
+            if (mDay) {
+              st.dateLabel = `${mDay.dayName} ${toHebrewLetters(mDay.dateStr)} (${def.isoDate.split('-').reverse().join('/')})`;
+              st.dateStr = `${mDay.dayName} ${toHebrewLetters(mDay.dateStr)}`;
+            } else {
+              const meta = getDayMeta(def.isoDate);
+              st.dateLabel = meta ? `${meta.dayNameHe} ${meta.hebrewDate} (${def.isoDate.split('-').reverse().join('/')})` : def.isoDate;
+              st.dateStr = meta ? `${meta.dayNameHe} ${meta.hebrewDate}` : def.isoDate;
             }
-          });
+          } else {
+            st.dateLabel = 'טרם נקבע תאריך בלוח';
+            st.dateStr = 'טרם נקבע';
+          }
+        }
+      });
+      state.journeyStops = state.trailStops;
+
+      // Clear old d.trailStop markers on state.campaignDays, then stamp matching day
+      if (Array.isArray(state.campaignDays)) {
+        state.campaignDays.forEach(day => {
+          delete day.trailStop;
+          day.stationTitle = '';
+        });
+
+        state.trailStops.forEach(stop => {
+          if (stop.isoDate) {
+            const matchedDay = state.campaignDays.find(d => d.isoDate === stop.isoDate);
+            if (matchedDay) {
+              matchedDay.stationTitle = stop.title;
+              matchedDay.trailStop = {
+                idx: stop.idx,
+                badge: stop.badge,
+                title: stop.title,
+                points: stop.points,
+                isoDate: matchedDay.isoDate,
+                dateStr: matchedDay.dateStr
+              };
+            }
+          }
         });
       }
+    }
+
+    function onStopDateSelectChange(stopIdx, val) {
+      if (!state.config) state.config = {};
+      if (stopIdx === 0) state.config.stop1IsoDate = val || '';
+      if (stopIdx === 1) state.config.stop2IsoDate = val || '';
+      if (stopIdx === 2) state.config.stop3IsoDate = val || '';
+
+      syncTargetsWithCalendar();
+      saveJourneyStops(state.trailStops);
+      saveCampaignConfig(state.config);
+
+      const lbl = document.getElementById(`stop${stopIdx + 1}DateLabelDisplay`);
+      if (lbl) lbl.textContent = formatStopDisplayLabel(val);
 
       renderAllViews();
     }
@@ -6108,6 +6334,9 @@
     }
 
     function renderAllViews() {
+      if (typeof syncTargetsWithCalendar === 'function') {
+        syncTargetsWithCalendar();
+      }
       recalculateScheduleAndPointsBars();
       const nameGreeting = document.getElementById('greetingStudentName');
       if (nameGreeting && state.currentStudent) {
@@ -6120,6 +6349,13 @@
       renderMyRequestsStatus();
     }
     const renderAll = renderAllViews;
+    const renderPublicScreen = () => {
+      renderProgressGraph();
+      renderDynamicCalendar();
+      renderLeaderboard();
+    };
+    const renderCoordinatorScreen = renderPublicScreen;
+    const renderAdminScreen = renderAdminRequestsAndStudents;
 
     function submitForgottenRequest() {
       const sel = document.getElementById('reqSlotSelect')?.value;
@@ -6198,7 +6434,8 @@
 
     function exportToCsv() {
       let csv = 'שם הבחור,טלפון,סיסמה,קישור אישי,סך נקודות,סדרים,תורנויות,בונוסים,פירוט מנוע ניקוד\n';
-      state.students.forEach(s => {
+      const real = getRealStudents();
+      real.forEach(s => {
         const bd = getStudentScoreBreakdown(s);
         const directUrl = getStudentDirectUrl(s.id);
         const breakdownStr = `📖 סדרים: ${bd.sedarimPts} | ⏰ תורנויות: ${bd.dutiesPts} | 🔥 בונוסים: ${bd.bonusesPts}`;
@@ -6319,6 +6556,8 @@
       state.config.startDate = start;
       state.config.endDate = end;
       state.config.minTarget = minPts;
+      state.config.bronzeTarget = minPts;
+      state.config.goldTarget = maxPts;
       state.config.targets = {
         min: { points: minPts, name: minName },
         mid: { points: midPts, name: midName },
@@ -6330,6 +6569,7 @@
       state.config.xyWindow = xyWindow;
       state.config.xyBonus = xyBonus;
 
+      syncTargetsWithCalendar();
       saveCampaignConfig(state.config);
 
       if (supabaseClient) {
@@ -6350,7 +6590,7 @@
           await supabaseClient.from('app_state').upsert([
             {
               key: 'trail_stops',
-              data: trailStops,
+              data: state.trailStops,
               updated_at: new Date().toISOString()
             }
           ], { onConflict: 'key' });
@@ -6569,43 +6809,14 @@
     }
 
     function loginAsDemoStudent() {
-      let demo = state.students.find(s => s.id === 'demo_student_1');
-      if (!demo) {
-        demo = {
-          id: 'demo_student_1',
-          name: 'ישראל ישראלי (בחור לדוגמה)',
-          phone: '050-1234567',
-          password: '1234',
-          score: 12,
-          presentToday: false
-        };
-        state.students.unshift(demo);
-        saveLocalStudents();
-      }
-
-      // Live duties and opening day assignments are loaded from campaign_calendar
-
-      // Ensure sample request exists in requests history for demo student
-      try {
-        let allReqs = JSON.parse(localStorage.getItem('bakshu_absence_requests_v1') || '[]');
-        if (!allReqs.some(r => r.studentId === 'demo_student_1')) {
-          allReqs.unshift({
-            id: 'req_demo_sample',
-            studentId: 'demo_student_1',
-            studentName: 'ישראל ישראלי (בחור לדוגמה)',
-            slotTitle: 'סדר א׳ (עיון)',
-            dateStr: todayStr,
-            note: 'הייתי בבית המדרש והטלפון היה בחדר',
-            status: 'approved',
-            submittedAt: new Date().toISOString()
-          });
-          localStorage.setItem('bakshu_absence_requests_v1', JSON.stringify(allReqs));
-        }
-      } catch (e) {}
-
-      setStudentActiveSession(demo);
-      showToast('נכנסת כבחור לדוגמה להתרשמות מלאה מכל יכולות המערכת!', '👁️');
+      state.isDemoUser = true;
+      state.currentStudent = state.demoStudentProfile;
+      localStorage.removeItem('bakshu_logged_student_id');
+      const nameGreeting = document.getElementById('greetingStudentName');
+      if (nameGreeting) nameGreeting.textContent = state.demoStudentProfile.name;
+      showToast('נכנסת כבחור לדוגמה (מצב תצוגה בלבד)', '👁️');
       closeStudentLoginModal();
+      renderStudentScreen();
     }
 
     function setStudentActiveSession(student) {
@@ -6742,7 +6953,7 @@
       const summitTargetCalculated = targets.max.points || summitTarget || 130;
 
       if (state.graphMode === 'individual') {
-        const sorted = [...state.students].sort((a, b) => (b.score || 0) - (a.score || 0));
+        const sorted = [...getRealStudents()].sort((a, b) => (b.score || 0) - (a.score || 0));
         container.innerHTML = `
           <div class="space-y-3 p-2">
             <div class="flex items-center justify-between text-xs font-bold text-indigo-200 pb-2 border-b border-white/10">
@@ -7094,6 +7305,24 @@ END:VCALENDAR`;
       const noPhoneBonus = state.activeSederNoPhone ? (state.bonusConfig.noPhoneBonus || 1) : 0;
       const totalPointsEarned = 1 + noPhoneBonus;
 
+      if (state.isDemoUser || state.currentStudent?.id === 999 || state.currentStudent?.isDemo) {
+        state.demoStudentProfile.presentCurrent = true;
+        state.demoStudentProfile.baseScore = (Number(state.demoStudentProfile.baseScore) || 0) + totalPointsEarned;
+        state.demoStudentProfile.sedarimPoints = (state.demoStudentProfile.sedarimPoints || 0) + 1;
+        if (noPhoneBonus) state.demoStudentProfile.bonusPoints = (state.demoStudentProfile.bonusPoints || 0) + noPhoneBonus;
+        state.demoStudentProfile.last10.shift();
+        state.demoStudentProfile.last10.push(1);
+        state.currentStudent = state.demoStudentProfile;
+        state.activeSederNoPhone = false;
+        let msg = successMessage + ' (+' + totalPointsEarned + ' נקודה';
+        if (noPhoneBonus > 0) msg += ' כולל בונוס ללא טלפון 📵';
+        msg += ' - מצב הדגמה)';
+        showToast(msg, '🎉');
+        recalculateScheduleAndPointsBars();
+        renderStudentScreen();
+        return;
+      }
+
       state.currentStudent.presentCurrent = true;
       state.currentStudent.baseScore = (Number(state.currentStudent.baseScore) || 0) + totalPointsEarned;
       state.currentStudent.last10.shift();
@@ -7120,11 +7349,14 @@ END:VCALENDAR`;
       renderProgressGraph();
     }
     const verifyQrCodeAndCheckIn = handleCheckInConfirmation;
-    const renderPublicScreen = () => {
-      renderProgressGraph();
-      renderDynamicCalendar();
-      renderLeaderboard();
-    };
+
+    function checkUrlForAdminParam() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hash = window.location.hash;
+      if (urlParams.get('admin') === '1' || hash === '#admin') {
+        openAdminPasswordModal();
+      }
+    }
 
     function checkUrlForStudentParam() {
       const urlParams = new URLSearchParams(window.location.search);
