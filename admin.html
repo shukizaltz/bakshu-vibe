@@ -8938,8 +8938,75 @@ END:VCALENDAR`;
       </div>
     </div>
   </div>
+
 <script id="admin-isolation-and-schedule-save-patch">
 (function(){
+  function getFixedQr(){
+    const saved = localStorage.getItem("bakshu_fixed_qr_code");
+    if(saved) return saved;
+    const cur = (typeof state !== "undefined" && (state.qrCodeToken || state.qrSecretCode || (state.config && state.config.qrSecretCode))) || "7704";
+    localStorage.setItem("bakshu_fixed_qr_code", String(cur));
+    return String(cur);
+  }
+
+  function syncQrUI(code){
+    if(typeof state !== "undefined"){
+      state.qrCodeToken = code;
+      state.qrSecretCode = code;
+      if(state.config) state.config.qrSecretCode = code;
+    }
+    ["projectorBackupCode","qrProjectorCodeText","backupCodeHint","adminCurrentQrBadge","qrProjectorManualCode"].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = code;
+    });
+    ["adminRoshQrDecisionInput","customRoshQrInput"].forEach(id => {
+      const el = document.getElementById(id);
+      if(el && document.activeElement !== el) el.value = code;
+    });
+    const qrImg = document.getElementById("qrProjectorImg") || document.getElementById("qrProjectorImage");
+    if(qrImg) qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=" + encodeURIComponent("BAKSHU_QR_" + code);
+    if(typeof renderQrSvgPattern === "function") {
+      try { renderQrSvgPattern(code); } catch(e){}
+    }
+  }
+
+  async function saveFixedQrToCloud(code){
+    localStorage.setItem("bakshu_fixed_qr_code", String(code));
+    syncQrUI(String(code));
+    if(typeof saveState === "function") saveState();
+    if(typeof sbFetch === "function"){
+      try {
+        await sbFetch("/rest/v1/app_state", {
+          method: "POST",
+          headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
+          body: JSON.stringify({ key: "fixed_qr_code", data: { code: String(code) }, updated_at: new Date().toISOString() })
+        });
+      } catch(e){}
+    }
+  }
+
+  window.getActiveSlotQrCode = function(){ return getFixedQr(); };
+  window.computeSlotQrCode = function(){ return getFixedQr(); };
+  window.generateDynamicQrToken = function(){ return getFixedQr(); };
+
+  window.refreshQrCodeToken = async function(){
+    const newCode = String(Math.floor(1000 + Math.random() * 9000));
+    await saveFixedQrToCloud(newCode);
+    if(typeof showToast === "function") showToast("🔄 קוד ה-QR הוחלף בהוראתך ל-" + newCode + " ויישאר קבוע לכל הסדרים עד להחלפה הבאה!", "👑");
+  };
+
+  window.setCustomQrByRoshYeshiva = async function(src){
+    const id = src === "modal" ? "customRoshQrInput" : "adminRoshQrDecisionInput";
+    const el = document.getElementById(id) || document.getElementById("customRoshQrInput") || document.getElementById("adminRoshQrDecisionInput");
+    const val = (el && el.value || "").trim();
+    if(!val){
+      if(typeof showToast === "function") showToast("נא להזין קוד QR חדש", "⚠️");
+      return;
+    }
+    await saveFixedQrToCloud(val);
+    if(typeof showToast === "function") showToast("👑 קוד ה-QR נקבע ל-" + val + " ויישאר קבוע בין סדר לסדר עד שתורה להחליפו!", "👑");
+  };
+
   function isoAdmin(){
     const isA = (typeof state !== "undefined" && state.adminUnlocked) || location.pathname.includes("admin") || location.search.includes("admin=1");
     ["dtab-student","mtab-student","adminStudentInspectionHeader"].forEach(id => {
@@ -8949,6 +9016,7 @@ END:VCALENDAR`;
         else el.style.removeProperty("display");
       }
     });
+    syncQrUI(getFixedQr());
   }
 
   const oSw = window.switchTab;
@@ -8972,7 +9040,7 @@ END:VCALENDAR`;
     const iso = (pk && pk.value) || (typeof state !== "undefined" && state.selectedCalendarIso) || (typeof TODAY_ISO !== "undefined" ? TODAY_ISO : "");
     if(!iso || typeof state === "undefined") return;
 
-    const slots = (typeof getSlotsForDate === "function" ? getSlotsForDate(iso) : (typeof getScheduleForDate === "function" ? getScheduleForDate(iso) : (state.slotsByDate && state.slotsByDate[iso]) || []));
+    const slots = typeof getSlotsForDate === "function" ? getSlotsForDate(iso) : (typeof getScheduleForDate === "function" ? getScheduleForDate(iso) : (state.slotsByDate && state.slotsByDate[iso]) || []);
     state.slotsByDate = state.slotsByDate || {};
     state.slotsByDate[iso] = slots.map(s => ({
       ...s,
@@ -9011,8 +9079,17 @@ END:VCALENDAR`;
     };
   }
 
-  window.addEventListener("DOMContentLoaded", () => {
+  window.addEventListener("DOMContentLoaded", async () => {
     isoAdmin();
+    if(typeof sbFetch === "function"){
+      try {
+        const rows = await sbFetch("/rest/v1/app_state?key=eq.fixed_qr_code&select=data");
+        if(Array.isArray(rows) && rows[0] && rows[0].data && rows[0].data.code){
+          localStorage.setItem("bakshu_fixed_qr_code", String(rows[0].data.code));
+          syncQrUI(String(rows[0].data.code));
+        }
+      } catch(e){}
+    }
     setInterval(isoAdmin, 800);
   });
   setTimeout(isoAdmin, 100);
