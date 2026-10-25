@@ -56,7 +56,7 @@
   <!-- 1. LOGIN GATE FOR ROSH HAYESHIVA                           -->
   <!-- ========================================================== -->
   <div id="adminGateModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center relative">
+    <div id="adminPasswordGateCard" class="bg-white rounded-3xl max-w-sm sm:max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center relative">
       <div class="w-16 h-16 rounded-2xl bg-[#0A1138] p-1.5 mx-auto mb-4 shadow-lg border border-slate-300">
         <img src="logo-yeshiva.jpeg" alt="לוגו ישיבה" class="w-full h-full object-cover rounded-xl" />
       </div>
@@ -68,13 +68,13 @@
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">סיסמת ראש הישיבה:</label>
           <div class="relative">
-            <input type="password" id="gatePasswordInput" placeholder="הזן סיסמת מנהל" class="w-full text-sm font-mono font-bold p-3.5 pl-10 rounded-2xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:outline-none" onkeyup="if(event.key==='Enter') verifyAdminGate()" />
+            <input type="password" id="gatePasswordInput" placeholder="הזן סיסמת מנהל" class="w-full text-sm font-mono font-bold p-3.5 pl-10 rounded-2xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:outline-none" onkeyup="if(event.key==='Enter') unlockAdminPortal()" />
             <button type="button" onclick="togglePass('gatePasswordInput')" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">👁️</button>
           </div>
           <p id="gateErrorMsg" class="text-xs text-rose-600 font-bold hidden mt-1 text-right"></p>
         </div>
 
-        <button onclick="verifyAdminGate()" class="w-full py-3.5 rounded-2xl bg-[#0A1138] hover:bg-indigo-950 text-white font-black text-sm transition shadow-lg shadow-indigo-950/20 active:scale-98">
+        <button onclick="unlockAdminPortal()" class="w-full py-3.5 rounded-2xl bg-[#0A1138] hover:bg-indigo-950 text-white font-black text-sm transition shadow-lg shadow-indigo-950/20 active:scale-98">
           היכנס למערכת הניהול
         </button>
       </div>
@@ -445,6 +445,22 @@
             <button onclick="saveCampaignTargetsAndDates()" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
               שמור הגדרות יעדים ותאריכים
             </button>
+          </div>
+
+          <!-- Rosh HaYeshiva Admin Password Setting in Config -->
+          <div class="mt-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-right">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <label class="block text-xs font-black text-slate-800 mb-0.5">🔑 סיסמת ראש הישיבה (מנהל):</label>
+                <p class="text-[11px] text-slate-500">קביעת סיסמת הגישה לפורטל ושמירתה ב-Supabase (`app_state.config.adminPassword`)</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="text" id="adminConfigPasswordInput" placeholder="סיסמה חדשה (לפחות 4 תווים)..." class="text-xs font-mono font-bold p-2.5 rounded-xl border border-slate-300 bg-white min-w-[180px]" />
+                <button type="button" onclick="saveAdminPasswordFromSettings()" class="px-4 py-2.5 rounded-xl bg-[#0A1138] hover:bg-black text-white font-black text-xs transition shadow-sm whitespace-nowrap">
+                  שמור סיסמה ב-Supabase
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1392,13 +1408,164 @@
       ruleBonus: 3
     };
 
-    const ADMIN_USER_UUID = '00000000-0000-0000-0000-000000000001';
+    let isCloudHydrated = false;
+
+    const HEB_GEMATRIA_DAYS = [
+      '', 'א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ז׳','ח׳','ט׳',
+      'י׳','י״א','י״ב','י״ג','י״ד','ט״ו','ט״ז','י״ז','י״ח','י״ט',
+      'כ׳','כ״א','כ״ב','כ״ג','כ״ד','כ״ה','כ״ו','כ״ז','כ״ח','כ״ט','ל׳'
+    ];
+    const HEB_DAY_NAMES = ['יום א׳','יום ב׳','יום ג׳','יום ד׳','יום ה׳','יום ו׳','שבת'];
+
+    const DEFAULT_EVENTS_LIST = [
+      { id: 'ev_shacharit', title: 'תפילת שחרית', timeWindow: '08:25 - 08:50', points: 1, type: 'קבוע', schedule: 'א׳–ו׳' },
+      { id: 'ev_seder_a', title: 'סדר א׳ (עיון)', timeWindow: '09:00 - 10:15', points: 1, type: 'קבוע', schedule: 'א׳–ה׳' },
+      { id: 'ev_seder_b', title: 'סדר ב׳ (בקיאות)', timeWindow: '15:30 - 16:45', points: 1, type: 'קבוע', schedule: 'א׳–ה׳' },
+      { id: 'ev_seder_c', title: 'סדר ג׳ (לילה)', timeWindow: '20:00 - 21:15', points: 2, type: 'קבוע', schedule: 'א׳–ה׳' },
+      { id: 'ev_mishmar', title: 'משמר ליל שישי', timeWindow: '22:30 - 01:00', points: 3, type: 'בונוס', schedule: 'ליל שישי יום ה׳' },
+      { id: 'ev_shabbat_eve', title: 'סדר ליל שבת קודש', timeWindow: '21:00 - 22:00', points: 2, type: 'שבת', schedule: 'שבת' },
+      { id: 'ev_shabbat_morning', title: 'סדר שחרית ובוקר שבת', timeWindow: '08:30 - 10:00', points: 2, type: 'שבת', schedule: 'שבת' },
+      { id: 'ev_shabbat_reava', title: 'סדר רעווא דרעווין', timeWindow: '16:30 - 18:00', points: 2, type: 'שבת', schedule: 'שבת' },
+      { id: 'ev_motzei_shabbat', title: 'סדר מוצאי שבת קודש', timeWindow: '19:30 - 21:00', points: 2, type: 'שבת', schedule: 'שבת' }
+    ];
+
+    function getPresentCount() {
+      if (!state.students || !state.students.length) return 0;
+      return state.students.filter(s => s.presentToday || s.present_today || s.presentCurrent).length;
+    }
+
+    // 1. המרה מדויקת מתאריך לועזי לתאריך עברי באותיות + תאריך לועזי קצר
+    function formatSyncedHebrewAndGregorian(dateObj) {
+      const safeNoon = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 12, 0, 0);
+      const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(safeNoon);
+      const dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
+      const monthName = parts.find(p => p.type === 'month')?.value || '';
+      const hebLetters = HEB_GEMATRIA_DAYS[dayNum] || String(dayNum);
+      const gregShort = `${String(safeNoon.getDate()).padStart(2, '0')}/${String(safeNoon.getMonth() + 1).padStart(2, '0')}`;
+      return {
+        hebrewDateStr: `${hebLetters} ${monthName}`,
+        gregorianShort: gregShort,
+        fullDisplay: `${hebLetters} ${monthName} (${gregShort})`,
+        isoDate: `${safeNoon.getFullYear()}-${String(safeNoon.getMonth() + 1).padStart(2, '0')}-${String(safeNoon.getDate()).padStart(2, '0')}`,
+        dayOfWeek: safeNoon.getDay(),
+        dayName: HEB_DAY_NAMES[safeNoon.getDay()]
+      };
+    }
+
+    // 2. מקור אמת יחיד: אילו סדרים מתוך state.eventsList חלים ביום נתון
+    function getApplicableEventsForDate(dateObj) {
+      const info = formatSyncedHebrewAndGregorian(dateObj);
+      const dow = info.dayOfWeek; // 0 = א', 4 = ה', 5 = ו', 6 = שבת
+      return (state.eventsList || []).filter(ev => {
+        const sched = (ev.schedule || '') + ' ' + (ev.title || '');
+        // התאמה לתאריך עברי או לועזי ספציפי אם צוין
+        if (sched.includes(info.hebrewDateStr) || sched.includes(info.gregorianShort) || sched.includes(info.isoDate)) return true;
+        // שבת קודש
+        if (dow === 6) return ev.type === 'שבת' || sched.includes('שבת');
+        // יום שישי
+        if (dow === 5) return sched.includes('א׳–ו׳') || sched.includes('יום ו׳') || sched.includes('שישי');
+        // ימים א'–ה': סדרים קבועים + ימים מיוחדים (כמו רביעי או ליל שישי ביום ה')
+        if (sched.includes('א׳–ו׳') || sched.includes('א׳–ה׳') || ev.type === 'קבוע') {
+          if (sched.includes('רביעי') || sched.includes('יום ד׳')) return dow === 3;
+          if (sched.includes('ליל שישי') || sched.includes('יום ה׳')) return dow === 4;
+          return true;
+        }
+        if ((sched.includes('רביעי') || sched.includes('יום ד׳')) && dow === 3) return true;
+        if ((sched.includes('ליל שישי') || sched.includes('יום ה׳')) && dow === 4) return true;
+        return false;
+      });
+    }
+
+    // 3. בניית לוח המבצע וסדרי היום מתוך startDate ללא מחיקת שיבוצים קיימים
+    function rebuildSyncedCalendarAndToday() {
+      const startStr = state.config.startDate || '2026-10-18';
+      const duration = parseInt(state.config.durationDays, 10) || 28;
+      const [sy, sm, sd] = startStr.split('-').map(Number);
+      const now = new Date();
+      const todayNoon = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+
+      state.calendarGridOffset = new Date(sy, sm - 1, sd, 12, 0, 0).getDay(); // מספר משבצות ריקות ליישור עמודות א'-שבת
+
+      const updatedDays = [];
+      for (let i = 0; i < duration; i++) {
+        const curDate = new Date(sy, sm - 1, sd + i, 12, 0, 0);
+        const dInfo = formatSyncedHebrewAndGregorian(curDate);
+        const dayEvents = getApplicableEventsForDate(curDate);
+        const sedarimCount = dayEvents.length;
+        const pointsPool = dayEvents.reduce((sum, e) => sum + (Number(e.points) || 1), 0);
+        const specialEv = dayEvents.find(e => e.points >= 2 || e.type === 'בונוס' || e.type === 'מיוחד');
+
+        let status = 'upcoming';
+        if (curDate.getTime() < todayNoon.getTime()) status = 'passed';
+        else if (curDate.getTime() === todayNoon.getTime()) {
+          status = 'today';
+          state.selectedCalendarDayIndex = i;
+        }
+
+        const prevDayObj = (state.campaignDays || [])[i] || {};
+        updatedDays.push({
+          dayIndex: i,
+          isoDate: dInfo.isoDate,
+          gregorianShort: dInfo.gregorianShort,
+          dayName: status === 'today' ? `${dInfo.dayName} (היום)` : dInfo.dayName,
+          dateStr: dInfo.hebrewDateStr,
+          fullDateLabel: dInfo.fullDisplay,
+          status,
+          sedarim: sedarimCount,
+          pointsPool,
+          attendance: status === 'today' ? `${getPresentCount()}/${state.students.length} (פעיל כעת)` : (prevDayObj.attendance || (status === 'passed' ? 'הושלם ✓' : 'נשאר')),
+          isBonus: !!specialEv || !!prevDayObj.isBonus,
+          bonusLabel: specialEv ? specialEv.title : (prevDayObj.bonusLabel || '')
+        });
+
+        // עדכון תאריך עברי/לועזי תואם בטבלת התורנויות הקיימת מבלי למחוק את הבחורים המשובצים!
+        if (Array.isArray(state.dutiesRoster)) {
+          const dutyRow = state.dutiesRoster.find(dr => dr.dayIdx === i || dr.dateStr === dInfo.isoDate);
+          if (dutyRow) {
+            dutyRow.dateStr = dInfo.fullDisplay;
+            dutyRow.dayName = dInfo.dayName;
+          }
+        } else if (state.dutiesRoster && typeof state.dutiesRoster === 'object') {
+          const dutyObj = state.dutiesRoster[dInfo.isoDate];
+          if (dutyObj) {
+            dutyObj.dateStr = dInfo.fullDisplay;
+            dutyObj.dayName = dInfo.dayName;
+          }
+        }
+      }
+      state.campaignDays = updatedDays;
+
+      // עדכון הסדרים של היום (למסך הבחור) מתוך אותה פונקציה בדיוק!
+      const todayEvents = getApplicableEventsForDate(todayNoon);
+      state.todaySlots = todayEvents.map((ev, idx) => {
+        const existing = (state.todaySlots || []).find(t => t.id === ev.id) || {};
+        const [openTime, lockTime] = (ev.timeWindow || '09:00 - 10:15').split('-').map(s => s.trim());
+        return {
+          id: ev.id,
+          title: ev.title,
+          time: ev.timeWindow,
+          timeWindow: ev.timeWindow,
+          openTime: openTime || '09:00',
+          lockTime: lockTime || '10:15',
+          points: ev.points,
+          status: idx === 0 ? 'active' : 'upcoming',
+          noPhone: !!existing.noPhone,
+          requestSent: !!existing.requestSent
+        };
+      });
+    }
 
     const state = {
+      adminUnlocked: false,
       students: [],
       slotsByDate: {},
-      config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)),
-      adminPassword: '1234',
+      config: Object.assign({}, DEFAULT_CONFIG, { adminPassword: 'bakshu2026', startDate: '2026-10-25', durationDays: 28 }),
+      adminPassword: 'bakshu2026',
+      eventsList: DEFAULT_EVENTS_LIST,
+      campaignDays: [],
+      todaySlots: [],
+      calendarGridOffset: 0,
+      selectedCalendarDayIndex: 0,
       bonusLogs: [],
       bonusRules: { x: 5, y: 10, bonus: 3 },
       absenceRequests: [],
@@ -1407,6 +1574,7 @@
       journeyStops: JSON.parse(JSON.stringify(DEFAULT_JOURNEY_STOPS)),
       bonusConfig: JSON.parse(JSON.stringify(DEFAULT_BONUS_CONFIG)),
       qrSecret: 'BK-892',
+      qrSecretCode: 'BK-892',
       attendanceRecords: [],
       calendarSelectedDate: new Date().toISOString().slice(0, 10),
       calendarViewingYear: 2026,
@@ -1469,76 +1637,180 @@
       }
     }
 
-    // Load Live State from Supabase
+    // Load Live State from Supabase with Non-Destructive Merge and app_state Support
     async function loadStateFromSupabase() {
       if (!supabaseClient) {
         updateSupabaseStatusUI(false, 'לא אותחל');
         return;
       }
       try {
-        updateSupabaseStatusUI(true, 'מסנכרן...');
+        updateSupabaseStatusUI(true, 'מסנכרן מטבלת app_state ב-Supabase...');
 
-        // 1. Fetch Students & Rosh Yeshiva Admin User
-        const { data: dbUsers, error: uErr } = await supabaseClient.from('users').select('*').order('created_at', { ascending: true });
-        if (!uErr && dbUsers && dbUsers.length > 0) {
-          // Check for admin user row
-          const adminRow = dbUsers.find(u => u.role === 'admin' || u.id === ADMIN_USER_UUID);
-          if (adminRow && adminRow.phone && adminRow.phone.trim()) {
-            state.adminPassword = adminRow.phone.trim();
-            localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword);
-            localStorage.setItem('bakshu_admin_password', state.adminPassword);
-            localStorage.setItem('bakshu_admin_password_v1', state.adminPassword);
-          }
+        let cloudAppState = null;
 
-          // Filter out admin and deleted/inactive from student list
-          state.students = dbUsers
-            .filter(u => u.role !== 'admin' && u.role !== 'deleted' && u.is_active !== false && u.id !== ADMIN_USER_UUID)
-            .map(u => ({
-              id: u.id,
-              name: u.full_name,
-              phone: u.phone || '',
-              password: u.password || '1234',
-              score: Number(u.score !== undefined && u.score !== null ? u.score : (u.manual_bonus_pts || 0)),
-              presentToday: Boolean(u.present_today)
-            }));
-          localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(state.students));
-        }
-
-        // 2. Fetch Campaign Config
-        const { data: dbCfg, error: cErr } = await supabaseClient.from('campaign_config').select('*').limit(1);
-        if (!cErr && dbCfg && dbCfg[0]) {
-          const c = dbCfg[0];
-          state.config.startDate = c.start_date || state.config.startDate;
-          state.config.endDate = c.end_date || state.config.endDate;
-          state.config.groupFullThreshold = Number(c.full_seder_threshold) || state.config.groupFullThreshold;
-          if (c.admin_password && c.admin_password.trim()) {
-            state.adminPassword = c.admin_password.trim();
-            localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword);
-            localStorage.setItem('bakshu_admin_password', state.adminPassword);
-            localStorage.setItem('bakshu_admin_password_v1', state.adminPassword);
-          }
-          localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(state.config));
-        }
-
-        // 3. Fetch Dedicated Admin Password row from manager_bonus_logs (points: -998)
+        // 1. Fetch from app_state table in Supabase
         try {
-          const { data: passRows } = await supabaseClient.from('manager_bonus_logs')
-            .select('*')
-            .eq('points', -998)
-            .order('created_at', { ascending: false })
-            .limit(1);
-          if (passRows && passRows.length > 0 && passRows[0].reason && passRows[0].reason.startsWith('ADMIN_PASSWORD:')) {
-            const fetchedPass = passRows[0].reason.slice('ADMIN_PASSWORD:'.length).trim();
-            if (fetchedPass) {
-              state.adminPassword = fetchedPass;
-              localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword);
-              localStorage.setItem('bakshu_admin_password', state.adminPassword);
-              localStorage.setItem('bakshu_admin_password_v1', state.adminPassword);
+          const { data: stateRows, error: stateErr } = await supabaseClient.from('app_state').select('*');
+          if (!stateErr && stateRows && stateRows.length > 0) {
+            const mainRow = stateRows.find(r => r.key === 'main_app_state' || r.key === 'main_state' || r.key === 'app_state');
+            if (mainRow && mainRow.data && typeof mainRow.data === 'object') {
+              cloudAppState = mainRow.data;
+            }
+            // Check for key-specific rows as well
+            stateRows.forEach(row => {
+              if (row.key === 'slots_by_date' && row.data) state.slotsByDate = row.data;
+              if (row.key === 'students' && Array.isArray(row.data)) {
+                if (!cloudAppState) cloudAppState = {};
+                cloudAppState.students = row.data;
+              }
+              if (row.key === 'eventsList' && Array.isArray(row.data)) {
+                if (!cloudAppState) cloudAppState = {};
+                cloudAppState.eventsList = row.data;
+              }
+              if (row.key === 'dutiesRoster' && row.data) {
+                if (!cloudAppState) cloudAppState = {};
+                cloudAppState.dutiesRoster = row.data;
+              }
+              if (row.key === 'config' && row.data) {
+                if (!cloudAppState) cloudAppState = {};
+                cloudAppState.config = row.data;
+              }
+            });
+          }
+        } catch(e) {
+          console.warn('app_state read error:', e);
+        }
+
+        // 2. Non-Destructive Merge of cloud data if present
+        if (cloudAppState) {
+          // Merge students preserving score, phone, password, device lock, etc.
+          if (Array.isArray(cloudAppState.students) && cloudAppState.students.length > 0) {
+            const mergedStudents = [...state.students];
+            cloudAppState.students.forEach(cs => {
+              const idx = mergedStudents.findIndex(s => s.id === cs.id || (s.name && cs.name && s.name.trim() === cs.name.trim()));
+              if (idx !== -1) {
+                mergedStudents[idx] = {
+                  ...mergedStudents[idx],
+                  ...cs,
+                  score: cs.score !== undefined ? Number(cs.score) : mergedStudents[idx].score,
+                  phone: cs.phone || mergedStudents[idx].phone || '',
+                  password: cs.password || mergedStudents[idx].password || '1234',
+                  presentToday: cs.presentToday !== undefined ? Boolean(cs.presentToday) : (cs.present_today !== undefined ? Boolean(cs.present_today) : mergedStudents[idx].presentToday),
+                  deviceId: cs.deviceId || mergedStudents[idx].deviceId || '',
+                  deviceLocked: cs.deviceLocked !== undefined ? cs.deviceLocked : mergedStudents[idx].deviceLocked
+                };
+              } else {
+                mergedStudents.push(cs);
+              }
+            });
+            state.students = mergedStudents;
+            localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(state.students));
+          }
+
+          // Merge eventsList
+          if (Array.isArray(cloudAppState.eventsList) && cloudAppState.eventsList.length > 0) {
+            state.eventsList = cloudAppState.eventsList;
+          }
+
+          // Merge dutiesRoster preserving assigned boys
+          if (cloudAppState.dutiesRoster) {
+            state.dutiesRoster = Object.assign({}, state.dutiesRoster, cloudAppState.dutiesRoster);
+            localStorage.setItem(STORAGE_KEYS.DUTIES, JSON.stringify(state.dutiesRoster));
+          }
+
+          // Merge pendingRequests / absenceRequests
+          if (Array.isArray(cloudAppState.pendingRequests) && cloudAppState.pendingRequests.length > 0) {
+            state.absenceRequests = cloudAppState.pendingRequests;
+            localStorage.setItem(STORAGE_KEYS.REQUESTS, JSON.stringify(state.absenceRequests));
+          } else if (Array.isArray(cloudAppState.absenceRequests) && cloudAppState.absenceRequests.length > 0) {
+            state.absenceRequests = cloudAppState.absenceRequests;
+            localStorage.setItem(STORAGE_KEYS.REQUESTS, JSON.stringify(state.absenceRequests));
+          }
+
+          // Merge auditLogs / bonusLogs
+          if (Array.isArray(cloudAppState.auditLogs) && cloudAppState.auditLogs.length > 0) {
+            state.bonusLogs = cloudAppState.auditLogs;
+            localStorage.setItem(STORAGE_KEYS.BONUS_LOGS, JSON.stringify(state.bonusLogs));
+          }
+
+          // Merge qrSecretCode / qrSecret
+          if (cloudAppState.qrSecretCode || cloudAppState.qrSecret) {
+            state.qrSecret = cloudAppState.qrSecretCode || cloudAppState.qrSecret;
+            state.qrSecretCode = state.qrSecret;
+            localStorage.setItem(STORAGE_KEYS.QR_SECRET, state.qrSecret);
+          }
+
+          // Merge config
+          if (cloudAppState.config && typeof cloudAppState.config === 'object') {
+            state.config = Object.assign({}, state.config, cloudAppState.config);
+          }
+          if (cloudAppState.adminPassword && cloudAppState.adminPassword.trim()) {
+            state.config.adminPassword = cloudAppState.adminPassword.trim();
+          }
+        }
+
+        // 3. Fallback to existing Supabase tables (users, campaign_config, manager_bonus_logs) if needed so NO DATA IS EVER LOST
+        // Fetch Students from users table
+        try {
+          const { data: dbUsers, error: uErr } = await supabaseClient.from('users').select('*').order('created_at', { ascending: true });
+          if (!uErr && dbUsers && dbUsers.length > 0) {
+            const adminRow = dbUsers.find(u => u.role === 'admin' || u.id === '00000000-0000-0000-0000-000000000001');
+            if (adminRow && adminRow.phone && adminRow.phone.trim()) {
+              state.config.adminPassword = adminRow.phone.trim();
+              state.adminPassword = adminRow.phone.trim();
+            }
+
+            const dbStudents = dbUsers
+              .filter(u => u.role !== 'admin' && u.role !== 'deleted' && u.is_active !== false && u.id !== '00000000-0000-0000-0000-000000000001')
+              .map(u => ({
+                id: u.id,
+                name: u.full_name,
+                phone: u.phone || '',
+                password: u.password || '1234',
+                score: Number(u.score !== undefined && u.score !== null ? u.score : (u.manual_bonus_pts || 0)),
+                presentToday: Boolean(u.present_today),
+                deviceId: u.device_id || ''
+              }));
+
+            if (dbStudents.length > 0) {
+              const currentList = [...state.students];
+              dbStudents.forEach(ds => {
+                const idx = currentList.findIndex(s => s.id === ds.id || (s.name && ds.name && s.name.trim() === ds.name.trim()));
+                if (idx !== -1) {
+                  currentList[idx] = {
+                    ...currentList[idx],
+                    ...ds,
+                    score: ds.score !== undefined ? ds.score : currentList[idx].score,
+                    phone: ds.phone || currentList[idx].phone || '',
+                    password: ds.password || currentList[idx].password || '1234',
+                    presentToday: ds.presentToday !== undefined ? ds.presentToday : currentList[idx].presentToday
+                  };
+                } else {
+                  currentList.push(ds);
+                }
+              });
+              state.students = currentList;
+              localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(state.students));
             }
           }
         } catch(e) {}
 
-        // 4. Fetch State Snapshot from manager_bonus_logs (points: -999)
+        // Fetch Campaign Config table
+        try {
+          const { data: dbCfg, error: cErr } = await supabaseClient.from('campaign_config').select('*').limit(1);
+          if (!cErr && dbCfg && dbCfg[0]) {
+            const c = dbCfg[0];
+            state.config.startDate = c.start_date || state.config.startDate;
+            state.config.endDate = c.end_date || state.config.endDate;
+            state.config.groupFullThreshold = Number(c.full_seder_threshold) || state.config.groupFullThreshold;
+            if (c.admin_password && c.admin_password.trim()) {
+              state.config.adminPassword = c.admin_password.trim();
+              state.adminPassword = c.admin_password.trim();
+            }
+          }
+        } catch(e) {}
+
+        // Fetch State Snapshot from manager_bonus_logs
         try {
           const { data: snapshots } = await supabaseClient.from('manager_bonus_logs')
             .select('*')
@@ -1547,230 +1819,110 @@
             .limit(1);
           if (snapshots && snapshots.length > 0 && snapshots[0].reason && snapshots[0].reason.startsWith('APP_STATE_SNAPSHOT:')) {
             const snap = JSON.parse(snapshots[0].reason.slice('APP_STATE_SNAPSHOT:'.length));
-            if (snap.slotsByDate) state.slotsByDate = snap.slotsByDate;
-            if (snap.config && snap.config.targets) state.config.targets = snap.config.targets;
-            if (snap.dutiesRoster) state.dutiesRoster = snap.dutiesRoster;
+            if (snap.slotsByDate && (!state.slotsByDate || Object.keys(state.slotsByDate).length === 0)) state.slotsByDate = snap.slotsByDate;
+            if (snap.config && snap.config.targets && !state.config.targets) state.config.targets = snap.config.targets;
+            if (snap.dutiesRoster) state.dutiesRoster = Object.assign({}, snap.dutiesRoster, state.dutiesRoster);
             if (snap.journeyStops) state.journeyStops = snap.journeyStops;
             if (snap.bonusConfig) state.bonusConfig = snap.bonusConfig;
-            if (snap.qrSecret) state.qrSecret = snap.qrSecret;
-            if (snap.absenceRequests) state.absenceRequests = snap.absenceRequests;
-            if (snap.attendanceRecords && Array.isArray(snap.attendanceRecords)) {
-              state.attendanceRecords = snap.attendanceRecords;
-              localStorage.setItem(STORAGE_KEYS.ATTENDANCE_RECORDS, JSON.stringify(state.attendanceRecords));
-            }
+            if (snap.qrSecret) { state.qrSecret = snap.qrSecret; state.qrSecretCode = snap.qrSecret; }
+            if (snap.absenceRequests && state.absenceRequests.length === 0) state.absenceRequests = snap.absenceRequests;
             if (snap.adminPassword && snap.adminPassword.trim()) {
+              state.config.adminPassword = snap.adminPassword.trim();
               state.adminPassword = snap.adminPassword.trim();
-              localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword);
-              localStorage.setItem('bakshu_admin_password', state.adminPassword);
-              localStorage.setItem('bakshu_admin_password_v1', state.adminPassword);
             }
-
-            localStorage.setItem(STORAGE_KEYS.SLOTS_BY_DATE, JSON.stringify(state.slotsByDate));
-            localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(state.config));
-            localStorage.setItem(STORAGE_KEYS.DUTIES, JSON.stringify(state.dutiesRoster));
-            localStorage.setItem(STORAGE_KEYS.JOURNEY_STOPS, JSON.stringify(state.journeyStops));
-            localStorage.setItem(STORAGE_KEYS.BONUS_CONFIG, JSON.stringify(state.bonusConfig));
-            localStorage.setItem(STORAGE_KEYS.QR_SECRET, state.qrSecret);
-          }
-        } catch(e) {
-          console.warn('Snapshot load error:', e);
-        }
-
-        // 5. Fetch Bonus Logs (points > 0)
-        const { data: dbBonus, error: bErr } = await supabaseClient.from('manager_bonus_logs')
-          .select('*')
-          .gt('points', 0)
-          .order('created_at', { ascending: false })
-          .limit(50);
-        if (!bErr && dbBonus && dbBonus.length > 0) {
-          state.bonusLogs = dbBonus.map(b => ({
-            id: b.id,
-            studentId: b.user_id,
-            studentName: b.student_name || '',
-            points: b.points,
-            reason: b.reason,
-            dateStr: b.created_at ? new Date(b.created_at).toLocaleDateString('he-IL') : ''
-          }));
-          localStorage.setItem(STORAGE_KEYS.BONUS_LOGS, JSON.stringify(state.bonusLogs));
-        }
-
-        // 6. Fetch Schedule Slots directly from schedule_slots table
-        try {
-          const { data: dbSlots } = await supabaseClient.from('schedule_slots').select('*');
-          if (dbSlots && dbSlots.length > 0) {
-            dbSlots.forEach(sl => {
-              const d = sl.slot_date;
-              if (d) {
-                if (!state.slotsByDate[d]) state.slotsByDate[d] = [];
-                if (!state.slotsByDate[d].some(x => x.title === sl.title)) {
-                  state.slotsByDate[d].push({
-                    id: sl.id,
-                    title: sl.title,
-                    openTime: sl.time_window ? sl.time_window.split('-')[0].trim() : '09:00',
-                    lockTime: sl.time_window ? sl.time_window.split('-')[1].trim() : '10:15',
-                    points: Number(sl.base_points) || 1,
-                    isLocked: false
-                  });
-                }
-              }
-            });
-            localStorage.setItem(STORAGE_KEYS.SLOTS_BY_DATE, JSON.stringify(state.slotsByDate));
           }
         } catch(e) {}
 
-        // 7. Fetch Attendance Logs from attendance_logs table
-        try {
-          const { data: dbAtt } = await supabaseClient.from('attendance_logs').select('*').order('marked_at', { ascending: false }).limit(200);
-          if (dbAtt && dbAtt.length > 0) {
-            dbAtt.forEach(log => {
-              const st = state.students.find(s => s.id === log.user_id);
-              const exists = state.attendanceRecords.some(r => r.id === log.id || (r.studentId === log.user_id && r.markedAt === log.marked_at));
-              if (!exists && log.user_id) {
-                const dateStr = log.marked_at ? log.marked_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
-                const daySlots = getSlotsForDate(dateStr);
-                const matchingSlot = daySlots.find(s => s.id === log.slot_id) || daySlots[0] || { id: 's1', title: 'סדר יומי', points: 1 };
-                state.attendanceRecords.push({
-                  id: log.id,
-                  studentId: log.user_id,
-                  studentName: st ? st.name : 'בחור בישיבה',
-                  dateStr: dateStr,
-                  slotId: log.slot_id || matchingSlot.id,
-                  slotTitle: matchingSlot.title,
-                  markedAt: log.marked_at || new Date().toISOString(),
-                  status: log.status || 'approved',
-                  points: Number(matchingSlot.points) || 1,
-                  markedBy: log.marked_by || 'auto'
-                });
-              }
-            });
-            localStorage.setItem(STORAGE_KEYS.ATTENDANCE_RECORDS, JSON.stringify(state.attendanceRecords));
-          }
-        } catch(e) {}
+        // Ensure admin password is never empty
+        if (!state.config.adminPassword || !state.config.adminPassword.trim()) {
+          state.config.adminPassword = 'bakshu2026';
+        }
+        state.adminPassword = state.config.adminPassword;
+        localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword);
+        localStorage.setItem('bakshu_admin_password', state.adminPassword);
+        localStorage.setItem('bakshu_admin_password_v1', state.adminPassword);
 
-        updateSupabaseStatusUI(true, 'מחובר ומסונכרן');
+        // Populate password field in config UI if present
+        const passConfigInput = document.getElementById('adminConfigPasswordInput');
+        if (passConfigInput) passConfigInput.value = state.config.adminPassword;
 
-        // Re-render UI with fresh database data
-        if (sessionStorage.getItem('bakshu_admin_logged') === 'true') {
-          renderStudentsTable();
-          populateTargetsInputs();
-          populateBonusEngineInputs();
-          renderDutiesTable();
-          renderJourneyStopsAdmin();
-          renderPendingRequestsList();
+        // 4. Rebuild Synced Calendar and Today Slots from single source of truth
+        rebuildSyncedCalendarAndToday();
+
+        // 5. Turn ON cloud hydration flag - saving is only allowed from this point onwards!
+        isCloudHydrated = true;
+
+        updateSupabaseStatusUI(true, 'מחובר ומסונכרן (app_state)');
+
+        // Render dashboard
+        if (state.adminUnlocked || sessionStorage.getItem('bakshu_admin_logged') === 'true') {
+          initAdminDashboard();
+        } else {
           renderCampaignCalendar();
-          renderSelectedCalendarDayDetails(state.calendarSelectedDate);
         }
       } catch (err) {
-        console.warn('Supabase initial fetch failed:', err);
-        updateSupabaseStatusUI(false, 'שגיאת רשת');
+        console.warn('Supabase fetch error in admin.html:', err);
+        isCloudHydrated = true; // Allow local operations even if offline
       }
     }
 
-    // Debounced Sync to Supabase
+    // Debounced Sync to Supabase - ONLY runs when isCloudHydrated === true
     let syncTimeout = null;
     function syncStateToSupabase() {
+      if (!isCloudHydrated) {
+        console.warn('Skipping syncStateToSupabase: state is not yet hydrated from cloud.');
+        return;
+      }
       if (!supabaseClient) return;
       clearTimeout(syncTimeout);
       syncTimeout = setTimeout(async () => {
         try {
-          updateSupabaseStatusUI(true, 'שומר בענן...');
+          updateSupabaseStatusUI(true, 'שומר ב-app_state...');
 
-          // 0. Sync Rosh Yeshiva Admin User in users table
+          // Single source of truth state payload
+          const payload = {
+            students: state.students,
+            eventsList: state.eventsList,
+            dutiesRoster: state.dutiesRoster,
+            pendingRequests: state.absenceRequests || [],
+            auditLogs: state.bonusLogs || [],
+            qrSecretCode: state.qrSecret || 'BK-892',
+            config: state.config,
+            campaignDays: state.campaignDays,
+            todaySlots: state.todaySlots
+          };
+
+          // Primary save to app_state with onConflict: 'key'
+          await supabaseClient.from('app_state').upsert([
+            {
+              key: 'main_app_state',
+              data: payload,
+              updated_at: new Date().toISOString()
+            }
+          ], { onConflict: 'key' });
+
+          // Also sync to legacy tables in background for redundancy
           try {
             await supabaseClient.from('users').upsert({
-              id: ADMIN_USER_UUID,
+              id: '00000000-0000-0000-0000-000000000001',
               full_name: 'ראש הישיבה',
               role: 'admin',
-              phone: state.adminPassword || '1234',
+              phone: state.config.adminPassword || state.adminPassword || 'bakshu2026',
               is_active: true
             }, { onConflict: 'id' });
-          } catch(e) {
-            console.warn('Admin user sync error:', e);
-          }
+          } catch(e) {}
 
-          // 1. Sync Campaign Config
-          const cfgPayload = {
-            id: 1,
-            campaign_name: 'מבצע חורף תשפ״ז - עד הפסגה',
-            start_date: state.config.startDate,
-            end_date: state.config.endDate,
-            min_target_score: state.config.targets?.min?.points || 70,
-            full_seder_threshold: state.config.groupFullThreshold || 18,
-            full_seder_bonus_pts: state.bonusConfig?.groupFullBonus || 4,
-            xy_required_count: state.bonusConfig?.ruleX || 5,
-            xy_window_size: state.bonusConfig?.ruleY || 10,
-            xy_bonus_pts: state.bonusConfig?.ruleBonus || 3
-          };
           try {
-            await supabaseClient.from('campaign_config').upsert(cfgPayload);
-          } catch(e) {
-            console.warn('Config upsert error:', e);
-          }
-
-          // 2. Sync Students with UUIDs (exclude admin)
-          if (Array.isArray(state.students)) {
-            for (const st of state.students) {
-              if (st.id === ADMIN_USER_UUID) continue;
-              if (!st.id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(st.id)) {
-                st.id = genUUID();
-              }
-              const uPayload = {
-                id: st.id,
-                full_name: st.name,
-                phone: st.phone || '',
-                role: 'student',
-                manual_bonus_pts: Number(st.score) || 0,
-                is_active: true
-              };
-              try {
-                await supabaseClient.from('users').upsert(uPayload, { onConflict: 'id' });
-              } catch(err) {
-                console.warn('User sync error:', err);
-              }
-            }
-            localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(state.students));
-          }
-
-          // 3. Save dedicated password log and full state snapshot
-          try {
-            await supabaseClient.from('manager_bonus_logs').insert([
-              {
-                points: -998,
-                reason: 'ADMIN_PASSWORD:' + (state.adminPassword || '1234')
-              },
-              {
-                points: -999,
-                reason: 'APP_STATE_SNAPSHOT:' + JSON.stringify({
-                  slotsByDate: state.slotsByDate,
-                  config: state.config,
-                  dutiesRoster: state.dutiesRoster,
-                  journeyStops: state.journeyStops,
-                  bonusConfig: state.bonusConfig,
-                  qrSecret: state.qrSecret,
-                  absenceRequests: state.absenceRequests,
-                  adminPassword: state.adminPassword || '1234',
-                  attendanceRecords: state.attendanceRecords
-                })
-              }
-            ]);
-          } catch(e) {
-            console.warn('Snapshot sync error:', e);
-          }
-
-          // 4. Sync current slots directly to schedule_slots table
-          try {
-            const todayStr = new Date().toISOString().slice(0, 10);
-            const activeSlots = getSlotsForDate(todayStr);
-            for (const sl of activeSlots) {
-              await supabaseClient.from('schedule_slots').insert({
-                slot_date: todayStr,
-                title: sl.title,
-                time_window: (sl.openTime || '') + ' - ' + (sl.lockTime || ''),
-                open_time: todayStr + 'T' + (sl.openTime || '09:00') + ':00Z',
-                lock_time: todayStr + 'T' + (sl.lockTime || '10:15') + ':00Z',
-                base_points: Number(sl.points) || 1
-              });
-            }
+            await supabaseClient.from('campaign_config').upsert({
+              id: 1,
+              campaign_name: 'מבצע חורף תשפ״ז - עד הפסגה',
+              start_date: state.config.startDate,
+              end_date: state.config.endDate,
+              admin_password: state.config.adminPassword || 'bakshu2026',
+              min_target_score: state.config.targets?.min?.points || 70,
+              full_seder_threshold: state.config.groupFullThreshold || 18,
+              full_seder_bonus_pts: state.bonusConfig?.groupFullBonus || 4
+            });
           } catch(e) {}
 
           updateSupabaseStatusUI(true, 'נשמר ומסונכרן');
@@ -1780,6 +1932,7 @@
         }
       }, 300);
     }
+    const saveStateToSupabase = syncStateToSupabase;
 
     function saveState() {
       localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(state.students));
@@ -1791,21 +1944,22 @@
       localStorage.setItem(STORAGE_KEYS.JOURNEY_STOPS, JSON.stringify(state.journeyStops));
       localStorage.setItem(STORAGE_KEYS.BONUS_CONFIG, JSON.stringify(state.bonusConfig));
       localStorage.setItem(STORAGE_KEYS.QR_SECRET, state.qrSecret);
-      localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.adminPassword || '1234');
-      localStorage.setItem('bakshu_admin_password', state.adminPassword || '1234');
-      localStorage.setItem('bakshu_admin_password_v1', state.adminPassword || '1234');
+      localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, state.config.adminPassword || state.adminPassword || 'bakshu2026');
+      localStorage.setItem('bakshu_admin_password', state.config.adminPassword || state.adminPassword || 'bakshu2026');
+      localStorage.setItem('bakshu_admin_password_v1', state.config.adminPassword || state.adminPassword || 'bakshu2026');
       localStorage.setItem(STORAGE_KEYS.ATTENDANCE_RECORDS, JSON.stringify(state.attendanceRecords));
 
-      // Trigger automatic cloud sync to Supabase
+      // Trigger automatic cloud sync to Supabase app_state
       syncStateToSupabase();
     }
 
-    // Authentication Gate
-    function verifyAdminGate() {
+    // Authentication Gate - uses state.config.adminPassword from Supabase
+    function unlockAdminPortal() {
       const pass = (document.getElementById('gatePasswordInput')?.value || '').trim();
       const err = document.getElementById('gateErrorMsg');
-      const activePass = (state.adminPassword || '').trim() || '1234';
+      const activePass = ((state.config && state.config.adminPassword) || state.adminPassword || 'bakshu2026').trim();
       if (pass === activePass) {
+        state.adminUnlocked = true;
         document.getElementById('adminGateModal')?.classList.add('hidden');
         document.getElementById('adminPortalMain')?.classList.remove('hidden');
         sessionStorage.setItem('bakshu_admin_logged', 'true');
@@ -1816,6 +1970,25 @@
           err.classList.remove('hidden');
         }
       }
+    }
+    function verifyAdminGate() {
+      unlockAdminPortal();
+    }
+
+    async function saveAdminPasswordFromSettings() {
+      const np = (document.getElementById('adminConfigPasswordInput')?.value || '').trim();
+      if (!np || np.length < 4) {
+        alert('הסיסמה החדשה חייבת להכיל לפחות 4 תווים!');
+        return;
+      }
+      if (!state.config) state.config = {};
+      state.config.adminPassword = np;
+      state.adminPassword = np;
+      localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, np);
+      localStorage.setItem('bakshu_admin_password', np);
+      localStorage.setItem('bakshu_admin_password_v1', np);
+      await saveStateToSupabase();
+      showToast('סיסמת המנהל עודכנה ונשמרה ב-Supabase!', '🔑');
     }
 
     function handleAdminLogout() {
@@ -5135,17 +5308,21 @@
           btn.innerHTML = '<span>⏳</span><span>שומר בענן...</span>';
         }
 
+        if (!state.config) state.config = {};
+        state.config.adminPassword = np;
         state.adminPassword = np;
         localStorage.setItem(STORAGE_KEYS.ADMIN_PASS, np);
         localStorage.setItem('bakshu_admin_password', np);
         localStorage.setItem('bakshu_admin_password_v1', np);
+        const passConfigInput = document.getElementById('adminConfigPasswordInput');
+        if (passConfigInput) passConfigInput.value = np;
 
         // Immediate direct sync to Supabase without waiting for debounce
         if (supabaseClient) {
           // 1. Direct Admin User update in users table
           try {
             await supabaseClient.from('users').upsert({
-              id: ADMIN_USER_UUID,
+              id: '00000000-0000-0000-0000-000000000001',
               full_name: 'ראש הישיבה',
               role: 'admin',
               phone: np,
@@ -5158,27 +5335,14 @@
           // 2. Direct log entry & state snapshot
           try {
             await supabaseClient.from('manager_bonus_logs').insert([
-              { points: -998, reason: 'ADMIN_PASSWORD:' + np },
-              {
-                points: -999,
-                reason: 'APP_STATE_SNAPSHOT:' + JSON.stringify({
-                  slotsByDate: state.slotsByDate,
-                  config: state.config,
-                  dutiesRoster: state.dutiesRoster,
-                  journeyStops: state.journeyStops,
-                  bonusConfig: state.bonusConfig,
-                  qrSecret: state.qrSecret,
-                  absenceRequests: state.absenceRequests,
-                  adminPassword: np
-                })
-              }
+              { points: -998, reason: 'ADMIN_PASSWORD:' + np }
             ]);
           } catch(e) {
             console.warn('Direct snapshot insert error:', e);
           }
         }
 
-        saveState();
+        await saveStateToSupabase();
 
         if (succ) {
           succ.textContent = 'הסיסמה נשמרה וסונכרנה בענן בהצלחה! ✓';
@@ -5244,17 +5408,19 @@
 
     window.onload = async function() {
       loadState();
-      if (sessionStorage.getItem('bakshu_admin_logged') === 'true') {
-        document.getElementById('adminGateModal')?.classList.add('hidden');
-        document.getElementById('adminPortalMain')?.classList.remove('hidden');
-        initAdminDashboard();
-      }
+      state.adminUnlocked = false;
+      document.getElementById('adminGateModal')?.classList.remove('hidden');
+      document.getElementById('adminPortalMain')?.classList.add('hidden');
+
       await loadStateFromSupabase();
 
       // Setup Realtime Live Changes Listener
       if (supabaseClient) {
         try {
           supabaseClient.channel('admin_live_sync')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state' }, () => {
+              loadStateFromSupabase();
+            })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
               loadStateFromSupabase();
             })
