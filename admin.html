@@ -1095,7 +1095,7 @@
               </button>
               <button onclick="openAddSlotModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm">
                 + הוסף סדר
-              </button>
+              </button> <button onclick="saveExplicitDayScheduleChanges()" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white font-black text-xs hover:bg-indigo-700 transition shadow-sm flex items-center gap-1.5 cursor-pointer">💾 שמור שינויי זמני סדר</button>
             </div>
           </div>
           <div id="adminDaySlotsContainer" class="space-y-3">
@@ -1108,9 +1108,7 @@
             <button onclick="applyCurrentDayToShabbats()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">
               החל יום זה על כל השבתות
             </button>
-            <button onclick="resetDefaultSchedules()" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold mr-auto">
-              שחזר ברירת מחדל
-            </button>
+            
           </div>
         </div>
       </div>
@@ -8940,5 +8938,85 @@ END:VCALENDAR`;
       </div>
     </div>
   </div>
+<script id="admin-isolation-and-schedule-save-patch">
+(function(){
+  function isoAdmin(){
+    const isA = (typeof state !== "undefined" && state.adminUnlocked) || location.pathname.includes("admin") || location.search.includes("admin=1");
+    ["dtab-student","mtab-student","adminStudentInspectionHeader"].forEach(id => {
+      const el = document.getElementById(id);
+      if(el){
+        if(isA) el.style.setProperty("display","none","important");
+        else el.style.removeProperty("display");
+      }
+    });
+  }
+
+  const oSw = window.switchTab;
+  if(typeof oSw === "function"){
+    window.switchTab = function(t){
+      const isA = (typeof state !== "undefined" && state.adminUnlocked) || location.pathname.includes("admin") || location.search.includes("admin=1");
+      if(t === "student" && isA) t = "admin";
+      const r = oSw.apply(this, [t]);
+      isoAdmin();
+      return r;
+    };
+  }
+
+  window.resetDayScheduleToDefault = function(){
+    if(typeof showToast === "function") showToast("איפוס לברירת מחדל מבוטל", "🔒");
+  };
+  window.resetDefaultSchedules = window.resetDayScheduleToDefault;
+
+  window.saveExplicitDayScheduleChanges = async function(){
+    const pk = document.getElementById("adminScheduleDayPicker");
+    const iso = (pk && pk.value) || (typeof state !== "undefined" && state.selectedCalendarIso) || (typeof TODAY_ISO !== "undefined" ? TODAY_ISO : "");
+    if(!iso || typeof state === "undefined") return;
+
+    const slots = (typeof getSlotsForDate === "function" ? getSlotsForDate(iso) : (typeof getScheduleForDate === "function" ? getScheduleForDate(iso) : (state.slotsByDate && state.slotsByDate[iso]) || []));
+    state.slotsByDate = state.slotsByDate || {};
+    state.slotsByDate[iso] = slots.map(s => ({
+      ...s,
+      timeWindow: (s.openTime || "09:00") + " – " + (s.lockTime || "10:15")
+    }));
+
+    try {
+      localStorage.setItem("bakshu_slots_by_date_v1", JSON.stringify(state.slotsByDate));
+      if (typeof saveScheduleSlots === "function") saveScheduleSlots(state.slotsByDate);
+    } catch(e){}
+
+    if(typeof saveState === "function") saveState();
+    if(typeof pushSlotOverrideToSupabase === "function") await pushSlotOverrideToSupabase(iso, state.slotsByDate[iso]);
+    if(typeof saveDailyScheduleToSupabase === "function") await saveDailyScheduleToSupabase(iso, state.slotsByDate[iso]);
+    if(typeof renderAll === "function") renderAll();
+    if(typeof renderAdminDayScheduleEditor === "function") renderAdminDayScheduleEditor();
+    if(typeof showToast === "function") showToast("💾 זמני הסדר נשמרו בהצלחה בלוח השנה ובענן!");
+  };
+
+  const oEd = window.renderAdminDayScheduleEditor;
+  if(typeof oEd === "function"){
+    window.renderAdminDayScheduleEditor = function(){
+      oEd.apply(this, arguments);
+      const c = document.getElementById("adminDaySlotsEditorList") || document.getElementById("adminDaySlotsContainer");
+      if(!c) return;
+      c.querySelectorAll("button[onclick*='removeScheduleSlotFromDay'], button[onclick*='removeSlotItem']").forEach(b => {
+        if(b.parentElement && !b.parentElement.querySelector(".explicit-slot-save-btn")){
+          const sb = document.createElement("button");
+          sb.type = "button";
+          sb.className = "explicit-slot-save-btn px-3 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-black text-xs transition shadow-sm";
+          sb.innerHTML = "💾 שמור שינוי";
+          sb.onclick = function(){ window.saveExplicitDayScheduleChanges(); };
+          b.parentElement.insertBefore(sb, b);
+        }
+      });
+    };
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    isoAdmin();
+    setInterval(isoAdmin, 800);
+  });
+  setTimeout(isoAdmin, 100);
+})();
+</script>
 </body>
 </html>
