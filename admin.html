@@ -1224,7 +1224,7 @@
   <!-- ========================================================== -->
   <!-- ROSH HAYESHIVA PASSWORD AUTHENTICATION MODAL               -->
   <!-- ========================================================== -->
-  <div id="adminPasswordModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div id="adminPasswordModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
     <div id="adminPasswordGateCard" class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-center relative">
       
       <!-- Yeshiva Crest inside modal -->
@@ -2067,6 +2067,7 @@
 
     // 6. בניית לוח המבצע ודפדוף השבועות דינמית לפי config.startDate עד config.endDate (ביטול מגבלת 28 יום / 4 שבועות)
     function rebuildSyncedCalendarAndToday() {
+        let totalDays = (state && Array.isArray(state.campaignDays)) ? state.campaignDays.length : 28;
       if (typeof state === 'undefined' || !state.config) return;
       const startStr = state.config.startDate || '2026-10-25';
       let endStr = state.config.endDate;
@@ -7472,6 +7473,7 @@ END:VCALENDAR`;
     }
 
     window.onload = async function () {
+        try { checkUrlForAdminParam(); } catch(e) { console.error(e); }
       state.isAdminUnlocked = false;
       state.adminUnlocked = false;
       checkUrlForStudentParam();
