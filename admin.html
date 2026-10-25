@@ -1875,73 +1875,63 @@
 
     // 4. ניקוי וסנכרון תורנויות - מחיקת תורנים לפני startDate וביטול מעורר בוקר ביום הפתיחה
     function cleanseAndSyncDutiesRoster() {
-      if (!state) return;
-      const startStr = state.config?.startDate || '2026-10-25';
-
-      if (Array.isArray(state.dutiesRoster)) {
-        state.dutiesRoster = state.dutiesRoster.filter(d => {
-          if (!d) return false;
-          if (typeof d.dayIdx === 'number' && d.dayIdx < 0) return false;
-          if (d.isoDate && d.isoDate < startStr) return false;
-          if (typeof d.dateStr === 'string' && (d.dateStr.includes('אתמול') || d.dateStr.includes('לפני תחילת'))) return false;
-          return true;
-        });
-
-        state.dutiesRoster.forEach(d => {
-          if (d.isoDate) {
-            const meta = getDayMeta(d.isoDate);
-            if (meta) {
-              d.dateStr = meta.fullLabel;
-              d.dayName = meta.dayNameHe;
+        if (typeof state === 'undefined') return;
+        if (!state.dutiesRoster || Array.isArray(state.dutiesRoster)) {
+          const converted = {};
+          if (Array.isArray(state.dutiesRoster)) {
+            state.dutiesRoster.forEach(d => {
+              const iso = d.isoDate || d.dateStr;
+              if (iso && /^\d{4}-\d{2}-\d{2}$/.test(iso)) converted[iso] = d;
+            });
+          }
+          state.dutiesRoster = converted;
+        }
+        // Merge any duties present in state.campaignCalendar so nothing from Supabase is ever lost
+        if (state.campaignCalendar && typeof state.campaignCalendar === 'object') {
+          Object.keys(state.campaignCalendar).forEach(iso => {
+            const row = state.campaignCalendar[iso];
+            if (!row) return;
+            const wId = row.wakeup_student_id;
+            const kId = row.kitchen_student_id;
+            if (wId || kId) {
+              if (!state.dutiesRoster[iso]) state.dutiesRoster[iso] = {};
+              const dObj = state.dutiesRoster[iso];
+              if (wId && !dObj.wakeupStudentId && !dObj.wakerStudentId) {
+                dObj.wakeupStudentId = wId;
+                dObj.wakerStudentId = wId;
+              }
+              if (kId && !dObj.kitchenStudentId) {
+                dObj.kitchenStudentId = kId;
+              }
+            }
+          });
+        }
+        // Resolve student names for all duties
+        const studentsList = Array.isArray(state.students) ? state.students : [];
+        Object.keys(state.dutiesRoster).forEach(iso => {
+          const dObj = state.dutiesRoster[iso];
+          if (!dObj || typeof dObj !== 'object') return;
+          const wId = dObj.wakeupStudentId || dObj.wakerStudentId;
+          const kId = dObj.kitchenStudentId;
+          if (wId) {
+            dObj.wakeupStudentId = wId;
+            dObj.wakerStudentId = wId;
+            const st = studentsList.find(s => String(s.id) === String(wId));
+            if (st) {
+              dObj.wakeupStudentName = st.name;
+              dObj.wakerStudentName = st.name;
             }
           }
-
-          // אל תשבץ אוטומטית מעורר בבוקר ביום הראשון (מתחיל בערב)
-          if (d.dayIdx === 0 || d.isoDate === startStr || d.isoDate === '2026-10-25') {
-            d.wakerStudentId = null;
-            d.wakeupStudentId = null;
-            d.wakerStudentName = '';
-            d.wakeupStudentName = '';
-            d.wakerDone = false;
-            d.wakeupDone = false;
-          }
-
-          if (d.role === 'מעורר') {
-            d.reminderTime = '22:30 לילה קודם';
-            d.reminderText = `מעורר ב-22:30 לילה קודם (${d.dateStr})`;
-          } else if (d.role === 'מטבח' || d.role === 'ניקיון מטבח') {
-            d.reminderTime = '19:30 לקראת ערב';
-            d.reminderText = `ניקיון מטבח ב-19:30 לקראת ערב (${d.dateStr})`;
+          if (kId) {
+            const st = studentsList.find(s => String(s.id) === String(kId));
+            if (st) {
+              dObj.kitchenStudentName = st.name;
+            }
           }
         });
-      } else if (state.dutiesRoster && typeof state.dutiesRoster === 'object') {
-        const filtered = {};
-        Object.keys(state.dutiesRoster).forEach(k => {
-          if (k < startStr) return;
-          const dObj = state.dutiesRoster[k];
-          if (dObj) {
-            const meta = getDayMeta(k);
-            if (meta) {
-              dObj.dateStr = meta.fullLabel;
-              dObj.dayName = meta.dayNameHe;
-            }
-            if (k === startStr || k === '2026-10-25') {
-              dObj.wakerStudentId = null;
-              dObj.wakeupStudentId = null;
-              dObj.wakerStudentName = '';
-              dObj.wakeupStudentName = '';
-              dObj.wakerDone = false;
-              dObj.wakeupDone = false;
-            }
-            filtered[k] = dObj;
-          }
-        });
-        state.dutiesRoster = filtered;
       }
-    }
 
-    // ניהול ושיבוץ תורנויות אצל המנהל עם כתיבה ישירה ל-campaign_calendar
-    async function updateDutyAssignee(dateStr, role, studentId) {
+      async function updateDutyAssignee(dateStr, role, studentId) {
       const isClearing = !studentId || studentId === '';
       const val = isClearing ? null : studentId;
       const col = (role === 'waker' || role === 'wakeup') ? 'wakeup_student_id' : 'kitchen_student_id';
@@ -3516,25 +3506,18 @@
       showToast('נפתח יומן Google Calendar עם פרטי התורנות', '📅');
     }
 
-    function openGoogleCalendarForStop(stopIdx) {
-      const stops = (state.trailStops && state.trailStops.length > 0) ? state.trailStops : (state.journeyStops || DEFAULT_TRAIL_STOPS);
-      const idx = typeof stopIdx === 'number' ? stopIdx : (stopIdx === 'stop_2' ? 1 : (stopIdx === 'stop_3' || stopIdx === 'stop_summit' ? 2 : 0));
-      const stop = stops[idx];
-      if (!stop || !stop.isoDate) {
-        showToast('טרם נקבע תאריך לעצירה זו בפורטל הניהול (יוכרז בהמשך)', 'ℹ️');
-        return;
+    function openGoogleCalendarForStop(stopIdx = 0) {
+        const stops = (state && Array.isArray(state.trailStops)) ? state.trailStops : [];
+        const stop = stops[stopIdx] || stops[0] || {};
+        const rawIso = stop.isoDate || (stopIdx === 0 ? (state?.config?.stop1Date || '2026-11-19') : (state?.config?.endDate || '2026-12-05'));
+        const cleanDate = String(rawIso).replace(/-/g, '').slice(0, 8) || '20261119';
+        const title = encodeURIComponent(stop.title || (stopIdx === 0 ? 'עצירה 1 במסע – ישיבת בקשו ירושלים' : 'תחנת עצירה במסע – עד הפסגה'));
+        const details = encodeURIComponent('מבצע חורף תשפ״ז – עד הפסגה | ישיבת בקשו ירושלים');
+        const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${cleanDate}/${cleanDate}&details=${details}`;
+        window.open(gcalUrl, '_blank');
       }
-      const ymd = stop.isoDate.replace(/-/g, '');
 
-      const title = encodeURIComponent('🎁 ' + stop.title + ' - ישיבת בקשו');
-      const details = encodeURIComponent((stop.desc || stop.note || '') + ' | יעד נקודות: ' + (stop.points || 70) + ' נק׳ | תאריך עברי: ' + (stop.dateLabel || stop.dateStr || ''));
-      const location = encodeURIComponent('ישיבת בקשו ירושלים');
-      const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${ymd}T180000/${ymd}T220000&details=${details}&location=${location}&ctz=Asia/Jerusalem`;
-      window.open(googleUrl, '_blank');
-      showToast('נפתח יומן Google Calendar עבור ' + stop.title + ' (' + (stop.dateLabel || stop.dateStr) + ')', '📅');
-    }
-
-    function openJourneyStopGoogleCalendar(stopId) {
+      function openJourneyStopGoogleCalendar(stopId) {
       openGoogleCalendarForStop(stopId);
     }
 
