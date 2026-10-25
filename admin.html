@@ -1334,6 +1334,8 @@
       ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
       : null;
 
+    const SCHEMA_VERSION = '2026_10_25_v5';
+
     function updateSupabaseStatusUI(connected, text) {
       const badge = document.getElementById('supabaseAdminBadge');
       if (!badge) return;
@@ -1347,7 +1349,7 @@
     }
 
     const DEFAULT_CONFIG = {
-      startDate: '2026-10-20',
+      startDate: '2026-10-25',
       endDate: '2026-11-30',
       groupFullThreshold: 1,
       targets: {
@@ -1421,7 +1423,8 @@
       { id: 'ev_shacharit', title: 'תפילת שחרית', timeWindow: '08:25 - 08:50', points: 1, type: 'קבוע', schedule: 'א׳–ו׳' },
       { id: 'ev_seder_a', title: 'סדר א׳ (עיון)', timeWindow: '09:00 - 10:15', points: 1, type: 'קבוע', schedule: 'א׳–ה׳' },
       { id: 'ev_seder_b', title: 'סדר ב׳ (בקיאות)', timeWindow: '15:30 - 16:45', points: 1, type: 'קבוע', schedule: 'א׳–ה׳' },
-      { id: 'ev_seder_c', title: 'סדר ג׳ (לילה)', timeWindow: '20:00 - 21:15', points: 2, type: 'קבוע', schedule: 'א׳–ה׳' },
+      { id: 'ev_maariv', title: 'תפילת מעריב (פתיחת המבצע)', timeWindow: '19:45 - 20:15', points: 1, type: 'פתיחה', schedule: '2026-10-25' },
+      { id: 'ev_seder_c', title: 'סדר ג׳ (לילה ופתיחה)', timeWindow: '20:30 - 21:45', points: 2, type: 'קבוע', schedule: 'א׳–ה׳' },
       { id: 'ev_mishmar', title: 'משמר ליל שישי', timeWindow: '22:30 - 01:00', points: 3, type: 'בונוס', schedule: 'ליל שישי יום ה׳' },
       { id: 'ev_shabbat_eve', title: 'סדר ליל שבת קודש', timeWindow: '21:00 - 22:00', points: 2, type: 'שבת', schedule: 'שבת' },
       { id: 'ev_shabbat_morning', title: 'סדר שחרית ובוקר שבת', timeWindow: '08:30 - 10:00', points: 2, type: 'שבת', schedule: 'שבת' },
@@ -1470,7 +1473,7 @@
     // ניקוי מוחלט של תורנויות לפני תחילת המבצע וסנכרון תאריכים ותזכורות
     function cleanseAndSyncDutiesRoster() {
       if (typeof state === 'undefined' || !state.dutiesRoster) return false;
-      const startStr = state.config?.startDate || '2026-10-18';
+      const startStr = state.config?.startDate || '2026-10-25';
       let modified = false;
 
       // 1. אם dutiesRoster הוא מערך
@@ -1499,6 +1502,16 @@
             dr.wakerReminderText = `מעורר ב-22:30 לילה קודם (${dr.dateStr})`;
             dr.kitchenReminderText = `ניקיון מטבח ב-19:30 לקראת ערב (${dr.dateStr})`;
           }
+
+          // אל תשבץ אוטומטית מעורר בבוקר ביום הראשון (מתחיל בערב)
+          if (dr.dayIdx === 0 || dr.isoDate === startStr || dr.isoDate === '2026-10-25') {
+            dr.wakerStudentId = null;
+            dr.wakeupStudentId = null;
+            dr.wakerStudentName = '';
+            dr.wakeupStudentName = '';
+            dr.wakerDone = false;
+            dr.wakeupDone = false;
+          }
         });
       }
 
@@ -1517,6 +1530,14 @@
               duty.wakerReminderText = `מעורר ב-22:30 לילה קודם (${duty.dateStr})`;
               duty.kitchenReminderText = `ניקיון מטבח ב-19:30 לקראת ערב (${duty.dateStr})`;
             }
+            if (dStr === startStr || dStr === '2026-10-25') {
+              duty.wakerStudentId = null;
+              duty.wakeupStudentId = null;
+              duty.wakerStudentName = '';
+              duty.wakeupStudentName = '';
+              duty.wakerDone = false;
+              duty.wakeupDone = false;
+            }
           }
         });
       }
@@ -1529,10 +1550,22 @@
     }
 
     // 2. מקור אמת יחיד: אילו סדרים מתוך state.eventsList חלים ביום נתון
-    function getApplicableEventsForDate(dateObj) {
+    function getApplicableEventsForDate(dateObj, dayIdx) {
       const info = formatSyncedHebrewAndGregorian(dateObj);
       const dow = info.dayOfWeek; // 0 = א', 4 = ה', 5 = ו', 6 = שבת
+      const startStr = state.config?.startDate || '2026-10-25';
+      const isOpeningDay = (dayIdx === 0) || (info.isoDate === startStr) || (info.isoDate === '2026-10-25');
+
+      if (isOpeningDay) {
+        // ביום הראשון של המבצע (25.10 / י״ד חשוון מתחיל בערב): 2 סדרים בלבד
+        return [
+          { id: 'ev_maariv', title: 'תפילת מעריב (פתיחת המבצע)', timeWindow: '19:45 - 20:15', points: 1, type: 'פתיחה', schedule: '2026-10-25' },
+          { id: 'ev_seder_c', title: 'סדר ג׳ (לילה ופתיחה)', timeWindow: '20:30 - 21:45', points: 2, type: 'קבוע', schedule: 'א׳–ה׳' }
+        ];
+      }
+
       return (state.eventsList || []).filter(ev => {
+        if (ev.id === 'ev_maariv') return false;
         const sched = (ev.schedule || '') + ' ' + (ev.title || '');
         // התאמה לתאריך עברי או לועזי ספציפי אם צוין
         if (sched.includes(info.hebrewDateStr) || sched.includes(info.gregorianShort) || sched.includes(info.isoDate)) return true;
@@ -1667,7 +1700,7 @@
 
     // 3. בניית לוח המבצע וסדרי היום מתוך startDate ללא מחיקת שיבוצים קיימים
     function rebuildSyncedCalendarAndToday() {
-      const startStr = state.config?.startDate || '2026-10-18';
+      const startStr = state.config?.startDate || '2026-10-25';
       const duration = parseInt(state.config.durationDays, 10) || 28;
       const [sy, sm, sd] = startStr.split('-').map(Number);
       const now = new Date();
@@ -1679,7 +1712,7 @@
       for (let i = 0; i < duration; i++) {
         const curDate = new Date(sy, sm - 1, sd + i, 12, 0, 0);
         const dInfo = formatSyncedHebrewAndGregorian(curDate);
-        const dayEvents = getApplicableEventsForDate(curDate);
+        const dayEvents = getApplicableEventsForDate(curDate, i);
         const sedarimCount = dayEvents.length;
         const pointsPool = dayEvents.reduce((sum, e) => sum + (Number(e.points) || 1), 0);
         const specialEv = dayEvents.find(e => e.points >= 2 || e.type === 'בונוס' || e.type === 'מיוחד');
@@ -2772,9 +2805,12 @@
                   <label class="block text-[10px] text-slate-500 font-bold mb-1">בחור משובץ:</label>
                   <div class="flex items-center gap-1.5">
                     <select onchange="updateDutyAssignee('${dateStr}', 'waker', this.value); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 text-xs font-bold p-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none">
-                      <option value="">-- טרם שובץ בחור --</option>
-                      ${state.students.map(s => `<option value="${s.id}" ${s.id === duty.wakerStudentId ? 'selected' : ''}>${s.name}</option>`).join('')}
+                      <option value="">-- ללא תורן (מחק תורנות) --</option>
+                      ${state.students.map(s => `<option value="${s.id}" ${(s.id === duty.wakerStudentId || s.id === duty.wakeupStudentId) ? 'selected' : ''}>${s.name}</option>`).join('')}
                     </select>
+                    <button type="button" onclick="deleteSpecificDuty('${dateStr}', 'waker')" class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition shrink-0" title="מחק תורנות מעורר">
+                      🗑️ מחק
+                    </button>
                     <button type="button" onclick="randomAssignSingleDuty('${dateStr}', 'waker')" class="px-2.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-black text-xs border border-amber-300 transition flex items-center gap-1 shrink-0" title="הגרל או החלף שיבוץ לתורנות מעורר ביום זה לפי האלגוריתם">
                       <span>🎲</span>
                       <span class="text-[11px]">הגרל</span>
@@ -2812,9 +2848,12 @@
                   <label class="block text-[10px] text-slate-500 font-bold mb-1">בחור משובץ:</label>
                   <div class="flex items-center gap-1.5">
                     <select onchange="updateDutyAssignee('${dateStr}', 'kitchen', this.value); renderSelectedCalendarDayDetails('${dateStr}');" class="flex-1 text-xs font-bold p-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none">
-                      <option value="">-- טרם שובץ בחור --</option>
+                      <option value="">-- ללא תורן (מחק תורנות) --</option>
                       ${state.students.map(s => `<option value="${s.id}" ${s.id === duty.kitchenStudentId ? 'selected' : ''}>${s.name}</option>`).join('')}
                     </select>
+                    <button type="button" onclick="deleteSpecificDuty('${dateStr}', 'kitchen')" class="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition shrink-0" title="מחק תורנות מטבח">
+                      🗑️ מחק
+                    </button>
                     <button type="button" onclick="randomAssignSingleDuty('${dateStr}', 'kitchen')" class="px-2.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-900 font-black text-xs border border-amber-300 transition flex items-center gap-1 shrink-0" title="הגרל או החלף שיבוץ לתורנות מטבח ביום זה לפי האלגוריתם">
                       <span>🎲</span>
                       <span class="text-[11px]">הגרל</span>
@@ -4606,15 +4645,18 @@
         const dayName = 'יום ' + dayNames[d.getDay()];
         const hDate = getHebrewDateString(dStr);
 
+        const hasWaker = Boolean(duty.wakerStudentId || duty.wakeupStudentId);
+        const hasKitchen = Boolean(duty.kitchenStudentId);
+
         if (isToday) {
-          if (!duty.wakerDone || currentHour < 10) {
+          if (hasWaker && (!duty.wakerDone || currentHour < 10)) {
             candidateItems.push({
               dateStr: dStr,
               role: 'waker',
               roleTitle: 'השכמה (מעורר בוקר)',
               roleEmoji: '⏰',
-              studentId: duty.wakerStudentId,
-              isDone: Boolean(duty.wakerDone),
+              studentId: duty.wakerStudentId || duty.wakeupStudentId,
+              isDone: Boolean(duty.wakerDone || duty.wakeupDone),
               isToday: true,
               dayName,
               hDate,
@@ -4622,7 +4664,7 @@
               order: 1
             });
           }
-          if (!duty.kitchenDone || currentHour < 22) {
+          if (hasKitchen && (!duty.kitchenDone || currentHour < 22)) {
             candidateItems.push({
               dateStr: dStr,
               role: 'kitchen',
@@ -4638,32 +4680,36 @@
             });
           }
         } else {
-          candidateItems.push({
-            dateStr: dStr,
-            role: 'waker',
-            roleTitle: 'השכמה (מעורר בוקר)',
-            roleEmoji: '⏰',
-            studentId: duty.wakerStudentId,
-            isDone: Boolean(duty.wakerDone),
-            isToday: false,
-            dayName,
-            hDate,
-            relativeLabel: dStr === tomorrowStr ? 'מחר בבוקר' : `${dayName} בבוקר`,
-            order: 1
-          });
-          candidateItems.push({
-            dateStr: dStr,
-            role: 'kitchen',
-            roleTitle: 'נקיון מטבח ערב',
-            roleEmoji: '🧹',
-            studentId: duty.kitchenStudentId,
-            isDone: Boolean(duty.kitchenDone),
-            isToday: false,
-            dayName,
-            hDate,
-            relativeLabel: dStr === tomorrowStr ? 'מחר בערב' : `${dayName} בערב`,
-            order: 2
-          });
+          if (hasWaker) {
+            candidateItems.push({
+              dateStr: dStr,
+              role: 'waker',
+              roleTitle: 'השכמה (מעורר בוקר)',
+              roleEmoji: '⏰',
+              studentId: duty.wakerStudentId || duty.wakeupStudentId,
+              isDone: Boolean(duty.wakerDone || duty.wakeupDone),
+              isToday: false,
+              dayName,
+              hDate,
+              relativeLabel: dStr === tomorrowStr ? 'מחר בבוקר' : `${dayName} בבוקר`,
+              order: 1
+            });
+          }
+          if (hasKitchen) {
+            candidateItems.push({
+              dateStr: dStr,
+              role: 'kitchen',
+              roleTitle: 'נקיון מטבח ערב',
+              roleEmoji: '🧹',
+              studentId: duty.kitchenStudentId,
+              isDone: Boolean(duty.kitchenDone),
+              isToday: false,
+              dayName,
+              hDate,
+              relativeLabel: dStr === tomorrowStr ? 'מחר בערב' : `${dayName} בערב`,
+              order: 2
+            });
+          }
         }
       });
 
@@ -4825,9 +4871,12 @@
 
                   <div class="flex items-center gap-1.5 mb-2">
                     <select onchange="updateDutyAssignee('${dStr}', 'waker', this.value)" class="flex-1 text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-slate-50'}">
-                      <option value="">-- בחר בחור מעורר --</option>
-                      ${(state.students || []).map(s => `<option value="${s.id}" ${duty.wakerStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+                      <option value="">-- ללא תורן (מחק תורנות) --</option>
+                      ${(state.students || []).map(s => `<option value="${s.id}" ${(duty.wakerStudentId === s.id || duty.wakeupStudentId === s.id) ? 'selected' : ''}>${s.name}</option>`).join('')}
                     </select>
+                    <button onclick="deleteSpecificDuty('${dStr}', 'waker')" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition shrink-0" title="מחק תורנות מעורר">
+                      🗑️
+                    </button>
                     <button onclick="randomAssignSingleDuty('${dStr}', 'waker')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition shrink-0" title="שבץ/החלף באקראי">
                       🎲
                     </button>
@@ -4862,9 +4911,12 @@
 
                   <div class="flex items-center gap-1.5 mb-2">
                     <select onchange="updateDutyAssignee('${dStr}', 'kitchen', this.value)" class="flex-1 text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-slate-50'}">
-                      <option value="">-- בחר תורן מטבח --</option>
+                      <option value="">-- ללא תורן (מחק תורנות) --</option>
                       ${(state.students || []).map(s => `<option value="${s.id}" ${duty.kitchenStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
                     </select>
+                    <button onclick="deleteSpecificDuty('${dStr}', 'kitchen')" class="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition shrink-0" title="מחק תורנות מטבח">
+                      🗑️
+                    </button>
                     <button onclick="randomAssignSingleDuty('${dStr}', 'kitchen')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition shrink-0" title="שבץ/החלף באקראי">
                       🎲
                     </button>
@@ -5086,11 +5138,15 @@
             
             <!-- Waker duty -->
             <td class="py-3 px-3 border-r border-slate-100">
-              <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
                 <select onchange="updateDutyAssignee('${dStr}', 'waker', this.value)" class="flex-1 min-w-[130px] text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-white'}">
-                  <option value="">-- בחר בחור מעורר --</option>
-                  ${(state.students || []).map(s => `<option value="${s.id}" ${duty.wakerStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+                  <option value="">-- ללא תורן (מחק תורנות) --</option>
+                  ${(state.students || []).map(s => `<option value="${s.id}" ${(duty.wakerStudentId === s.id || duty.wakeupStudentId === s.id) ? 'selected' : ''}>${s.name}</option>`).join('')}
                 </select>
+                <button type="button" onclick="deleteSpecificDuty('${dStr}', 'waker')" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition flex items-center gap-1 shrink-0" title="מחק תורנות מעורר">
+                  <span>🗑️</span>
+                  <span>מחק מעורר</span>
+                </button>
                 <button type="button" onclick="randomAssignSingleDuty('${dStr}', 'waker')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black transition shrink-0" title="שבץ / החלף באקראי תורנות מעורר ביום זה בלבד">
                   🎲
                 </button>
@@ -5107,11 +5163,15 @@
 
             <!-- Kitchen duty -->
             <td class="py-3 px-3 border-r border-slate-100">
-              <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
                 <select onchange="updateDutyAssignee('${dStr}', 'kitchen', this.value)" class="flex-1 min-w-[130px] text-xs font-bold p-1.5 rounded-lg border ${isConflict ? 'border-rose-400 bg-rose-50' : 'border-slate-200 bg-white'}">
-                  <option value="">-- בחר תורן מטבח --</option>
+                  <option value="">-- ללא תורן (מחק תורנות) --</option>
                   ${(state.students || []).map(s => `<option value="${s.id}" ${duty.kitchenStudentId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
                 </select>
+                <button type="button" onclick="deleteSpecificDuty('${dStr}', 'kitchen')" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition flex items-center gap-1 shrink-0" title="מחק תורנות מטבח">
+                  <span>🗑️</span>
+                  <span>מחק מטבח</span>
+                </button>
                 <button type="button" onclick="randomAssignSingleDuty('${dStr}', 'kitchen')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black transition shrink-0" title="שבץ / החלף באקראי תורנות מטבח ביום זה בלבד">
                   🎲
                 </button>
@@ -5135,35 +5195,63 @@
       renderDutiesHub();
     }
 
-    function updateDutyAssignee(dateStr, role, studentId) {
+    async function updateDutyAssignee(dateStr, role, studentId) {
       const d = new Date(dateStr + 'T12:00:00');
       if (d.getDay() === 5 || d.getDay() === 6) {
         alert('אין תורנויות מעורר ומטבח בימי שישי ושבת קודש');
         return;
       }
+      if (!state.dutiesRoster) state.dutiesRoster = {};
       if (!state.dutiesRoster[dateStr]) {
         state.dutiesRoster[dateStr] = {
-          wakerStudentId: '', wakerStudentName: '', wakerDone: false, wakerReminderTime: '22:30',
-          kitchenStudentId: '', kitchenStudentName: '', kitchenDone: false, kitchenReminderTime: '19:30'
+          wakerStudentId: null, wakerStudentName: '', wakerDone: false, wakerReminderTime: '22:30',
+          wakeupStudentId: null, wakeupStudentName: '', wakeupDone: false,
+          kitchenStudentId: null, kitchenStudentName: '', kitchenDone: false, kitchenReminderTime: '19:30'
         };
       }
-      const st = state.students.find(s => s.id === studentId);
-      if (role === 'waker') {
-        state.dutiesRoster[dateStr].wakerStudentId = studentId;
-        state.dutiesRoster[dateStr].wakerStudentName = st ? st.name : '';
+      const isClearing = !studentId || studentId === '';
+      const st = isClearing ? null : (state.students || []).find(s => s.id === studentId);
+      const dayDuty = state.dutiesRoster[dateStr];
+
+      if (role === 'waker' || role === 'wakeup') {
+        dayDuty.wakerStudentId = isClearing ? null : studentId;
+        dayDuty.wakeupStudentId = isClearing ? null : studentId;
+        dayDuty.wakerStudentName = isClearing ? '' : (st ? st.name : '');
+        dayDuty.wakeupStudentName = isClearing ? '' : (st ? st.name : '');
+        if (isClearing) {
+          dayDuty.wakerDone = false;
+          dayDuty.wakeupDone = false;
+        }
       } else if (role === 'kitchen') {
-        state.dutiesRoster[dateStr].kitchenStudentId = studentId;
-        state.dutiesRoster[dateStr].kitchenStudentName = st ? st.name : '';
+        dayDuty.kitchenStudentId = isClearing ? null : studentId;
+        dayDuty.kitchenStudentName = isClearing ? '' : (st ? st.name : '');
+        if (isClearing) {
+          dayDuty.kitchenDone = false;
+        }
       }
 
-      if (state.dutiesRoster[dateStr].wakerStudentId && state.dutiesRoster[dateStr].kitchenStudentId && state.dutiesRoster[dateStr].wakerStudentId === state.dutiesRoster[dateStr].kitchenStudentId) {
+      if (isClearing) {
+        showToast(`תורנות ${role === 'waker' ? 'מעורר' : 'מטבח'} נמחקה בהצלחה`, '🗑️');
+      } else if (dayDuty.wakerStudentId && dayDuty.kitchenStudentId && dayDuty.wakerStudentId === dayDuty.kitchenStudentId) {
         showToast('שים לב: נקבעה כפילות של אותו תורן בוקר וערב!', '⚠️');
       } else {
         showToast('השיבוץ עודכן בהצלחה', '📋');
       }
 
       saveState();
+      try {
+        if (typeof syncStateToSupabaseNow === 'function') {
+          await syncStateToSupabaseNow();
+        }
+      } catch(e) {}
       renderDutiesHub();
+      if (state.calendarSelectedDate === dateStr) {
+        renderSelectedCalendarDayDetails(dateStr);
+      }
+    }
+
+    async function deleteSpecificDuty(dateStr, role) {
+      await updateDutyAssignee(dateStr, role, '');
     }
 
     function toggleDutyDone(dateStr, role) {

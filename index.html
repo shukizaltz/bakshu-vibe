@@ -1127,6 +1127,7 @@
     const SUPABASE_KEY = 'sb_publishable_DuJUmTpWwU4h3P8r1htVWw_24i-VjeG';
     const supabaseClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
+    const SCHEMA_VERSION = '2026_10_25_v5';
     let isCloudHydrated = false;
 
     const HEB_GEMATRIA_DAYS = [
@@ -1140,7 +1141,8 @@
       { id: 'ev_shacharit', title: 'תפילת שחרית', timeWindow: '08:25 - 08:50', points: 1, type: 'קבוע', schedule: 'א׳–ו׳' },
       { id: 'ev_seder_a', title: 'סדר א׳ (עיון)', timeWindow: '09:00 - 10:15', points: 1, type: 'קבוע', schedule: 'א׳–ה׳' },
       { id: 'ev_seder_b', title: 'סדר ב׳ (בקיאות)', timeWindow: '15:30 - 16:45', points: 1, type: 'קבוע', schedule: 'א׳–ה׳' },
-      { id: 'ev_seder_c', title: 'סדר ג׳ (לילה)', timeWindow: '20:00 - 21:15', points: 2, type: 'קבוע', schedule: 'א׳–ה׳' },
+      { id: 'ev_maariv', title: 'תפילת מעריב (פתיחת המבצע)', timeWindow: '19:45 - 20:15', points: 1, type: 'פתיחה', schedule: '2026-10-25' },
+      { id: 'ev_seder_c', title: 'סדר ג׳ (לילה ופתיחה)', timeWindow: '20:30 - 21:45', points: 2, type: 'קבוע', schedule: 'א׳–ה׳' },
       { id: 'ev_mishmar', title: 'משמר ליל שישי', timeWindow: '22:30 - 01:00', points: 3, type: 'בונוס', schedule: 'ליל שישי יום ה׳' },
       { id: 'ev_shabbat_eve', title: 'סדר ליל שבת קודש', timeWindow: '21:00 - 22:00', points: 2, type: 'שבת', schedule: 'שבת' },
       { id: 'ev_shabbat_morning', title: 'סדר שחרית ובוקר שבת', timeWindow: '08:30 - 10:00', points: 2, type: 'שבת', schedule: 'שבת' },
@@ -1187,11 +1189,23 @@
     }
 
     // 3. מקור אמת יחיד: אילו סדרים מתוך state.eventsList חלים ביום נתון
-    function getApplicableEventsForDate(dateObj) {
+    function getApplicableEventsForDate(dateObj, dayIdx) {
       const info = formatSyncedHebrewAndGregorian(dateObj);
       const dow = info.dayOfWeek; // 0 = א', 4 = ה', 5 = ו', 6 = שבת
-      const events = (typeof state !== 'undefined' && state.eventsList) ? state.eventsList : DEFAULT_EVENTS_LIST;
+      const startStr = (typeof state !== 'undefined' && state.config?.startDate) ? state.config.startDate : '2026-10-25';
+      const isOpeningDay = (dayIdx === 0) || (info.isoDate === startStr) || (info.isoDate === '2026-10-25');
+
+      if (isOpeningDay) {
+        // ביום הראשון של המבצע (25.10 / י״ד חשוון מתחיל בערב): אך ורק 2 סדרי ערב ופתיחה (3 נקודות) ללא שחרית/בוקר/צהריים
+        return [
+          { id: 'ev_maariv', title: 'תפילת מעריב (פתיחת המבצע)', timeWindow: '19:45 - 20:15', points: 1, type: 'פתיחה', schedule: '2026-10-25' },
+          { id: 'ev_seder_c', title: 'סדר ג׳ (לילה ופתיחה)', timeWindow: '20:30 - 21:45', points: 2, type: 'קבוע', schedule: 'א׳–ה׳' }
+        ];
+      }
+
+      const events = (typeof state !== 'undefined' && state.eventsList && state.eventsList.length > 0) ? state.eventsList : DEFAULT_EVENTS_LIST;
       return events.filter(ev => {
+        if (ev.id === 'ev_maariv') return false;
         const sched = (ev.schedule || '') + ' ' + (ev.title || '');
         if (sched.includes(info.hebrewDateStr) || sched.includes(info.gregorianShort) || sched.includes(info.isoDate)) return true;
         if (dow === 6) return ev.type === 'שבת' || sched.includes('שבת');
@@ -1207,10 +1221,10 @@
       });
     }
 
-    // 4. ניקוי וסנכרון תורנויות - מחיקת תורנים לפני startDate ועדכון טקסט תזכורת
+    // 4. ניקוי וסנכרון תורנויות - מחיקת תורנים לפני startDate וביטול מעורר בוקר ביום הפתיחה
     function cleanseAndSyncDutiesRoster() {
       if (!state) return;
-      const startStr = state.config?.startDate || '2026-10-18';
+      const startStr = state.config?.startDate || '2026-10-25';
       const [sy, sm, sd] = startStr.split('-').map(Number);
       const startDateNoon = new Date(sy, sm - 1, sd, 12, 0, 0);
 
@@ -1236,6 +1250,17 @@
             d.dateStr = dInfo.fullDisplay;
             d.dayName = dInfo.dayName;
           }
+
+          // אל תשבץ אוטומטית מעורר בבוקר ביום הראשון (מתחיל בערב)
+          if (d.dayIdx === 0 || d.isoDate === startStr || d.isoDate === '2026-10-25') {
+            d.wakerStudentId = null;
+            d.wakeupStudentId = null;
+            d.wakerStudentName = '';
+            d.wakeupStudentName = '';
+            d.wakerDone = false;
+            d.wakeupDone = false;
+          }
+
           if (d.role === 'מעורר') {
             d.reminderTime = '22:30 לילה קודם';
             d.reminderText = toHebrewLetters(`מעורר ב-22:30 לילה קודם (${d.dateStr})`);
@@ -1257,6 +1282,14 @@
               dObj.dateStr = dInfo.fullDisplay;
               dObj.dayName = dInfo.dayName;
             }
+            if (k === startStr || k === '2026-10-25') {
+              dObj.wakerStudentId = null;
+              dObj.wakeupStudentId = null;
+              dObj.wakerStudentName = '';
+              dObj.wakeupStudentName = '';
+              dObj.wakerDone = false;
+              dObj.wakeupDone = false;
+            }
             filtered[k] = dObj;
           }
         });
@@ -1267,7 +1300,7 @@
     // 5. חישוב הסדר הפעיל / הסדר הבא בהתאמה לתאריך הפתיחה startDate
     function getActiveOrNextSederInfo() {
       if (!state || !state.config) return null;
-      const startStr = state.config.startDate || '2026-10-18';
+      const startStr = state.config.startDate || '2026-10-25';
       const [sy, sm, sd] = startStr.split('-').map(Number);
       const startDateNoon = new Date(sy, sm - 1, sd, 12, 0, 0);
 
@@ -1276,13 +1309,15 @@
 
       let targetDate = todayNoon;
       let isPreCampaign = false;
+      let targetDayIdx = Math.round((todayNoon.getTime() - startDateNoon.getTime()) / (1000 * 60 * 60 * 24));
 
       if (todayNoon.getTime() < startDateNoon.getTime()) {
         targetDate = startDateNoon;
         isPreCampaign = true;
+        targetDayIdx = 0;
       }
 
-      const applicableEvents = getApplicableEventsForDate(targetDate);
+      const applicableEvents = getApplicableEventsForDate(targetDate, targetDayIdx);
       const dInfo = formatSyncedHebrewAndGregorian(targetDate);
 
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -1315,7 +1350,7 @@
         if (!activeSeder && !nextSeder && applicableEvents.length > 0) {
           allPassedToday = true;
           const tomorrowNoon = new Date(todayNoon.getFullYear(), todayNoon.getMonth(), todayNoon.getDate() + 1, 12, 0, 0);
-          const tomorrowEvents = getApplicableEventsForDate(tomorrowNoon);
+          const tomorrowEvents = getApplicableEventsForDate(tomorrowNoon, targetDayIdx + 1);
           const tomorrowInfo = formatSyncedHebrewAndGregorian(tomorrowNoon);
           nextSeder = tomorrowEvents[0] || null;
           return {
@@ -1333,7 +1368,7 @@
       return {
         targetDate,
         dateInfo: dInfo,
-        activeSeder: activeSeder || nextSeder || applicableEvents[0] || null,
+        activeSeder: activeSeder || (currentMinutes < 1200 ? (nextSeder || applicableEvents[0]) : (activeSeder || nextSeder || applicableEvents[0])),
         nextSeder,
         applicableEvents,
         allPassedToday: false,
@@ -1344,7 +1379,7 @@
     // 6. בניית לוח המבצע וסדרי היום מתוך startDate בזמן אמת ללא טעינת campaignDays ישן
     function rebuildSyncedCalendarAndToday() {
       if (typeof state === 'undefined' || !state.config) return;
-      const startStr = state.config.startDate || '2026-10-18';
+      const startStr = state.config.startDate || '2026-10-25';
       const duration = parseInt(state.config.durationDays, 10) || 28;
       const [sy, sm, sd] = startStr.split('-').map(Number);
       const now = new Date();
@@ -1356,7 +1391,7 @@
       for (let i = 0; i < duration; i++) {
         const curDate = new Date(sy, sm - 1, sd + i, 12, 0, 0);
         const dInfo = formatSyncedHebrewAndGregorian(curDate);
-        const dayEvents = getApplicableEventsForDate(curDate);
+        const dayEvents = getApplicableEventsForDate(curDate, i);
         const sedarimCount = dayEvents.length;
         const pointsPool = dayEvents.reduce((sum, e) => sum + (Number(e.points) || 1), 0);
         const specialEv = dayEvents.find(e => e.points >= 2 || e.type === 'בונוס' || e.type === 'מיוחד');
@@ -1391,7 +1426,7 @@
       const sederInfo = getActiveOrNextSederInfo();
       const targetEvents = (sederInfo && sederInfo.applicableEvents && sederInfo.applicableEvents.length > 0)
         ? sederInfo.applicableEvents
-        : getApplicableEventsForDate(todayNoon);
+        : getApplicableEventsForDate(todayNoon, 0);
 
       state.todaySlots = targetEvents.map((ev, idx) => {
         const existing = (state.todaySlots || []).find(t => t.id === ev.id) || {};
@@ -1701,6 +1736,11 @@
           } catch(e) {}
         }
 
+        // Check schema version and force sync if needed
+        if (typeof cloudAppState === 'undefined' || !cloudAppState || cloudAppState.schemaVersion !== SCHEMA_VERSION) {
+          if (state.config) state.config.startDate = '2026-10-25';
+        }
+
         // Cleanse duties and rebuild calendar using unified real-time calculation
         cleanseAndSyncDutiesRoster();
         if (typeof rebuildSyncedCalendarAndToday === 'function') {
@@ -1728,6 +1768,7 @@
       if (!supabaseClient) return;
       try {
         const payload = {
+          schemaVersion: SCHEMA_VERSION,
           students: state.students,
           eventsList: state.eventsList,
           dutiesRoster: state.dutiesRoster,
@@ -2515,11 +2556,11 @@ events.join('\n') + '\n' +
       const today = getTodayDateStr();
       const def = {};
       def[today] = {
-        wakerStudentId: 'demo_student_1',
-        wakerStudentName: 'ישראל ישראלי (בחור לדוגמה)',
+        wakerStudentId: null,
+        wakerStudentName: '',
         wakerDone: false,
         wakerReminderTime: '22:30',
-        kitchenStudentId: '',
+        kitchenStudentId: null,
         kitchenStudentName: '',
         kitchenDone: false,
         kitchenReminderTime: '19:30'
@@ -3159,8 +3200,11 @@ events.join('\n') + '\n' +
       }
 
       const duty = (state.dutiesRoster && state.dutiesRoster[todayStr]) ? state.dutiesRoster[todayStr] : null;
-      const isWaker = duty && (duty.wakerStudentId === curStudent.id || duty.wakerStudentName === curStudent.name);
-      const isKitchen = duty && (duty.kitchenStudentId === curStudent.id || duty.kitchenStudentName === curStudent.name);
+      const wakerId = duty ? (duty.wakerStudentId || duty.wakeupStudentId) : null;
+      const kitchenId = duty ? duty.kitchenStudentId : null;
+
+      const isWaker = Boolean(wakerId && curStudent && (wakerId === curStudent.id || (duty.wakerStudentName && duty.wakerStudentName === curStudent.name)));
+      const isKitchen = Boolean(kitchenId && curStudent && (kitchenId === curStudent.id || (duty.kitchenStudentName && duty.kitchenStudentName === curStudent.name)));
 
       if (card) {
         if (isWaker || isKitchen) {
@@ -3171,8 +3215,8 @@ events.join('\n') + '\n' +
           const btnEl = document.getElementById('studentDutyActionBtn');
           const btnTextEl = document.getElementById('studentDutyBtnText');
 
-          const isDone = isWaker ? duty.wakerDone : duty.kitchenDone;
-          const bonusPts = isWaker ? (state.bonusConfig.dutyWakerBonus || 3) : (state.bonusConfig.dutyKitchenBonus || 3);
+          const isDone = isWaker ? (duty.wakerDone || duty.wakeupDone) : duty.kitchenDone;
+          const bonusPts = isWaker ? (state.bonusConfig?.dutyWakerBonus || 3) : (state.bonusConfig?.dutyKitchenBonus || 3);
 
           if (iconEl) iconEl.textContent = isWaker ? '⏰' : '🍳';
           if (titleEl) titleEl.textContent = isWaker ? 'השכמת בוקר (מעורר לתפילה)' : 'ניקיון ושטיפת מטבח (ערב)';
@@ -3205,13 +3249,15 @@ events.join('\n') + '\n' +
           let nextDateStr = '';
           for (const fd of futureDates) {
             const dObj = state.dutiesRoster[fd];
-            if (dObj.wakerStudentId === curStudent.id || dObj.wakerStudentName === curStudent.name) {
+            const fwId = dObj.wakerStudentId || dObj.wakeupStudentId;
+            const fkId = dObj.kitchenStudentId;
+            if (fwId && curStudent && (fwId === curStudent.id || (dObj.wakerStudentName && dObj.wakerStudentName === curStudent.name))) {
               nextDuty = dObj;
               nextRole = 'waker';
               nextDateStr = fd;
               break;
             }
-            if (dObj.kitchenStudentId === curStudent.id || dObj.kitchenStudentName === curStudent.name) {
+            if (fkId && curStudent && (fkId === curStudent.id || (dObj.kitchenStudentName && dObj.kitchenStudentName === curStudent.name))) {
               nextDuty = dObj;
               nextRole = 'kitchen';
               nextDateStr = fd;
@@ -3689,20 +3735,12 @@ events.join('\n') + '\n' +
         blanksHtml += '<div class="hidden md:block p-2 rounded-2xl border border-transparent bg-slate-50/30"></div>';
       }
 
-      const curStudent = state.currentStudent;
       const daysHtml = state.campaignDays.map((day, idx) => {
         const isToday = (day.status === 'today');
         const isSelected = (idx === (state.selectedCalendarDayIndex !== undefined ? state.selectedCalendarDayIndex : (state.currentSelectedCalendarDayIndex || 0)));
         const isPassed = (day.status === 'passed');
         const isFri = day.dayName.includes('שישי') || day.dayName.includes('ו׳');
         const isShabbat = day.dayName.includes('שבת');
-
-        const dayDuty = (Array.isArray(state.dutiesRoster))
-          ? state.dutiesRoster.find(dr => dr.dayIdx === idx || dr.isoDate === day.isoDate)
-          : ((state.dutiesRoster && state.dutiesRoster[day.isoDate]) ? state.dutiesRoster[day.isoDate] : null);
-
-        const isMyWaker = dayDuty && curStudent && (dayDuty.wakerStudentId === curStudent.id || dayDuty.wakerStudentName === curStudent.name || (dayDuty.studentId === curStudent.id && dayDuty.role === 'מעורר'));
-        const isMyKitchen = dayDuty && curStudent && (dayDuty.kitchenStudentId === curStudent.id || dayDuty.kitchenStudentName === curStudent.name || (dayDuty.studentId === curStudent.id && (dayDuty.role === 'מטבח' || dayDuty.role === 'ניקיון מטבח')));
 
         const pointsText = `${day.sedarim} סדרים (${day.pointsPool} נק׳)`;
 
@@ -3713,27 +3751,6 @@ events.join('\n') + '\n' +
             <div class="mt-1 text-[10px] font-extrabold ${isToday ? 'text-emerald-700' : isFri ? 'text-amber-700' : isShabbat ? 'text-indigo-700' : 'text-slate-500'}">
               ${isToday ? 'היום • ' + pointsText : pointsText}
             </div>
-
-            <!-- Student Duty Badge on this day -->
-            ${isMyWaker ? `
-              <div class="mt-1.5 px-1.5 py-0.5 rounded-lg bg-amber-100 border border-amber-300 text-amber-900 text-[10px] font-black flex items-center justify-center gap-1 shadow-xs animate-pulse">
-                <span>⏰</span>
-                <span>תורן מעורר!</span>
-              </div>
-            ` : ''}
-            ${isMyKitchen ? `
-              <div class="mt-1.5 px-1.5 py-0.5 rounded-lg bg-orange-100 border border-orange-300 text-orange-900 text-[10px] font-black flex items-center justify-center gap-1 shadow-xs animate-pulse">
-                <span>🍳</span>
-                <span>תורן מטבח!</span>
-              </div>
-            ` : ''}
-
-            <!-- Other assignees (subtle) if neither is me -->
-            ${(!isMyWaker && !isMyKitchen && dayDuty && (dayDuty.wakerStudentName || dayDuty.kitchenStudentName || dayDuty.studentName)) ? `
-              <div class="mt-1 text-[9px] text-slate-400 truncate">
-                ${dayDuty.wakerStudentName ? 'מעורר: ' + dayDuty.wakerStudentName.split(' ')[0] : (dayDuty.studentName ? dayDuty.studentName.split(' ')[0] : '')}
-              </div>
-            ` : ''}
           </div>
         `;
       }).join('');
@@ -3758,65 +3775,11 @@ events.join('\n') + '\n' +
 
       const [dy, dm, dd] = day.isoDate.split('-').map(Number);
       const dayDate = new Date(dy, dm - 1, dd, 12, 0, 0);
-      const dayEvents = getApplicableEventsForDate(dayDate);
+      const dayEvents = getApplicableEventsForDate(dayDate, idx);
       const isToday = (day.status === 'today');
 
       let desc = dayEvents.length > 0 ? `• ${dayEvents.map(e => e.title).join(' • ')}` : '• אין סדרים ביום זה';
       let ptsDesc = `סך ניקוד יומי: ${day.pointsPool} נק׳ (${dayEvents.length} סדרים)`;
-
-      const curStudent = state.currentStudent;
-      const duty = (Array.isArray(state.dutiesRoster))
-        ? state.dutiesRoster.find(dr => dr.dayIdx === idx || dr.isoDate === day.isoDate)
-        : ((state.dutiesRoster && state.dutiesRoster[day.isoDate]) ? state.dutiesRoster[day.isoDate] : null);
-
-      const isMyWaker = duty && curStudent && (duty.wakerStudentId === curStudent.id || duty.wakerStudentName === curStudent.name || (duty.studentId === curStudent.id && duty.role === 'מעורר'));
-      const isMyKitchen = duty && curStudent && (duty.kitchenStudentId === curStudent.id || duty.kitchenStudentName === curStudent.name || (duty.studentId === curStudent.id && (duty.role === 'מטבח' || duty.role === 'ניקיון מטבח')));
-
-      let myDutyCallout = '';
-      if (isMyWaker || isMyKitchen) {
-        const dutyTitle = isMyWaker ? 'השכמת בוקר (מעורר לתפילה)' : 'ניקיון מטבח ערב';
-        const dutyIcon = isMyWaker ? '⏰' : '🍳';
-        const remTime = isMyWaker ? '22:30 לילה קודם' : '19:30 לקראת ערב';
-        myDutyCallout = `
-          <div class="w-full p-3 rounded-2xl bg-amber-50 border-2 border-amber-300 flex items-center justify-between gap-2 shadow-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-xl">${dutyIcon}</span>
-              <div>
-                <span class="text-xs font-black text-amber-950">התורנות שלך ביום זה: ${dutyTitle}!</span>
-                <p class="text-[11px] text-amber-800">תזכורת נשלחת ב-${remTime}. מזכה בבונוס מיוחד בסימון ביצוע.</p>
-              </div>
-            </div>
-            ${isToday ? `
-              <button onclick="switchTab('student')" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shrink-0">
-                לסימון ביצוע ←
-              </button>
-            ` : ''}
-          </div>
-        `;
-      }
-
-      let dutyInfoHtml = '';
-      if (duty && (duty.wakerStudentName || duty.kitchenStudentName || duty.studentName)) {
-        const wName = duty.wakerStudentName || (duty.role === 'מעורר' ? duty.studentName : '');
-        const kName = duty.kitchenStudentName || ((duty.role === 'מטבח' || duty.role === 'ניקיון מטבח') ? duty.studentName : '');
-        dutyInfoHtml = `
-          <div class="w-full flex flex-wrap items-center gap-2 pt-2.5 mt-2 border-t border-indigo-100/80 text-xs">
-            <span class="font-extrabold text-slate-700">תורני יום זה בישיבה:</span>
-            ${wName ? `
-              <span class="px-2.5 py-1 rounded-xl ${isMyWaker ? 'bg-amber-200 text-amber-950 border border-amber-400 font-black ring-2 ring-amber-300' : 'bg-amber-100/80 text-amber-950 border border-amber-300 font-bold'} flex items-center gap-1">
-                <span>⏰</span>
-                <span>מעורר: <strong>${wName}</strong> ${isMyWaker ? '(אתה!)' : ''}</span>
-              </span>
-            ` : ''}
-            ${kName ? `
-              <span class="px-2.5 py-1 rounded-xl ${isMyKitchen ? 'bg-orange-200 text-orange-950 border border-orange-400 font-black ring-2 ring-orange-300' : 'bg-slate-100 text-slate-800 border border-slate-300 font-bold'} flex items-center gap-1">
-                <span>⏰</span>
-                <span>מטבח: <strong>${kName}</strong> ${isMyKitchen ? '(אתה!)' : ''}</span>
-              </span>
-            ` : ''}
-          </div>
-        `;
-      }
 
       bar.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-3 w-full">
@@ -3828,8 +3791,6 @@ events.join('\n') + '\n' +
             <span class="bg-white border border-indigo-200 px-2.5 py-1 rounded-xl font-bold text-indigo-900">${ptsDesc}</span>
           </div>
         </div>
-        ${myDutyCallout}
-        ${dutyInfoHtml}
       `;
     }
 
