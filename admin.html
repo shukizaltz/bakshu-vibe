@@ -3846,10 +3846,13 @@
     const initialTrailStops = loadJourneyStops();
 
     const state = {
-      activeTab: 'student',
+      activeTab: 'admin',
       adminSubView: 'schedule',
-      isAdminUnlocked: false,
-      adminUnlocked: false,
+      isAdminUnlocked: true,
+      adminUnlocked: true,
+      isAdmin: true,
+      currentRole: 'admin',
+      hermeticPortal: 'admin_portal',
       isDemoUser: false,
       demoStudentProfile: {
         id: 999,
@@ -3951,8 +3954,8 @@
     // 5. NAVIGATION & TABS (ROSH HAYESHIVA PROTECTED)
     // ====================================================
     function switchTab(tabId) {
-      if (tabId === 'admin' && !state.isAdminUnlocked) {
-        openAdminPasswordModal();
+      if (tabId === 'admin') {
+        forceOpenRoshYeshivaAdmin();
         return;
       }
 
@@ -4037,6 +4040,87 @@
       document.getElementById('adminPasswordModal')?.classList.add('hidden');
     }
 
+    function forceOpenRoshYeshivaAdmin() {
+      // 1. Activate all admin state flags
+      state.isAdminUnlocked = true;
+      state.adminUnlocked = true;
+      state.isAdmin = true;
+      state.currentRole = 'admin';
+      state.hermeticPortal = 'admin_portal';
+      state.activeTab = 'admin';
+
+      // 2. Hide all modals and student/public screens completely
+      const hideIds = [
+        'studentLoginModal',
+        'adminPasswordModal',
+        'changePasswordModal',
+        'barcodeScannerModal',
+        'adminPasswordGateCard',
+        'screen-student',
+        'screen-public',
+        'screen-requests'
+      ];
+      hideIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.add('hidden');
+          el.style.display = 'none';
+        }
+      });
+
+      // 3. Show admin screens, navigation, and protected content directly
+      const showIds = [
+        'screen-admin',
+        'adminProtectedContent',
+        'adminNavContainer',
+        'adminLockBtn',
+        'dtab-admin',
+        'mtab-admin',
+        'supabaseSyncStatusBtn',
+        'hermeticSimulatorBar'
+      ];
+      showIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.remove('hidden');
+          if (id === 'screen-admin' || id === 'adminProtectedContent' || id === 'adminNavContainer') {
+            el.style.display = 'block';
+          }
+        }
+      });
+
+      // 4. Update tab button styles
+      const dAdmin = document.getElementById('dtab-admin');
+      const mAdmin = document.getElementById('mtab-admin');
+      if (dAdmin) {
+        dAdmin.className = 'px-4 py-2 rounded-xl text-xs font-black transition bg-amber-500 text-white shadow-sm';
+      }
+      if (mAdmin) {
+        mAdmin.className = 'flex flex-col items-center py-2 px-3 text-amber-700 font-black transition';
+      }
+
+      ['student', 'public', 'requests'].forEach(t => {
+        const dBtn = document.getElementById('dtab-' + t);
+        const mBtn = document.getElementById('mtab-' + t);
+        if (dBtn) dBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition text-slate-600 hover:text-slate-900';
+        if (mBtn) mBtn.className = 'flex flex-col items-center py-2 px-3 text-slate-500 font-bold transition';
+      });
+
+      // 5. Render admin subviews
+      if (typeof switchAdminSubView === 'function') {
+        switchAdminSubView(state.adminSubView || 'students');
+      }
+      if (typeof renderAdminRequestsAndStudents === 'function') {
+        renderAdminRequestsAndStudents();
+      }
+      if (typeof renderAdminDayScheduleEditor === 'function') {
+        renderAdminDayScheduleEditor();
+      }
+      if (typeof populateCampaignConfigInputs === 'function') {
+        populateCampaignConfigInputs();
+      }
+    }
+
     function unlockAdminPortal() {
       const input = document.getElementById('adminPasswordInput');
       const err = document.getElementById('adminPasswordError');
@@ -4044,18 +4128,8 @@
       const activePass = ((state.config && state.config.adminPassword) || state.adminPasswordHash || 'bakshu2026').trim();
 
       if (val === activePass) {
-        state.isAdminUnlocked = true;
-        state.adminUnlocked = true;
-        closeAdminPasswordModal();
-
-        document.getElementById('adminLockBtn')?.classList.remove('hidden');
-        document.getElementById('dtab-admin')?.classList.remove('hidden');
-        document.getElementById('mtab-admin')?.classList.remove('hidden');
-        document.getElementById('supabaseSyncStatusBtn')?.classList.remove('hidden');
-        document.getElementById('hermeticSimulatorBar')?.classList.remove('hidden');
-
         showToast('פורטל ראש הישיבה נפתח בהצלחה', '🔓');
-        switchHermeticPortal('admin_portal');
+        forceOpenRoshYeshivaAdmin();
       } else {
         if (err) err.classList.remove('hidden');
       }
@@ -4065,6 +4139,8 @@
     function lockAdminPortal() {
       state.isAdminUnlocked = false;
       state.adminUnlocked = false;
+      state.isAdmin = false;
+      state.currentRole = 'student';
       
       document.getElementById('adminLockBtn')?.classList.add('hidden');
       document.getElementById('dtab-admin')?.classList.add('hidden');
@@ -4078,11 +4154,7 @@
 
     function switchHermeticPortal(portal) {
       if (portal === 'admin_portal' || portal === 'admin') {
-        if (state.isAdminUnlocked) {
-          switchTab('admin');
-        } else {
-          openAdminPasswordModal();
-        }
+        forceOpenRoshYeshivaAdmin();
       } else {
         switchTab('student');
       }
@@ -6343,6 +6415,10 @@
       if (nameGreeting && state.currentStudent) {
         nameGreeting.textContent = state.currentStudent.name;
       }
+      if (state.activeTab === 'admin' || window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin') {
+        forceOpenRoshYeshivaAdmin();
+        return;
+      }
       renderStudentScreen();
       renderDynamicCalendar();
       renderLeaderboard();
@@ -7372,18 +7448,7 @@ END:VCALENDAR`;
       const hash = window.location.hash;
       const isPathAdmin = window.location.pathname.includes('admin') || urlParams.get('admin') === '1' || hash === '#admin';
       if (isPathAdmin) {
-        state.isAdminUnlocked = true;
-        state.adminUnlocked = true;
-        closeAdminPasswordModal();
-        closeStudentLoginModal();
-        document.getElementById('studentLoginModal')?.classList.add('hidden');
-        document.getElementById('adminLockBtn')?.classList.remove('hidden');
-        document.getElementById('dtab-admin')?.classList.remove('hidden');
-        document.getElementById('mtab-admin')?.classList.remove('hidden');
-        document.getElementById('supabaseSyncStatusBtn')?.classList.remove('hidden');
-        document.getElementById('hermeticSimulatorBar')?.classList.remove('hidden');
-        switchTab('admin');
-        renderAdminRequestsAndStudents();
+        forceOpenRoshYeshivaAdmin();
       }
     }
 
@@ -7423,39 +7488,22 @@ END:VCALENDAR`;
         renderMyRequestsStatus();
       }
       if (state.activeTab === 'admin') {
-        renderAdminRequestsAndStudents();
-        renderAdminDayScheduleEditor();
-        populateCampaignConfigInputs();
+        forceOpenRoshYeshivaAdmin();
       }
     }
 
     window.onload = async function () {
-      const isNavAdmin = window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin';
-      if (isNavAdmin) {
-        state.isAdminUnlocked = true;
-        state.adminUnlocked = true;
-      } else {
-        state.isAdminUnlocked = false;
-        state.adminUnlocked = false;
-        checkUrlForStudentParam();
-      }
+      forceOpenRoshYeshivaAdmin();
       initAdminScheduleDayPicker();
-      if (!isNavAdmin) {
-        checkSavedStudentLogin();
-      }
       populateCampaignConfigInputs();
-      renderStudentScreen();
-      renderDynamicCalendar();
-      renderLeaderboard();
-      renderAdminRequestsAndStudents();
-      checkUrlForAdminParam();
+      forceOpenRoshYeshivaAdmin();
 
       // Live Supabase Sync
       await loadStateFromSupabase();
 
-      if (window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin') {
-        checkUrlForAdminParam();
-      }
+      forceOpenRoshYeshivaAdmin();
+      setTimeout(forceOpenRoshYeshivaAdmin, 300);
+      setTimeout(forceOpenRoshYeshivaAdmin, 800);
 
       // Realtime Live Subscription with debounce
       if (supabaseClient) {
