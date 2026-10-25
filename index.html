@@ -421,27 +421,22 @@
               <span class="text-xl">📅</span>
               <div>
                 <h3 class="text-base font-extrabold text-slate-900">לוח שנה אישי עם תזכורות</h3>
-                <p class="text-xs text-slate-500">סנכרון מלא ליומן הטלפון (Apple / Google / Outlook)</p>
+                <p class="text-xs text-slate-500">סנכרון מלא ליומן Google Calendar</p>
               </div>
             </div>
             <p class="text-[11px] text-slate-500 my-2">
-              היומן כולל את כל שעות הסדרים וכן את כל התורנויות האישיות שלך (מעורר בוקר / מטבח ערב) עם תזכורות אוטומטיות מראש ישירות בטלפון.
+              לחיצה תוריד קובץ יומן מעודכן עם כל סדרי המבצע, התאריכים העבריים והתורנויות האישיות שלך (כולל תזכורת 10 דקות לפני כל סדר) – פתח את הקובץ בטלפון או במחשב כדי להוסיף הכל אוטומטית ל-Google Calendar
             </p>
           </div>
 
-          <div class="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-slate-100">
-            <button onclick="downloadStudentCalendarIcs()" class="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition flex items-center justify-center gap-1.5 shadow-sm" title="הורד לוח שנה אישי מלא עם כל הסדרים והתורנויות שלך לטלפון">
-              <span>📥</span>
-              <span>הורד יומן אישי (.ics)</span>
-            </button>
-            <button onclick="openGoogleCalendarSync()" class="w-full sm:w-auto py-2.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 font-bold text-xs transition flex items-center justify-center gap-1 border border-blue-200" title="פתח ב-Google Calendar">
+          <div class="pt-2 border-t border-slate-100 space-y-2">
+            <button onclick="downloadStudentCalendarIcs()" class="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition flex items-center justify-center gap-2 shadow-sm cursor-pointer" title="הורד לוח שנה מעודכן ליומן Google (.ics)">
               <span>📅</span>
-              <span>Google Cal</span>
+              <span>הורד לוח שנה מעודכן ליומן Google (.ics)</span>
             </button>
-            <button onclick="copyStudentDirectUrl()" class="w-full sm:w-auto py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1 border border-slate-200" title="העתק קישור ישיר מהיר">
-              <span>📋</span>
-              <span>קישור</span>
-            </button>
+            <p class="text-[10px] text-slate-500 text-center">
+              לחיצה תוריד קובץ יומן מעודכן עם כל סדרי המבצע, התאריכים העבריים והתורנויות האישיות שלך (כולל תזכורת 10 דקות לפני כל סדר) – פתח את הקובץ בטלפון או במחשב כדי להוסיף הכל אוטומטית ל-Google Calendar
+            </p>
           </div>
         </div>
 
@@ -615,11 +610,15 @@
             <h2 class="text-lg font-black text-slate-900">לוח שנה למבצע (כמה עבר וכמה נשאר)</h2>
             <p id="campaignDurationSubtitle" class="text-xs text-slate-500">מבצע חורף • בחר יום לצפייה בפרטי הסדרים</p>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-slate-500">מעבר שבוע:</span>
-            <button onclick="changeCalendarWeek(-1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700">‹</button>
-            <span id="currentWeekRangeLabel" class="text-xs font-bold text-indigo-950 font-mono">שבוע 1</span>
-            <button onclick="changeCalendarWeek(1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700">›</button>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="toggleCalendarViewMode()" id="toggleAllWeeksBtn" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+              כל השבועות
+            </button>
+            <div class="flex items-center gap-1.5 bg-slate-50 p-1 rounded-2xl border border-slate-200">
+              <button onclick="changeCalendarWeek(-1)" class="w-8 h-8 rounded-xl bg-white hover:bg-slate-100 flex items-center justify-center font-black text-slate-700 shadow-xs text-sm" title="שבוע קודם">‹</button>
+              <span id="currentWeekRangeLabel" class="text-xs font-black text-indigo-950 px-2 font-mono">שבוע 1 מתוך 4</span>
+              <button onclick="changeCalendarWeek(1)" class="w-8 h-8 rounded-xl bg-white hover:bg-slate-100 flex items-center justify-center font-black text-slate-700 shadow-xs text-sm" title="שבוע הבא">›</button>
+            </div>
           </div>
         </div>
 
@@ -636,6 +635,17 @@
         <!-- Selected Day Details Bar -->
         <div id="selectedDayDetailsBar" class="mt-3 p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex flex-wrap items-center justify-between gap-3 text-xs">
           <!-- Populated by JS -->
+        </div>
+
+        <!-- Calendar Download to Google Calendar Button -->
+        <div class="mt-4 pt-3 border-t border-slate-100 text-center">
+          <button onclick="downloadStudentCalendarIcs()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-[#0A1138] hover:bg-indigo-950 text-white font-black text-xs transition shadow-md cursor-pointer">
+            <span>📅</span>
+            <span>הורד לוח שנה מעודכן ליומן Google (.ics)</span>
+          </button>
+          <p class="text-[11px] text-slate-500 mt-2 max-w-xl mx-auto">
+            לחיצה תוריד קובץ יומן מעודכן עם כל סדרי המבצע, התאריכים העבריים והתורנויות האישיות שלך (כולל תזכורת 10 דקות לפני כל סדר) – פתח את הקובץ בטלפון או במחשב כדי להוסיף הכל אוטומטית ל-Google Calendar
+          </p>
         </div>
       </div>
 </section>
@@ -1127,7 +1137,7 @@
     const SUPABASE_KEY = 'sb_publishable_DuJUmTpWwU4h3P8r1htVWw_24i-VjeG';
     const supabaseClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-    const SCHEMA_VERSION = '2026_10_25_v5';
+    const SCHEMA_VERSION = '2026_10_25_v6';
     let isCloudHydrated = false;
 
     const HEB_GEMATRIA_DAYS = [
@@ -1420,6 +1430,11 @@
         });
       }
       state.campaignDays = updatedDays;
+
+      if (typeof state.currentWeekIndex !== 'number') {
+        const todayDayIdx = (state.selectedCalendarDayIndex !== undefined) ? state.selectedCalendarDayIndex : 0;
+        state.currentWeekIndex = Math.floor(todayDayIdx / 7);
+      }
 
       cleanseAndSyncDutiesRoster();
 
@@ -2124,131 +2139,155 @@
     }
 
     function generateStudentCalendarIcs(student) {
-      const start = new Date(state.config.startDate + 'T12:00:00');
-      const end = new Date(state.config.endDate + 'T12:00:00');
-      const directUrl = getStudentDirectUrl(student.id);
+      const curStudent = student || state.currentStudent || { id: 'generic', name: 'בחור ישיבה' };
+      const startStr = state.config?.startDate || '2026-10-25';
+      const endStr = state.config?.endDate || '2026-12-05';
+      const [sy, sm, sd] = startStr.split('-').map(Number);
+      const [ey, em, ed] = endStr.split('-').map(Number);
+
+      const start = new Date(sy, sm - 1, sd, 12, 0, 0);
+      const end = new Date(ey, em - 1, ed, 12, 0, 0);
+
+      const pad = (n) => String(n).padStart(2, '0');
+      const formatIcsDt = (d) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+      const formatUtc = (d) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+      const dtStamp = formatUtc(new Date());
 
       const events = [];
       let curr = new Date(start);
+      let dayIdx = 0;
+
       while (curr <= end) {
-        const dStr = curr.toISOString().slice(0, 10);
-        const slots = getSlotsForDate(dStr);
+        const dInfo = formatSyncedHebrewAndGregorian(curr);
+        const dayEvents = getApplicableEventsForDate(curr, dayIdx);
 
-        slots.forEach((slot, sIdx) => {
-          const openParts = (slot.openTime || '09:00').split(':');
-          const lockParts = (slot.lockTime || '10:15').split(':');
-          
-          const dtStart = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), parseInt(openParts[0], 10), parseInt(openParts[1], 10));
-          const dtEnd = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), parseInt(lockParts[0], 10), parseInt(lockParts[1], 10));
+        dayEvents.forEach((ev, eIdx) => {
+          const timeWin = ev.timeWindow || '09:00 - 10:15';
+          const [oStr, lStr] = timeWin.split('-').map(x => x.trim());
+          const [oh, om] = (oStr || '09:00').split(':').map(Number);
+          const [lh, lm] = (lStr || '10:15').split(':').map(Number);
 
-          const formatIcsDate = (d) => {
-            const pad = (n) => String(n).padStart(2, '0');
-            return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + 'T' + pad(d.getHours()) + pad(d.getMinutes()) + '00';
-          };
+          const dtStart = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), oh || 0, om || 0, 0);
+          const dtEnd = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), lh || 0, lm || 0, 0);
 
-          const uid = 'bakshu_' + dStr + '_' + (slot.id || sIdx) + '_' + student.id + '@bakshu-vibe';
-          const summary = 'סדר: ' + slot.title + ' (' + slot.points + ' נק׳)';
-          const desc = 'מבצע ישיבת בקשו עבור ' + student.name + '. לחץ כאן לסימון נוכחות: ' + directUrl;
+          const uid = `bakshu_ev_${dInfo.isoDate}_${ev.id || eIdx}_${curStudent.id}@bakshu.org`;
+          const summary = `${ev.title} (${dInfo.hebrewDateStr}) - ${ev.points || 1} נק׳`;
+          const desc = `סדר מבצע בקשו VIBE עבור ${curStudent.name}.\\nשווי: ${ev.points || 1} נקודות.\\nתאריך עברי: ${dInfo.hebrewDateStr} (${dInfo.gregorianShort}).`;
 
-          const isShabbatSlot = (curr.getDay() === 6) || (curr.getDay() === 5 && parseInt(openParts[0], 10) >= 16);
-          const alarmBlock = isShabbatSlot ? '' : ('BEGIN:VALARM\n' +
-'TRIGGER:-PT10M\n' +
-'ACTION:DISPLAY\n' +
-'DESCRIPTION:תזכורת: בעוד 10 דקות מתחיל ' + slot.title + ' בישיבת בקשו!\n' +
-'END:VALARM\n');
-
-          events.push('BEGIN:VEVENT\n' +
-'UID:' + uid + '\n' +
-'DTSTAMP:' + formatIcsDate(new Date()) + 'Z\n' +
-'DTSTART:' + formatIcsDate(dtStart) + '\n' +
-'DTEND:' + formatIcsDate(dtEnd) + '\n' +
-'SUMMARY:' + summary + '\n' +
-'DESCRIPTION:' + desc + '\n' +
-'URL:' + directUrl + '\n' +
-'LOCATION:בית המדרש - ישיבת בקשו\n' +
-alarmBlock +
-'END:VEVENT');
+          events.push(
+            'BEGIN:VEVENT\n' +
+            'UID:' + uid + '\n' +
+            'DTSTAMP:' + dtStamp + '\n' +
+            'DTSTART;TZID=Asia/Jerusalem:' + formatIcsDt(dtStart) + '\n' +
+            'DTEND;TZID=Asia/Jerusalem:' + formatIcsDt(dtEnd) + '\n' +
+            'SUMMARY:' + summary + '\n' +
+            'DESCRIPTION:' + desc + '\n' +
+            'LOCATION:בית המדרש - ישיבת בקשו ירושלים\n' +
+            'BEGIN:VALARM\n' +
+            'TRIGGER:-PT10M\n' +
+            'ACTION:DISPLAY\n' +
+            'DESCRIPTION:תזכורת: בעוד 10 דקות מתחיל ' + ev.title + ' בישיבת בקשו!\n' +
+            'END:VALARM\n' +
+            'END:VEVENT'
+          );
         });
 
-        // Check if student has duty assigned on dStr
-        const dayDuty = (state.dutiesRoster && state.dutiesRoster[dStr]) ? state.dutiesRoster[dStr] : null;
+        // Personal duty check for curr
+        const dayDuty = (Array.isArray(state.dutiesRoster))
+          ? state.dutiesRoster.find(dr => dr.dayIdx === dayIdx || dr.isoDate === dInfo.isoDate)
+          : ((state.dutiesRoster && state.dutiesRoster[dInfo.isoDate]) ? state.dutiesRoster[dInfo.isoDate] : null);
+
         if (dayDuty) {
-          const isWaker = dayDuty.wakerStudentId === student.id || dayDuty.wakerStudentName === student.name;
-          const isKitchen = dayDuty.kitchenStudentId === student.id || dayDuty.kitchenStudentName === student.name;
+          const isWaker = Boolean(
+            (dayDuty.wakerStudentId && (dayDuty.wakerStudentId === curStudent.id || dayDuty.wakeupStudentId === curStudent.id)) ||
+            (dayDuty.wakeupStudentId && dayDuty.wakeupStudentId === curStudent.id) ||
+            (dayDuty.wakerStudentName && curStudent.name && dayDuty.wakerStudentName === curStudent.name)
+          );
+
+          const isKitchen = Boolean(
+            (dayDuty.kitchenStudentId && dayDuty.kitchenStudentId === curStudent.id) ||
+            (dayDuty.kitchenStudentName && curStudent.name && dayDuty.kitchenStudentName === curStudent.name)
+          );
 
           if (isWaker) {
-            const dtStartWaker = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 6, 45);
-            const dtEndWaker = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 7, 30);
-            const uidWaker = 'bakshu_duty_waker_' + dStr + '_' + student.id + '@bakshu-vibe';
-            events.push('BEGIN:VEVENT\n' +
-'UID:' + uidWaker + '\n' +
-'DTSTAMP:' + formatIcsDate(new Date()) + 'Z\n' +
-'DTSTART:' + formatIcsDate(dtStartWaker) + '\n' +
-'DTEND:' + formatIcsDate(dtEndWaker) + '\n' +
-'SUMMARY:⏰ תורנות מעורר לתפילה - ישיבת בקשו\n' +
-'DESCRIPTION:שלום ' + student.name + ', הנך משובץ לתורנות מעורר לתפילה בישיבה. היכנס לאפליקציה לסימון ביצוע וקבלת בונוס: ' + directUrl + '\n' +
-'URL:' + directUrl + '\n' +
-'LOCATION:פנימייה ובית המדרש - ישיבת בקשו\n' +
-'BEGIN:VALARM\n' +
-'TRIGGER:-PT495M\n' +
-'ACTION:DISPLAY\n' +
-'DESCRIPTION:תזכורת: מחר בבוקר הנך תורן מעורר לתפילה בישיבת בקשו (השכמה ב-06:45)!\n' +
-'END:VALARM\n' +
-'END:VEVENT');
+            const dtStartWaker = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 6, 45, 0);
+            const dtEndWaker = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 7, 30, 0);
+            const uidWaker = `bakshu_duty_waker_${dInfo.isoDate}_${curStudent.id}@bakshu.org`;
+            events.push(
+              'BEGIN:VEVENT\n' +
+              'UID:' + uidWaker + '\n' +
+              'DTSTAMP:' + dtStamp + '\n' +
+              'DTSTART;TZID=Asia/Jerusalem:' + formatIcsDt(dtStartWaker) + '\n' +
+              'DTEND;TZID=Asia/Jerusalem:' + formatIcsDt(dtEndWaker) + '\n' +
+              'SUMMARY:⏰ תורן מעורר לתפילה (' + dInfo.hebrewDateStr + ') - ישיבת בקשו (שלך!)\n' +
+              'DESCRIPTION:שלום ' + curStudent.name + ', הנך משובץ כתורן מעורר לתפילה בישיבת בקשו. השכמה ב-06:45 בבוקר.\\nתזכורת נשלחת ב-22:30 לילה קודם.\\nבונוס תורנות: +' + (state.bonusConfig?.dutyWakerBonus || 3) + ' נקודות.\n' +
+              'LOCATION:פנימייה ובית המדרש - ישיבת בקשו\n' +
+              'BEGIN:VALARM\n' +
+              'TRIGGER:-PT495M\n' +
+              'ACTION:DISPLAY\n' +
+              'DESCRIPTION:תזכורת תורנות מעורר לתפילה: מחר בבוקר השכמה ב-06:45 בישיבת בקשו!\n' +
+              'END:VALARM\n' +
+              'END:VEVENT'
+            );
           }
 
           if (isKitchen) {
-            const dtStartKitchen = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 19, 30);
-            const dtEndKitchen = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 20, 30);
-            const uidKitchen = 'bakshu_duty_kitchen_' + dStr + '_' + student.id + '@bakshu-vibe';
-            events.push('BEGIN:VEVENT\n' +
-'UID:' + uidKitchen + '\n' +
-'DTSTAMP:' + formatIcsDate(new Date()) + 'Z\n' +
-'DTSTART:' + formatIcsDate(dtStartKitchen) + '\n' +
-'DTEND:' + formatIcsDate(dtEndKitchen) + '\n' +
-'SUMMARY:🍳 תורנות מטבח ערב - ישיבת בקשו\n' +
-'DESCRIPTION:שלום ' + student.name + ', הנך משובץ לתורנות מטבח ערב. היכנס לאפליקציה לסימון ביצוע וקבלת בונוס: ' + directUrl + '\n' +
-'URL:' + directUrl + '\n' +
-'LOCATION:חדר אוכל ומטבח - ישיבת בקשו\n' +
-'BEGIN:VALARM\n' +
-'TRIGGER:-PT30M\n' +
-'ACTION:DISPLAY\n' +
-'DESCRIPTION:תזכורת: בעוד 30 דקות מתחילה תורנות מטבח ערב בישיבת בקשו!\n' +
-'END:VALARM\n' +
-'END:VEVENT');
+            const dtStartKitchen = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 19, 30, 0);
+            const dtEndKitchen = new Date(curr.getFullYear(), curr.getMonth(), curr.getDate(), 20, 30, 0);
+            const uidKitchen = `bakshu_duty_kitchen_${dInfo.isoDate}_${curStudent.id}@bakshu.org`;
+            events.push(
+              'BEGIN:VEVENT\n' +
+              'UID:' + uidKitchen + '\n' +
+              'DTSTAMP:' + dtStamp + '\n' +
+              'DTSTART;TZID=Asia/Jerusalem:' + formatIcsDt(dtStartKitchen) + '\n' +
+              'DTEND;TZID=Asia/Jerusalem:' + formatIcsDt(dtEndKitchen) + '\n' +
+              'SUMMARY:🧹 תורן מטבח ערב (' + dInfo.hebrewDateStr + ') - ישיבת בקשו (שלך!)\n' +
+              'DESCRIPTION:שלום ' + curStudent.name + ', הנך משובץ לתורנות ניקיון ושטיפת מטבח וחדר אוכל לקראת ערב (19:30 - 20:30).\\nתזכורת נשלחת ב-19:30 בערב.\\nבונוס תורנות: +' + (state.bonusConfig?.dutyKitchenBonus || 3) + ' נקודות.\n' +
+              'LOCATION:חדר אוכל ומטבח - ישיבת בקשו\n' +
+              'BEGIN:VALARM\n' +
+              'TRIGGER:-PT0M\n' +
+              'ACTION:DISPLAY\n' +
+              'DESCRIPTION:תזכורת: כעת מתחילה תורנות ניקיון מטבח ערב בישיבת בקשו!\n' +
+              'END:VALARM\n' +
+              'END:VEVENT'
+            );
           }
         }
 
         curr.setDate(curr.getDate() + 1);
+        dayIdx++;
       }
 
       return 'BEGIN:VCALENDAR\n' +
-'VERSION:2.0\n' +
-'PRODID:-//Yeshivat Bakshu//Bakshu VIBE//HE\n' +
-'CALSCALE:GREGORIAN\n' +
-'METHOD:PUBLISH\n' +
-'X-WR-CALNAME:לוח מבצע בקשו - ' + student.name + '\n' +
-'X-WR-TIMEZONE:Asia/Jerusalem\n' +
-events.join('\n') + '\n' +
-'END:VCALENDAR';
+        'VERSION:2.0\n' +
+        'PRODID:-//Yeshivat Bakshu//Bakshu Winter Campaign//HE\n' +
+        'CALSCALE:GREGORIAN\n' +
+        'METHOD:PUBLISH\n' +
+        'X-WR-CALNAME:מבצע בקשו - ' + curStudent.name + '\n' +
+        'X-WR-TIMEZONE:Asia/Jerusalem\n' +
+        events.join('\n') + '\n' +
+        'END:VCALENDAR';
     }
 
     function downloadStudentCalendarIcs(studentId) {
       const id = studentId || (state.currentStudent ? state.currentStudent.id : null);
-      const student = state.students.find(s => s.id === id) || state.currentStudent;
-      if (!student) return;
+      const student = (state.students && state.students.find(s => s.id === id)) || state.currentStudent || { id: 'generic', name: 'בחור ישיבה' };
 
       const icsContent = generateStudentCalendarIcs(student);
-      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'לוח_מבצע_בקשו_' + student.name.replace(/\s+/g, '_') + '.ics';
+      a.download = 'bakshu-winter-campaign.ics';
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      showToast('לוח השנה עם התזכורות ירד בהצלחה!', '📲');
+      setTimeout(() => {
+        try {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch(e) {}
+      }, 300);
+      showToast('לוח השנה מעודכן ליומן Google (.ics) ירד בהצלחה! פתח להוספה אוטומטית ליומן', '📅');
     }
 
     function openGoogleCalendarSync() {
@@ -3710,15 +3749,27 @@ events.join('\n') + '\n' +
     // ====================================================
     function changeCalendarWeek(delta) {
       if (!state.campaignDays || state.campaignDays.length === 0) return;
-      const curIdx = state.selectedCalendarDayIndex || 0;
-      const newIdx = Math.max(0, Math.min(state.campaignDays.length - 1, curIdx + delta * 7));
-      state.selectedCalendarDayIndex = newIdx;
-      state.currentSelectedCalendarDayIndex = newIdx;
-      const weekNum = Math.floor(newIdx / 7) + 1;
-      const weekLabel = document.getElementById('currentWeekRangeLabel');
-      if (weekLabel) {
-        weekLabel.textContent = `שבוע ${weekNum}`;
+      const totalWeeks = Math.max(1, Math.ceil(state.campaignDays.length / 7));
+      state.calendarViewMode = 'week';
+      let curWeek = typeof state.currentWeekIndex === 'number' ? state.currentWeekIndex : 0;
+      curWeek = Math.max(0, Math.min(totalWeeks - 1, curWeek + delta));
+      state.currentWeekIndex = curWeek;
+
+      const startIdx = curWeek * 7;
+      const weekDays = state.campaignDays.slice(startIdx, startIdx + 7);
+      const todayInWeek = weekDays.find(d => d.status === 'today');
+      if (todayInWeek) {
+        state.selectedCalendarDayIndex = state.campaignDays.indexOf(todayInWeek);
+      } else {
+        state.selectedCalendarDayIndex = startIdx;
       }
+      state.currentSelectedCalendarDayIndex = state.selectedCalendarDayIndex;
+
+      renderDynamicCalendar();
+    }
+
+    function toggleCalendarViewMode() {
+      state.calendarViewMode = (state.calendarViewMode === 'all') ? 'week' : 'all';
       renderDynamicCalendar();
     }
 
@@ -3730,27 +3781,97 @@ events.join('\n') + '\n' +
         rebuildSyncedCalendarAndToday();
       }
 
+      const totalDays = state.campaignDays.length;
+      const totalWeeks = Math.max(1, Math.ceil(totalDays / 7));
+      let curWeek = typeof state.currentWeekIndex === 'number' ? state.currentWeekIndex : 0;
+      curWeek = Math.max(0, Math.min(totalWeeks - 1, curWeek));
+      state.currentWeekIndex = curWeek;
+
+      const isAll = (state.calendarViewMode === 'all');
+
+      const weekLabel = document.getElementById('currentWeekRangeLabel');
+      if (weekLabel) {
+        weekLabel.textContent = isAll ? `כל ${totalWeeks} השבועות` : `שבוע ${curWeek + 1} מתוך ${totalWeeks}`;
+      }
+      const toggleBtn = document.getElementById('toggleAllWeeksBtn');
+      if (toggleBtn) {
+        toggleBtn.textContent = isAll ? 'תצוגת שבוע' : 'כל השבועות';
+        toggleBtn.className = isAll
+          ? 'px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs transition shadow-xs'
+          : 'px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition';
+      }
+
+      let daysToRender = [];
+      let blanksCount = 0;
+
+      if (isAll) {
+        daysToRender = state.campaignDays;
+        blanksCount = state.calendarGridOffset || 0;
+      } else {
+        const startIdx = curWeek * 7;
+        daysToRender = state.campaignDays.slice(startIdx, startIdx + 7);
+        if (daysToRender.length > 0) {
+          const [dy, dm, dd] = daysToRender[0].isoDate.split('-').map(Number);
+          const firstDate = new Date(dy, dm - 1, dd, 12, 0, 0);
+          blanksCount = firstDate.getDay();
+        }
+      }
+
       let blanksHtml = '';
-      for (let b = 0; b < (state.calendarGridOffset || 0); b++) {
+      for (let b = 0; b < blanksCount; b++) {
         blanksHtml += '<div class="hidden md:block p-2 rounded-2xl border border-transparent bg-slate-50/30"></div>';
       }
 
-      const daysHtml = state.campaignDays.map((day, idx) => {
+      const curStudent = state.currentStudent;
+      const currentStudentId = curStudent ? curStudent.id : null;
+      const selectedDayIdx = (state.selectedCalendarDayIndex !== undefined ? state.selectedCalendarDayIndex : (state.currentSelectedCalendarDayIndex || 0));
+
+      const daysHtml = daysToRender.map((day) => {
+        const actualIdx = state.campaignDays.indexOf(day);
         const isToday = (day.status === 'today');
-        const isSelected = (idx === (state.selectedCalendarDayIndex !== undefined ? state.selectedCalendarDayIndex : (state.currentSelectedCalendarDayIndex || 0)));
+        const isSelected = (actualIdx === selectedDayIdx);
         const isPassed = (day.status === 'passed');
         const isFri = day.dayName.includes('שישי') || day.dayName.includes('ו׳');
         const isShabbat = day.dayName.includes('שבת');
 
+        // Check ONLY if the currently logged-in student is on duty this day
+        const dayDuty = (Array.isArray(state.dutiesRoster))
+          ? state.dutiesRoster.find(dr => dr.dayIdx === actualIdx || dr.isoDate === day.isoDate)
+          : ((state.dutiesRoster && state.dutiesRoster[day.isoDate]) ? state.dutiesRoster[day.isoDate] : null);
+
+        const isMyWaker = Boolean(
+          curStudent && dayDuty && (
+            (dayDuty.wakerStudentId && (dayDuty.wakerStudentId === currentStudentId || dayDuty.wakeupStudentId === currentStudentId)) ||
+            (dayDuty.wakeupStudentId && dayDuty.wakeupStudentId === currentStudentId) ||
+            (dayDuty.wakerStudentName && curStudent.name && dayDuty.wakerStudentName === curStudent.name)
+          )
+        );
+
+        const isMyKitchen = Boolean(
+          curStudent && dayDuty && (
+            (dayDuty.kitchenStudentId && dayDuty.kitchenStudentId === currentStudentId) ||
+            (dayDuty.kitchenStudentName && curStudent.name && dayDuty.kitchenStudentName === curStudent.name)
+          )
+        );
+
+        let dutyBadges = '';
+        if (isMyWaker) {
+          dutyBadges += `<div class="mt-1 px-1.5 py-0.5 rounded-lg bg-amber-100 text-amber-950 border border-amber-300 text-[9px] font-black inline-block shadow-xs">⏰ תורן מעורר (שלך!)</div>`;
+        }
+        if (isMyKitchen) {
+          dutyBadges += `<div class="mt-1 px-1.5 py-0.5 rounded-lg bg-orange-100 text-orange-950 border border-orange-300 text-[9px] font-black inline-block shadow-xs">🧹 תורן מטבח (שלך!)</div>`;
+        }
+
         const pointsText = `${day.sedarim} סדרים (${day.pointsPool} נק׳)`;
 
         return `
-          <div onclick="selectCalendarDay(${idx})" class="p-2.5 rounded-2xl border cursor-pointer transition text-center relative ${isSelected ? 'border-indigo-600 bg-indigo-50/80 shadow-sm ring-2 ring-indigo-400/40' : isToday ? 'border-emerald-400 bg-emerald-50/60 ring-2 ring-emerald-300' : isPassed ? 'border-slate-200 bg-slate-50/60 opacity-80' : 'border-slate-200 bg-white hover:bg-slate-50'}">
+          <div onclick="selectCalendarDay(${actualIdx})" class="p-2.5 rounded-2xl border cursor-pointer transition text-center relative ${isSelected ? 'border-indigo-600 bg-indigo-50/80 shadow-sm ring-2 ring-indigo-400/40' : isToday ? 'border-emerald-400 bg-emerald-50/60 ring-2 ring-emerald-300' : isPassed ? 'border-slate-200 bg-slate-50/60 opacity-80' : 'border-slate-200 bg-white hover:bg-slate-50'}">
             <div class="text-[10px] font-bold ${isToday ? 'text-emerald-700 font-black' : isFri ? 'text-amber-700' : isShabbat ? 'text-indigo-800 font-black' : 'text-slate-500'}">${day.dayName}</div>
             <div class="text-xs font-black text-slate-900 mt-0.5">${toHebrewLetters(day.dateStr)} <span class="text-[10px] text-slate-400 font-mono">(${day.gregorianShort})</span></div>
             <div class="mt-1 text-[10px] font-extrabold ${isToday ? 'text-emerald-700' : isFri ? 'text-amber-700' : isShabbat ? 'text-indigo-700' : 'text-slate-500'}">
               ${isToday ? 'היום • ' + pointsText : pointsText}
             </div>
+            ${dutyBadges}
           </div>
         `;
       }).join('');
@@ -3776,20 +3897,72 @@ events.join('\n') + '\n' +
       const [dy, dm, dd] = day.isoDate.split('-').map(Number);
       const dayDate = new Date(dy, dm - 1, dd, 12, 0, 0);
       const dayEvents = getApplicableEventsForDate(dayDate, idx);
-      const isToday = (day.status === 'today');
 
       let desc = dayEvents.length > 0 ? `• ${dayEvents.map(e => e.title).join(' • ')}` : '• אין סדרים ביום זה';
       let ptsDesc = `סך ניקוד יומי: ${day.pointsPool} נק׳ (${dayEvents.length} סדרים)`;
 
+      // Check ONLY personal duty for currently logged-in student
+      const curStudent = state.currentStudent;
+      const currentStudentId = curStudent ? curStudent.id : null;
+      const dayDuty = (Array.isArray(state.dutiesRoster))
+        ? state.dutiesRoster.find(dr => dr.dayIdx === idx || dr.isoDate === day.isoDate)
+        : ((state.dutiesRoster && state.dutiesRoster[day.isoDate]) ? state.dutiesRoster[day.isoDate] : null);
+
+      const isMyWaker = Boolean(
+        curStudent && dayDuty && (
+          (dayDuty.wakerStudentId && (dayDuty.wakerStudentId === currentStudentId || dayDuty.wakeupStudentId === currentStudentId)) ||
+          (dayDuty.wakeupStudentId && dayDuty.wakeupStudentId === currentStudentId) ||
+          (dayDuty.wakerStudentName && curStudent.name && dayDuty.wakerStudentName === curStudent.name)
+        )
+      );
+
+      const isMyKitchen = Boolean(
+        curStudent && dayDuty && (
+          (dayDuty.kitchenStudentId && dayDuty.kitchenStudentId === currentStudentId) ||
+          (dayDuty.kitchenStudentName && curStudent.name && dayDuty.kitchenStudentName === curStudent.name)
+        )
+      );
+
+      let dutyNoticeHtml = '';
+      if (isMyWaker) {
+        dutyNoticeHtml += `
+          <div class="mt-2.5 p-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 flex items-center justify-between gap-2 w-full text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-base">⏰</span>
+              <div>
+                <strong class="font-black">תורנות מעורר לתפילה (שלך!):</strong>
+                <span class="text-amber-900 mr-1">השכמה ב-06:45 • תזכורת נשלחת ב-22:30 לילה קודם • בונוס: +${state.bonusConfig?.dutyWakerBonus || 3} נק׳</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      if (isMyKitchen) {
+        dutyNoticeHtml += `
+          <div class="mt-2.5 p-2.5 rounded-xl bg-orange-50 border border-orange-300 text-orange-950 flex items-center justify-between gap-2 w-full text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-base">🧹</span>
+              <div>
+                <strong class="font-black">תורנות מטבח ערב (שלך!):</strong>
+                <span class="text-orange-900 mr-1">ניקיון מטבח וחדר אוכל (19:30 - 20:30) • תזכורת נשלחת ב-19:30 בערב • בונוס: +${state.bonusConfig?.dutyKitchenBonus || 3} נק׳</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
       bar.innerHTML = `
-        <div class="flex flex-wrap items-center justify-between gap-3 w-full">
-          <div>
-            <strong class="text-indigo-950 font-black">${day.dayName} • ${toHebrewLetters(day.fullDateLabel)}</strong>
-            <span class="text-slate-500 mr-1">${desc}</span>
+        <div class="flex flex-col w-full">
+          <div class="flex flex-wrap items-center justify-between gap-3 w-full">
+            <div>
+              <strong class="text-indigo-950 font-black">${day.dayName} • ${toHebrewLetters(day.fullDateLabel)}</strong>
+              <span class="text-slate-500 mr-1">${desc}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="bg-white border border-indigo-200 px-2.5 py-1 rounded-xl font-bold text-indigo-900">${ptsDesc}</span>
+            </div>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="bg-white border border-indigo-200 px-2.5 py-1 rounded-xl font-bold text-indigo-900">${ptsDesc}</span>
-          </div>
+          ${dutyNoticeHtml}
         </div>
       `;
     }
