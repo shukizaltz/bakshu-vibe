@@ -1449,25 +1449,44 @@
       });
     }
 
-    // 1. המרה מדויקת מתאריך לועזי לתאריך עברי באותיות + תאריך לועזי קצר
+    // 1. המרה מדויקת מתאריך לועזי לתאריך עברי באותיות + תאריך לועזי קצר עם מטמון מהיר
+    const _adminDateCache = new Map();
+    let _adminHebrewFormatter = null;
+
     function formatSyncedHebrewAndGregorian(dateObj) {
       const safeNoon = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), 12, 0, 0);
-      const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(safeNoon);
-      const dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
-      let monthName = (parts.find(p => p.type === 'month')?.value || '').trim();
+      const isoKey = `${safeNoon.getFullYear()}-${String(safeNoon.getMonth() + 1).padStart(2, '0')}-${String(safeNoon.getDate()).padStart(2, '0')}`;
+      if (_adminDateCache.has(isoKey)) {
+        return _adminDateCache.get(isoKey);
+      }
+
+      let dayNum = 1;
+      let monthName = '';
+      try {
+        if (!_adminHebrewFormatter) {
+          _adminHebrewFormatter = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' });
+        }
+        const parts = _adminHebrewFormatter.formatToParts(safeNoon);
+        dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
+        monthName = (parts.find(p => p.type === 'month')?.value || '').trim();
+      } catch (e) {
+        dayNum = safeNoon.getDate();
+      }
       if (monthName.startsWith('ב') && monthName.length > 2) monthName = monthName.slice(1);
       const hebLetters = HEB_GEMATRIA_DAYS[dayNum] || String(dayNum);
       const gregShort = `${String(safeNoon.getDate()).padStart(2, '0')}.${String(safeNoon.getMonth() + 1).padStart(2, '0')}`;
       const hebrewDateStr = forceHebrewLetters(`${hebLetters} ${monthName}`);
       const fullDisplay = `${hebrewDateStr} (${gregShort})`;
-      return {
+      const res = {
         hebrewDateStr,
         gregorianShort: gregShort,
         fullDisplay,
-        isoDate: `${safeNoon.getFullYear()}-${String(safeNoon.getMonth() + 1).padStart(2, '0')}-${String(safeNoon.getDate()).padStart(2, '0')}`,
+        isoDate: isoKey,
         dayOfWeek: safeNoon.getDay(),
         dayName: HEB_DAY_NAMES[safeNoon.getDay()]
       };
+      _adminDateCache.set(isoKey, res);
+      return res;
     }
 
     // ניקוי מוחלט של תורנויות לפני תחילת המבצע וסנכרון תאריכים ותזכורות
@@ -1847,12 +1866,15 @@
       }
     }
 
+    let _isAdminLoadingState = false;
+
     // Load Live State from Supabase with Non-Destructive Merge and app_state Support
     async function loadStateFromSupabase() {
-      if (!supabaseClient) {
-        updateSupabaseStatusUI(false, 'לא אותחל');
+      if (!supabaseClient || _isAdminLoadingState) {
+        if (!supabaseClient) updateSupabaseStatusUI(false, 'לא אותחל');
         return;
       }
+      _isAdminLoadingState = true;
       try {
         updateSupabaseStatusUI(true, 'מסנכרן מטבלת app_state ב-Supabase...');
 
@@ -2062,9 +2084,6 @@
         // 5. Turn ON cloud hydration flag - saving is only allowed from this point onwards!
         isCloudHydrated = true;
 
-        // 6. Save cleansed & synced state to Supabase immediately so pre-start duties are purged in cloud
-        await syncStateToSupabaseNow();
-
         updateSupabaseStatusUI(true, 'מחובר ומסונכרן (app_state)');
 
         // Render dashboard
@@ -2076,6 +2095,8 @@
       } catch (err) {
         console.warn('Supabase fetch error in admin.html:', err);
         isCloudHydrated = true; // Allow local operations even if offline
+      } finally {
+        _isAdminLoadingState = false;
       }
     }
 
@@ -5712,19 +5733,21 @@
 
       await loadStateFromSupabase();
 
-      // Setup Realtime Live Changes Listener
+      // Setup Realtime Live Changes Listener with debounce
       if (supabaseClient) {
         try {
+          let _adminRtDebounceTimer = null;
+          const handleAdminRealtimeUpdate = () => {
+            if (_adminRtDebounceTimer) clearTimeout(_adminRtDebounceTimer);
+            _adminRtDebounceTimer = setTimeout(() => {
+              loadStateFromSupabase();
+            }, 1000);
+          };
+
           supabaseClient.channel('admin_live_sync')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state' }, () => {
-              loadStateFromSupabase();
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
-              loadStateFromSupabase();
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_config' }, () => {
-              loadStateFromSupabase();
-            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state' }, handleAdminRealtimeUpdate)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, handleAdminRealtimeUpdate)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_config' }, handleAdminRealtimeUpdate)
             .subscribe();
         } catch(e) {
           console.warn('Realtime subscription error:', e);

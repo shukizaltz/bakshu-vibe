@@ -1178,10 +1178,16 @@
     }
     const forceHebrewLetters = toHebrewLetters;
 
-    // 2. מנוע תאריכים מרכזי אחד (Single Source of Truth עברי-לועזי)
+    // 2. מנוע תאריכים מרכזי אחד (Single Source of Truth עברי-לועזי) עם מטמון זיכרון לביצועים מרביים
+    const _dayMetaCache = new Map();
+    let _hebrewDateFormatter = null;
+
     function getDayMeta(isoDate) {
       if (!isoDate) return null;
       const cleanIso = String(isoDate).trim().slice(0, 10);
+      if (_dayMetaCache.has(cleanIso)) {
+        return _dayMetaCache.get(cleanIso);
+      }
       const safeNoon = new Date(cleanIso + 'T12:00:00');
       if (isNaN(safeNoon.getTime())) return null;
 
@@ -1197,7 +1203,10 @@
       let dayNum = 1;
       let rawMonth = '';
       try {
-        const parts = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' }).formatToParts(safeNoon);
+        if (!_hebrewDateFormatter) {
+          _hebrewDateFormatter = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' });
+        }
+        const parts = _hebrewDateFormatter.formatToParts(safeNoon);
         dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
         rawMonth = parts.find(p => p.type === 'month')?.value || '';
       } catch (e) {
@@ -1208,7 +1217,7 @@
       const hebrewDate = toHebrewLetters(`${hebLetters} ${rawMonth}`.trim());
       const fullLabel = `${dayNameHe} • ${hebrewDate} (${gregShort})`;
 
-      return {
+      const result = {
         isoDate: normalizedIso,
         gregShort,
         gregFull,
@@ -1217,21 +1226,47 @@
         hebrewDate,
         fullLabel
       };
+      _dayMetaCache.set(cleanIso, result);
+      return result;
     }
+
+    const _resolveIsoDateCache = new Map();
 
     function resolveToIsoDate(inputStr, campaignDays) {
       if (!inputStr) return '';
       const raw = String(inputStr).trim();
+      const cacheKey = raw + '_' + (campaignDays ? campaignDays.length : 0);
+      if (_resolveIsoDateCache.has(cacheKey)) {
+        return _resolveIsoDateCache.get(cacheKey);
+      }
 
       // 1. Direct ISO match (YYYY-MM-DD)
       const isoMatch = raw.match(/\b(202\d-\d{2}-\d{2})\b/);
-      if (isoMatch) return isoMatch[1];
+      if (isoMatch) {
+        _resolveIsoDateCache.set(cacheKey, isoMatch[1]);
+        return isoMatch[1];
+      }
 
       // 2. Direct DD.MM match
       const ddmMatch = raw.match(/\b(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?\b/);
 
-      // Pre-normalize input text (remove quotes, gershayim, extra spaces)
-      const cleanInput = raw.replace(/[״״"']/g, '').replace(/\s+/g, ' ').trim();
+      // Pre-check: if string does NOT contain a date clue or Hebrew month, exit immediately (O(1))
+      const hasDateClue = ddmMatch || /(?:תשרי|חשוון|חשון|מרחשוון|מרחשון|כסלו|כסליו|טבת|שבט|אדר|ניסן|אייר|סיוון|סיון|תמוז|אב|אלול)/.test(raw);
+      if (!hasDateClue) {
+        _resolveIsoDateCache.set(cacheKey, '');
+        return '';
+      }
+
+      // Pre-normalize input text (remove quotes, gershayim, extra spaces, full/defective month spelling)
+      const normHebText = s => (s || '')
+        .replace(/[״״"'\u05F3\u05F4]/g, '')
+        .replace(/חשוון|מרחשוון|מרחשון/g, 'חשון')
+        .replace(/כסליו/g, 'כסלו')
+        .replace(/סיוון/g, 'סיון')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const cleanInput = normHebText(raw);
 
       // Prepare days pool: first check campaignDays, then scan up to 180 days from config.startDate
       let pool = [];
@@ -1254,47 +1289,35 @@
         const meta = getDayMeta(iso);
         if (!meta) continue;
 
-        if (raw.includes(meta.isoDate)) return meta.isoDate;
+        if (raw.includes(meta.isoDate)) {
+          _resolveIsoDateCache.set(cacheKey, meta.isoDate);
+          return meta.isoDate;
+        }
 
         if (ddmMatch) {
           const gD = String(parseInt(ddmMatch[1], 10)).padStart(2, '0');
           const gM = String(parseInt(ddmMatch[2], 10)).padStart(2, '0');
-          if (meta.gregShort === `${gD}.${gM}`) return meta.isoDate;
+          if (meta.gregShort === `${gD}.${gM}`) {
+            _resolveIsoDateCache.set(cacheKey, meta.isoDate);
+            return meta.isoDate;
+          }
         }
 
-        const cleanHebrew = meta.hebrewDate.replace(/[״״"']/g, '').trim();
+        const cleanHebrew = normHebText(meta.hebrewDate);
         if (cleanInput.includes(cleanHebrew) || cleanHebrew.includes(cleanInput)) {
+          _resolveIsoDateCache.set(cacheKey, meta.isoDate);
           return meta.isoDate;
         }
 
+        const inputWords = cleanInput.split(/\s+/);
         const [hDay, hMonth] = cleanHebrew.split(' ');
-        if (hDay && hMonth && cleanInput.includes(hDay) && cleanInput.includes(hMonth)) {
+        if (hDay && hMonth && inputWords.includes(hDay) && inputWords.includes(hMonth)) {
+          _resolveIsoDateCache.set(cacheKey, meta.isoDate);
           return meta.isoDate;
         }
       }
 
-      // Fallback: 180-day scan
-      const startStr = (typeof state !== 'undefined' && state.config?.startDate) ? state.config.startDate : '2026-10-25';
-      const [sy, sm, sd] = startStr.split('-').map(Number);
-      for (let i = 0; i < 180; i++) {
-        const c = new Date(sy, sm - 1, sd + i, 12, 0, 0);
-        const iy = c.getFullYear();
-        const im = String(c.getMonth() + 1).padStart(2, '0');
-        const id = String(c.getDate()).padStart(2, '0');
-        const iso = `${iy}-${im}-${id}`;
-        const meta = getDayMeta(iso);
-        if (!meta) continue;
-
-        const cleanHebrew = meta.hebrewDate.replace(/[״״"']/g, '').trim();
-        if (cleanInput.includes(cleanHebrew) || cleanHebrew.includes(cleanInput)) {
-          return meta.isoDate;
-        }
-        const [hDay, hMonth] = cleanHebrew.split(' ');
-        if (hDay && hMonth && cleanInput.includes(hDay) && cleanInput.includes(hMonth)) {
-          return meta.isoDate;
-        }
-      }
-
+      _resolveIsoDateCache.set(cacheKey, '');
       return '';
     }
 
@@ -1755,8 +1778,11 @@
       }
     }
 
+    let _isLoadingStateFromSupabase = false;
+
     async function loadStateFromSupabase() {
-      if (!supabaseClient) return;
+      if (!supabaseClient || _isLoadingStateFromSupabase) return;
+      _isLoadingStateFromSupabase = true;
       try {
         // 1. Fetch from app_state table in Supabase
         let appStateLoaded = false;
@@ -2020,13 +2046,12 @@
         // Mark cloud as hydrated only after data is loaded and merged into state
         isCloudHydrated = true;
 
-        // Persist cleansed and synchronized state back to Supabase app_state
-        await syncStateToSupabase();
-
         renderAllViews();
       } catch (err) {
         console.warn('Supabase fetch error in index.html:', err);
         isCloudHydrated = true;
+      } finally {
+        _isLoadingStateFromSupabase = false;
       }
     }
 
@@ -5982,19 +6007,21 @@ END:VCALENDAR`;
       // Live Supabase Sync
       await loadStateFromSupabase();
 
-      // Realtime Live Subscription
+      // Realtime Live Subscription with debounce
       if (supabaseClient) {
         try {
+          let _rtDebounceTimer = null;
+          const handleRealtimeUpdate = () => {
+            if (_rtDebounceTimer) clearTimeout(_rtDebounceTimer);
+            _rtDebounceTimer = setTimeout(() => {
+              loadStateFromSupabase();
+            }, 1000);
+          };
+
           supabaseClient.channel('student_live_sync')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state' }, () => {
-              loadStateFromSupabase();
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
-              loadStateFromSupabase();
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_config' }, () => {
-              loadStateFromSupabase();
-            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state' }, handleRealtimeUpdate)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, handleRealtimeUpdate)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_config' }, handleRealtimeUpdate)
             .subscribe();
         } catch(e) {
           console.warn('Realtime error in index.html:', e);
