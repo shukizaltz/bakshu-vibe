@@ -119,8 +119,11 @@
           <button onclick="switchTab('requests')" id="dtab-requests" class="dtab-btn px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-white/60">
             ✍️ בקשות לאישור
           </button>
-          <!-- Rosh HaYeshiva Tab (Revealed only when unlocked) -->
-          </div>
+          <button onclick="state.isAdminUnlocked ? switchTab('admin') : openAdminPasswordModal()" id="dtab-admin" class="dtab-btn px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-white/60 flex items-center gap-1">
+            <span>🔐</span>
+            <span>פורטל ראש הישיבה</span>
+          </button>
+        </div>
 
         <!-- Connection status indicator -->
         <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono" dir="ltr">
@@ -167,6 +170,9 @@
           </button>
         </div>
       </div>
+
+      <!-- Scoring System Map Banner (איך מגיעים לפסגה? מפת הנקודות במבצע) -->
+      <div id="studentScoringMapBanner" class="mb-2"></div>
 
       <!-- Shabbat Batch Reporting Card (Motzei Shabbat through Sunday 10:00 AM) -->
       <div id="studentShabbatBatchCard" class="hidden soft-card p-5 border-2 border-indigo-300 bg-gradient-to-r from-indigo-50/90 via-white to-amber-50/50 shadow-md">
@@ -326,6 +332,19 @@
               </div>
             </div>
 
+            <!-- Unified 3-Source Score Breakdown Badges (Sedarim, Duties, Bonuses) -->
+            <div id="studentScoreBreakdownBadges" class="flex flex-wrap items-center justify-end gap-1.5 mt-2">
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 text-blue-900 border border-blue-200 text-xs font-bold" id="badgeStudentSedarimPts">
+                📖 סדרים: <strong class="font-black text-blue-950">0</strong> נק׳
+              </span>
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 text-xs font-bold" id="badgeStudentDutiesPts">
+                ⏰ תורנויות: <strong class="font-black text-purple-950">0</strong> נק׳
+              </span>
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-50 text-amber-950 border border-amber-200 text-xs font-bold" id="badgeStudentBonusesPts">
+                🔥 בונוסים: <strong class="font-black text-amber-950">0</strong> נק׳
+              </span>
+            </div>
+
             <!-- Multi-tier progress bar -->
             <div class="my-3">
               <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
@@ -459,6 +478,9 @@
     <!-- SCREEN 2: CAMPAIGN CALENDAR & FULL LEADERBOARD             -->
     <!-- ========================================================== -->
     <section id="screen-public" class="screen-section hidden space-y-4">
+      <!-- Scoring System Map Banner (איך מגיעים לפסגה? מפת הנקודות במבצע) -->
+      <div id="publicScoringMapBanner" class="mb-2"></div>
+
       <!-- 1. Campaign Mountain Ascent Graph & Milestones (גרף הר קולקטיבי של כל הישיבה) -->
       <div class="soft-card p-4 sm:p-6 bg-gradient-to-b from-[#0A1138] via-[#0F172A] to-[#1E1B4B] text-white rounded-3xl shadow-xl border border-indigo-900/60 overflow-hidden relative">
         
@@ -695,9 +717,267 @@
     </section>
 
     <!-- ========================================================== -->
-    <!-- SCREEN 4: ROSH HAYESHIVA ADMIN PORTAL (PASSWORD PROTECTED) -->
+    <!-- SCREEN 4: ROSH HAYESHIVA ADMIN PORTAL                      -->
     <!-- ========================================================== -->
-    <!-- Admin portal is standalone at /admin.html -->
+    <section id="screen-admin" class="screen-section hidden space-y-4">
+      
+      <!-- Admin Header Bar & Subview Switcher -->
+      <div class="soft-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 border-indigo-100 bg-gradient-to-r from-indigo-50/50 via-white to-amber-50/30">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-[#0A1138] text-white flex items-center justify-center font-black text-lg shadow-sm">
+            👑
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base sm:text-lg font-black text-slate-900">פורטל ראש הישיבה</h2>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">ניהול פעיל ✓</span>
+            </div>
+            <p class="text-xs text-slate-500">ניהול בחורים, הגדרת יעדים, מחשבון נקודות ואישור בקשות</p>
+          </div>
+        </div>
+
+        <!-- Sub Navigation Tabs -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          <button onclick="switchAdminSubView('students')" id="asv-students" class="px-3.5 py-2 rounded-xl font-black text-xs transition bg-[#0A1138] text-white shadow-sm shrink-0">
+            👥 1. בחורים וניקוד
+          </button>
+          <button onclick="switchAdminSubView('schedule')" id="asv-schedule" class="px-3.5 py-2 rounded-xl font-bold text-xs transition text-slate-600 hover:bg-slate-100 shrink-0">
+            📅 2. לוח סדרים
+          </button>
+          <button onclick="switchAdminSubView('campaign')" id="asv-campaign" class="px-3.5 py-2 rounded-xl font-bold text-xs transition text-slate-600 hover:bg-slate-100 shrink-0">
+            🎯 3. הגדרת יעדים ובונוסים
+          </button>
+          <button onclick="switchAdminSubView('requests')" id="asv-requests" class="px-3.5 py-2 rounded-xl font-bold text-xs transition text-slate-600 hover:bg-slate-100 shrink-0 flex items-center gap-1">
+            <span>✍️ 4. בקשות</span>
+            <span id="adminPendingCountBadge" class="px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-mono text-[10px]">0</span>
+          </button>
+          <button onclick="lockAdminPortal()" class="px-3 py-2 rounded-xl text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 font-bold text-xs transition shrink-0">
+            🔒 נעילה
+          </button>
+        </div>
+      </div>
+
+      <!-- Subview 1: Students & Scores Management -->
+      <div id="adminView-students" class="admin-subview space-y-4">
+        <div class="soft-card p-4 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-base font-black text-slate-900">רשימת בחורי הישיבה וניקוד מצטבר</h3>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-900 border border-indigo-200" id="adminTotalStudentsBadge">0 בחורים</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">ניקוד מפורט בשפה אחידה: סדרים, תורנויות ובונוסים</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openAddStudentModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-sm flex items-center gap-1">
+                <span>+</span>
+                <span>הוסף בחור</span>
+              </button>
+              <button onclick="exportToCsv()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition border border-slate-200 flex items-center gap-1">
+                <span>📥</span>
+                <span>ייצוא לאקסל</span>
+              </button>
+              <button onclick="resetToSingleDemoStudent()" class="px-2.5 py-2 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-500 hover:text-rose-700 text-xs font-bold transition" title="איפוס מהיר לדמו יחיד">
+                🔄 דמו
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto no-scrollbar">
+            <table class="w-full text-right text-xs">
+              <thead class="bg-slate-50 text-slate-500 border-b border-slate-200 font-bold">
+                <tr>
+                  <th class="py-2.5 px-3">שם הבחור</th>
+                  <th class="py-2.5 px-3 text-center">טלפון וסיסמה</th>
+                  <th class="py-2.5 px-3 text-center">סך נקודות ופירוט</th>
+                  <th class="py-2.5 px-3 text-center">סטטוס היום</th>
+                  <th class="py-2.5 px-3 text-center">טווח צבירה צפוי</th>
+                  <th class="py-2.5 px-3 text-left">פעולות</th>
+                </tr>
+              </thead>
+              <tbody id="adminStudentsTableBody" class="divide-y divide-slate-100">
+                <!-- Populated dynamically by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subview 2: Tab 3 - Target Tiers, Live Calculator & Campaign Dates -->
+      <div id="adminView-campaign" class="admin-subview hidden space-y-4">
+        
+        <!-- Live Pool Calculator Card (מחשבון קופת הנקודות במבצע) -->
+        <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#0A1138] via-indigo-950 to-slate-900 text-white border border-indigo-400/30 shadow-lg">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-white/10">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">📊</span>
+              <h3 class="text-sm font-black text-amber-300">מחשבון קופת הנקודות במבצע (Live Pool Calculator)</h3>
+            </div>
+            <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">חישוב סל הסדרים בזמן אמת</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-center">
+            <div class="p-3 rounded-xl bg-white/10 border border-white/10">
+              <div class="text-[10px] text-indigo-200 font-bold">סך הכל בסל הסדרים</div>
+              <div class="text-xl font-black text-amber-300 mt-0.5" id="calcPoolSedarimPts">-- נק׳</div>
+              <div class="text-[10px] text-white/70 mt-0.5" id="calcPoolDaysCount">-- ימים (-- סדרים)</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-400/20">
+              <div class="text-[10px] text-amber-200 font-bold">עצירה 1 (ארד)</div>
+              <div class="text-lg font-black text-amber-400 mt-0.5" id="calcTier1Pct">--%</div>
+              <div class="text-[10px] text-amber-200/80 mt-0.5">מתוך סל הסדרים</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-400/10 border border-slate-300/20">
+              <div class="text-[10px] text-slate-200 font-bold">עצירה 2 (כסף)</div>
+              <div class="text-lg font-black text-slate-200 mt-0.5" id="calcTier2Pct">--%</div>
+              <div class="text-[10px] text-slate-300/80 mt-0.5">מתוך סל הסדרים</div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-400/20">
+              <div class="text-[10px] text-indigo-200 font-bold">הפסגה (זהב)</div>
+              <div class="text-lg font-black text-emerald-400 mt-0.5" id="calcTier3Pct">--%</div>
+              <div class="text-[10px] text-indigo-200/80 mt-0.5">מתוך סל הסדרים</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3 Tiers & Dates Configuration Form -->
+        <div class="soft-card p-5 sm:p-6">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="text-base font-black text-slate-900">הגדרת 3 יעדי המבצע ותאריכים</h3>
+              <p class="text-xs text-slate-500">קביעת ספי הנקודות והתאריכים - מחושב ישירות מול קופת הסדרים</p>
+            </div>
+            <span id="adminTotalAchievablePointsBadge" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
+              -- נק׳ בקופה
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-5">
+            <!-- Tier 1: Bronze -->
+            <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-black text-amber-900">🥉 יעד 1 (מינימום / ארד)</span>
+                <span class="text-[10px] font-bold text-amber-700">בסיסי</span>
+              </div>
+              <input type="text" id="targetMinNameInput" value="יעד כניסה להגרלה" class="w-full text-xs font-bold p-2 rounded-xl border border-amber-300 bg-white mb-2" oninput="updateCampaignTotalPointsLive()" />
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">כמות נקודות לסף:</label>
+              <input type="number" id="targetMinPointsInput" value="70" class="w-full text-sm font-black p-2 rounded-xl border border-amber-300 bg-white" oninput="updateCampaignTotalPointsLive()" />
+            </div>
+
+            <!-- Tier 2: Silver -->
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-300">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-black text-slate-800">🥈 יעד 2 (אמצע / כסף)</span>
+                <span class="text-[10px] font-bold text-slate-600">בינוני</span>
+              </div>
+              <input type="text" id="targetMidNameInput" value="יעד פרס כספי" class="w-full text-xs font-bold p-2 rounded-xl border border-slate-300 bg-white mb-2" oninput="updateCampaignTotalPointsLive()" />
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">כמות נקודות לסף:</label>
+              <input type="number" id="targetMidPointsInput" value="100" class="w-full text-sm font-black p-2 rounded-xl border border-slate-300 bg-white" oninput="updateCampaignTotalPointsLive()" />
+            </div>
+
+            <!-- Tier 3: Gold -->
+            <div class="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-black text-indigo-950">🥇 יעד 3 (מקסימום / זהב)</span>
+                <span class="text-[10px] font-bold text-indigo-700">הפסגה</span>
+              </div>
+              <input type="text" id="targetMaxNameInput" value="יעד נסיעה ופרס ענק" class="w-full text-xs font-bold p-2 rounded-xl border border-indigo-300 bg-white mb-2" oninput="updateCampaignTotalPointsLive()" />
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">כמות נקודות לסף:</label>
+              <input type="number" id="targetMaxPointsInput" value="130" class="w-full text-sm font-black p-2 rounded-xl border border-indigo-300 bg-white" oninput="updateCampaignTotalPointsLive()" />
+            </div>
+          </div>
+
+          <!-- Campaign Dates & Full Seder Rule -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-4 border-t border-slate-100">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">תאריך פתיחת המבצע:</label>
+              <input type="date" id="campaignStartDateInput" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" onchange="updateCampaignTotalPointsLive()" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">תאריך סיום המבצע:</label>
+              <input type="date" id="campaignEndDateInput" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" onchange="updateCampaignTotalPointsLive()" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">סף בחורים ל"סדר מלא":</label>
+              <input type="number" id="campaignThresholdInput" min="1" value="1" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" />
+            </div>
+          </div>
+
+          <!-- Bonuses Rules Configuration -->
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3.5 pt-4 mt-4 border-t border-slate-100">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">בונוס סדר מלא קבוצתי:</label>
+              <input type="number" id="campaignFullBonusInput" min="1" value="4" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">התמדה: כמות סדרים (X):</label>
+              <input type="number" id="campaignXyNeedInput" min="1" value="5" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">התמדה: גודל חלון (Y):</label>
+              <input type="number" id="campaignXyWindowInput" min="1" value="10" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">ניקוד בונוס התמדה:</label>
+              <input type="number" id="campaignXyBonusInput" min="1" value="3" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white" />
+            </div>
+          </div>
+
+          <div class="mt-5 flex justify-end">
+            <button onclick="saveCampaignConfigToSupabase()" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md flex items-center gap-1.5">
+              <span>💾</span>
+              <span>שמור יעדים ותאריכים בענן</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subview 3: Schedule Editor -->
+      <div id="adminView-schedule" class="admin-subview hidden space-y-4">
+        <div class="soft-card p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="text-base font-black text-slate-900">עריכת זמני סדרים לכל יום</h3>
+              <p class="text-xs text-slate-500">קביעת שעות פתיחה, נעילה ושווי נקודות לסדרים</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="date" id="adminScheduleDayPicker" class="text-xs font-bold p-2 rounded-xl border border-slate-300" onchange="renderAdminDayScheduleEditor()" />
+              <button onclick="openAddSlotModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm">
+                + הוסף סדר
+              </button>
+            </div>
+          </div>
+          <div id="adminDaySlotsEditorContainer" class="space-y-3">
+            <!-- Rendered by JS -->
+          </div>
+          <div class="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-slate-100 text-xs">
+            <button onclick="applyCurrentDayToWeekdays()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">
+              החל יום זה על כל ימי החול (א׳-ה׳)
+            </button>
+            <button onclick="applyCurrentDayToShabbats()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">
+              החל יום זה על כל השבתות
+            </button>
+            <button onclick="resetDefaultSchedules()" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold mr-auto">
+              שחזר ברירת מחדל
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subview 4: Requests Approval -->
+      <div id="adminView-requests" class="admin-subview hidden space-y-4">
+        <div class="soft-card p-5 sm:p-6">
+          <h3 class="text-base font-black text-slate-900 mb-3">בקשות "שכחתי לסמן" ממתינות</h3>
+          <div id="adminPendingRequestsContainer" class="space-y-2">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+    </section>
 
   </main>
 
@@ -725,7 +1005,11 @@
     </button>
 
     <!-- Tab 4: Rosh HaYeshiva (Revealed dynamically when unlocked) -->
-    </nav>
+    <button onclick="state.isAdminUnlocked ? switchTab('admin') : openAdminPasswordModal()" id="mtab-admin" class="mtab-btn flex-1 py-1 px-2 flex flex-col items-center gap-0.5 rounded-xl text-slate-400 font-bold">
+      <span class="text-lg">🔐</span>
+      <span class="text-[10px] leading-none">ראש הישיבה</span>
+    </button>
+  </nav>
 
   <!-- ========================================================== -->
   <!-- ADD STUDENT MODAL (ROSH HAYESHIVA)                         -->
@@ -1137,7 +1421,7 @@
     const SUPABASE_KEY = 'sb_publishable_DuJUmTpWwU4h3P8r1htVWw_24i-VjeG';
     const supabaseClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-    const SCHEMA_VERSION = '2026_10_25_v9';
+    const SCHEMA_VERSION = '2026_10_25_v10';
     let isCloudHydrated = false;
 
     const HEB_GEMATRIA_DAYS = [
@@ -2387,30 +2671,179 @@
     }
 
     // ====================================================
-    // CAMPAIGN TOTAL POINTS & STUDENT PROJECTED RANGE
+    // CAMPAIGN POINTS POTENTIAL & STUDENT SCORE BREAKDOWN
+    // SINGLE SOURCE OF TRUTH SCORING ENGINE
     // ====================================================
-    function calculateCampaignTotalAchievablePoints() {
-      const start = new Date(state.config.startDate + 'T12:00:00');
-      const end = new Date(state.config.endDate + 'T12:00:00');
-      if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
-        return 160;
+    function getCampaignPointsPotential() {
+      if (!state.campaignDays || state.campaignDays.length === 0) {
+        if (typeof rebuildSyncedCalendarAndToday === 'function') {
+          rebuildSyncedCalendarAndToday();
+        }
       }
-      let total = 0;
-      let curr = new Date(start);
-      while (curr <= end) {
-        const dStr = curr.toISOString().slice(0, 10);
-        const slots = getSlotsForDate(dStr);
-        slots.forEach(s => {
-          total += (Number(s.points) || 0);
+      const days = (state && state.campaignDays && state.campaignDays.length > 0)
+        ? state.campaignDays
+        : [];
+
+      const totalDays = days.length;
+      const totalSedarimCount = days.reduce((sum, d) => sum + (Number(d.sedarim) || Number(d.sedarim_count) || 0), 0);
+      const maxSedarimPoints = days.reduce((sum, d) => sum + (Number(d.pointsPool) || Number(d.points_pool) || 0), 0);
+
+      const noPhoneBonus = (state.bonusConfig && state.bonusConfig.noPhoneBonus) || (state.config && state.config.noPhoneBonusPts) || 1;
+      const noPhonePotential = totalSedarimCount * noPhoneBonus;
+      const singleDutyPoints = (state.bonusConfig && state.bonusConfig.dutyWakerBonus) || (state.config && state.config.dutyBonusPts) || 3;
+      const persistenceBonusPts = (state.config && state.config.xyBonus) || 3;
+      const groupFullBonusPts = (state.config && state.config.groupFullBonus) || 4;
+
+      return {
+        totalDays,
+        totalSedarimCount,
+        maxSedarimPoints,
+        noPhonePotential,
+        singleDutyPoints,
+        persistenceBonusPts,
+        groupFullBonus: groupFullBonusPts,
+        groupFullBonusPts,
+        wakerBonusPts: singleDutyPoints,
+        kitchenBonusPts: (state.bonusConfig && state.bonusConfig.dutyKitchenBonus) || singleDutyPoints
+      };
+    }
+
+    function getStudentScoreBreakdown(student) {
+      if (!student) {
+        return { sedarimPts: 0, dutiesPts: 0, bonusesPts: 0, totalScore: 0 };
+      }
+      const stId = student.id;
+      const dutyBonusPts = (state.config && state.config.dutyBonusPts) || (state.bonusConfig && state.bonusConfig.dutyWakerBonus) || 3;
+
+      // 1. ניקוד על תורנויות (מעורר בבוקר + ניקיון מטבח בערב)
+      let dutiesDoneCount = 0;
+      if (state.dutiesRoster) {
+        const rosterItems = Array.isArray(state.dutiesRoster)
+          ? state.dutiesRoster
+          : Object.values(state.dutiesRoster);
+
+        rosterItems.forEach(dr => {
+          if (!dr) return;
+          const isWakerMatch = (dr.wakerStudentId === stId || dr.wakeupStudentId === stId || (dr.wakerStudentName && student.name && dr.wakerStudentName === student.name));
+          if (isWakerMatch && (dr.wakerDone || dr.wakeupDone)) {
+            dutiesDoneCount++;
+          }
+          const isKitchenMatch = (dr.kitchenStudentId === stId || (dr.kitchenStudentName && student.name && dr.kitchenStudentName === student.name));
+          if (isKitchenMatch && dr.kitchenDone) {
+            dutiesDoneCount++;
+          }
         });
-        curr.setDate(curr.getDate() + 1);
       }
-      return total;
+      const dutiesPts = dutiesDoneCount * dutyBonusPts;
+
+      // 2. ניקוד על בונוסים (סדר ללא טלפון, סדר מלא קבוצתי, התמדה X מתוך Y, בונוס מנהל)
+      let adminBonusPts = Number(student.manualBonusPts || student.manual_bonus_pts || 0);
+      if (state.bonusLogs && Array.isArray(state.bonusLogs)) {
+        state.bonusLogs.forEach(b => {
+          if (b.points > 0 && b.points !== -998 && b.points !== -999) {
+            if (b.studentId === stId || b.targetId === stId || b.targetId === 'ALL') {
+              adminBonusPts += Number(b.points) || 0;
+            }
+          }
+        });
+      }
+      const xyNeed = (state.config && state.config.xyNeed) || 5;
+      const xyBonus = (state.config && state.config.xyBonus) || 3;
+      const persistencePts = Math.floor((Number(student.persistenceCount) || 0) / xyNeed) * xyBonus;
+      const noPhonePts = Number(student.noPhoneBonusPts || 0);
+      const groupFullPts = Number(student.groupFullBonusPts || 0);
+
+      const bonusesPts = adminBonusPts + persistencePts + noPhonePts + groupFullPts;
+
+      // 3. ניקוד על סדרים בלבד
+      const rawScore = Number(student.score !== undefined && student.score !== null ? student.score : (student.baseScore || 0));
+      let sedarimPts = 0;
+      if (student.sedarimPts !== undefined && student.sedarimPts !== null) {
+        sedarimPts = Number(student.sedarimPts) || 0;
+      } else {
+        sedarimPts = Math.max(0, rawScore - dutiesPts - bonusesPts);
+      }
+
+      const totalScore = sedarimPts + dutiesPts + bonusesPts;
+
+      return {
+        sedarimPts,
+        dutiesPts,
+        bonusesPts,
+        totalScore
+      };
+    }
+
+    function getStudentTotalScore(student) {
+      return getStudentScoreBreakdown(student).totalScore;
+    }
+
+    function getCampaignScoringMapBannerHtml() {
+      const pot = getCampaignPointsPotential();
+      const goldTarget = (state.config && state.config.targets && state.config.targets.max && state.config.targets.max.points)
+        || (state.config && state.config.minTarget ? Math.round(state.config.minTarget * 1.85) : 130);
+
+      let smartHint = '';
+      if (goldTarget > pot.maxSedarimPoints) {
+        smartHint = `💡 שים לב: מסדרים בלבד ניתן לצבור עד ${pot.maxSedarimPoints} נק׳ – כדי לכבוש את הפסגה (${goldTarget} נק׳) משלבים תורנויות ובונוסים!`;
+      } else {
+        smartHint = `💡 ניתן להגיע ליעד מתוך סדרים בלבד (${pot.maxSedarimPoints} נק׳ בקופה), ותורנויות + בונוסים מקצרים את הדרך!`;
+      }
+
+      return `
+        <div class="rounded-2xl p-3.5 sm:p-4 bg-gradient-to-r from-[#0A1138]/95 via-indigo-950/90 to-[#0A1138]/95 text-white border border-indigo-400/30 backdrop-blur-md shadow-lg text-xs">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-indigo-400/20">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">🗺️</span>
+              <h4 class="font-black text-amber-300 text-sm tracking-tight">איך מגיעים לפסגה? מפת הנקודות במבצע</h4>
+            </div>
+            <span class="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">שפת ניקוד אחידה</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-2.5">
+            <div class="p-2.5 rounded-xl bg-white/10 border border-white/10 flex items-center gap-2">
+              <span class="text-xl">📖</span>
+              <div>
+                <div class="text-[10px] text-indigo-200 font-bold">מקסימום מסדרים בלבד:</div>
+                <div class="text-xs font-black text-amber-300">${pot.maxSedarimPoints} נק׳ <span class="text-[10px] font-normal text-white/80">(על ${pot.totalSedarimCount} סדרים)</span></div>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-white/10 border border-white/10 flex items-center gap-2">
+              <span class="text-xl">⏰</span>
+              <div>
+                <div class="text-[10px] text-indigo-200 font-bold">תורנויות (מעורר / מטבח):</div>
+                <div class="text-xs font-black text-emerald-300">+${pot.singleDutyPoints} נק׳ <span class="text-[10px] font-normal text-white/80">לכל תורנות שמבוצעת</span></div>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-xl bg-white/10 border border-white/10 flex items-center gap-2">
+              <span class="text-xl">🔥</span>
+              <div>
+                <div class="text-[10px] text-indigo-200 font-bold">בונוסים מאיצים:</div>
+                <div class="text-[11px] font-black text-amber-200 leading-tight">
+                  +1 ללא טלפון 📵 • +${pot.persistenceBonusPts} התמדה • +${pot.groupFullBonusPts} סדר מלא קבוצתי 🔥
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-white/10 text-[11px] font-bold text-amber-100 flex items-center gap-1.5">
+            <span>${smartHint}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function calculateCampaignTotalAchievablePoints() {
+      return getCampaignPointsPotential().maxSedarimPoints;
     }
 
     function calculateStudentProjectedRange(student) {
-      const campaignTotal = calculateCampaignTotalAchievablePoints();
-      const current = Number(student.score) || 0;
+      const pot = getCampaignPointsPotential();
+      const campaignTotal = pot.maxSedarimPoints;
+      const bd = getStudentScoreBreakdown(student);
+      const current = bd.totalScore;
       
       const now = new Date();
       const endDate = new Date(state.config.endDate + 'T12:00:00');
@@ -2486,16 +2919,65 @@
       if (startEl && startEl.value) state.config.startDate = startEl.value;
       if (endEl && endEl.value) state.config.endDate = endEl.value;
 
-      const totalAchievable = calculateCampaignTotalAchievablePoints();
+      const t1Input = document.getElementById('targetMinPointsInput') || document.getElementById('cfgTier1Points');
+      const t2Input = document.getElementById('targetMidPointsInput') || document.getElementById('cfgTier2Points');
+      const t3Input = document.getElementById('targetMaxPointsInput') || document.getElementById('cfgTier3Points');
+      
+      if (t1Input && t1Input.value) {
+        if (!state.config.targets) state.config.targets = {};
+        if (!state.config.targets.min) state.config.targets.min = { points: 70, name: 'יעד כניסה להגרלה' };
+        state.config.targets.min.points = parseInt(t1Input.value, 10) || 70;
+      }
+      if (t2Input && t2Input.value) {
+        if (!state.config.targets) state.config.targets = {};
+        if (!state.config.targets.mid) state.config.targets.mid = { points: 100, name: 'יעד פרס כספי' };
+        state.config.targets.mid.points = parseInt(t2Input.value, 10) || 100;
+      }
+      if (t3Input && t3Input.value) {
+        if (!state.config.targets) state.config.targets = {};
+        if (!state.config.targets.max) state.config.targets.max = { points: 130, name: 'יעד נסיעה ופרס ענק' };
+        state.config.targets.max.points = parseInt(t3Input.value, 10) || 130;
+      }
+
+      if (typeof rebuildSyncedCalendarAndToday === 'function') {
+        rebuildSyncedCalendarAndToday();
+      }
+
+      const pot = getCampaignPointsPotential();
+      const maxSedarimPoints = pot.maxSedarimPoints || 160;
+
+      const t1Pts = (state.config.targets?.min?.points) || 70;
+      const t2Pts = (state.config.targets?.mid?.points) || 100;
+      const t3Pts = (state.config.targets?.max?.points) || 130;
+
+      const p1Pct = maxSedarimPoints > 0 ? Math.round((t1Pts / maxSedarimPoints) * 100) : 0;
+      const p2Pct = maxSedarimPoints > 0 ? Math.round((t2Pts / maxSedarimPoints) * 100) : 0;
+      const p3Pct = maxSedarimPoints > 0 ? Math.round((t3Pts / maxSedarimPoints) * 100) : 0;
+
+      // Update Live Pool Calculator Card in Admin
+      const poolEl = document.getElementById('calcPoolSedarimPts');
+      if (poolEl) poolEl.textContent = maxSedarimPoints + ' נק׳';
+
+      const poolDaysEl = document.getElementById('calcPoolDaysCount');
+      if (poolDaysEl) poolDaysEl.textContent = `${pot.totalDays} ימים (${pot.totalSedarimCount} סדרים)`;
+
+      const t1PctEl = document.getElementById('calcTier1Pct');
+      if (t1PctEl) t1PctEl.textContent = `${p1Pct}% (${t1Pts} נק׳)`;
+
+      const t2PctEl = document.getElementById('calcTier2Pct');
+      if (t2PctEl) t2PctEl.textContent = `${p2Pct}% (${t2Pts} נק׳)`;
+
+      const t3PctEl = document.getElementById('calcTier3Pct');
+      if (t3PctEl) t3PctEl.textContent = `${p3Pct}% (${t3Pts} נק׳)`;
+
       const badge = document.getElementById('adminTotalAchievablePointsBadge');
-      if (badge) {
-        badge.textContent = totalAchievable + ' נק׳ בקופה';
-      }
+      if (badge) badge.textContent = maxSedarimPoints + ' נק׳ בקופה';
+
       const studentAchievable = document.getElementById('studentTotalAchievableMax');
-      if (studentAchievable) {
-        studentAchievable.textContent = totalAchievable;
-      }
+      if (studentAchievable) studentAchievable.textContent = maxSedarimPoints;
+
       renderStudentScreen();
+      renderLeaderboard();
     }
 
     // ====================================================
@@ -3293,7 +3775,7 @@
         document.getElementById('mtab-admin')?.classList.remove('hidden');
 
         showToast('פורטל ראש הישיבה נפתח בהצלחה', '🔓');
-        window.location.href = 'admin.html';
+        switchTab('admin');
       } else {
         if (err) err.classList.remove('hidden');
       }
@@ -3921,8 +4403,28 @@
         }
       }
 
+      // Unified Scoring Engine Breakdown for Current Student
+      const scoreBreakdown = getStudentScoreBreakdown(s);
+      s.baseScore = scoreBreakdown.totalScore;
+      if (s.score !== undefined) s.score = scoreBreakdown.totalScore;
+
       const totalScoreEl = document.getElementById('studentTotalScoreBig');
-      if (totalScoreEl) totalScoreEl.textContent = s.baseScore;
+      if (totalScoreEl) totalScoreEl.textContent = scoreBreakdown.totalScore;
+
+      // Update the 3 unified score breakdown badges
+      const bSedarim = document.getElementById('badgeStudentSedarimPts');
+      const bDuties = document.getElementById('badgeStudentDutiesPts');
+      const bBonuses = document.getElementById('badgeStudentBonusesPts');
+      if (bSedarim) bSedarim.innerHTML = `📖 סדרים: <strong class="font-black text-blue-950">${scoreBreakdown.sedarimPts}</strong> נק׳`;
+      if (bDuties) bDuties.innerHTML = `⏰ תורנויות: <strong class="font-black text-purple-950">${scoreBreakdown.dutiesPts}</strong> נק׳`;
+      if (bBonuses) bBonuses.innerHTML = `🔥 בונוסים: <strong class="font-black text-amber-950">${scoreBreakdown.bonusesPts}</strong> נק׳`;
+
+      // Render Explanation Map Banners
+      const bannerHtml = getCampaignScoringMapBannerHtml();
+      const sMapBanner = document.getElementById('studentScoringMapBanner');
+      if (sMapBanner) sMapBanner.innerHTML = bannerHtml;
+      const pMapBanner = document.getElementById('publicScoringMapBanner');
+      if (pMapBanner) pMapBanner.innerHTML = bannerHtml;
 
       const targets = state.config.targets || {
         min: { points: 70, name: 'יעד כניסה להגרלה' },
@@ -4162,10 +4664,11 @@
         return;
       }
 
-      const sorted = [...state.students].sort((a, b) => b.score - a.score);
+      const sorted = [...state.students].sort((a, b) => getStudentTotalScore(b) - getStudentTotalScore(a));
       tbody.innerHTML = sorted.map((st, idx) => {
+        const bd = getStudentScoreBreakdown(st);
         const range = calculateStudentProjectedRange(st);
-        const sScore = Number(st.score) || 0;
+        const sScore = bd.totalScore;
         let giftBadge = '';
         if (sScore >= 140) {
           giftBadge = '<span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-400 text-slate-950 border border-amber-300 ml-1.5 shadow-xs">👑 כל 3 המתנות!</span>';
@@ -4193,7 +4696,7 @@
             </span>
           </td>
           <td class="py-2.5 px-3 text-center font-bold text-slate-700">${st.persistenceCount} / 10</td>
-          <td class="py-2.5 px-3 text-left font-black text-indigo-950">${st.score} נק׳</td>
+          <td class="py-2.5 px-3 text-left font-black text-indigo-950">${sScore} נק׳</td>
         </tr>
       `;
       }).join('');
@@ -4719,6 +5222,7 @@
           `;
         } else {
           stTable.innerHTML = state.students.map(st => {
+            const bd = getStudentScoreBreakdown(st);
             const range = calculateStudentProjectedRange(st);
             return `
             <tr class="hover:bg-slate-50/80 transition">
@@ -4744,8 +5248,11 @@
                   </button>
                 </div>
               </td>
-              <td class="py-2.5 px-3 text-center font-black text-indigo-950 text-xs sm:text-sm">
-                ${st.score} נק׳
+              <td class="py-2.5 px-3 text-center">
+                <div class="font-black text-indigo-950 text-xs sm:text-sm">${bd.totalScore} נק׳</div>
+                <div class="text-[10px] text-slate-500 font-bold mt-0.5 whitespace-nowrap">
+                  סדרים: ${bd.sedarimPts} | תורנות: ${bd.dutiesPts} | בונוס: ${bd.bonusesPts}
+                </div>
               </td>
               <td class="py-2.5 px-3 text-center">
                 <span class="px-2 py-0.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-950 font-black font-mono text-xs">
