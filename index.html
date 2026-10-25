@@ -561,26 +561,26 @@
           <div class="flex items-center justify-between text-xs mb-2">
             <span class="font-extrabold text-amber-300 flex items-center gap-1.5">
               <span>🎁</span>
-              <span>ציר א׳: יעדי ניקוד נושאי מתנה חסויה (הפתעה מובטחת במעמד הזכייה!)</span>
+              <span>יעדים אישיים – תגמול פרטי לפי התקדמות בניקוד האישי!</span>
             </span>
             <span class="text-[11px] text-indigo-300">סודי לחלוטין 🤫</span>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-center">
             <div class="p-3 rounded-2xl bg-white/5 border border-amber-400/30 text-xs hover:bg-white/10 transition">
-              <div class="font-black text-amber-300 text-xs" id="giftTier1Title">🥉 יעד כניסה להגרלה</div>
+              <div class="font-black text-amber-300 text-xs" id="giftTier1Title">🥉 יעד אישי 1 (ארד)</div>
               <div class="font-mono font-black text-white text-base mt-1" id="giftTier1Pts">70 נק׳</div>
               <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier1Status">נצברו 0 נק׳</div>
             </div>
 
             <div class="p-3 rounded-2xl bg-white/5 border border-slate-300/30 text-xs hover:bg-white/10 transition">
-              <div class="font-black text-slate-200 text-xs" id="giftTier2Title">🥈 יעד פרס כספי</div>
+              <div class="font-black text-slate-200 text-xs" id="giftTier2Title">🥈 יעד אישי 2 (כסף)</div>
               <div class="font-mono font-black text-white text-base mt-1" id="giftTier2Pts">100 נק׳</div>
               <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier2Status">עוד 100 נק׳</div>
             </div>
 
             <div class="p-3 rounded-2xl bg-white/5 border border-indigo-400/30 text-xs hover:bg-white/10 transition">
-              <div class="font-black text-indigo-300 text-xs" id="giftTier3Title">🥇 יעד נסיעה ופרס ענק</div>
+              <div class="font-black text-indigo-300 text-xs" id="giftTier3Title">🥇 יעד אישי 3 (זהב)</div>
               <div class="font-mono font-black text-white text-base mt-1" id="giftTier3Pts">130 נק׳</div>
               <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier3Status">עוד 130 נק׳</div>
             </div>
@@ -2535,7 +2535,19 @@
             try { localStorage.setItem('bakshu_bonus_logs_v1', JSON.stringify(state.bonusLogs)); } catch(e){}
           }
 
-          // 6. Fetch Schedule Slots directly from schedule_slots table
+          // 5B. Load saved daily schedule overrides from app_state ('slots_by_date')
+            try {
+              const { data: sbdRow } = await supabaseClient.from('app_state').select('value').eq('key', 'slots_by_date').maybeSingle();
+              if (sbdRow && sbdRow.value && typeof sbdRow.value === 'object') {
+                if (!state.slotsByDate) state.slotsByDate = {};
+                Object.keys(sbdRow.value).forEach(dKey => {
+                  if (Array.isArray(sbdRow.value[dKey]) && sbdRow.value[dKey].length > 0) {
+                    state.slotsByDate[dKey] = sbdRow.value[dKey];
+                  }
+                });
+              }
+            } catch (e) {}
+            // 6. Fetch Schedule Slots directly from schedule_slots table
           try {
             const { data: dbSlots } = await supabaseClient.from('schedule_slots').select('*');
             if (dbSlots && dbSlots.length > 0) {
@@ -2564,11 +2576,7 @@
             const startStr = state.config?.startDate || '2026-10-25';
             const endStr = state.config?.endDate || '2026-12-05';
             const { data: calRows, error: calErr } = await supabaseClient
-              .from('campaign_calendar')
-              .select('*')
-              .gte('iso_date', startStr)
-              .lte('iso_date', endStr)
-              .order('iso_date', { ascending: true });
+              .from('campaign_calendar').select('*').order('iso_date', { ascending: true });
 
             if (!calErr && calRows && calRows.length > 0) {
               if (!state.campaignCalendar) state.campaignCalendar = {};
@@ -6098,7 +6106,7 @@
         rebuildSyncedCalendarAndToday();
       }
 
-      let optionsHtml = '<option value="">-- טרם נקבע תאריך בלוח --</option>';
+      let optionsHtml = '<option value="">-- התאריך ייחשף בהמשך המסע! 🎁 --</option>';
       (state.campaignDays || []).forEach(d => {
         const dmy = d.isoDate.split('-').reverse().join('/');
         optionsHtml += `<option value="${d.isoDate}">${d.dayName} • ${d.dateStr} (${dmy})</option>`;
@@ -6130,7 +6138,7 @@
     }
 
     function formatStopDisplayLabel(iso) {
-      if (!iso) return 'טרם נקבע תאריך בלוח';
+      if (!iso) return 'התאריך ייחשף בהמשך המסע! 🎁';
       const mDay = (state.campaignDays || []).find(d => d.isoDate === iso);
       if (mDay) {
         return `${mDay.dayName} • ${mDay.dateStr} (${iso.split('-').reverse().join('/')})`;
@@ -6145,92 +6153,95 @@
     // Canonical Function: syncTargetsWithCalendar()
     // Called in saveAdminRules(), applySavedStateObject(), and at start of renderAll()
     function syncTargetsWithCalendar() {
-      if (!state.config) state.config = {};
-      const bronzeTarget = Number(state.config.bronzeTarget || state.config.targets?.min?.points || 70);
-      const minTarget = Number(state.config.minTarget || state.config.targets?.mid?.points || 100);
-      const goldTarget = Number(state.config.goldTarget || state.config.targets?.max?.points || 130);
+        if (!state || !state.config) return;
+        const bPts = Number(state.config.bronzeTarget || state.config.targets?.min?.points || 70);
+        const sPts = Number(state.config.minTarget || state.config.targets?.mid?.points || 100);
+        const gPts = Number(state.config.goldTarget || state.config.targets?.max?.points || 130);
 
-      state.config.bronzeTarget = bronzeTarget;
-      state.config.minTarget = minTarget;
-      state.config.goldTarget = goldTarget;
+        // א. עדכון יעדים אישיים (תגמול פרטי לפי נקודות)
+        const s = state.currentStudent || { baseScore: 0 };
+        const myPts = Number(s.baseScore || 0);
+        const gt1Pts = document.getElementById('giftTier1Pts');
+        const gt2Pts = document.getElementById('giftTier2Pts');
+        const gt3Pts = document.getElementById('giftTier3Pts');
+        if (gt1Pts) gt1Pts.textContent = bPts + ' נק׳';
+        if (gt2Pts) gt2Pts.textContent = sPts + ' נק׳';
+        if (gt3Pts) gt3Pts.textContent = gPts + ' נק׳';
 
-      if (!state.config.targets) state.config.targets = {};
-      state.config.targets.min = { points: bronzeTarget, name: state.config.targets.min?.name || 'יעד כניסה להגרלה (ארד)' };
-      state.config.targets.mid = { points: minTarget, name: state.config.targets.mid?.name || 'יעד פרס כספי (כסף)' };
-      state.config.targets.max = { points: goldTarget, name: state.config.targets.max?.name || 'יעד נסיעה ופרס ענק (הפסגה/זהב)' };
+        const gt1St = document.getElementById('giftTier1Status');
+        const gt2St = document.getElementById('giftTier2Status');
+        const gt3St = document.getElementById('giftTier3Status');
+        if (gt1St) gt1St.textContent = myPts >= bPts ? '✓ הושג!' : ('עוד ' + Math.max(0, bPts - myPts) + ' נק׳');
+        if (gt2St) gt2St.textContent = myPts >= sPts ? '✓ הושג!' : ('עוד ' + Math.max(0, sPts - myPts) + ' נק׳');
+        if (gt3St) gt3St.textContent = myPts >= gPts ? '✓ הושג!' : ('עוד ' + Math.max(0, gPts - myPts) + ' נק׳');
 
-      const stop1Iso = state.config.stop1IsoDate !== undefined ? state.config.stop1IsoDate : '2026-11-19';
-      const stop2Iso = state.config.stop2IsoDate !== undefined ? state.config.stop2IsoDate : '';
-      const stop3Iso = state.config.stop3IsoDate !== undefined ? state.config.stop3IsoDate : '';
+        // ב. עדכון תחנות העצירה במסע (תאריכים קבוצתיים לטיול/תגמול בלבד – ללא סף נקודות!)
+        const stops = Array.isArray(state.trailStops) ? state.trailStops : [];
+        const stop1Iso = stops[0]?.isoDate || state.config?.stop1Date || '';
+        const stop2Iso = stops[1]?.isoDate || state.config?.stop2Date || '';
+        const stop3Iso = stops[2]?.isoDate || state.config?.stop3Date || '';
 
-      state.config.stop1IsoDate = stop1Iso;
-      state.config.stop2IsoDate = stop2Iso;
-      state.config.stop3IsoDate = stop3Iso;
-
-      if (!state.trailStops || state.trailStops.length < 3) {
-        state.trailStops = JSON.parse(JSON.stringify(DEFAULT_TRAIL_STOPS));
-      }
-
-      const stopDefs = [
-        { idx: 0, badge: 'עצירה 1 – פיתחו יומנים!', title: 'עצירה 1 – פיתחו יומנים!', points: bronzeTarget, isoDate: stop1Iso },
-        { idx: 1, badge: 'עצירה 2 – יעד נושא מתנה 🎁', title: 'עצירה 2 – יעד נושא מתנה 🎁', points: minTarget, isoDate: stop2Iso },
-        { idx: 2, badge: 'הפסגה – המטרה הגדולה מחכה לנו! 🏔️🎁', title: 'הפסגה – המטרה הגדולה מחכה לנו! 🏔️🎁', points: goldTarget, isoDate: stop3Iso }
-      ];
-
-      stopDefs.forEach(def => {
-        const st = state.trailStops[def.idx];
-        if (st) {
-          st.idx = def.idx;
-          st.badge = def.badge;
-          st.title = def.title;
-          st.points = def.points;
-          st.isoDate = def.isoDate;
-          st.isDecided = Boolean(def.isoDate);
-          if (def.isoDate) {
-            const mDay = (state.campaignDays || []).find(d => d.isoDate === def.isoDate);
-            if (mDay) {
-              st.dateLabel = `${mDay.dayName} ${toHebrewLetters(mDay.dateStr)} (${def.isoDate.split('-').reverse().join('/')})`;
-              st.dateStr = `${mDay.dayName} ${toHebrewLetters(mDay.dateStr)}`;
-            } else {
-              const meta = getDayMeta(def.isoDate);
-              st.dateLabel = meta ? `${meta.dayNameHe} ${meta.hebrewDate} (${def.isoDate.split('-').reverse().join('/')})` : def.isoDate;
-              st.dateStr = meta ? `${meta.dayNameHe} ${meta.hebrewDate}` : def.isoDate;
-            }
-          } else {
-            st.dateLabel = def.idx === 0 ? 'יום חמישי ט׳ כסליו – פיתחו יומנים!' : (def.idx === 1 ? 'התאריך ייחשף בהמשך המסע! 🎁' : 'התאריך ייחשף בהמשך המסע! 🎁');
-              st.dateStr = def.idx === 0 ? 'יום חמישי ט׳ כסליו' : 'ייחשף בהמשך המסע! 🎁';
+        const formatStopDate = (iso, fallbackText) => {
+          if (!iso) return fallbackText;
+          const m = typeof getDayMeta === 'function' ? getDayMeta(iso) : null;
+          if (m && m.hebrewDay && m.hebrewMonth) {
+            return `יום ${m.dayName || ''} ${toHebrewLetters(m.hebrewDay + ' ' + m.hebrewMonth)}`.trim();
           }
+          return fallbackText;
+        };
+
+        const stop1DateText = formatStopDate(stop1Iso, 'יום חמישי ט׳ כסליו – פיתחו יומנים!');
+        const stop2DateText = formatStopDate(stop2Iso, 'התאריך ייחשף בהמשך המסע! 🎁');
+        const stop3DateText = formatStopDate(stop3Iso, 'בסוף המסע – המטרה הגדולה מחכה לנו! 🏔️');
+
+        const nextStopEl = document.getElementById('mountainNextStopPts');
+        if (nextStopEl) nextStopEl.textContent = stop1DateText;
+
+        const nextGiftEl = document.getElementById('mountainNextGiftPts');
+        if (nextGiftEl) {
+          const nextTarget = myPts < bPts ? bPts : (myPts < sPts ? sPts : gPts);
+          nextGiftEl.textContent = myPts >= gPts ? 'כל היעדים האישיים הושגו! 🎉' : ('יעד אישי קרוב: ' + nextTarget + ' נק׳');
         }
-      });
-      state.journeyStops = state.trailStops;
 
-      // Clear old d.trailStop markers on state.campaignDays, then stamp matching day
-      if (Array.isArray(state.campaignDays)) {
-        state.campaignDays.forEach(day => {
-          delete day.trailStop;
-          day.stationTitle = '';
-        });
-
-        state.trailStops.forEach(stop => {
-          if (stop.isoDate) {
-            const matchedDay = state.campaignDays.find(d => d.isoDate === stop.isoDate);
-            if (matchedDay) {
-              matchedDay.stationTitle = stop.title;
-              matchedDay.trailStop = {
-                idx: stop.idx,
-                badge: stop.badge,
-                title: stop.title,
-                points: stop.points,
-                isoDate: matchedDay.isoDate,
-                dateStr: matchedDay.dateStr
-              };
+        const container = document.getElementById('journeyStopsContainer');
+        if (container) {
+          const cards = [
+            {
+              badge: '📍 תחנת עצירה 1 במסע',
+              title: 'עצירה ראשונה – טיול / תגמול קבוצתי',
+              dateDisplay: stop1DateText,
+              sub: 'פיתחו יומנים! חוויה וגיבוש לכלל הבחורים',
+              cls: 'bg-emerald-50/70 border-emerald-300 text-emerald-950'
+            },
+            {
+              badge: '🎁 תחנת עצירה 2 במסע',
+              title: 'עצירה שנייה – תגמול קבוצתי בהפתעה',
+              dateDisplay: stop2DateText,
+              sub: 'לא משנה איפה נעצור – ממשיכים לטפס יחד!',
+              cls: 'bg-indigo-50/70 border-indigo-200 text-indigo-950'
+            },
+            {
+              badge: '🏔️ תחנת הפסגה – סיום המבצע',
+              title: 'הפסגה – המטרה הגדולה מחכה לנו!',
+              dateDisplay: stop3DateText,
+              sub: 'השנה מטפסים עד לפסגה! 🏔️🎁',
+              cls: 'bg-amber-50/80 border-amber-300 text-amber-950'
             }
-          }
-        });
+          ];
+          container.innerHTML = cards.map(c => `
+            <div class="p-3.5 rounded-2xl border ${c.cls} flex flex-col justify-between gap-1.5 shadow-2xs">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-black px-2 py-0.5 rounded-full bg-white/80 border border-black/5">${c.badge}</span>
+              </div>
+              <div class="text-xs sm:text-sm font-black mt-1">${c.title}</div>
+              <div class="text-xs font-extrabold text-indigo-900 bg-white/90 px-2.5 py-1.5 rounded-xl border border-black/5">🗓️ ${c.dateDisplay}</div>
+              <div class="text-[11px] opacity-80 font-semibold">${c.sub}</div>
+            </div>
+          `).join('');
+        }
       }
-    }
 
-    function onStopDateSelectChange(stopIdx, val) {
+      function onStopDateSelectChange(stopIdx, val) {
       if (!state.config) state.config = {};
       if (stopIdx === 0) state.config.stop1IsoDate = val || '';
       if (stopIdx === 1) state.config.stop2IsoDate = val || '';
