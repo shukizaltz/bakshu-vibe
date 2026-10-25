@@ -453,8 +453,12 @@
               <span>📅</span>
               <span>הורד לוח שנה מעודכן ליומן Google (.ics)</span>
             </button>
+            <button onclick="openGoogleCalendarForStop(0)" class="w-full py-2.5 px-4 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-black text-xs transition flex items-center justify-center gap-2 shadow-xs cursor-pointer" title="סנכרן את תחנת העצירה הקרובה ליומן">
+              <span>📅</span>
+              <span id="btnSyncStop1CalendarText">📅 שמור עצירה זו ב-Google Calendar (ט׳ כסליו)</span>
+            </button>
             <p class="text-[10px] text-slate-500 text-center">
-              לחיצה תוריד קובץ יומן מעודכן עם כל סדרי המבצע, התאריכים העבריים והתורנויות האישיות שלך (כולל תזכורת 10 דקות לפני כל סדר) – פתח את הקובץ בטלפון או במחשב כדי להוסיף הכל אוטומטית ל-Google Calendar
+              לחיצה תוריד קובץ יומן מעודכן עם כל סדרי המבצע, 3 תחנות העצירה, התאריכים העבריים והתורנויות האישיות שלך (כולל תזכורת 10 דקות לפני כל סדר) – פתח את הקובץ בטלפון או במחשב כדי להוסיף הכל אוטומטית ל-Google Calendar
             </p>
           </div>
         </div>
@@ -581,15 +585,20 @@
               <span class="text-xl">📍</span>
               <h3 class="text-base font-black text-slate-900">ציר ב׳: נקודות העצירה במסע</h3>
             </div>
-            <p class="text-xs text-slate-500">עצירה 1 נקבעה לט׳ כסליו • שאר העצירות ייקבעו בהחלטת ראש הישיבה</p>
+            <p class="text-xs text-slate-500">עצירות המסע מסונכרנות ליומן Google ולוח שנה חורף תשפ״ז</p>
           </div>
-          <button onclick="openJourneyStopGoogleCalendar('stop_1')" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-black text-xs transition flex items-center gap-1.5 self-start sm:self-auto shadow-sm">
+          <button onclick="openGoogleCalendarForStop(0)" class="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-black text-xs transition flex items-center gap-1.5 self-start sm:self-auto shadow-sm cursor-pointer">
             <span>📅</span>
             <span>סנכרן עצירה 1 ליומן Google</span>
           </button>
         </div>
 
-        <div id="journeyStopsContainer" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+        <!-- Selected Stop Info Bar -->
+        <div id="selectedStopInfoBar" class="mb-3">
+          <!-- Populated by renderRoyalTrail -->
+        </div>
+
+        <div id="journeyStopsContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           <!-- Populated by JS -->
         </div>
       </div>
@@ -804,8 +813,11 @@
       </div>
 
       <!-- Subview 2: Tab 3 - Target Tiers, Live Calculator & Campaign Dates -->
-      <div id="adminView-campaign" class="admin-subview hidden space-y-4">
+      <div id="adminView-campaign" class="admin-subview hidden space-y-4" data-alias="adminSubView-rules">
         
+        <!-- Live Scoring Map Banner at the Top of Admin Tab 3 -->
+        <div id="adminScoringMapBanner" class="mb-2"></div>
+
         <!-- Live Pool Calculator Card (מחשבון קופת הנקודות במבצע) -->
         <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#0A1138] via-indigo-950 to-slate-900 text-white border border-indigo-400/30 shadow-lg">
           <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-white/10">
@@ -844,11 +856,11 @@
         </div>
 
         <!-- 3 Tiers & Dates Configuration Form -->
-        <div class="soft-card p-5 sm:p-6">
+        <div class="soft-card p-5 sm:p-6" id="adminSubView-rules">
           <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
             <div>
-              <h3 class="text-base font-black text-slate-900">הגדרת 3 יעדי המבצע ותאריכים</h3>
-              <p class="text-xs text-slate-500">קביעת ספי הנקודות והתאריכים - מחושב ישירות מול קופת הסדרים</p>
+              <h3 class="text-base font-black text-slate-900">🎯 3. הגדרת יעדים ובונוסים (יעדי העצירות)</h3>
+              <p class="text-xs text-slate-500">קביעת ספי הנקודות, תאריכי העצירה המסונכרנים ליומן וקופת הסדרים</p>
             </div>
             <span id="adminTotalAchievablePointsBadge" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
               -- נק׳ בקופה
@@ -856,37 +868,52 @@
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 mb-5">
-            <!-- Tier 1: Bronze -->
+            <!-- Tier 1: Bronze & Stop 1 -->
             <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200">
               <div class="flex items-center justify-between mb-1.5">
-                <span class="text-xs font-black text-amber-900">🥉 יעד 1 (מינימום / ארד)</span>
+                <span class="text-xs font-black text-amber-900">🥉 עצירה 1 (ארד)</span>
                 <span class="text-[10px] font-bold text-amber-700">בסיסי</span>
               </div>
               <input type="text" id="targetMinNameInput" value="יעד כניסה להגרלה" class="w-full text-xs font-bold p-2 rounded-xl border border-amber-300 bg-white mb-2" oninput="updateCampaignTotalPointsLive()" />
               <label class="block text-[10px] font-bold text-slate-500 mb-0.5">כמות נקודות לסף:</label>
-              <input type="number" id="targetMinPointsInput" value="70" class="w-full text-sm font-black p-2 rounded-xl border border-amber-300 bg-white" oninput="updateCampaignTotalPointsLive()" />
+              <input type="number" id="targetMinPointsInput" value="70" class="w-full text-sm font-black p-2 rounded-xl border border-amber-300 bg-white mb-2" oninput="updateCampaignTotalPointsLive()" />
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">תאריך עצירה 1 בלוח המבצע:</label>
+              <select id="stop1DateSelect" class="w-full text-xs font-bold p-2 rounded-xl border border-amber-300 bg-white mb-1" onchange="onStopDateSelectChange(0, this.value)">
+                <!-- populated by JS -->
+              </select>
+              <div class="text-[10px] text-amber-800 font-bold" id="stop1DateLabelDisplay">יום חמישי ט׳ כסליו (19.11)</div>
             </div>
 
-            <!-- Tier 2: Silver -->
+            <!-- Tier 2: Silver & Stop 2 -->
             <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-300">
               <div class="flex items-center justify-between mb-1.5">
-                <span class="text-xs font-black text-slate-800">🥈 יעד 2 (אמצע / כסף)</span>
+                <span class="text-xs font-black text-slate-800">🥈 עצירה 2 (כסף)</span>
                 <span class="text-[10px] font-bold text-slate-600">בינוני</span>
               </div>
               <input type="text" id="targetMidNameInput" value="יעד פרס כספי" class="w-full text-xs font-bold p-2 rounded-xl border border-slate-300 bg-white mb-2" oninput="updateCampaignTotalPointsLive()" />
               <label class="block text-[10px] font-bold text-slate-500 mb-0.5">כמות נקודות לסף:</label>
-              <input type="number" id="targetMidPointsInput" value="100" class="w-full text-sm font-black p-2 rounded-xl border border-slate-300 bg-white" oninput="updateCampaignTotalPointsLive()" />
+              <input type="number" id="targetMidPointsInput" value="100" class="w-full text-sm font-black p-2 rounded-xl border border-slate-300 bg-white mb-2" oninput="updateCampaignTotalPointsLive()" />
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">תאריך עצירה 2 בלוח המבצע:</label>
+              <select id="stop2DateSelect" class="w-full text-xs font-bold p-2 rounded-xl border border-slate-300 bg-white mb-1" onchange="onStopDateSelectChange(1, this.value)">
+                <!-- populated by JS -->
+              </select>
+              <div class="text-[10px] text-slate-700 font-bold" id="stop2DateLabelDisplay">יום חמישי א׳ טבת - חנוכה (10.12)</div>
             </div>
 
-            <!-- Tier 3: Gold -->
+            <!-- Tier 3: Gold & Summit -->
             <div class="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200">
               <div class="flex items-center justify-between mb-1.5">
-                <span class="text-xs font-black text-indigo-950">🥇 יעד 3 (מקסימום / זהב)</span>
-                <span class="text-[10px] font-bold text-indigo-700">הפסגה</span>
+                <span class="text-xs font-black text-indigo-950">🥇 הפסגה (זהב)</span>
+                <span class="text-[10px] font-bold text-indigo-700">היעד הגדול</span>
               </div>
               <input type="text" id="targetMaxNameInput" value="יעד נסיעה ופרס ענק" class="w-full text-xs font-bold p-2 rounded-xl border border-indigo-300 bg-white mb-2" oninput="updateCampaignTotalPointsLive()" />
               <label class="block text-[10px] font-bold text-slate-500 mb-0.5">כמות נקודות לסף:</label>
-              <input type="number" id="targetMaxPointsInput" value="130" class="w-full text-sm font-black p-2 rounded-xl border border-indigo-300 bg-white" oninput="updateCampaignTotalPointsLive()" />
+              <input type="number" id="targetMaxPointsInput" value="130" class="w-full text-sm font-black p-2 rounded-xl border border-indigo-300 bg-white mb-2" oninput="updateCampaignTotalPointsLive()" />
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">תאריך הפסגה בלוח המבצע:</label>
+              <select id="stop3DateSelect" class="w-full text-xs font-bold p-2 rounded-xl border border-indigo-300 bg-white mb-1" onchange="onStopDateSelectChange(2, this.value)">
+                <!-- populated by JS -->
+              </select>
+              <div class="text-[10px] text-indigo-800 font-bold" id="stop3DateLabelDisplay">י״ד טבת (24.12)</div>
             </div>
           </div>
 
@@ -927,9 +954,9 @@
           </div>
 
           <div class="mt-5 flex justify-end">
-            <button onclick="saveCampaignConfigToSupabase()" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md flex items-center gap-1.5">
+            <button onclick="saveAdminRules()" id="saveAdminRulesBtn" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md flex items-center gap-1.5 cursor-pointer">
               <span>💾</span>
-              <span>שמור יעדים ותאריכים בענן</span>
+              <span>שמור יעדים ותאריכים בענן (Save Rules)</span>
             </button>
           </div>
         </div>
@@ -2080,12 +2107,23 @@
 
       state.campaignDays = updatedDays;
 
-      // עדכון דינמי של כותרת כמה עבר וכמה נשאר מתוך campaignDays
-      const totalDays = updatedDays.length;
+      // סנכרון תחנות העצירה מתוך state.trailStops ישירות ללוח השנה
+      const stopsToSync = (state.trailStops && state.trailStops.length > 0) ? state.trailStops : (state.journeyStops || []);
+      stopsToSync.forEach(st => {
+        if (st.isoDate) {
+          const mDay = updatedDays.find(d => d.isoDate === st.isoDate);
+          if (mDay) {
+            mDay.stationTitle = st.title;
+          }
+        }
+      });
+
+      // עדכון דינמי של מוני הימים והסדרים מתוך getCampaignPointsPotential()
+      const pot = getCampaignPointsPotential();
       const currentDayNum = state.selectedCalendarDayIndex !== undefined ? (state.selectedCalendarDayIndex + 1) : 1;
       const subtitleEl = document.getElementById('campaignDurationSubtitle');
       if (subtitleEl) {
-        subtitleEl.textContent = `היום: יום ${currentDayNum} מתוך ${totalDays} במבצע • עברו: ${passedDaysCount} ימים (${passedSedarimCount} סדרים, ${passedPointsCount} נק׳) | נשארו: ${remainingDaysCount} ימים (${remainingSedarimCount} סדרים, ${remainingPointsCount} נק׳)`;
+        subtitleEl.textContent = `היום: יום ${currentDayNum} מתוך ${pot.totalDays} במבצע • עברו: ${pot.passedDaysCount} ימים (${pot.passedSedarimCount} סדרים) • נשארו: ${pot.remainingDaysCount} ימים (${pot.remainingSedarimCount} סדרים)`;
       }
 
       // חישוב שבועות דינמי לחלוטין ללא הגבלת 4 שבועות
@@ -2688,15 +2726,28 @@
       const totalSedarimCount = days.reduce((sum, d) => sum + (Number(d.sedarim) || Number(d.sedarim_count) || 0), 0);
       const maxSedarimPoints = days.reduce((sum, d) => sum + (Number(d.pointsPool) || Number(d.points_pool) || 0), 0);
 
+      const passedDays = days.filter(d => d.status === 'passed');
+      const remainingDays = days.filter(d => d.status === 'today' || d.status === 'upcoming');
+
+      const passedDaysCount = passedDays.length;
+      const remainingDaysCount = remainingDays.length;
+
+      const passedSedarimCount = passedDays.reduce((sum, d) => sum + (Number(d.sedarim) || 0), 0);
+      const remainingSedarimCount = remainingDays.reduce((sum, d) => sum + (Number(d.sedarim) || 0), 0);
+
       const noPhoneBonus = (state.bonusConfig && state.bonusConfig.noPhoneBonus) || (state.config && state.config.noPhoneBonusPts) || 1;
       const noPhonePotential = totalSedarimCount * noPhoneBonus;
-      const singleDutyPoints = (state.bonusConfig && state.bonusConfig.dutyWakerBonus) || (state.config && state.config.dutyBonusPts) || 3;
+      const singleDutyPoints = (state.config && state.config.dutyBonusPts) || (state.bonusConfig && state.bonusConfig.dutyWakerBonus) || 3;
       const persistenceBonusPts = (state.config && state.config.xyBonus) || 3;
       const groupFullBonusPts = (state.config && state.config.groupFullBonus) || 4;
 
       return {
         totalDays,
         totalSedarimCount,
+        passedDaysCount,
+        remainingDaysCount,
+        passedSedarimCount,
+        remainingSedarimCount,
         maxSedarimPoints,
         noPhonePotential,
         singleDutyPoints,
@@ -2755,12 +2806,12 @@
 
       const bonusesPts = adminBonusPts + persistencePts + noPhonePts + groupFullPts;
 
-      // 3. ניקוד על סדרים בלבד
-      const rawScore = Number(student.score !== undefined && student.score !== null ? student.score : (student.baseScore || 0));
+      // 3. ניקוד על סדרים בלבד (כולל סדר פעיל, שבתות ובקשות שאושרו)
       let sedarimPts = 0;
       if (student.sedarimPts !== undefined && student.sedarimPts !== null) {
         sedarimPts = Number(student.sedarimPts) || 0;
       } else {
+        const rawScore = Number(student.score !== undefined && student.score !== null ? student.score : (student.baseScore || 0));
         sedarimPts = Math.max(0, rawScore - dutiesPts - bonusesPts);
       }
 
@@ -2976,6 +3027,15 @@
       const studentAchievable = document.getElementById('studentTotalAchievableMax');
       if (studentAchievable) studentAchievable.textContent = maxSedarimPoints;
 
+      // Update Live Scoring Map Banners
+      const bannerHtml = getCampaignScoringMapBannerHtml();
+      const sMapBanner = document.getElementById('studentScoringMapBanner');
+      if (sMapBanner) sMapBanner.innerHTML = bannerHtml;
+      const pMapBanner = document.getElementById('publicScoringMapBanner');
+      if (pMapBanner) pMapBanner.innerHTML = bannerHtml;
+      const aMapBanner = document.getElementById('adminScoringMapBanner');
+      if (aMapBanner) aMapBanner.innerHTML = bannerHtml;
+
       renderStudentScreen();
       renderLeaderboard();
     }
@@ -3022,10 +3082,12 @@
 
       const events = [];
 
-      // 1. ייצוא נקודות העצירה במסע מתוך campaign_calendar
-      const stops = (state.journeyStops && state.journeyStops.length > 0) ? state.journeyStops : [
-        { id: 'stop_1', title: 'עצירה 1 - פיתחו יומנים!', dateStr: 'יום ה׳ ט׳ כסליו', isDecided: true, note: 'האירוע הפותח של מסע החורף' }
-      ];
+      // 1. ייצוא נקודות העצירה במסע מתוך trailStops / campaign_calendar
+      const stops = (state.trailStops && state.trailStops.length > 0) ? state.trailStops : (state.journeyStops || [
+        { id: 'stop_1', title: 'עצירה 1 - פיתחו יומנים!', isoDate: '2026-11-19', dateStr: 'יום ה׳ ט׳ כסליו', dateLabel: 'יום חמישי ט׳ כסליו (19.11)', points: 70, isDecided: true, note: 'האירוע הפותח של מסע החורף' },
+        { id: 'stop_2', title: 'עצירה 2 - הדלקת נרות חנוכה', isoDate: '2026-12-10', dateStr: 'יום ה׳ א׳ טבת', dateLabel: 'יום חמישי א׳ טבת - חנוכה (10.12)', points: 100, isDecided: true, note: 'אירוע חנוכה ישיבתי' },
+        { id: 'stop_summit', title: 'הפסגה - סיום המסע', isoDate: '2026-12-24', dateStr: 'יום ה׳ י״ד טבת', dateLabel: 'י״ד טבת (24.12)', points: 130, isDecided: true, note: 'האירוע המרכזי והחגיגי בסיום המבצע' }
+      ]);
 
       stops.forEach((stop, sIdx) => {
         let resolvedIso = stop.isoDate;
@@ -3043,8 +3105,8 @@
           const stopDateStr = `${stopDate.getFullYear()}${pad(stopDate.getMonth() + 1)}${pad(stopDate.getDate())}`;
           const nextDateStr = `${nextDate.getFullYear()}${pad(nextDate.getMonth() + 1)}${pad(nextDate.getDate())}`;
           const stopMeta = getDayMeta(resolvedIso);
-          const displayTitle = `📍 מבצע בקשו - ${stop.title}`;
-          const displayDesc = `אירוע עצירה במסע מבצע בקשו VIBE: ${stop.note || ''}\\nמועד: ${stopMeta ? stopMeta.fullLabel : stop.dateStr}.`;
+          const displayTitle = `🎁 מבצע בקשו - ${stop.title}`;
+          const displayDesc = `אירוע עצירה במסע מבצע בקשו VIBE: ${stop.desc || stop.note || ''}\\nיעד נקודות: ${stop.points || 70} נק׳\\nתאריך עברי: ${stop.dateLabel || stop.dateStr || (stopMeta ? stopMeta.fullLabel : '')}.`;
 
           events.push(
             'BEGIN:VEVENT\n' +
@@ -3293,25 +3355,27 @@
       showToast('נפתח יומן Google Calendar עם פרטי התורנות', '📅');
     }
 
-    function openJourneyStopGoogleCalendar(stopId) {
-      const stop = (state.journeyStops || []).find(s => s.id === stopId) || { title: 'עצירה 1 במסע החורף', dateStr: 'ט׳ כסליו' };
-      const resolvedIso = resolveToIsoDate(stop.isoDate || stop.dateStr, state.campaignDays) || '2026-11-19';
-      const meta = getDayMeta(resolvedIso);
-      const title = encodeURIComponent('ישיבת בקשו - ' + stop.title);
-      const details = encodeURIComponent('אירוע עצירה מיוחד במסע מבצע בקשו VIBE: ' + (stop.note || 'האירוע הפותח של מסע החורף') + (meta ? '\nתאריך עברי: ' + meta.fullLabel : ''));
+    function openGoogleCalendarForStop(stopIdx) {
+      const stops = (state.trailStops && state.trailStops.length > 0) ? state.trailStops : (state.journeyStops || DEFAULT_TRAIL_STOPS);
+      const idx = typeof stopIdx === 'number' ? stopIdx : (stopIdx === 'stop_2' ? 1 : (stopIdx === 'stop_3' || stopIdx === 'stop_summit' ? 2 : 0));
+      const stop = stops[idx] || stops[0];
+      const iso = stop.isoDate || (idx === 0 ? '2026-11-19' : idx === 1 ? '2026-12-10' : '2026-12-24');
+      const ymd = iso.replace(/-/g, '');
+
+      const title = encodeURIComponent('🎁 ' + stop.title + ' - ישיבת בקשו');
+      const details = encodeURIComponent((stop.desc || stop.note || '') + ' | יעד נקודות: ' + (stop.points || 70) + ' נק׳ | תאריך עברי: ' + (stop.dateLabel || stop.dateStr || ''));
       const location = encodeURIComponent('ישיבת בקשו ירושלים');
-
-      const [ry, rm, rd] = resolvedIso.split('-').map(Number);
-      const d = new Date(ry, rm - 1, rd, 20, 0, 0);
-      const dEnd = new Date(ry, rm - 1, rd, 22, 0, 0);
-
-      const pad = (n) => String(n).padStart(2, '0');
-      const formatGDate = (dt) => dt.getUTCFullYear() + pad(dt.getUTCMonth()+1) + pad(dt.getUTCDate()) + 'T' + pad(dt.getUTCHours()) + pad(dt.getUTCMinutes()) + '00Z';
-      const dates = formatGDate(d) + '/' + formatGDate(dEnd);
-
-      const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dates}&details=${details}&location=${location}`;
+      const googleUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${ymd}T180000/${ymd}T220000&details=${details}&location=${location}&ctz=Asia/Jerusalem`;
       window.open(googleUrl, '_blank');
       showToast('נפתח יומן Google Calendar עבור ' + stop.title, '📅');
+    }
+
+    function openJourneyStopGoogleCalendar(stopId) {
+      openGoogleCalendarForStop(stopId);
+    }
+
+    function downloadSampleIcs() {
+      downloadStudentCalendarIcs();
     }
 
     // ====================================================
@@ -3551,22 +3615,64 @@
       }
     }
 
+    const DEFAULT_TRAIL_STOPS = [
+      {
+        id: 'stop_1',
+        title: 'עצירה 1 - פיתחו יומנים!',
+        isoDate: '2026-11-19',
+        dateStr: 'יום ה׳ ט׳ כסליו',
+        dateLabel: 'יום חמישי ט׳ כסליו (19.11)',
+        points: 70,
+        isDecided: true,
+        desc: 'עצירה ראשונה במסע החורף - סמנו ביומנים!',
+        note: 'האירוע הפותח של מסע החורף - סמנו ביומנים!',
+        icon: '📍'
+      },
+      {
+        id: 'stop_2',
+        title: 'עצירה 2 - הדלקת נרות חנוכה',
+        isoDate: '2026-12-10',
+        dateStr: 'יום ה׳ א׳ טבת',
+        dateLabel: 'יום חמישי א׳ טבת - חנוכה (10.12)',
+        points: 100,
+        isDecided: true,
+        desc: 'עצירה שנייה במסע - אירוע חנוכה ישיבתי חגיגי',
+        note: 'אירוע חנוכה ישיבתי חגיגי',
+        icon: '🕯️'
+      },
+      {
+        id: 'stop_summit',
+        title: 'הפסגה - סיום המסע',
+        isoDate: '2026-12-24',
+        dateStr: 'יום ה׳ י״ד טבת',
+        dateLabel: 'י״ד טבת (24.12)',
+        points: 130,
+        isDecided: true,
+        desc: 'יעד הפסגה הגדול - מעמד הסיום החגיגי של כלל הישיבה!',
+        note: 'אירוע השיא והמעמד החגיגי של כלל הישיבה!',
+        icon: '🏔️'
+      }
+    ];
+
     function loadJourneyStops() {
       try {
         const raw = localStorage.getItem(JOURNEY_STOPS_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          if (Array.isArray(parsed) && parsed.length >= 3) {
+            return parsed.map((s, idx) => ({
+              ...DEFAULT_TRAIL_STOPS[idx],
+              ...s,
+              isoDate: s.isoDate || DEFAULT_TRAIL_STOPS[idx].isoDate,
+              dateLabel: s.dateLabel || DEFAULT_TRAIL_STOPS[idx].dateLabel,
+              points: Number(s.points) || DEFAULT_TRAIL_STOPS[idx].points
+            }));
+          }
         }
       } catch (e) {
         console.warn('Could not load journey stops:', e);
       }
-      return [
-        { id: 'stop_1', title: 'עצירה 1 - פיתחו יומנים!', dateStr: 'יום ה׳ ט׳ כסליו', isoDate: '2026-11-19', isDecided: true, note: 'האירוע הפותח של מסע החורף - סמנו ביומנים!', icon: '📍' },
-        { id: 'stop_2', title: 'עצירה 2', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isoDate: '', isDecided: false, note: 'פרטי העצירה ייחשפו בהחלטת ראש הישיבה', icon: '❓' },
-        { id: 'stop_3', title: 'עצירה 3', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isoDate: '', isDecided: false, note: 'הפתעה מיוחדת לעומדים ביעדים', icon: '❓' },
-        { id: 'stop_summit', title: 'הפסגה - סיום המסע', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isoDate: '', isDecided: false, note: 'אירוע השיא והמעמד החגיגי של כלל הישיבה!', icon: '🏔️' }
-      ];
+      return JSON.parse(JSON.stringify(DEFAULT_TRAIL_STOPS));
     }
 
     function saveJourneyStops(stops) {
@@ -3602,6 +3708,7 @@
     const initialConfig = loadCampaignConfig(initialStudentsList.length);
     const initialSlots = loadScheduleSlots();
     const initialBonusLogs = loadBonusLogs();
+    const initialTrailStops = loadJourneyStops();
 
     const state = {
       activeTab: 'student',
@@ -3616,7 +3723,8 @@
       config: initialConfig,
       bonusConfig: loadBonusConfig(),
       dutiesRoster: loadDutiesRoster(),
-      journeyStops: loadJourneyStops(),
+      trailStops: initialTrailStops,
+      journeyStops: initialTrailStops,
       qrSecret: loadQrSecret(),
       qrSecretCode: loadQrSecret(),
       graphMode: 'collective',
@@ -4117,13 +4225,19 @@
         selectedIds.push(cb.value);
       });
 
-      // Update student score
+      // Update student score directly into sedarimPts and score without deduction
       curStudent.baseScore = (Number(curStudent.baseScore) || 0) + totalPoints;
       curStudent.score = curStudent.baseScore;
+      if (curStudent.sedarimPts !== undefined) {
+        curStudent.sedarimPts = (Number(curStudent.sedarimPts) || 0) + totalPoints;
+      }
 
       const stIdx = state.students.findIndex(s => s.id === curStudent.id);
       if (stIdx !== -1) {
         state.students[stIdx].score = curStudent.baseScore;
+        if (state.students[stIdx].sedarimPts !== undefined) {
+          state.students[stIdx].sedarimPts = curStudent.sedarimPts;
+        }
         saveLocalStudents();
       }
 
@@ -5532,6 +5646,49 @@
       showToast('סף סדר מלא הותאם ל-' + currentCount + ' בחורים', '🎯');
     }
 
+    function populateStopDateSelects() {
+      const calMap = state.campaignCalendar || STATIC_CALENDAR_5787;
+      const sortedIsos = Object.keys(calMap).sort();
+
+      const optionsHtml = sortedIsos.map(iso => {
+        const meta = getDayMeta(iso);
+        const label = `${meta.dayNameHe} • ${meta.hebrewDate} (${meta.gregFull})`;
+        return `<option value="${iso}">${label}</option>`;
+      }).join('');
+
+      const trailStops = (state.trailStops && state.trailStops.length > 0) ? state.trailStops : (state.journeyStops || DEFAULT_TRAIL_STOPS);
+
+      [0, 1, 2].forEach(idx => {
+        const sel = document.getElementById(`stop${idx + 1}DateSelect`);
+        const lbl = document.getElementById(`stop${idx + 1}DateLabelDisplay`);
+        const stop = trailStops[idx];
+        if (sel) {
+          sel.innerHTML = optionsHtml;
+          if (stop && stop.isoDate) sel.value = stop.isoDate;
+        }
+        if (lbl && stop) {
+          lbl.textContent = stop.dateLabel || stop.dateStr || '';
+        }
+      });
+    }
+
+    function onStopDateSelectChange(stopIdx, val) {
+      if (!val) return;
+      const meta = getDayMeta(val);
+      const trailStops = (state.trailStops && state.trailStops.length > 0) ? state.trailStops : (state.journeyStops || DEFAULT_TRAIL_STOPS);
+      if (trailStops[stopIdx]) {
+        trailStops[stopIdx].isoDate = val;
+        trailStops[stopIdx].dateLabel = meta ? `${meta.dayNameHe} ${meta.hebrewDate} (${meta.gregShort})` : val;
+        trailStops[stopIdx].dateStr = meta ? `${meta.dayNameHe} ${meta.hebrewDate}` : val;
+        const lbl = document.getElementById(`stop${stopIdx + 1}DateLabelDisplay`);
+        if (lbl) lbl.textContent = trailStops[stopIdx].dateLabel;
+      }
+      state.trailStops = trailStops;
+      state.journeyStops = trailStops;
+      saveJourneyStops(trailStops);
+      renderAllViews();
+    }
+
     function populateCampaignConfigInputs() {
       const startEl = document.getElementById('campaignStartDateInput');
       const endEl = document.getElementById('campaignEndDateInput');
@@ -5576,6 +5733,7 @@
         liveCountEl.textContent = state.students.length === 1 ? '1 בחור רשום' : state.students.length + ' בחורים רשומים';
       }
 
+      populateStopDateSelects();
       updateCampaignTotalPointsLive();
     }
 
@@ -5751,9 +5909,11 @@
     }
 
     function exportToCsv() {
-      let csv = 'שם הבחור,טלפון,סיסמה,ניקוד מצטבר\n';
+      let csv = 'שם הבחור,טלפון,סיסמה,קישור אישי,סך נקודות,סדרים,תורנויות,בונוסים\n';
       state.students.forEach(s => {
-        csv += '"' + s.name + '","' + s.phone + '","' + (s.password || '1234') + '",' + s.score + '\n';
+        const bd = getStudentScoreBreakdown(s);
+        const directUrl = getStudentDirectUrl(s.id);
+        csv += `"${s.name}","${s.phone}","${s.password || '1234'}","${directUrl}",${bd.totalScore},${bd.sedarimPts},${bd.dutiesPts},${bd.bonusesPts}\n`;
       });
       const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -5763,6 +5923,7 @@
       a.click();
       showToast('דו״ח אקסל הופק בהצלחה!', '📊');
     }
+    const exportAdminCsv = exportToCsv;
 
     // ====================================================
     // 11. SUPABASE SYNC FUNCTIONS
@@ -5810,6 +5971,48 @@
       const maxName = (document.getElementById('targetMaxNameInput')?.value || 'יעד נסיעה ופרס ענק').trim();
       const maxPts = Math.max(1, parseInt(document.getElementById('targetMaxPointsInput')?.value || '130', 10));
 
+      // Sync Trail Stops from Select Pickers
+      const s1Date = document.getElementById('stop1DateSelect')?.value || state.trailStops[0]?.isoDate || '2026-11-19';
+      const s2Date = document.getElementById('stop2DateSelect')?.value || state.trailStops[1]?.isoDate || '2026-12-10';
+      const s3Date = document.getElementById('stop3DateSelect')?.value || state.trailStops[2]?.isoDate || end || '2026-12-24';
+
+      const meta1 = getDayMeta(s1Date);
+      const meta2 = getDayMeta(s2Date);
+      const meta3 = getDayMeta(s3Date);
+
+      const trailStops = (state.trailStops && state.trailStops.length >= 3) ? state.trailStops : (state.journeyStops || DEFAULT_TRAIL_STOPS);
+      if (trailStops && trailStops.length >= 3) {
+        trailStops[0].isoDate = s1Date;
+        trailStops[0].points = minPts;
+        trailStops[0].dateLabel = meta1 ? `${meta1.dayNameHe} ${meta1.hebrewDate} (${meta1.gregShort})` : 'יום חמישי ט׳ כסליו (19.11)';
+        trailStops[0].dateStr = meta1 ? `${meta1.dayNameHe} ${meta1.hebrewDate}` : 'ט׳ כסליו';
+
+        trailStops[1].isoDate = s2Date;
+        trailStops[1].points = midPts;
+        trailStops[1].dateLabel = meta2 ? `${meta2.dayNameHe} ${meta2.hebrewDate} (${meta2.gregShort})` : 'יום חמישי א׳ טבת - חנוכה (10.12)';
+        trailStops[1].dateStr = meta2 ? `${meta2.dayNameHe} ${meta2.hebrewDate}` : 'א׳ טבת';
+
+        trailStops[2].isoDate = s3Date;
+        trailStops[2].points = maxPts;
+        trailStops[2].dateLabel = meta3 ? `${meta3.hebrewDate} (${meta3.gregShort})` : 'י״ד טבת (24.12)';
+        trailStops[2].dateStr = meta3 ? meta3.hebrewDate : 'י״ד טבת';
+      }
+      state.trailStops = trailStops;
+      state.journeyStops = trailStops;
+      saveJourneyStops(trailStops);
+
+      // Update stationTitle in state.campaignDays
+      if (state.campaignDays && Array.isArray(state.campaignDays)) {
+        state.campaignDays.forEach(day => {
+          day.stationTitle = '';
+          trailStops.forEach(st => {
+            if (st.isoDate === day.isoDate) {
+              day.stationTitle = st.title;
+            }
+          });
+        });
+      }
+
       state.config.startDate = start;
       state.config.endDate = end;
       state.config.minTarget = minPts;
@@ -5840,14 +6043,23 @@
             xy_window_size: xyWindow,
             xy_bonus_pts: xyBonus
           });
+
+          await supabaseClient.from('app_state').upsert([
+            {
+              key: 'trail_stops',
+              data: trailStops,
+              updated_at: new Date().toISOString()
+            }
+          ], { onConflict: 'key' });
         } catch (e) {
           console.warn('Supabase campaign sync:', e);
         }
       }
 
-      showToast('כל 3 היעדים והגדרות המבצע נשמרו בהצלחה ב-Supabase!', '💾');
+      showToast('כל 3 היעדים, תאריכי העצירות וההגדרות נשמרו בהצלחה ב-Supabase!', '💾');
       renderAllViews();
     }
+    const saveAdminRules = saveCampaignConfigToSupabase;
 
     async function saveDailyScheduleToSupabase() {
       saveScheduleSlots(state.slotsByDate);
@@ -6370,55 +6582,66 @@
 
     function renderJourneyStops() {
       const container = document.getElementById('journeyStopsContainer');
-      if (!container) return;
+      const stops = (state.trailStops && state.trailStops.length > 0) ? state.trailStops : (state.journeyStops || DEFAULT_TRAIL_STOPS);
 
-      const stops = state.journeyStops || [
-        { id: 'stop_1', title: 'עצירה 1 - פיתחו יומנים!', dateStr: 'יום ה׳ ט׳ כסליו', isDecided: true, note: 'האירוע הפותח של מסע החורף', icon: '📍' },
-        { id: 'stop_2', title: 'עצירה 2', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isDecided: false, note: 'פרטי העצירה ייחשפו בהמשך', icon: '❓' },
-        { id: 'stop_3', title: 'עצירה 3', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isDecided: false, note: 'פרטי העצירה ייחשפו בהמשך', icon: '❓' },
-        { id: 'stop_summit', title: 'הפסגה - סיום המסע', dateStr: '❓ מועד ייקבע ע״י ראש הישיבה', isDecided: false, note: 'האירוע המרכזי והחגיגי בסיום המבצע', icon: '🏔️' }
-      ];
-
-      container.innerHTML = stops.map((stop) => {
-        const isDecided = stop.isDecided;
-        let combinedDateText = stop.dateStr;
-        const resolvedIso = resolveToIsoDate(stop.isoDate || stop.dateStr, state.campaignDays);
-        if (resolvedIso) {
-          const meta = getDayMeta(resolvedIso);
-          if (meta) {
-            combinedDateText = `${meta.dayNameHe} • ${meta.hebrewDate} (${meta.gregFull})`;
+      if (container) {
+        container.innerHTML = stops.map((stop, idx) => {
+          const isDecided = stop.isDecided !== false;
+          let combinedDateText = stop.dateLabel || stop.dateStr;
+          if (stop.isoDate) {
+            const meta = getDayMeta(stop.isoDate);
+            if (meta) {
+              combinedDateText = `${meta.dayNameHe} • ${meta.hebrewDate} (${meta.gregShort})`;
+            }
           }
-        }
 
-        return `
-          <div class="p-3.5 rounded-2xl border ${isDecided ? 'border-amber-300 bg-gradient-to-b from-amber-50/70 to-white shadow-sm' : 'border-slate-200 bg-slate-50/70'} flex flex-col justify-between transition hover:shadow-md">
-            <div>
-              <div class="flex items-center justify-between gap-1 mb-1">
-                <span class="text-xs font-black text-slate-900 flex items-center gap-1">
-                  <span>${stop.icon || '📍'}</span>
-                  <span>${stop.title}</span>
-                </span>
-                <span class="text-[9px] font-black px-2 py-0.5 rounded-full ${isDecided ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-200 text-slate-600'}">
-                  ${isDecided ? 'מועד סופי ✓' : 'ממתין לקביעה ⏳'}
-                </span>
+          return `
+            <div class="p-3.5 rounded-2xl border ${isDecided ? 'border-amber-300 bg-gradient-to-b from-amber-50/70 to-white shadow-sm' : 'border-slate-200 bg-slate-50/70'} flex flex-col justify-between transition hover:shadow-md">
+              <div>
+                <div class="flex items-center justify-between gap-1 mb-1">
+                  <span class="text-xs font-black text-slate-900 flex items-center gap-1">
+                    <span>${stop.icon || '📍'}</span>
+                    <span>${stop.title}</span>
+                  </span>
+                  <span class="text-[9px] font-black px-2 py-0.5 rounded-full ${isDecided ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-200 text-slate-600'}">
+                    ${isDecided ? 'מועד סופי ✓' : 'ממתין לקביעה ⏳'}
+                  </span>
+                </div>
+                <div class="text-xs font-black text-indigo-950 mt-1">${combinedDateText}</div>
+                <div class="text-[10px] text-amber-700 font-extrabold mt-0.5">יעד נקודות: ${stop.points || 70} נק׳</div>
+                <p class="text-[10px] text-slate-500 mt-1">${stop.desc || stop.note || ''}</p>
               </div>
-              <div class="text-xs font-black text-indigo-950 mt-1">${combinedDateText}</div>
-              <p class="text-[10px] text-slate-500 mt-1">${stop.note || ''}</p>
-            </div>
-            ${isDecided ? `
-              <button onclick="openJourneyStopGoogleCalendar('${stop.id}')" class="mt-3 w-full py-1.5 px-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] transition flex items-center justify-center gap-1 shadow-xs">
+              <button onclick="openGoogleCalendarForStop(${idx})" class="mt-3 w-full py-2 px-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer">
                 <span>📅</span>
-                <span>סנכרן ליומן Google</span>
+                <span>שמור עצירה זו ב-Google Calendar (${stop.dateLabel || stop.dateStr})</span>
               </button>
-            ` : `
-              <div class="mt-3 text-center py-1 text-[10px] font-bold text-slate-400 bg-white/80 rounded-xl border border-slate-200">
-                ייקבע ע״י ראש הישיבה
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Update Selected Stop Info Bar
+      const infoBar = document.getElementById('selectedStopInfoBar');
+      if (infoBar && stops.length > 0) {
+        const sel = stops[0];
+        infoBar.innerHTML = `
+          <div class="p-3 rounded-2xl bg-indigo-900/90 text-white border border-indigo-700 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs shadow-md">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">📍</span>
+              <div>
+                <span class="font-black text-amber-300">${sel.title}</span>
+                <span class="text-white/80 mr-1.5">(${sel.dateLabel || sel.dateStr}) • יעד: ${sel.points || 70} נק׳</span>
               </div>
-            `}
+            </div>
+            <button onclick="openGoogleCalendarForStop(0)" class="px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition flex items-center gap-1.5 shadow-sm cursor-pointer">
+              <span>📅</span>
+              <span>שמור עצירה זו ב-Google Calendar (${sel.dateLabel || sel.dateStr})</span>
+            </button>
           </div>
         `;
-      }).join('');
+      }
     }
+    const renderRoyalTrail = renderJourneyStops;
 
     function downloadJourneyStop1Ics() {
       const ics = 
