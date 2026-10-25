@@ -780,6 +780,10 @@
 
         <!-- Sub Navigation Tabs -->
         <div class="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          <button onclick="openQrProjectorModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md flex items-center gap-1.5 shrink-0 cursor-pointer animate-pulse hover:animate-none">
+            <span>📽️</span>
+            <span>צור / הצג QR לבית המדרש</span>
+          </button>
           <button onclick="switchAdminSubView('students')" id="asv-students" class="px-3.5 py-2 rounded-xl font-black text-xs transition bg-[#0A1138] text-white shadow-sm shrink-0">
             👥 1. בחורים וניקוד
           </button>
@@ -1085,6 +1089,10 @@
             </div>
             <div class="flex items-center gap-2">
               <select id="adminScheduleDayPicker" class="text-xs font-bold p-2 rounded-xl border border-slate-300 bg-white" onchange="renderAdminDayScheduleEditor()"></select>
+              <button onclick="openQrProjectorModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 cursor-pointer">
+                <span>📽️</span>
+                <span>הצג QR לבית המדרש</span>
+              </button>
               <button onclick="openAddSlotModal()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm">
                 + הוסף סדר
               </button>
@@ -4494,6 +4502,85 @@
       if (typeof renderAdminDutiesRosterTable === 'function') renderAdminDutiesRosterTable();
     }
 
+    
+    // QR & Barcode Projector for Beit Midrash Screen
+    function openQrProjectorModal(slotTitle, dateStr, slotIdx) {
+      const modal = document.getElementById('adminQrProjectorModal');
+      const titleEl = document.getElementById('qrProjectorSederTitle');
+      const subEl = document.getElementById('qrProjectorDateSubtitle');
+      const imgEl = document.getElementById('qrProjectorImage');
+      const codeEl = document.getElementById('qrProjectorManualCode');
+      if (!modal) return;
+
+      const secretObj = (typeof loadQrSecret === 'function') ? loadQrSecret() : { code: 'BK-892' };
+      const code = secretObj.code || 'BK-892';
+
+      let displayTitle = slotTitle;
+      if (!displayTitle) {
+        const curSederInfo = typeof getActiveOrNextSederInfo === 'function' ? getActiveOrNextSederInfo() : null;
+        displayTitle = curSederInfo?.activeSeder?.title || curSederInfo?.nextSeder?.title || 'סדר פעיל בבית המדרש';
+      }
+
+      const todayStr = dateStr || getTodayDateStr();
+      const meta = typeof getDayMeta === 'function' ? getDayMeta(todayStr) : null;
+      const dateText = meta ? (meta.dayNameHe + ' • ' + meta.hebrewDate + ' (' + meta.gregShort + ')') : todayStr;
+
+      if (titleEl) titleEl.textContent = displayTitle;
+      if (subEl) subEl.textContent = dateText + ' • סרוק נוכחות בבית המדרש';
+      if (codeEl) codeEl.textContent = code;
+
+      // Construct high-res QR code URL
+      const qrData = encodeURIComponent('BAKSHU:' + code + ':' + displayTitle + ':' + todayStr);
+      if (imgEl) {
+        imgEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=' + qrData;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeQrProjectorModal() {
+      const modal = document.getElementById('adminQrProjectorModal');
+      if (modal) modal.classList.add('hidden');
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    function regenerateQrSecretCode() {
+      const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+      const p1 = letters[Math.floor(Math.random() * letters.length)] + letters[Math.floor(Math.random() * letters.length)];
+      const num = Math.floor(100 + Math.random() * 900);
+      const newCode = p1 + '-' + num;
+
+      const newSecret = { code: newCode, updatedAt: Date.now() };
+      if (typeof saveQrSecret === 'function') saveQrSecret(newSecret);
+
+      const codeEl = document.getElementById('qrProjectorManualCode');
+      if (codeEl) codeEl.textContent = newCode;
+
+      const titleEl = document.getElementById('qrProjectorSederTitle');
+      const displayTitle = titleEl ? titleEl.textContent : 'סדר בית המדרש';
+      const qrData = encodeURIComponent('BAKSHU:' + newCode + ':' + displayTitle);
+      const imgEl = document.getElementById('qrProjectorImage');
+      if (imgEl) {
+        imgEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=' + qrData;
+      }
+
+      showToast('קוד ברקוד חדש נוצר בהצלחה: ' + newCode, '🔑');
+    }
+
+    function toggleQrProjectorFullScreen() {
+      const box = document.getElementById('qrProjectorModalBox') || document.getElementById('adminQrProjectorModal');
+      if (!box) return;
+      if (!document.fullscreenElement) {
+        box.requestFullscreen().catch(err => {
+          console.log('Fullscreen error:', err);
+        });
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
     function switchAdminSubView(subViewId) {
       if (subViewId === 'rules') subViewId = 'campaign';
       state.adminSubView = subViewId;
@@ -6198,6 +6285,10 @@
                   <option value="5" ${slot.points === 5 ? 'selected' : ''}>5 נק׳ (משמר)</option>
                   <option value="8" ${slot.points === 8 ? 'selected' : ''}>8 נק׳ (שבת)</option>
                 </select>
+                <button onclick="openQrProjectorModal('${slot.title}', '${selectedDate}', ${idx})" class="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs flex items-center gap-1 transition cursor-pointer" title="הצג ברקוד להקרנה בסדר זה">
+                  <span>📽️</span>
+                  <span>הצג QR לסדר זה</span>
+                </button>
                 <button onclick="removeSlotItem('${selectedDate}', ${idx})" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-bold" title="מחק סדר זה">
                   ✕
                 </button>
@@ -8791,6 +8882,61 @@ END:VCALENDAR`;
     <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-right max-h-[90vh] overflow-y-auto">
       <div id="adminStudentBreakdownModalContent">
         <!-- Rendered dynamically by inspectStudentFromAdmin -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Full Beit Midrash QR & Barcode Projector Modal -->
+  <div id="adminQrProjectorModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 hidden">
+    <div id="qrProjectorModalBox" class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center relative transition-all">
+      <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">📽️</span>
+          <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">הקרנה לבית המדרש</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button onclick="toggleQrProjectorFullScreen()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs transition" title="מסך מלא">
+            ⛶
+          </button>
+          <button onclick="closeQrProjectorModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-sm transition" title="סגור">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <h3 id="qrProjectorSederTitle" class="text-xl sm:text-2xl font-black text-slate-900 mb-1">
+        סריקת נוכחות לבית המדרש
+      </h3>
+      <p id="qrProjectorDateSubtitle" class="text-xs sm:text-sm font-bold text-indigo-700 mb-5">
+        כוון את מצלמת הטלפון לסריקה וסימון נוכחות מידי
+      </p>
+
+      <!-- Center Big QR Code Display -->
+      <div class="relative inline-block mx-auto mb-4 p-3 bg-white rounded-3xl border-2 border-indigo-200 shadow-xl">
+        <img id="qrProjectorImage" src="" alt="ברקוד בית המדרש" class="w-56 h-56 sm:w-72 sm:h-72 object-contain mx-auto rounded-2xl" />
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div class="w-10 h-10 rounded-xl bg-white/95 shadow-md flex items-center justify-center border border-indigo-100 text-lg">
+            🕍
+          </div>
+        </div>
+      </div>
+
+      <!-- Alphanumeric Backup Code -->
+      <div class="max-w-xs mx-auto p-3 rounded-2xl bg-amber-50 border border-amber-200 mb-4">
+        <span class="text-[11px] font-bold text-amber-900 block mb-0.5">קוד בית המדרש להזנה ידנית (למי שאין מצלמה):</span>
+        <div id="qrProjectorManualCode" class="text-2xl sm:text-3xl font-black font-mono tracking-widest text-amber-950">BK-892</div>
+        <button onclick="regenerateQrSecretCode()" class="mt-1 text-[11px] text-indigo-700 hover:text-indigo-900 font-bold underline cursor-pointer">
+          🔄 צור קוד רנדומלי חדש
+        </button>
+      </div>
+
+      <div class="flex items-center justify-center gap-2 text-xs">
+        <button onclick="toggleQrProjectorFullScreen()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black transition shadow-sm">
+          ⛶ מסך מלא להקרנה
+        </button>
+        <button onclick="closeQrProjectorModal()" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition">
+          סגור
+        </button>
       </div>
     </div>
   </div>
