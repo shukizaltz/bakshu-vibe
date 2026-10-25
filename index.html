@@ -1137,7 +1137,7 @@
     const SUPABASE_KEY = 'sb_publishable_DuJUmTpWwU4h3P8r1htVWw_24i-VjeG';
     const supabaseClient = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-    const SCHEMA_VERSION = '2026_10_25_v8';
+    const SCHEMA_VERSION = '2026_10_25_v9';
     let isCloudHydrated = false;
 
     const HEB_GEMATRIA_DAYS = [
@@ -1146,6 +1146,87 @@
       'כ׳','כ״א','כ״ב','כ״ג','כ״ד','כ״ה','כ״ו','כ״ז','כ״ח','כ״ט','ל׳'
     ];
     const HEB_DAY_NAMES = ['יום א׳','יום ב׳','יום ג׳','יום ד׳','יום ה׳','יום ו׳','שבת קודש'];
+
+    // 1. מילון קבוע ודטרמיניסטי לתשפ״ז - גיבוי מובנה ומקור אמת לכל תאריכי המבצע
+    const STATIC_CALENDAR_5787 = (() => {
+      const map = {};
+      const addRange = (startY, startM, startD, count, monthName, startHebNum) => {
+        let cur = new Date(startY, startM - 1, startD, 12, 0, 0);
+        for (let i = 0; i < count; i++) {
+          const y = cur.getFullYear();
+          const mm = String(cur.getMonth() + 1).padStart(2, '0');
+          const dd = String(cur.getDate()).padStart(2, '0');
+          const iso = `${y}-${mm}-${dd}`;
+          const dow = cur.getDay();
+          const hebDayNum = startHebNum + i;
+          const gem = HEB_GEMATRIA_DAYS[hebDayNum] || String(hebDayNum);
+          const hDate = `${gem} ${monthName}`;
+          const isOpening = (iso === '2026-10-25');
+          const isStop1 = (iso === '2026-11-19');
+          const isFri = (dow === 5);
+          const isShabbat = (dow === 6);
+          const isMishmarThu = (dow === 4);
+
+          let sedarimCount = 3;
+          let pointsPool = 4;
+          if (isOpening) {
+            sedarimCount = 2;
+            pointsPool = 3;
+          } else if (isFri) {
+            sedarimCount = 0;
+            pointsPool = 0;
+          } else if (isShabbat) {
+            sedarimCount = 4;
+            pointsPool = 8;
+          } else if (isMishmarThu) {
+            sedarimCount = 4;
+            pointsPool = 7;
+          }
+
+          map[iso] = {
+            iso_date: iso,
+            hebrew_date: hDate,
+            greg_label: `${dd}.${mm}`,
+            greg_full: `${dd}.${mm}.${y}`,
+            day_name_he: HEB_DAY_NAMES[dow],
+            day_of_week: dow,
+            sedarim_count: sedarimCount,
+            points_pool: pointsPool,
+            station_title: isStop1 ? 'עצירה 1 - פיתחו יומנים!' : '',
+            wakeup_student_id: null,
+            kitchen_student_id: null,
+            is_evening_start: isOpening
+          };
+          cur.setDate(cur.getDate() + 1);
+        }
+      };
+
+      // חשוון: 29 ימים מ-2026-10-12 (יום א׳ 25.10.2026 = י״ד חשוון פתיחת המבצע)
+      addRange(2026, 10, 12, 29, 'חשוון', 1);
+      // 2026-11-10: ל׳ חשוון / ר״ח כסליו
+      map['2026-11-10'] = {
+        iso_date: '2026-11-10',
+        hebrew_date: 'ל׳ חשוון',
+        greg_label: '10.11',
+        greg_full: '10.11.2026',
+        day_name_he: 'יום ג׳',
+        day_of_week: 2,
+        sedarim_count: 3,
+        points_pool: 4,
+        station_title: '',
+        wakeup_student_id: null,
+        kitchen_student_id: null,
+        is_evening_start: false
+      };
+      // כסלו: 30 ימים, כאשר ט׳ כסליו חל ביום ה׳ 19.11.2026
+      addRange(2026, 11, 11, 29, 'כסליו', 1);
+      // טבת: 29 ימים החל מ-2026-12-10
+      addRange(2026, 12, 10, 29, 'טבת', 1);
+      // שבט: 30 ימים החל מ-2027-01-08
+      addRange(2027, 1, 8, 30, 'שבט', 1);
+
+      return map;
+    })();
 
     const DEFAULT_EVENTS_LIST = [
       { id: 'ev_shacharit', title: 'תפילת שחרית', timeWindow: '08:25 - 08:50', points: 1, type: 'קבוע', schedule: 'א׳–ו׳' },
@@ -1165,7 +1246,7 @@
       return state.students.filter(s => s.presentToday || s.present_today || s.presentCurrent).length;
     }
 
-    // 1. המרה כפויה של כל תאריך עברי לאותיות גימטריה בלבד (הסרת 'ב' מתחילת החודש ואפס מספרים)
+    // המרה כפויה של כל תאריך עברי לאותיות גימטריה בלבד
     function toHebrewLetters(str) {
       if (!str || typeof str !== 'string') return str;
       const hebRegex = /(^|[^\d])([1-2]?\d|30)\s*ב?(תשרי|חשוון|חשון|מרחשוון|מרחשון|כסלו|כסליו|טבת|שבט|אדר|ניסן|אייר|סיוון|סיון|תמוז|אב|אלול)/g;
@@ -1178,86 +1259,72 @@
     }
     const forceHebrewLetters = toHebrewLetters;
 
-    // 2. מנוע תאריכים מרכזי אחד (Single Source of Truth עברי-לועזי) עם מטמון זיכרון לביצועים מרביים
-    const _dayMetaCache = new Map();
-    let _hebrewDateFormatter = null;
-
+    // 2. מנוע תאריכים מרכזי אחד (Single Source of Truth) מתוך campaign_calendar ומילון תשפ״ז (ללא Intl!)
     function getDayMeta(isoDate) {
       if (!isoDate) return null;
       const cleanIso = String(isoDate).trim().slice(0, 10);
-      if (_dayMetaCache.has(cleanIso)) {
-        return _dayMetaCache.get(cleanIso);
+      const row = (typeof state !== 'undefined' && state.campaignCalendar && state.campaignCalendar[cleanIso])
+        ? state.campaignCalendar[cleanIso]
+        : STATIC_CALENDAR_5787[cleanIso];
+
+      if (row) {
+        const gregShort = row.greg_label || row.gregShort || (cleanIso.slice(8, 10) + '.' + cleanIso.slice(5, 7));
+        const gregFull = row.greg_full || row.gregFull || `${gregShort}.${cleanIso.slice(0, 4)}`;
+        const dow = (typeof row.day_of_week === 'number') ? row.day_of_week : new Date(cleanIso + 'T12:00:00').getDay();
+        const dayNameHe = row.day_name_he || row.dayNameHe || HEB_DAY_NAMES[dow];
+        const hebrewDate = row.hebrew_date || row.hebrewDate || '';
+        return {
+          isoDate: cleanIso,
+          gregShort,
+          gregFull,
+          dayOfWeek: dow,
+          dayNameHe,
+          hebrewDate,
+          fullLabel: `${dayNameHe} • ${hebrewDate} (${gregShort})`,
+          sedarimCount: row.sedarim_count,
+          pointsPool: row.points_pool,
+          stationTitle: row.station_title || '',
+          wakeupStudentId: row.wakeup_student_id,
+          kitchenStudentId: row.kitchen_student_id,
+          isEveningStart: !!row.is_evening_start
+        };
       }
+
+      // Safe fallback
       const safeNoon = new Date(cleanIso + 'T12:00:00');
       if (isNaN(safeNoon.getTime())) return null;
-
       const y = safeNoon.getFullYear();
       const m = String(safeNoon.getMonth() + 1).padStart(2, '0');
       const d = String(safeNoon.getDate()).padStart(2, '0');
-      const normalizedIso = `${y}-${m}-${d}`;
-      const gregShort = `${d}.${m}`;
-      const gregFull = `${d}.${m}.${y}`;
-      const dayOfWeek = safeNoon.getDay(); // 0..6
-      const dayNameHe = HEB_DAY_NAMES[dayOfWeek] || 'יום חול';
-
-      let dayNum = 1;
-      let rawMonth = '';
-      try {
-        if (!_hebrewDateFormatter) {
-          _hebrewDateFormatter = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' });
-        }
-        const parts = _hebrewDateFormatter.formatToParts(safeNoon);
-        dayNum = parseInt(parts.find(p => p.type === 'day')?.value || '1', 10);
-        rawMonth = parts.find(p => p.type === 'month')?.value || '';
-      } catch (e) {
-        dayNum = safeNoon.getDate();
-      }
-      if (rawMonth.startsWith('ב')) rawMonth = rawMonth.slice(1);
-      const hebLetters = HEB_GEMATRIA_DAYS[dayNum] || String(dayNum);
-      const hebrewDate = toHebrewLetters(`${hebLetters} ${rawMonth}`.trim());
-      const fullLabel = `${dayNameHe} • ${hebrewDate} (${gregShort})`;
-
-      const result = {
-        isoDate: normalizedIso,
-        gregShort,
-        gregFull,
-        dayOfWeek,
-        dayNameHe,
-        hebrewDate,
-        fullLabel
+      const dow = safeNoon.getDay();
+      return {
+        isoDate: `${y}-${m}-${d}`,
+        gregShort: `${d}.${m}`,
+        gregFull: `${d}.${m}.${y}`,
+        dayOfWeek: dow,
+        dayNameHe: HEB_DAY_NAMES[dow] || 'יום חול',
+        hebrewDate: '',
+        fullLabel: `${HEB_DAY_NAMES[dow]} (${d}.${m})`,
+        sedarimCount: (dow === 5 ? 0 : dow === 6 ? 4 : 3),
+        pointsPool: (dow === 5 ? 0 : dow === 6 ? 8 : 4),
+        stationTitle: '',
+        wakeupStudentId: null,
+        kitchenStudentId: null,
+        isEveningStart: false
       };
-      _dayMetaCache.set(cleanIso, result);
-      return result;
     }
-
-    const _resolveIsoDateCache = new Map();
 
     function resolveToIsoDate(inputStr, campaignDays) {
       if (!inputStr) return '';
       const raw = String(inputStr).trim();
-      const cacheKey = raw + '_' + (campaignDays ? campaignDays.length : 0);
-      if (_resolveIsoDateCache.has(cacheKey)) {
-        return _resolveIsoDateCache.get(cacheKey);
-      }
 
       // 1. Direct ISO match (YYYY-MM-DD)
       const isoMatch = raw.match(/\b(202\d-\d{2}-\d{2})\b/);
-      if (isoMatch) {
-        _resolveIsoDateCache.set(cacheKey, isoMatch[1]);
-        return isoMatch[1];
-      }
+      if (isoMatch) return isoMatch[1];
 
       // 2. Direct DD.MM match
       const ddmMatch = raw.match(/\b(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?\b/);
 
-      // Pre-check: if string does NOT contain a date clue or Hebrew month, exit immediately (O(1))
-      const hasDateClue = ddmMatch || /(?:תשרי|חשוון|חשון|מרחשוון|מרחשון|כסלו|כסליו|טבת|שבט|אדר|ניסן|אייר|סיוון|סיון|תמוז|אב|אלול)/.test(raw);
-      if (!hasDateClue) {
-        _resolveIsoDateCache.set(cacheKey, '');
-        return '';
-      }
-
-      // Pre-normalize input text (remove quotes, gershayim, extra spaces, full/defective month spelling)
       const normHebText = s => (s || '')
         .replace(/[״״"'\u05F3\u05F4]/g, '')
         .replace(/חשוון|מרחשוון|מרחשון/g, 'חשון')
@@ -1268,56 +1335,37 @@
 
       const cleanInput = normHebText(raw);
 
-      // Prepare days pool: first check campaignDays, then scan up to 180 days from config.startDate
-      let pool = [];
-      if (Array.isArray(campaignDays) && campaignDays.length > 0) {
-        pool = campaignDays.map(d => (typeof d === 'string' ? d : d.isoDate)).filter(Boolean);
-      }
-      if (pool.length === 0) {
-        const startStr = (typeof state !== 'undefined' && state.config?.startDate) ? state.config.startDate : '2026-10-25';
-        const [sy, sm, sd] = startStr.split('-').map(Number);
-        for (let i = 0; i < 180; i++) {
-          const c = new Date(sy, sm - 1, sd + i, 12, 0, 0);
-          const iy = c.getFullYear();
-          const im = String(c.getMonth() + 1).padStart(2, '0');
-          const id = String(c.getDate()).padStart(2, '0');
-          pool.push(`${iy}-${im}-${id}`);
-        }
-      }
+      // Search state.campaignCalendar / STATIC_CALENDAR_5787
+      const calMap = (typeof state !== 'undefined' && state.campaignCalendar)
+        ? state.campaignCalendar
+        : STATIC_CALENDAR_5787;
 
-      for (const iso of pool) {
+      for (const iso of Object.keys(calMap)) {
+        const item = calMap[iso];
+        if (!item) continue;
         const meta = getDayMeta(iso);
         if (!meta) continue;
 
-        if (raw.includes(meta.isoDate)) {
-          _resolveIsoDateCache.set(cacheKey, meta.isoDate);
-          return meta.isoDate;
-        }
+        if (raw.includes(meta.isoDate)) return meta.isoDate;
 
         if (ddmMatch) {
           const gD = String(parseInt(ddmMatch[1], 10)).padStart(2, '0');
           const gM = String(parseInt(ddmMatch[2], 10)).padStart(2, '0');
-          if (meta.gregShort === `${gD}.${gM}`) {
-            _resolveIsoDateCache.set(cacheKey, meta.isoDate);
-            return meta.isoDate;
-          }
+          if (meta.gregShort === `${gD}.${gM}`) return meta.isoDate;
         }
 
         const cleanHebrew = normHebText(meta.hebrewDate);
-        if (cleanInput.includes(cleanHebrew) || cleanHebrew.includes(cleanInput)) {
-          _resolveIsoDateCache.set(cacheKey, meta.isoDate);
+        if (cleanHebrew && (cleanInput === cleanHebrew || cleanInput.includes(cleanHebrew) || cleanHebrew.includes(cleanInput))) {
           return meta.isoDate;
         }
 
         const inputWords = cleanInput.split(/\s+/);
         const [hDay, hMonth] = cleanHebrew.split(' ');
         if (hDay && hMonth && inputWords.includes(hDay) && inputWords.includes(hMonth)) {
-          _resolveIsoDateCache.set(cacheKey, meta.isoDate);
           return meta.isoDate;
         }
       }
 
-      _resolveIsoDateCache.set(cacheKey, '');
       return '';
     }
 
@@ -1356,7 +1404,7 @@
       if (!meta) return [];
 
       const startStr = (typeof state !== 'undefined' && state.config?.startDate) ? state.config.startDate : '2026-10-25';
-      const isOpeningDay = (cleanIso === startStr) || (cleanIso === '2026-10-25');
+      const isOpeningDay = (meta.isEveningStart) || (cleanIso === startStr) || (cleanIso === '2026-10-25');
 
       // א. ביום הראשון של המבצע (מתחיל בערב): אך ורק 2 סדרי ערב ופתיחה (3 נקודות סה״כ)
       if (isOpeningDay) {
@@ -1539,6 +1587,52 @@
       }
     }
 
+    // ניהול ושיבוץ תורנויות אצל המנהל עם כתיבה ישירה ל-campaign_calendar
+    async function updateDutyAssignee(dateStr, role, studentId) {
+      const isClearing = !studentId || studentId === '';
+      const val = isClearing ? null : studentId;
+      const col = (role === 'waker' || role === 'wakeup') ? 'wakeup_student_id' : 'kitchen_student_id';
+
+      if (state.campaignCalendar && state.campaignCalendar[dateStr]) {
+        state.campaignCalendar[dateStr][col] = val;
+      }
+      if (!state.dutiesRoster) state.dutiesRoster = {};
+      if (!state.dutiesRoster[dateStr]) state.dutiesRoster[dateStr] = {};
+
+      const st = isClearing ? null : (state.students || []).find(s => s.id === studentId);
+      if (role === 'waker' || role === 'wakeup') {
+        state.dutiesRoster[dateStr].wakeupStudentId = val;
+        state.dutiesRoster[dateStr].wakerStudentId = val;
+        state.dutiesRoster[dateStr].wakerStudentName = st ? st.name : '';
+        state.dutiesRoster[dateStr].wakeupStudentName = st ? st.name : '';
+        if (isClearing) {
+          state.dutiesRoster[dateStr].wakerDone = false;
+          state.dutiesRoster[dateStr].wakeupDone = false;
+        }
+      } else {
+        state.dutiesRoster[dateStr].kitchenStudentId = val;
+        state.dutiesRoster[dateStr].kitchenStudentName = st ? st.name : '';
+        if (isClearing) {
+          state.dutiesRoster[dateStr].kitchenDone = false;
+        }
+      }
+
+      if (supabaseClient) {
+        try {
+          await supabaseClient.from('campaign_calendar').update({ [col]: val }).eq('iso_date', dateStr);
+        } catch (e) {
+          console.warn('Error updating duty in campaign_calendar:', e);
+        }
+      }
+      rebuildSyncedCalendarAndToday();
+      renderAllViews();
+      showToast(isClearing ? `תורנות נמחקה בהצלחה` : `השיבוץ עודכן ונשמר`, '💾');
+    }
+
+    async function deleteSpecificDuty(dateStr, role) {
+      await updateDutyAssignee(dateStr, role, null);
+    }
+
     // 5. חישוב הסדר הפעיל / הסדר הבא בהתאמה לתאריך הפתיחה startDate
     function getActiveOrNextSederInfo() {
       if (!state || !state.config) return null;
@@ -1653,8 +1747,8 @@
         const curIso = `${curr.getFullYear()}-${String(curr.getMonth() + 1).padStart(2, '0')}-${String(curr.getDate()).padStart(2, '0')}`;
         const dMeta = getDayMeta(curIso);
         const daySlots = getSlotsForDate(curIso);
-        const sedarimCount = daySlots.length;
-        const pointsPool = daySlots.reduce((sum, e) => sum + (Number(e.points) || 1), 0);
+        const sedarimCount = (dMeta && typeof dMeta.sedarimCount === 'number') ? dMeta.sedarimCount : daySlots.length;
+        const pointsPool = (dMeta && typeof dMeta.pointsPool === 'number') ? dMeta.pointsPool : daySlots.reduce((sum, e) => sum + (Number(e.points) || 1), 0);
         const specialEv = daySlots.find(e => e.points >= 2 || e.type === 'בונוס' || e.type === 'מיוחד');
 
         let status = 'upcoming';
@@ -1688,6 +1782,9 @@
           status,
           sedarim: sedarimCount,
           pointsPool,
+          stationTitle: dMeta.stationTitle || '',
+          wakeupStudentId: dMeta.wakeupStudentId,
+          kitchenStudentId: dMeta.kitchenStudentId,
           attendance: status === 'today' ? `${getPresentCount()}/${state.students ? state.students.length : 1} (פעיל כעת)` : (prevDayObj.attendance || (status === 'passed' ? 'הושלם ✓' : 'נשאר')),
           isBonus: !!specialEv || !!prevDayObj.isBonus,
           bonusLabel: specialEv ? specialEv.title : (prevDayObj.bonusLabel || '')
@@ -2030,6 +2127,34 @@
               saveScheduleSlots(state.slotsByDate);
             }
           } catch(e) {}
+
+          // 7. טעינת כל שורות לוח המבצע מטבלת campaign_calendar כמקור אמת יחיד
+          try {
+            const startStr = state.config?.startDate || '2026-10-25';
+            const endStr = state.config?.endDate || '2026-12-05';
+            const { data: calRows, error: calErr } = await supabaseClient
+              .from('campaign_calendar')
+              .select('*')
+              .gte('iso_date', startStr)
+              .lte('iso_date', endStr)
+              .order('iso_date', { ascending: true });
+
+            if (!calErr && calRows && calRows.length > 0) {
+              if (!state.campaignCalendar) state.campaignCalendar = {};
+              calRows.forEach(r => {
+                state.campaignCalendar[r.iso_date] = r;
+                if (!state.dutiesRoster) state.dutiesRoster = {};
+                if (!state.dutiesRoster[r.iso_date]) {
+                  state.dutiesRoster[r.iso_date] = {};
+                }
+                state.dutiesRoster[r.iso_date].wakeupStudentId = r.wakeup_student_id;
+                state.dutiesRoster[r.iso_date].wakerStudentId = r.wakeup_student_id;
+                state.dutiesRoster[r.iso_date].kitchenStudentId = r.kitchen_student_id;
+              });
+            }
+          } catch (e) {
+            console.warn('Error loading campaign_calendar:', e);
+          }
         }
 
         // Check schema version and force sync if needed
@@ -2415,14 +2540,20 @@
 
       const events = [];
 
-      // 1. ייצוא נקודות העצירה במסע (כולל עצירה ראשונה: ט׳ כסליו התואם ל-2026-11-19)
+      // 1. ייצוא נקודות העצירה במסע מתוך campaign_calendar
       const stops = (state.journeyStops && state.journeyStops.length > 0) ? state.journeyStops : [
         { id: 'stop_1', title: 'עצירה 1 - פיתחו יומנים!', dateStr: 'יום ה׳ ט׳ כסליו', isDecided: true, note: 'האירוע הפותח של מסע החורף' }
       ];
 
       stops.forEach((stop, sIdx) => {
-        const rawDateStr = stop.isoDate || stop.dateStr || '';
-        const resolvedIso = resolveToIsoDate(rawDateStr, state.campaignDays);
+        let resolvedIso = stop.isoDate;
+        if (!resolvedIso && state.campaignCalendar) {
+          const matchRow = Object.values(state.campaignCalendar).find(r => r.hebrew_date && (r.hebrew_date === stop.dateStr || stop.dateStr?.includes(r.hebrew_date)));
+          if (matchRow) resolvedIso = matchRow.iso_date;
+        }
+        if (!resolvedIso) {
+          resolvedIso = resolveToIsoDate(stop.isoDate || stop.dateStr, state.campaignDays);
+        }
         if (resolvedIso) {
           const [ry, rm, rd] = resolvedIso.split('-').map(Number);
           const stopDate = new Date(ry, rm - 1, rd, 12, 0, 0);
@@ -2431,7 +2562,7 @@
           const nextDateStr = `${nextDate.getFullYear()}${pad(nextDate.getMonth() + 1)}${pad(nextDate.getDate())}`;
           const stopMeta = getDayMeta(resolvedIso);
           const displayTitle = `📍 מבצע בקשו - ${stop.title}`;
-          const displayDesc = `אירוע עצירה במסע מבצע בקשו VIBE: ${stop.note || ''}\\nמועד: ${stopMeta ? stopMeta.fullLabel : rawDateStr}.`;
+          const displayDesc = `אירוע עצירה במסע מבצע בקשו VIBE: ${stop.note || ''}\\nמועד: ${stopMeta ? stopMeta.fullLabel : stop.dateStr}.`;
 
           events.push(
             'BEGIN:VEVENT\n' +
@@ -3012,7 +3143,8 @@
       // Yeshiva Students List
       students: initialStudentsList,
 
-      // Single source of truth for events
+      // Single source of truth for events and canonical campaign_calendar
+      campaignCalendar: JSON.parse(JSON.stringify(STATIC_CALENDAR_5787)),
       eventsList: DEFAULT_EVENTS_LIST,
       campaignDays: [],
       todaySlots: [],
@@ -4158,31 +4290,34 @@
         const isShabbat = day.dayName.includes('שבת');
 
         // Check ONLY if the currently logged-in student is on duty this day
+        const calDay = (state.campaignCalendar && state.campaignCalendar[day.isoDate]) ? state.campaignCalendar[day.isoDate] : null;
         const dayDuty = (Array.isArray(state.dutiesRoster))
           ? state.dutiesRoster.find(dr => dr.dayIdx === actualIdx || dr.isoDate === day.isoDate)
           : ((state.dutiesRoster && state.dutiesRoster[day.isoDate]) ? state.dutiesRoster[day.isoDate] : null);
 
+        const wakerId = (calDay && calDay.wakeup_student_id) || (dayDuty && (dayDuty.wakeupStudentId || dayDuty.wakerStudentId));
+        const kitchenId = (calDay && calDay.kitchen_student_id) || (dayDuty && dayDuty.kitchenStudentId);
+
         const isMyWaker = Boolean(
-          curStudent && dayDuty && (
-            (dayDuty.wakerStudentId && (dayDuty.wakerStudentId === currentStudentId || dayDuty.wakeupStudentId === currentStudentId)) ||
-            (dayDuty.wakeupStudentId && dayDuty.wakeupStudentId === currentStudentId) ||
-            (dayDuty.wakerStudentName && curStudent.name && dayDuty.wakerStudentName === curStudent.name)
+          curStudent && (
+            (wakerId && wakerId === currentStudentId) ||
+            (dayDuty && dayDuty.wakerStudentName && curStudent.name && dayDuty.wakerStudentName === curStudent.name)
           )
         );
 
         const isMyKitchen = Boolean(
-          curStudent && dayDuty && (
-            (dayDuty.kitchenStudentId && dayDuty.kitchenStudentId === currentStudentId) ||
-            (dayDuty.kitchenStudentName && curStudent.name && dayDuty.kitchenStudentName === curStudent.name)
+          curStudent && (
+            (kitchenId && kitchenId === currentStudentId) ||
+            (dayDuty && dayDuty.kitchenStudentName && curStudent.name && dayDuty.kitchenStudentName === curStudent.name)
           )
         );
 
         let dutyBadges = '';
         if (isMyWaker) {
-          dutyBadges += `<div class="mt-1 px-1.5 py-0.5 rounded-lg bg-amber-100 text-amber-950 border border-amber-300 text-[9px] font-black inline-block shadow-xs">⏰ תורן מעורר (שלך!)</div>`;
+          dutyBadges += `<div class="mt-1 px-1.5 py-0.5 rounded-lg bg-amber-100 text-amber-950 border border-amber-300 text-[9px] font-black inline-block shadow-xs">⏰ תורן מעורר שלך!</div>`;
         }
         if (isMyKitchen) {
-          dutyBadges += `<div class="mt-1 px-1.5 py-0.5 rounded-lg bg-orange-100 text-orange-950 border border-orange-300 text-[9px] font-black inline-block shadow-xs">🧹 תורן מטבח (שלך!)</div>`;
+          dutyBadges += `<div class="mt-1 px-1.5 py-0.5 rounded-lg bg-orange-100 text-orange-950 border border-orange-300 text-[9px] font-black inline-block shadow-xs">🧹 תורן מטבח שלך!</div>`;
         }
 
         const pointsText = `${day.sedarim} סדרים (${day.pointsPool} נק׳)`;
@@ -5426,22 +5561,7 @@
         saveLocalStudents();
       }
 
-      // Ensure demo duty is populated for today if none assigned
-      const todayStr = getTodayDateStr();
-      if (!state.dutiesRoster) state.dutiesRoster = {};
-      if (!state.dutiesRoster[todayStr] || (!state.dutiesRoster[todayStr].wakerStudentId && !state.dutiesRoster[todayStr].kitchenStudentId)) {
-        state.dutiesRoster[todayStr] = {
-          wakerStudentId: 'demo_student_1',
-          wakerStudentName: 'ישראל ישראלי (בחור לדוגמה)',
-          wakerDone: false,
-          wakerReminderTime: '22:30',
-          kitchenStudentId: '',
-          kitchenStudentName: '',
-          kitchenDone: false,
-          kitchenReminderTime: '19:30'
-        };
-        saveDutiesRoster(state.dutiesRoster);
-      }
+      // Live duties and opening day assignments are loaded from campaign_calendar
 
       // Ensure sample request exists in requests history for demo student
       try {
@@ -5759,7 +5879,7 @@
         if (resolvedIso) {
           const meta = getDayMeta(resolvedIso);
           if (meta) {
-            combinedDateText = `${meta.dayNameHe} • ${meta.hebrewDate} (${meta.gregShort})`;
+            combinedDateText = `${meta.dayNameHe} • ${meta.hebrewDate} (${meta.gregFull})`;
           }
         }
 
@@ -6022,6 +6142,7 @@ END:VCALENDAR`;
             .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state' }, handleRealtimeUpdate)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, handleRealtimeUpdate)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_config' }, handleRealtimeUpdate)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_calendar' }, handleRealtimeUpdate)
             .subscribe();
         } catch(e) {
           console.warn('Realtime error in index.html:', e);
