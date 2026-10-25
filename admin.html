@@ -2067,7 +2067,7 @@
 
     // 6. בניית לוח המבצע ודפדוף השבועות דינמית לפי config.startDate עד config.endDate (ביטול מגבלת 28 יום / 4 שבועות)
     function rebuildSyncedCalendarAndToday() {
-        let totalDays = (state && Array.isArray(state.campaignDays)) ? state.campaignDays.length : 28;
+        let totalDays = (state && Array.isArray(state.campaignDays) && state.campaignDays.length) ? state.campaignDays.length : 28;
       if (typeof state === 'undefined' || !state.config) return;
       const startStr = state.config.startDate || '2026-10-25';
       let endStr = state.config.endDate;
@@ -2148,7 +2148,7 @@
         dayIndex++;
       }
 
-      state.campaignDays = updatedDays;
+      state.campaignDays = updatedDays; totalDays = updatedDays.length;
 
       // סנכרון תחנות העצירה מתוך state.trailStops והגדרות הניהול ישירות ללוח השנה
       const stopsToSync = (state.trailStops && state.trailStops.length >= 3) ? state.trailStops : (state.journeyStops || DEFAULT_TRAIL_STOPS);
