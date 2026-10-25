@@ -2422,7 +2422,7 @@
                   score: Number(u.score !== undefined && u.score !== null ? u.score : (u.manual_bonus_pts || (ex ? ex.score : 0))),
                   presentToday: Boolean(u.present_today),
                   persistenceCount: Number(u.persistence_count) || (ex ? ex.persistenceCount : 0),
-                        last10: Array.isArray(ex?.last10) ? ex.last10 : [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+                  last10: Array.isArray(ex?.last10) ? ex.last10 : [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
                   deviceId: ex?.deviceId,
                   deviceLocked: ex?.deviceLocked
                 });
@@ -2435,10 +2435,12 @@
             const activeSt = (savedLogId ? state.students.find(s => s.id === savedLogId) : null) || state.students[0];
             if (activeSt) {
               state.currentStudent = {
-                ...activeSt,
-                presentCurrent: activeSt.presentToday || false,
-                baseScore: activeSt.score || 0
-              };
+                      ...DEFAULT_DEMO_STUDENT,
+                      ...activeSt,
+                      last10: Array.isArray(activeSt.last10) ? activeSt.last10 : [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+                      presentCurrent: activeSt.presentToday || false,
+                      baseScore: activeSt.score || 0
+                    };
             }
           }
 
@@ -2604,8 +2606,8 @@
           state.journeyStops = state.trailStops;
         }
 
-        try { if (typeof populateCampaignConfigInputs === "function") populateCampaignConfigInputs(); } catch (e) { console.error(e); }
-          renderAllViews();
+        try { if (typeof populateCampaignConfigInputs === 'function') populateCampaignConfigInputs(); } catch (e) { console.error(e); }
+        renderAllViews();
         } catch (err) {
         console.warn('Supabase fetch error in index.html:', err);
         isCloudHydrated = true;
@@ -6372,18 +6374,18 @@
     }
 
     function renderAllViews() {
-        try { if (typeof syncTargetsWithCalendar === "function") syncTargetsWithCalendar(); } catch (e) { console.error(e); }
+        try { if (typeof syncTargetsWithCalendar === 'function') syncTargetsWithCalendar(); } catch (e) { console.error(e); }
         try { recalculateScheduleAndPointsBars(); } catch (e) { console.error(e); }
-        const nameGreeting = document.getElementById("greetingStudentName");
+        const nameGreeting = document.getElementById('greetingStudentName');
         if (nameGreeting && state.currentStudent) nameGreeting.textContent = state.currentStudent.name;
         try { renderStudentScreen(); } catch (e) { console.error(e); }
-        try { if (typeof renderJourneyStops === "function") renderJourneyStops(); } catch (e) { console.error(e); }
+        try { if (typeof renderJourneyStops === 'function') renderJourneyStops(); } catch (e) { console.error(e); }
         try { renderDynamicCalendar(); } catch (e) { console.error(e); }
         try { renderLeaderboard(); } catch (e) { console.error(e); }
         try { renderAdminRequestsAndStudents(); } catch (e) { console.error(e); }
-        try { if (typeof renderAdminDayScheduleEditor === "function") renderAdminDayScheduleEditor(); } catch (e) { console.error(e); }
+        try { if (typeof renderAdminDayScheduleEditor === 'function') renderAdminDayScheduleEditor(); } catch (e) { console.error(e); }
         try { renderMyRequestsStatus(); } catch (e) { console.error(e); }
-      }
+    }
     const renderAll = renderAllViews;
     const renderPublicScreen = () => {
       renderProgressGraph();
