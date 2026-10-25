@@ -2535,19 +2535,7 @@
             try { localStorage.setItem('bakshu_bonus_logs_v1', JSON.stringify(state.bonusLogs)); } catch(e){}
           }
 
-          // 5B. Load saved daily schedule overrides from app_state ('slots_by_date')
-            try {
-              const { data: sbdRow } = await supabaseClient.from('app_state').select('value').eq('key', 'slots_by_date').maybeSingle();
-              if (sbdRow && sbdRow.value && typeof sbdRow.value === 'object') {
-                if (!state.slotsByDate) state.slotsByDate = {};
-                Object.keys(sbdRow.value).forEach(dKey => {
-                  if (Array.isArray(sbdRow.value[dKey]) && sbdRow.value[dKey].length > 0) {
-                    state.slotsByDate[dKey] = sbdRow.value[dKey];
-                  }
-                });
-              }
-            } catch (e) {}
-            // 6. Fetch Schedule Slots directly from schedule_slots table
+          // 6. Fetch Schedule Slots directly from schedule_slots table
           try {
             const { data: dbSlots } = await supabaseClient.from('schedule_slots').select('*');
             if (dbSlots && dbSlots.length > 0) {
