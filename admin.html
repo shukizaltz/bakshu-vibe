@@ -2327,10 +2327,12 @@
                 const activeSt = (savedLogId ? state.students.find(s => s.id === savedLogId) : null) || state.students[0];
                 if (activeSt) {
                   state.currentStudent = {
-                    ...activeSt,
-                    presentCurrent: activeSt.presentToday || false,
-                    baseScore: activeSt.score || 0
-                  };
+                      ...DEFAULT_DEMO_STUDENT,
+                      ...activeSt,
+                      last10: Array.isArray(activeSt.last10) ? activeSt.last10 : [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+                      presentCurrent: activeSt.presentToday || false,
+                      baseScore: activeSt.score || 0
+                    };
                 }
               }
 
@@ -2420,6 +2422,7 @@
                   score: Number(u.score !== undefined && u.score !== null ? u.score : (u.manual_bonus_pts || (ex ? ex.score : 0))),
                   presentToday: Boolean(u.present_today),
                   persistenceCount: Number(u.persistence_count) || (ex ? ex.persistenceCount : 0),
+                        last10: Array.isArray(ex?.last10) ? ex.last10 : [1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
                   deviceId: ex?.deviceId,
                   deviceLocked: ex?.deviceLocked
                 });
@@ -2601,8 +2604,9 @@
           state.journeyStops = state.trailStops;
         }
 
-        renderAllViews();
-      } catch (err) {
+        try { if (typeof populateCampaignConfigInputs === "function") populateCampaignConfigInputs(); } catch (e) { console.error(e); }
+          renderAllViews();
+        } catch (err) {
         console.warn('Supabase fetch error in index.html:', err);
         isCloudHydrated = true;
       } finally {
@@ -3849,14 +3853,16 @@
     }
 
     function loadQrSecret() {
-      try {
-        const raw = localStorage.getItem(QR_SECRET_KEY);
-        if (raw) return JSON.parse(raw);
-      } catch (e) {
-        console.warn('Could not load QR secret:', e);
+        try {
+          const raw = localStorage.getItem(QR_SECRET_KEY);
+          if (raw) {
+            const t = String(raw).trim();
+            if (t.startsWith("{")) return JSON.parse(t);
+            return { code: t.replace(/^["']|["']$/g, "") || "BK-892", updatedAt: Date.now() };
+          }
+        } catch (e) {}
+        return { code: "BK-892", updatedAt: Date.now() };
       }
-      return { code: 'BK-892', updatedAt: Date.now() };
-    }
 
     function saveQrSecret(qr) {
       try {
@@ -5043,13 +5049,14 @@
       const xyBonusLabelEl = document.getElementById('ruleXYBonusLabel');
       if (xyBonusLabelEl) xyBonusLabelEl.textContent = '+' + state.config.xyBonus + ' נק׳';
 
-      const onesCount = s.last10.filter(x => x === 1).length;
+      const sLast10 = Array.isArray(s?.last10) ? s.last10 : [1, 1, 1, 1, 0, 0, 0, 0, 0, 0];
+        const onesCount = sLast10.filter(x => x === 1).length;
       const xyBadge = document.getElementById('xyCurrentBadge');
       if (xyBadge) xyBadge.textContent = onesCount + ' / ' + state.config.xyNeed;
 
       const dotsContainer = document.getElementById('xyDotsContainer');
       if (dotsContainer) {
-        dotsContainer.innerHTML = s.last10.map(val => `
+        dotsContainer.innerHTML = (Array.isArray(s?.last10) ? s.last10 : [1, 1, 1, 1, 0, 0, 0, 0, 0, 0]).map(val => `
           <div class="h-6 rounded-lg flex items-center justify-center text-[10px] font-black ${val ? 'bg-emerald-600 text-white shadow-sm' : 'bg-slate-200 text-slate-400'}">
             ${val ? '✓' : '•'}
           </div>
@@ -6365,20 +6372,18 @@
     }
 
     function renderAllViews() {
-      if (typeof syncTargetsWithCalendar === 'function') {
-        syncTargetsWithCalendar();
+        try { if (typeof syncTargetsWithCalendar === "function") syncTargetsWithCalendar(); } catch (e) { console.error(e); }
+        try { recalculateScheduleAndPointsBars(); } catch (e) { console.error(e); }
+        const nameGreeting = document.getElementById("greetingStudentName");
+        if (nameGreeting && state.currentStudent) nameGreeting.textContent = state.currentStudent.name;
+        try { renderStudentScreen(); } catch (e) { console.error(e); }
+        try { if (typeof renderJourneyStops === "function") renderJourneyStops(); } catch (e) { console.error(e); }
+        try { renderDynamicCalendar(); } catch (e) { console.error(e); }
+        try { renderLeaderboard(); } catch (e) { console.error(e); }
+        try { renderAdminRequestsAndStudents(); } catch (e) { console.error(e); }
+        try { if (typeof renderAdminDayScheduleEditor === "function") renderAdminDayScheduleEditor(); } catch (e) { console.error(e); }
+        try { renderMyRequestsStatus(); } catch (e) { console.error(e); }
       }
-      recalculateScheduleAndPointsBars();
-      const nameGreeting = document.getElementById('greetingStudentName');
-      if (nameGreeting && state.currentStudent) {
-        nameGreeting.textContent = state.currentStudent.name;
-      }
-      renderStudentScreen();
-      renderDynamicCalendar();
-      renderLeaderboard();
-      renderAdminRequestsAndStudents();
-      renderMyRequestsStatus();
-    }
     const renderAll = renderAllViews;
     const renderPublicScreen = () => {
       renderProgressGraph();
