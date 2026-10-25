@@ -1886,7 +1886,8 @@
           }
           state.dutiesRoster = converted;
         }
-        // Merge any duties present in state.campaignCalendar so nothing from Supabase is ever lost
+
+        // Merge all duties from campaign_calendar so Supabase rows are never lost
         if (state.campaignCalendar && typeof state.campaignCalendar === 'object') {
           Object.keys(state.campaignCalendar).forEach(iso => {
             const row = state.campaignCalendar[iso];
@@ -1896,17 +1897,25 @@
             if (wId || kId) {
               if (!state.dutiesRoster[iso]) state.dutiesRoster[iso] = {};
               const dObj = state.dutiesRoster[iso];
-              if (wId && !dObj.wakeupStudentId && !dObj.wakerStudentId) {
+              if (wId) {
                 dObj.wakeupStudentId = wId;
                 dObj.wakerStudentId = wId;
               }
-              if (kId && !dObj.kitchenStudentId) {
+              if (kId) {
                 dObj.kitchenStudentId = kId;
+              }
+              if (row.wakeup_done !== undefined) {
+                dObj.wakeupDone = !!row.wakeup_done;
+                dObj.wakerDone = !!row.wakeup_done;
+              }
+              if (row.kitchen_done !== undefined) {
+                dObj.kitchenDone = !!row.kitchen_done;
               }
             }
           });
         }
-        // Resolve student names for all duties
+
+        // Resolve student names from students array
         const studentsList = Array.isArray(state.students) ? state.students : [];
         Object.keys(state.dutiesRoster).forEach(iso => {
           const dObj = state.dutiesRoster[iso];
@@ -1962,7 +1971,11 @@
 
       if (supabaseClient) {
         try {
-          await supabaseClient.from('campaign_calendar').update({ [col]: val }).eq('iso_date', dateStr);
+          await supabaseClient.from('campaign_calendar').upsert({
+            iso_date: dateStr,
+            [col]: val,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'iso_date' });
         } catch (e) {
           console.warn('Error updating duty in campaign_calendar:', e);
         }
@@ -2567,6 +2580,9 @@
                 state.dutiesRoster[r.iso_date].wakeupStudentId = r.wakeup_student_id;
                 state.dutiesRoster[r.iso_date].wakerStudentId = r.wakeup_student_id;
                 state.dutiesRoster[r.iso_date].kitchenStudentId = r.kitchen_student_id;
+                state.dutiesRoster[r.iso_date].wakeupDone = !!r.wakeup_done;
+                state.dutiesRoster[r.iso_date].wakerDone = !!r.wakeup_done;
+                state.dutiesRoster[r.iso_date].kitchenDone = !!r.kitchen_done;
               });
             }
           } catch (e) {
@@ -3509,11 +3525,23 @@
     function openGoogleCalendarForStop(stopIdx = 0) {
         const stops = (state && Array.isArray(state.trailStops)) ? state.trailStops : [];
         const stop = stops[stopIdx] || stops[0] || {};
-        const rawIso = stop.isoDate || (stopIdx === 0 ? (state?.config?.stop1Date || '2026-11-19') : (state?.config?.endDate || '2026-12-05'));
-        const cleanDate = String(rawIso).replace(/-/g, '').slice(0, 8) || '20261119';
-        const title = encodeURIComponent(stop.title || (stopIdx === 0 ? 'עצירה 1 במסע – ישיבת בקשו ירושלים' : 'תחנת עצירה במסע – עד הפסגה'));
+        let rawIso = stop.isoDate || (stopIdx === 0 ? (state?.config?.stop1Date || '2026-11-19') : (state?.config?.endDate || '2026-12-05'));
+        if (stopIdx === 0 && (!rawIso || rawIso === '2026-10-25')) {
+          rawIso = '2026-11-19'; // 9 Kislev 5787
+        }
+        const cleanIso = String(rawIso).trim().slice(0, 10);
+        const cleanDate = cleanIso.replace(/-/g, '') || '20261119';
+
+        const [y, m, d] = cleanIso.split('-').map(Number);
+        const nextDt = new Date(y || 2026, ((m || 11) - 1), (d || 19) + 1);
+        const nextDate = `${nextDt.getFullYear()}${String(nextDt.getMonth() + 1).padStart(2, '0')}${String(nextDt.getDate()).padStart(2, '0')}`;
+
+        const titleText = stopIdx === 0 
+          ? 'עצירה 1 במסע – ישיבת בקשו ירושלים' 
+          : (stopIdx === 1 ? 'עצירה 2 במסע – ישיבת בקשו ירושלים' : 'אירוע הפסגה וסיום המבצע – ישיבת בקשו ירושלים');
+        const title = encodeURIComponent(titleText);
         const details = encodeURIComponent('מבצע חורף תשפ״ז – עד הפסגה | ישיבת בקשו ירושלים');
-        const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${cleanDate}/${cleanDate}&details=${details}`;
+        const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${cleanDate}/${nextDate}&details=${details}`;
         window.open(gcalUrl, '_blank');
       }
 
@@ -6129,7 +6157,7 @@
         const sPts = Number(state.config.minTarget || state.config.targets?.mid?.points || 100);
         const gPts = Number(state.config.goldTarget || state.config.targets?.max?.points || 130);
 
-        // א. עדכון יעדים אישיים (תגמול פרטי לפי נקודות)
+        // א. עדכון יעדים אישיים (תגמול פרטי לפי נקודות - ארד, כסף, זהב)
         const s = state.currentStudent || { baseScore: 0 };
         const myPts = Number(s.baseScore || 0);
         const gt1Pts = document.getElementById('giftTier1Pts');
@@ -6146,9 +6174,9 @@
         if (gt2St) gt2St.textContent = myPts >= sPts ? '✓ הושג!' : ('עוד ' + Math.max(0, sPts - myPts) + ' נק׳');
         if (gt3St) gt3St.textContent = myPts >= gPts ? '✓ הושג!' : ('עוד ' + Math.max(0, gPts - myPts) + ' נק׳');
 
-        // ב. עדכון תחנות העצירה במסע (תאריכים קבוצתיים לטיול/תגמול בלבד – ללא סף נקודות!)
+        // ב. עדכון תחנות העצירה במסע (תאריכים קבוצתיים בלבד – ללא סף נקודות!)
         const stops = Array.isArray(state.trailStops) ? state.trailStops : [];
-        const stop1Iso = stops[0]?.isoDate || state.config?.stop1Date || '';
+        const stop1Iso = stops[0]?.isoDate || state.config?.stop1Date || '2026-11-19';
         const stop2Iso = stops[1]?.isoDate || state.config?.stop2Date || '';
         const stop3Iso = stops[2]?.isoDate || state.config?.stop3Date || '';
 
@@ -6178,35 +6206,47 @@
         if (container) {
           const cards = [
             {
-              badge: '📍 תחנת עצירה 1 במסע',
-              title: 'עצירה ראשונה – טיול / תגמול קבוצתי',
+              idx: 0,
+              badge: '📍 עצירה 1 במסע',
+              title: 'עצירה ראשונה – פיתחו יומנים!',
               dateDisplay: stop1DateText,
-              sub: 'פיתחו יומנים! חוויה וגיבוש לכלל הבחורים',
-              cls: 'bg-emerald-50/70 border-emerald-300 text-emerald-950'
+              sub: 'חוויה וגיבוש לכלל הבחורים',
+              cls: 'bg-emerald-50/80 border-emerald-300 text-emerald-950',
+              hasDate: true
             },
             {
-              badge: '🎁 תחנת עצירה 2 במסע',
-              title: 'עצירה שנייה – תגמול קבוצתי בהפתעה',
+              idx: 1,
+              badge: '🎁 עצירה 2 במסע',
+              title: 'עצירה שנייה – יעד נושא מתנה 🎁',
               dateDisplay: stop2DateText,
-              sub: 'לא משנה איפה נעצור – ממשיכים לטפס יחד!',
-              cls: 'bg-indigo-50/70 border-indigo-200 text-indigo-950'
+              sub: 'תחנת ביניים מפתיעה לכל הישיבה',
+              cls: 'bg-indigo-50/80 border-indigo-200 text-indigo-950',
+              hasDate: Boolean(stop2Iso)
             },
             {
-              badge: '🏔️ תחנת הפסגה – סיום המבצע',
-              title: 'הפסגה – המטרה הגדולה מחכה לנו!',
+              idx: 2,
+              badge: '🏔️ הפסגה הגדולה',
+              title: 'הפסגה – המטרה הגדולה מחכה לנו! 🏔️🎁',
               dateDisplay: stop3DateText,
-              sub: 'השנה מטפסים עד לפסגה! 🏔️🎁',
-              cls: 'bg-amber-50/80 border-amber-300 text-amber-950'
+              sub: 'מעמד הסיום החגיגי של כלל הישיבה',
+              cls: 'bg-amber-50/90 border-amber-300 text-amber-950',
+              hasDate: Boolean(stop3Iso)
             }
           ];
+
           container.innerHTML = cards.map(c => `
-            <div class="p-3.5 rounded-2xl border ${c.cls} flex flex-col justify-between gap-1.5 shadow-2xs">
+            <div class="p-3.5 rounded-2xl border ${c.cls} flex flex-col justify-between gap-2 shadow-2xs">
               <div class="flex items-center justify-between">
-                <span class="text-[11px] font-black px-2 py-0.5 rounded-full bg-white/80 border border-black/5">${c.badge}</span>
+                <span class="text-[11px] font-black px-2 py-0.5 rounded-full bg-white/90 border border-black/5 shadow-2xs">${c.badge}</span>
+                <span class="text-xs font-bold text-slate-500">${c.hasDate ? 'מועד סופי ✓' : 'יוכרז בהמשך 🎁'}</span>
               </div>
-              <div class="text-xs sm:text-sm font-black mt-1">${c.title}</div>
-              <div class="text-xs font-extrabold text-indigo-900 bg-white/90 px-2.5 py-1.5 rounded-xl border border-black/5">🗓️ ${c.dateDisplay}</div>
+              <div class="text-xs sm:text-sm font-black mt-0.5 leading-snug">${c.title}</div>
+              <div class="text-xs font-extrabold text-indigo-950 bg-white/95 px-2.5 py-1.5 rounded-xl border border-black/5 shadow-2xs">🗓️ ${c.dateDisplay}</div>
               <div class="text-[11px] opacity-80 font-semibold">${c.sub}</div>
+              <button onclick="openGoogleCalendarForStop(${c.idx})" class="mt-2 w-full py-2 px-2.5 rounded-xl ${c.hasDate ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer shadow-xs' : 'bg-slate-200 text-slate-600 cursor-not-allowed'} font-black text-[11px] transition flex items-center justify-center gap-1.5">
+                <span>📅</span>
+                <span>${c.hasDate ? 'הוסף ליומן Google' : 'התאריך ייחשף בהמשך 🎁'}</span>
+              </button>
             </div>
           `).join('');
         }
@@ -6707,8 +6747,8 @@
       if (supabaseClient) {
         try {
           await supabaseClient.from('app_state').upsert([
-            { key: 'slots_by_date', data: state.slotsByDate }
-          ]);
+            { key: 'slots_by_date', data: state.slotsByDate, updated_at: new Date().toISOString() }
+          ], { onConflict: 'key' });
         } catch(e) {}
       }
       showToast('סדרי היום נשמרו בהצלחה במסד הנתונים Supabase', '💾');
