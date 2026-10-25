@@ -9097,7 +9097,7 @@ END:VCALENDAR`;
 </script>
 
 
-<script id="targets-and-stops-cloud-persistence">(function(){const LS_KEY="bakshu_targets_and_stops_v1";function collectCurrentTargetsData(){if(typeof state==="undefined")return null;return{personalTargets:state.personalTargets||[],trailStops:state.trailStops||[],config:{bronzeTarget:state.config&&state.config.bronzeTarget,minTarget:state.config&&state.config.minTarget,goldTarget:state.config&&state.config.goldTarget,groupFullThreshold:state.config&&state.config.groupFullThreshold,groupFullBonus:state.config&&state.config.groupFullBonus,xyNeed:state.config&&state.config.xyNeed,xyWindow:state.config&&state.config.xyWindow,xyBonus:state.config&&state.config.xyBonus,dutyBonusPts:state.config&&state.config.dutyBonusPts,noPhoneBonusPts:state.config&&state.config.noPhoneBonusPts}};}function applyTargetsData(d){if(!d||typeof state==="undefined")return;if(Array.isArray(d.personalTargets)&&d.personalTargets.length){state.personalTargets=d.personalTargets;if(state.config){if(d.personalTargets[0]&&d.personalTargets[0].points)state.config.bronzeTarget=Number(d.personalTargets[0].points);if(d.personalTargets[1]&&d.personalTargets[1].points)state.config.minTarget=Number(d.personalTargets[1].points);if(d.personalTargets[2]&&d.personalTargets[2].points)state.config.goldTarget=Number(d.personalTargets[2].points);}}if(Array.isArray(d.trailStops)&&d.trailStops.length){state.trailStops=d.trailStops;}if(d.config&&state.config){Object.assign(state.config,d.config);}}async function saveTargetsAndStopsEverywhere(showMsg){if(typeof state==="undefined")return;const container=document.getElementById("adminPersonalTargetsEditor");if(container&&Array.isArray(state.personalTargets)){const rows=container.querySelectorAll("[data-target-idx]");rows.forEach(r=>{const idx=parseInt(r.getAttribute("data-target-idx"),10);if(!state.personalTargets[idx])return;const tIn=r.querySelector("input[type=text]");const pIn=r.querySelector("input[type=number]");if(tIn)state.personalTargets[idx].title=tIn.value.trim();if(pIn)state.personalTargets[idx].points=parseInt(pIn.value,10)||0;});}const tMinName=document.getElementById("targetMinNameInput");const tMinPts=document.getElementById("targetMinPointsInput");const tMidName=document.getElementById("targetMidNameInput");const tMidPts=document.getElementById("targetMidPointsInput");const tMaxName=document.getElementById("targetMaxNameInput");const tMaxPts=document.getElementById("targetMaxPointsInput");if(!Array.isArray(state.personalTargets)||state.personalTargets.length<3){state.personalTargets=[{id:"pt_1",title:(tMinName&&tMinName.value)||"יעד 1 – נושא מתנה 🎁",points:(tMinPts&&parseInt(tMinPts.value,10))||70},{id:"pt_2",title:(tMidName&&tMidName.value)||"יעד 2 – נושא מתנה 🎁",points:(tMidPts&&parseInt(tMidPts.value,10))||100},{id:"pt_3",title:(tMaxName&&tMaxName.value)||"יעד הפסגה – הפרס הגדול! 🏔️🎁",points:(tMaxPts&&parseInt(tMaxPts.value,10))||130}];}else{if(tMinName&&tMinName.value)state.personalTargets[0].title=tMinName.value.trim();if(tMinPts&&tMinPts.value)state.personalTargets[0].points=parseInt(tMinPts.value,10)||70;if(tMidName&&tMidName.value)state.personalTargets[1].title=tMidName.value.trim();if(tMidPts&&tMidPts.value)state.personalTargets[1].points=parseInt(tMidPts.value,10)||100;if(tMaxName&&tMaxName.value)state.personalTargets[2].title=tMaxName.value.trim();if(tMaxPts&&tMaxPts.value)state.personalTargets[2].points=parseInt(tMaxPts.value,10)||130;}if(state.config){if(state.personalTargets[0])state.config.bronzeTarget=Number(state.personalTargets[0].points)||70;if(state.personalTargets[1])state.config.minTarget=Number(state.personalTargets[1].points)||100;if(state.personalTargets[2])state.config.goldTarget=Number(state.personalTargets[2].points)||130;}const payload=collectCurrentTargetsData();try{localStorage.setItem(LS_KEY,JSON.stringify(payload));}catch(e){}if(typeof saveState==="function")saveState();if(typeof sbFetch==="function"){try{await sbFetch("/rest/v1/app_state",{method:"POST",headers:{"Prefer":"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({key:"targets_and_stops",data:payload,updated_at:new Date().toISOString()})});}catch(e){}}if(typeof renderAll==="function")renderAll();if(typeof renderAdminPersonalTargetsEditor==="function")renderAdminPersonalTargetsEditor();if(typeof renderAdminTrailStopsEditor==="function")renderAdminTrailStopsEditor();if(showMsg&&typeof showToast==="function")showToast("💾 יעדי הפרסים (כיתוב ונקודות) ותחנות העצירה נשמרו בענן בהצלחה!","🎁");}window.saveTargetsAndStopsEverywhere=saveTargetsAndStopsEverywhere;window.updatePersonalTargetField=function(idx,field,val){if(!state.personalTargets||!state.personalTargets[idx])return;state.personalTargets[idx][field]=field==="points"?(parseInt(val,10)||0):val;saveTargetsAndStopsEverywhere(false);};const origUpdateStop=window.updateTrailStopField;window.updateTrailStopField=function(idx,field,val){if(typeof origUpdateStop==="function")origUpdateStop(idx,field,val);else if(state.trailStops&&state.trailStops[idx])state.trailStops[idx][field]=val;saveTargetsAndStopsEverywhere(false);};const origSaveRules=window.saveAdminCampaignConfig||window.saveAdminRules;window.saveAdminCampaignConfig=async function(){if(typeof origSaveRules==="function")await origSaveRules.apply(this,arguments);await saveTargetsAndStopsEverywhere(true);};window.saveAdminRules=window.saveAdminCampaignConfig;const origRenderTargets=window.renderAdminPersonalTargetsEditor;if(typeof origRenderTargets==="function"){window.renderAdminPersonalTargetsEditor=function(){const c=document.getElementById("adminPersonalTargetsEditor");if(!c)return;if(!Array.isArray(state.personalTargets)||!state.personalTargets.length){state.personalTargets=[{id:"pt_1",title:"יעד אישי 1 – נושא מתנה 🎁",points:70,rewardHint:"מתנה ראשונה לבחור שעומד ביעד"},{id:"pt_2",title:"יעד אישי 2 – נושא מתנה 🎁",points:100,rewardHint:"מתנה שנייה לבחור שעומד ביעד"},{id:"pt_3",title:"יעד הפסגה – הפרס הגדול! 🏔️🎁",points:130,rewardHint:"מתנת הפסגה למצטייני המבצע"}];}c.innerHTML=state.personalTargets.map((pt,idx)=>"<div data-target-idx=\""+idx+"\" class=\"p-3.5 rounded-2xl bg-white border border-amber-200 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end shadow-2xs\"><div class=\"sm:col-span-5\"><label class=\"block text-[10px] font-bold text-slate-500 mb-1\">שם היעד והכיתוב (יעד "+(idx+1)+"):</label><input type=\"text\" value=\""+(pt.title||"").replace(/"/g,"&quot;")+"\" oninput=\"state.personalTargets["+idx+"].title=this.value\" class=\"w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-black text-slate-900\"/></div><div class=\"sm:col-span-4\"><label class=\"block text-[10px] font-bold text-slate-500 mb-1\">תיאור / רמז פרס (ללא חשיפת המתנה):</label><input type=\"text\" value=\""+(pt.rewardHint||"").replace(/"/g,"&quot;")+"\" oninput=\"state.personalTargets["+idx+"].rewardHint=this.value\" class=\"w-full px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700\"/></div><div class=\"sm:col-span-3\"><label class=\"block text-[10px] font-bold text-amber-800 mb-1\">ניקוד נדרש לזכייה בפרס:</label><input type=\"number\" value=\""+(pt.points||70)+"\" oninput=\"state.personalTargets["+idx+"].points=parseInt(this.value,10)||0\" class=\"w-full px-3 py-1.5 rounded-xl border border-amber-300 bg-amber-50/50 text-xs font-black text-amber-900\"/></div></div>").join("")+"<div class=\"pt-2 flex justify-end\"><button type=\"button\" onclick=\"saveTargetsAndStopsEverywhere(true)\" class=\"px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm transition flex items-center gap-1.5\">💾 שמור יעדי פרסים, כיתוב ונקודות</button></div>";};}async function loadTargetsFromCloud(){try{const raw=localStorage.getItem(LS_KEY);if(raw)applyTargetsData(JSON.parse(raw));}catch(e){}if(typeof sbFetch==="function"){try{const rows=await sbFetch("/rest/v1/app_state?key=eq.targets_and_stops&select=data");if(Array.isArray(rows)&&rows[0]&&rows[0].data){applyTargetsData(rows[0].data);try{localStorage.setItem(LS_KEY,JSON.stringify(rows[0].data));}catch(e){}}}catch(e){}}if(state&&state.personalTargets&&state.personalTargets.length>=3){const tMinName=document.getElementById("targetMinNameInput");const tMinPts=document.getElementById("targetMinPointsInput");const tMidName=document.getElementById("targetMidNameInput");const tMidPts=document.getElementById("targetMidPointsInput");const tMaxName=document.getElementById("targetMaxNameInput");const tMaxPts=document.getElementById("targetMaxPointsInput");if(tMinName&&state.personalTargets[0].title)tMinName.value=state.personalTargets[0].title;if(tMinPts&&state.personalTargets[0].points)tMinPts.value=state.personalTargets[0].points;if(tMidName&&state.personalTargets[1].title)tMidName.value=state.personalTargets[1].title;if(tMidPts&&state.personalTargets[1].points)tMidPts.value=state.personalTargets[1].points;if(tMaxName&&state.personalTargets[2].title)tMaxName.value=state.personalTargets[2].title;if(tMaxPts&&state.personalTargets[2].points)tMaxPts.value=state.personalTargets[2].points;}if(typeof renderAll==="function")renderAll();if(typeof renderAdminPersonalTargetsEditor==="function")renderAdminPersonalTargetsEditor();if(typeof renderAdminTrailStopsEditor==="function")renderAdminTrailStopsEditor();}window.addEventListener("DOMContentLoaded",()=>{setTimeout(loadTargetsFromCloud,350);});setTimeout(loadTargetsFromCloud,200);})();</script>
+
 <script id="live-seder-time-sync-fix">
 (function(){
   function getIsraelTodayIso(){
@@ -9233,6 +9233,250 @@ END:VCALENDAR`;
     setInterval(forceSyncActiveSederCard, 500);
   });
   setTimeout(forceSyncActiveSederCard, 100);
+})();
+</script>
+<script id="targets-and-stops-cloud-persistence">
+(function(){
+  const LS_KEY = "bakshu_universal_targets_v2";
+
+  function ensureArrays(){
+    if(typeof state === "undefined") return;
+    if(!Array.isArray(state.personalTargets) || !state.personalTargets.length){
+      state.personalTargets = [
+        { id: "pt_1", title: "יעד אישי 1 – נושא מתנה 🎁", points: 70, rewardHint: "מתנה ראשונה לבחור שעומד ביעד" },
+        { id: "pt_2", title: "יעד אישי 2 – נושא מתנה 🎁", points: 100, rewardHint: "מתנה שנייה לבחור שעומד ביעד" },
+        { id: "pt_3", title: "יעד הפסגה – הפרס הגדול! 🏔️🎁", points: 130, rewardHint: "מתנת הפסגה למצטייני המבצע" }
+      ];
+    }
+    if(!Array.isArray(state.trailStops) || !state.trailStops.length){
+      state.trailStops = [
+        { id: "stop_1", title: "עצירה 1: פתיחת המסע", dateLabel: "יום חמישי ט׳ כסליו", isoDate: "2026-11-19", location: "אירוע ישיבתי מיוחד", points: 70 },
+        { id: "stop_2", title: "עצירה 2: אמצע החורף", dateLabel: "כ״ה כסליו – חנוכה", isoDate: "2026-12-05", location: "אירוע חנוכה ישיבתי", points: 100 },
+        { id: "stop_3", title: "תחנת הפסגה – סיום המבצע!", dateLabel: "ט״ו טבת", isoDate: "2026-12-25", location: "אירוע הפסגה הגדול", points: 130 }
+      ];
+    }
+  }
+
+  function readAllCampaignInputsFromDOM(){
+    if(typeof state === "undefined") return;
+    ensureArrays();
+    const ptBox = document.getElementById("adminPersonalTargetsEditor");
+    if(ptBox){
+      ptBox.querySelectorAll("[data-pt-idx]").forEach(row => {
+        const i = parseInt(row.getAttribute("data-pt-idx"), 10);
+        if(!state.personalTargets[i]) return;
+        const t = row.querySelector(".pt-title-in");
+        const h = row.querySelector(".pt-hint-in");
+        const p = row.querySelector(".pt-pts-in");
+        if(t) state.personalTargets[i].title = t.value;
+        if(h) state.personalTargets[i].rewardHint = h.value;
+        if(p) state.personalTargets[i].points = parseInt(p.value, 10) || 0;
+      });
+    }
+
+    const stBox = document.getElementById("adminTrailStopsEditor");
+    if(stBox){
+      stBox.querySelectorAll("[data-st-idx]").forEach(row => {
+        const i = parseInt(row.getAttribute("data-st-idx"), 10);
+        if(!state.trailStops[i]) return;
+        const t = row.querySelector(".st-title-in");
+        const d = row.querySelector(".st-date-in");
+        const l = row.querySelector(".st-loc-in");
+        const p = row.querySelector(".st-pts-in");
+        if(t) state.trailStops[i].title = t.value;
+        if(d) state.trailStops[i].dateLabel = d.value;
+        if(l) state.trailStops[i].location = l.value;
+        if(p) state.trailStops[i].points = parseInt(p.value, 10) || 0;
+      });
+    }
+
+    const campSec = document.getElementById("adminView-campaign") || document.getElementById("adminSubView-rules");
+    if(campSec){
+      const allCards = campSec.querySelectorAll(".soft-card, [class*=rounded-2xl]");
+      allCards.forEach(card => {
+        const txtInputs = card.querySelectorAll("input[type=text]");
+        const numInputs = card.querySelectorAll("input[type=number]");
+        if(txtInputs.length >= 1 && numInputs.length >= 1 && !card.hasAttribute("data-pt-idx") && !card.hasAttribute("data-st-idx")){
+          txtInputs.forEach((inp) => {
+            if(inp.id && inp.id.startsWith("stopTitle_")){
+              const si = parseInt(inp.id.split("_")[1], 10);
+              if(state.trailStops[si]) state.trailStops[si].title = inp.value;
+            }
+            if(inp.id && inp.id.startsWith("ptTitle_")){
+              const pi = parseInt(inp.id.split("_")[1], 10);
+              if(state.personalTargets[pi]) state.personalTargets[pi].title = inp.value;
+            }
+          });
+        }
+      });
+    }
+
+    if(state.config && state.personalTargets.length >= 3){
+      state.config.bronzeTarget = Number(state.personalTargets[0].points) || 70;
+      state.config.minTarget = Number(state.personalTargets[1].points) || 100;
+      state.config.minTargetScore = state.config.minTarget;
+      state.config.goldTarget = Number(state.personalTargets[2].points) || 130;
+    }
+  }
+
+  function renderBothEditorsInCampaignTab(){
+    if(typeof state === "undefined") return;
+    ensureArrays();
+    const campView = document.getElementById("adminView-campaign");
+    if(campView && !document.getElementById("adminPersonalTargetsEditor")){
+      const holder = document.createElement("div");
+      holder.className = "soft-card p-5 border-2 border-amber-200 bg-amber-50/20 space-y-3 mt-4";
+      holder.innerHTML = "<div class="flex items-center justify-between"><div><h3 class="text-base font-black text-slate-900">🎁 עריכת יעדי הפרסים האישיים (כיתוב ונקודות)</h3><p class="text-xs text-slate-500">כל שינוי בכיתוב או בנקודות נשמר אוטומטית ומוצג לבחורים ובגרף</p></div><button type="button" onclick="window.saveUniversalTargets(true)" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm">💾 שמור יעדי פרסים</button></div><div id="adminPersonalTargetsEditor" class="space-y-2.5"></div>";
+      campView.insertBefore(holder, campView.firstChild);
+    }
+    const ptBox = document.getElementById("adminPersonalTargetsEditor");
+    if(ptBox){
+      ptBox.innerHTML = state.personalTargets.map((pt, i) =>
+        "<div data-pt-idx="" + i + "" class="p-3.5 rounded-2xl bg-white border border-amber-200 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">" +
+          "<div class="sm:col-span-5"><label class="block text-[11px] font-bold text-slate-600 mb-1">כיתוב / שם יעד הפרס " + (i + 1) + ":</label><input type="text" class="pt-title-in w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-black text-slate-900" value="" + (pt.title || "").replace(/"/g, "&quot;") + "" oninput="state.personalTargets[" + i + "].title=this.value;window.syncTargetsToStudentUI();"/></div>" +
+          "<div class="sm:col-span-4"><label class="block text-[11px] font-bold text-slate-600 mb-1">פירוט / רמז מתנה:</label><input type="text" class="pt-hint-in w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700" value="" + (pt.rewardHint || "").replace(/"/g, "&quot;") + "" oninput="state.personalTargets[" + i + "].rewardHint=this.value;window.syncTargetsToStudentUI();"/></div>" +
+          "<div class="sm:col-span-3"><label class="block text-[11px] font-bold text-amber-800 mb-1">מספר נקודות ליעד:</label><input type="number" class="pt-pts-in w-full px-3 py-2 rounded-xl border border-amber-300 bg-amber-50/40 text-xs font-black text-amber-900" value="" + (pt.points || 0) + "" oninput="state.personalTargets[" + i + "].points=parseInt(this.value,10)||0;window.syncTargetsToStudentUI();"/></div>" +
+        "</div>"
+      ).join("") +
+      "<div class="pt-2 flex justify-end"><button type="button" onclick="window.saveUniversalTargets(true)" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm">💾 שמור שינויים ביעדי הפרסים</button></div>";
+    }
+
+    const stBox = document.getElementById("adminTrailStopsEditor");
+    if(stBox){
+      stBox.innerHTML = state.trailStops.map((st, i) =>
+        "<div data-st-idx="" + i + "" class="p-3.5 rounded-2xl bg-white border border-indigo-100 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">" +
+          "<div class="sm:col-span-4"><label class="block text-[11px] font-bold text-slate-600 mb-1">שם תחנת העצירה " + (i + 1) + ":</label><input type="text" class="st-title-in w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-black text-slate-900" value="" + (st.title || "").replace(/"/g, "&quot;") + "" oninput="state.trailStops[" + i + "].title=this.value;window.syncTargetsToStudentUI();"/></div>" +
+          "<div class="sm:col-span-4"><label class="block text-[11px] font-bold text-slate-600 mb-1">תאריך עברי / מועד:</label><input type="text" class="st-date-in w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700" value="" + (st.dateLabel || "").replace(/"/g, "&quot;") + "" oninput="state.trailStops[" + i + "].dateLabel=this.value;window.syncTargetsToStudentUI();"/></div>" +
+          "<div class="sm:col-span-4"><label class="block text-[11px] font-bold text-slate-600 mb-1">תיאור האירוע:</label><input type="text" class="st-loc-in w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700" value="" + (st.location || st.desc || "").replace(/"/g, "&quot;") + "" oninput="state.trailStops[" + i + "].location=this.value;state.trailStops[" + i + "].desc=this.value;window.syncTargetsToStudentUI();"/></div>" +
+        "</div>"
+      ).join("") +
+      "<div class="pt-2 flex justify-end"><button type="button" onclick="window.saveUniversalTargets(true)" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-sm">💾 שמור תחנות עצירה</button></div>";
+    }
+  }
+
+  window.syncTargetsToStudentUI = function(){
+    if(typeof state === "undefined") return;
+    ensureArrays();
+    const p0 = state.personalTargets[0], p1 = state.personalTargets[1], p2 = state.personalTargets[2];
+    if(state.config && p0 && p1 && p2){
+      state.config.bronzeTarget = Number(p0.points) || 70;
+      state.config.minTarget = Number(p1.points) || 100;
+      state.config.minTargetScore = state.config.minTarget;
+      state.config.goldTarget = Number(p2.points) || 130;
+    }
+
+    const bLbl = document.getElementById("bronzeTargetLabel");
+    if(bLbl && p0) bLbl.textContent = p0.title + " (" + p0.points + " נק׳)";
+    const sLbl = document.getElementById("silverTargetLabel");
+    if(sLbl && p1) sLbl.textContent = p1.title + " (" + p1.points + " נק׳)";
+    const gLbl = document.getElementById("goldTargetLabel");
+    if(gLbl && p2) gLbl.textContent = p2.title + " (" + p2.points + " נק׳)";
+
+    const minTxt = document.getElementById("studentMinTargetText") || document.getElementById("headerMinTarget");
+    if(minTxt && p1) minTxt.textContent = p1.points;
+
+    const stTargetsBox = document.getElementById("studentPersonalTargetsContainer") || document.getElementById("personalTargetsGrid");
+    if(stTargetsBox){
+      const stId = state.currentStudentId || state.activeStudentId;
+      const stObj = (state.students || []).find(s => String(s.id) === String(stId)) || (state.students && state.students[0]);
+      const myPts = stObj && typeof computeStudentScore === "function" ? computeStudentScore(stObj.id).total : (stObj && typeof getStudentTotalScore === "function" ? getStudentTotalScore(stObj) : 0);
+      stTargetsBox.innerHTML = state.personalTargets.map((pt) => {
+        const ok = myPts >= (pt.points || 0);
+        const left = Math.max(0, (pt.points || 0) - myPts);
+        return "<div class="p-3.5 rounded-2xl border transition " + (ok ? "bg-emerald-50 border-emerald-300 text-emerald-950" : "bg-white border-amber-200 text-slate-900") + "">" +
+          "<div class="flex items-center justify-between gap-2"><span class="text-xs font-black">" + pt.title + "</span><span class="px-2 py-0.5 rounded-full text-[11px] font-black " + (ok ? "bg-emerald-600 text-white" : "bg-amber-100 text-amber-900") + "">" + (pt.points || 0) + " נק׳</span></div>" +
+          "<div class="text-[11px] text-slate-500 mt-1">" + (pt.rewardHint || "יעד נושא מתנה 🎁") + "</div>" +
+          "<div class="mt-2 text-[11px] font-extrabold " + (ok ? "text-emerald-700" : "text-indigo-700") + "">" + (ok ? "✅ היעד הושג! זכאי למתנה" : "🎯 חסרות עוד " + left + " נק׳ ליעד זה") + "</div>" +
+        "</div>";
+      }).join("");
+    }
+
+    const stopsMap = document.getElementById("studentTrailMapContainer") || document.getElementById("trailStopsContainer");
+    if(stopsMap && Array.isArray(state.trailStops)){
+      stopsMap.innerHTML = state.trailStops.map((st, idx) =>
+        "<div class="p-3 rounded-xl bg-white/10 border border-white/15 text-right flex flex-col justify-between">" +
+          "<div class="flex items-center justify-between"><span class="text-[10px] font-black px-2 py-0.5 rounded bg-amber-400 text-slate-950">תחנה " + (idx + 1) + "</span><span class="text-[11px] font-bold text-amber-200">" + (st.dateLabel || "") + "</span></div>" +
+          "<div class="text-xs sm:text-sm font-black text-white mt-1.5">" + (st.title || "") + "</div>" +
+          "<div class="text-[11px] text-slate-300 mt-0.5">" + (st.location || st.desc || "") + "</div>" +
+        "</div>"
+      ).join("");
+    }
+  };
+
+  window.saveUniversalTargets = async function(showToastFlag){
+    readAllCampaignInputsFromDOM();
+    const data = { personalTargets: state.personalTargets, trailStops: state.trailStops, config: state.config };
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+      localStorage.setItem("bakshu_targets_and_stops_v1", JSON.stringify(data));
+    } catch(e){}
+    if(typeof saveState === "function") saveState();
+    window.syncTargetsToStudentUI();
+    if(typeof sbFetch === "function"){
+      try {
+        await sbFetch("/rest/v1/app_state", {
+          method: "POST",
+          headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
+          body: JSON.stringify({ key: "targets_and_stops", data: data, updated_at: new Date().toISOString() })
+        });
+      } catch(e){}
+    }
+    if(showToastFlag && typeof showToast === "function"){
+      showToast("💾 יעדי הפרסים (כיתוב ונקודות) ותחנות העצירה נשמרו בהצלחה!", "🎁");
+    }
+  };
+
+  async function loadUniversalTargets(){
+    ensureArrays();
+    try {
+      const raw = localStorage.getItem(LS_KEY) || localStorage.getItem("bakshu_targets_and_stops_v1");
+      if(raw){
+        const d = JSON.parse(raw);
+        if(Array.isArray(d.personalTargets) && d.personalTargets.length) state.personalTargets = d.personalTargets;
+        if(Array.isArray(d.trailStops) && d.trailStops.length) state.trailStops = d.trailStops;
+        if(d.config && state.config) Object.assign(state.config, d.config);
+      }
+    } catch(e){}
+
+    if(typeof sbFetch === "function"){
+      try {
+        const rows = await sbFetch("/rest/v1/app_state?key=eq.targets_and_stops&select=data");
+        if(Array.isArray(rows) && rows[0] && rows[0].data){
+          const d = rows[0].data;
+          if(Array.isArray(d.personalTargets) && d.personalTargets.length) state.personalTargets = d.personalTargets;
+          if(Array.isArray(d.trailStops) && d.trailStops.length) state.trailStops = d.trailStops;
+          if(d.config && state.config) Object.assign(state.config, d.config);
+          try { localStorage.setItem(LS_KEY, JSON.stringify(d)); } catch(e){}
+        }
+      } catch(e){}
+    }
+
+    renderBothEditorsInCampaignTab();
+    window.syncTargetsToStudentUI();
+  }
+
+  const origSubView = window.switchAdminSubView;
+  if(typeof origSubView === "function"){
+    window.switchAdminSubView = function(v){
+      const r = origSubView.apply(this, arguments);
+      if(v === "campaign"){
+        setTimeout(renderBothEditorsInCampaignTab, 50);
+      }
+      return r;
+    };
+  }
+
+  const origSaveCfg = window.saveAdminCampaignConfig;
+  window.saveAdminCampaignConfig = async function(){
+    if(typeof origSaveCfg === "function") await origSaveCfg.apply(this, arguments);
+    await window.saveUniversalTargets(true);
+  };
+  window.saveAdminRules = window.saveAdminCampaignConfig;
+
+  window.addEventListener("DOMContentLoaded", () => {
+    setTimeout(loadUniversalTargets, 300);
+  });
+  setTimeout(loadUniversalTargets, 150);
 })();
 </script>
 </body>
