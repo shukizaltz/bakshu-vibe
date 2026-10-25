@@ -1759,7 +1759,12 @@
       const startStr = (typeof state !== 'undefined' && state.config?.startDate) ? state.config.startDate : '2026-10-25';
       const isOpeningDay = (meta.isEveningStart) || (cleanIso === startStr) || (cleanIso === '2026-10-25');
 
-      // א. ביום הראשון של המבצע (מתחיל בערב): אך ורק 2 סדרי ערב ופתיחה (3 נקודות סה״כ)
+      // התאמות אישיות שנקבעו ע״י המנהל לתאריך ספציפי זה ב-slotsByDate (גובר גם על יום הפתיחה)
+      if (typeof state !== 'undefined' && state.slotsByDate && Array.isArray(state.slotsByDate[cleanIso]) && state.slotsByDate[cleanIso].length > 0) {
+        return [...state.slotsByDate[cleanIso]].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+      }
+
+      // א. ביום הראשון של המבצע (מתחיל בערב): 2 סדרי ערב ופתיחה כברירת מחדל אם לא הוגדר אחרת
       if (isOpeningDay) {
         return [
           {
@@ -1785,11 +1790,6 @@
             isLocked: false
           }
         ];
-      }
-
-      // התאמות אישיות שנקבעו ע״י המנהל לתאריך ספציפי זה ב-slotsByDate
-      if (typeof state !== 'undefined' && state.slotsByDate && Array.isArray(state.slotsByDate[cleanIso]) && state.slotsByDate[cleanIso].length > 0) {
-        return [...state.slotsByDate[cleanIso]].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
       }
 
       // סינון לפי eventsList
@@ -2292,6 +2292,10 @@
         try {
           const { data: stateRows, error: stateErr } = await supabaseClient.from('app_state').select('*');
           if (!stateErr && stateRows && stateRows.length > 0) {
+            const slotsRow = stateRows.find(r => r.key === 'slots_by_date');
+            if (slotsRow && (slotsRow.data || slotsRow.payload) && typeof (slotsRow.data || slotsRow.payload) === 'object') {
+              state.slotsByDate = { ...(state.slotsByDate || {}), ...(slotsRow.data || slotsRow.payload) };
+            }
             const mainRow = stateRows.find(r => r.key === 'main_app_state' || r.key === 'main_state' || r.key === 'app_state');
             if (mainRow && mainRow.data && typeof mainRow.data === 'object') {
               const cloudAppState = mainRow.data;
@@ -2396,7 +2400,7 @@
         }
 
         // Fallback to legacy relational tables if app_state is empty or not yet initialized
-        if (!appStateLoaded) {
+        if (true) { // תמיד טען וסנכרן גם מהטבלאות הרלציוניות (users, campaign_config, schedule_slots, campaign_calendar)
           // 1. Fetch Students from Supabase & Rosh Yeshiva Admin
           const { data: dbUsers, error: uErr } = await supabaseClient.from('users').select('*').order('created_at', { ascending: true });
           if (!uErr && dbUsers && dbUsers.length > 0) {
@@ -2584,8 +2588,7 @@
           }
         }
 
-        // Check schema version and force sync if needed
-        if (typeof cloudAppState === 'undefined' || !cloudAppState || cloudAppState.schemaVersion !== SCHEMA_VERSION) {
+        if (!state.config || !state.config.startDate) {
           if (state.config) state.config.startDate = '2026-10-25';
         }
 
@@ -2593,6 +2596,9 @@
         cleanseAndSyncDutiesRoster();
         if (typeof rebuildSyncedCalendarAndToday === 'function') {
           rebuildSyncedCalendarAndToday();
+        }
+        if (typeof initAdminScheduleDayPicker === 'function') {
+          try { initAdminScheduleDayPicker(); } catch (e) {}
         }
         if (typeof syncTargetsWithCalendar === 'function') {
           syncTargetsWithCalendar();
@@ -5347,7 +5353,6 @@
           trailStopBadge = `
             <div class="mt-1 px-1.5 py-0.5 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-[9px] shadow-sm flex items-center justify-center gap-1">
               <span>${day.trailStop.badge}</span>
-              <span>(${day.trailStop.points} נק׳)</span>
             </div>
           `;
         }
@@ -5451,7 +5456,7 @@
               <span class="text-xl">🎯</span>
               <div>
                 <strong class="font-black text-amber-900 text-xs sm:text-sm">${day.trailStop.badge} - ${day.trailStop.title}</strong>
-                <div class="text-[11px] text-slate-600">יעד עצירה בלוח המבצע • סף: <strong class="font-bold text-amber-800">${day.trailStop.points} נק׳</strong></div>
+                <div class="text-[11px] text-slate-600">📍 תחנת עצירה במסע</div>
               </div>
             </div>
             <button onclick="openGoogleCalendarForStop(${day.trailStop.idx})" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs transition shadow-sm flex items-center gap-1 cursor-pointer">
@@ -6167,9 +6172,9 @@
       }
 
       const stopDefs = [
-        { idx: 0, badge: '🥉 עצירה 1 (ארד)', title: 'עצירה 1 - יעד ארד', points: bronzeTarget, isoDate: stop1Iso },
-        { idx: 1, badge: '🥈 עצירה 2 (כסף)', title: 'עצירה 2 - יעד כסף', points: minTarget, isoDate: stop2Iso },
-        { idx: 2, badge: '🥇 הפסגה (זהב)', title: 'הפסגה - יעד זהב', points: goldTarget, isoDate: stop3Iso }
+        { idx: 0, badge: 'עצירה 1 – פיתחו יומנים!', title: 'עצירה 1 – פיתחו יומנים!', points: bronzeTarget, isoDate: stop1Iso },
+        { idx: 1, badge: 'עצירה 2 – יעד נושא מתנה 🎁', title: 'עצירה 2 – יעד נושא מתנה 🎁', points: minTarget, isoDate: stop2Iso },
+        { idx: 2, badge: 'הפסגה – המטרה הגדולה מחכה לנו! 🏔️🎁', title: 'הפסגה – המטרה הגדולה מחכה לנו! 🏔️🎁', points: goldTarget, isoDate: stop3Iso }
       ];
 
       stopDefs.forEach(def => {
@@ -6192,8 +6197,8 @@
               st.dateStr = meta ? `${meta.dayNameHe} ${meta.hebrewDate}` : def.isoDate;
             }
           } else {
-            st.dateLabel = 'טרם נקבע תאריך בלוח';
-            st.dateStr = 'טרם נקבע';
+            st.dateLabel = def.idx === 0 ? 'יום חמישי ט׳ כסליו – פיתחו יומנים!' : (def.idx === 1 ? 'התאריך ייחשף בהמשך המסע! 🎁' : 'התאריך ייחשף בהמשך המסע! 🎁');
+              st.dateStr = def.idx === 0 ? 'יום חמישי ט׳ כסליו' : 'ייחשף בהמשך המסע! 🎁';
           }
         }
       });
@@ -6373,6 +6378,78 @@
       showToast('רשימת הבחורים אופסה לבחור 1 להדגמה', '🔄');
     }
 
+    
+    function enforceClearSeparationInUI() {
+      try {
+        // א. עדכון כרטיס תחנות העצירה במסע (תאריכים בלבד, ללא נקודות וללא טקסט ניהולי)
+        const stopsContainer = document.getElementById('journeyStopsContainer');
+        if (stopsContainer && Array.isArray(state.trailStops)) {
+          const stopsMeta = [
+            {
+              step: 'תחנה 1 במסע הקבוצתי',
+              title: 'עצירה 1 – פיתחו יומנים!',
+              dateText: (state.trailStops[0]?.dateLabel && !state.trailStops[0].dateLabel.includes('טרם') && !state.trailStops[0].dateLabel.includes('ניהול'))
+                ? state.trailStops[0].dateLabel
+                : 'יום חמישי ט׳ כסליו – פיתחו יומנים!',
+              sub: 'יציאה וגיבוש קבוצתי לכל הישיבה 🗓️',
+              boxClass: 'bg-white/10 border-emerald-400/50',
+              badgeClass: 'bg-emerald-400 text-slate-950'
+            },
+            {
+              step: 'תחנה 2 במסע הקבוצתי',
+              title: 'עצירה 2 – יעד נושא מתנה 🎁',
+              dateText: (state.trailStops[1]?.dateLabel && !state.trailStops[1].dateLabel.includes('טרם') && !state.trailStops[1].dateLabel.includes('ניהול') && state.trailStops[1]?.dateIso)
+                ? state.trailStops[1].dateLabel
+                : 'התאריך ייחשף בהמשך המסע! 🎁',
+              sub: 'תחנת ביניים מפתיעה באמצע החורף 🎁',
+              boxClass: 'bg-white/10 border-amber-400/50',
+              badgeClass: 'bg-amber-300 text-slate-950'
+            },
+            {
+              step: 'תחנה 3 – סיום המסע',
+              title: 'הפסגה – המטרה הגדולה מחכה לנו! 🏔️🎁',
+              dateText: (state.trailStops[2]?.dateLabel && !state.trailStops[2].dateLabel.includes('טרם') && !state.trailStops[2].dateLabel.includes('ניהול') && state.trailStops[2]?.dateIso)
+                ? state.trailStops[2].dateLabel
+                : 'בסוף המסע – המטרה הגדולה מחכה לנו! 🏔️🎁',
+              sub: 'פסגת מבצע חורף תשפ״ז בישיבת בקשו 🏔️',
+              boxClass: 'bg-amber-400/20 border-amber-300 shadow-md',
+              badgeClass: 'bg-amber-400 text-slate-950'
+            }
+          ];
+          stopsContainer.innerHTML = stopsMeta.map(s => `
+            <div class="p-3.5 rounded-2xl border ${s.boxClass} text-right flex flex-col justify-between gap-2">
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${s.badgeClass}">${s.step}</span>
+                <span class="text-sm">📍</span>
+              </div>
+              <div class="text-sm font-black text-white leading-snug">${s.title}</div>
+              <div class="text-xs font-extrabold text-amber-300 bg-slate-950/50 px-2.5 py-1.5 rounded-xl border border-white/10">🗓️ ${s.dateText}</div>
+              <div class="text-[11px] text-slate-300 font-semibold">${s.sub}</div>
+            </div>
+          `).join('');
+        }
+
+        // ב. עדכון תוויות היעדים האישיים בגרף כך שיהיה ברור שמדובר ביעדי ניקוד אישיים ולא בתאריכי העצירה
+        const tierBronze = document.getElementById('tierCardBronze');
+        if (tierBronze) {
+          const lbl = tierBronze.querySelector('div > div:first-child');
+          if (lbl) lbl.textContent = '🥉 יעד אישי 1 (ארד): תגמול אישי';
+        }
+        const tierSilver = document.getElementById('tierCardSilver');
+        if (tierSilver) {
+          const lbl = tierSilver.querySelector('div > div:first-child');
+          if (lbl) lbl.textContent = '🥈 יעד אישי 2 (כסף): תגמול אישי';
+        }
+        const tierGold = document.getElementById('tierCardGold');
+        if (tierGold) {
+          const lbl = tierGold.querySelector('div > div:first-child');
+          if (lbl) lbl.textContent = '🥇 יעד אישי 3 (זהב): תגמול הפסגה';
+        }
+      } catch (err) {
+        console.warn('enforceClearSeparationInUI warn:', err);
+      }
+    }
+
     function renderAllViews() {
         try { if (typeof syncTargetsWithCalendar === 'function') syncTargetsWithCalendar(); } catch (e) { console.error(e); }
         try { recalculateScheduleAndPointsBars(); } catch (e) { console.error(e); }
@@ -6385,6 +6462,7 @@
         try { renderAdminRequestsAndStudents(); } catch (e) { console.error(e); }
         try { if (typeof renderAdminDayScheduleEditor === 'function') renderAdminDayScheduleEditor(); } catch (e) { console.error(e); }
         try { renderMyRequestsStatus(); } catch (e) { console.error(e); }
+      try { enforceClearSeparationInUI(); } catch (e) { console.error(e); }
     }
     const renderAll = renderAllViews;
     const renderPublicScreen = () => {
