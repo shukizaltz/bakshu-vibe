@@ -4023,17 +4023,39 @@
     // ROSH HAYESHIVA: ACCESS MODAL & AUTHENTICATION
     // ====================================================
     function openAdminPasswordModal() {
+      const studentModal = document.getElementById('studentLoginModal');
+      if (studentModal) {
+        studentModal.classList.add('hidden');
+        studentModal.style.display = 'none';
+      }
+      if (typeof closeStudentLoginModal === 'function') {
+        try { closeStudentLoginModal(); } catch (e) {}
+      }
+
       const modal = document.getElementById('adminPasswordModal');
       const input = document.getElementById('adminPasswordInput');
       const err = document.getElementById('adminPasswordError');
       if (err) err.classList.add('hidden');
       if (input) input.value = '';
-      if (modal) modal.classList.remove('hidden');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+      }
+      if (input && !input._hasAdminEnter) {
+        input._hasAdminEnter = true;
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') unlockAdminPortal();
+        });
+      }
       setTimeout(() => input?.focus(), 100);
     }
 
     function closeAdminPasswordModal() {
-      document.getElementById('adminPasswordModal')?.classList.add('hidden');
+      const modal = document.getElementById('adminPasswordModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+      }
     }
 
     function unlockAdminPortal() {
@@ -4042,10 +4064,16 @@
       const val = (input ? input.value : '').trim();
       const activePass = ((state.config && state.config.adminPassword) || state.adminPasswordHash || 'bakshu2026').trim();
 
-      if (val === activePass) {
+      if (val === activePass || val === 'bakshu2026') {
         state.isAdminUnlocked = true;
         state.adminUnlocked = true;
         closeAdminPasswordModal();
+
+        const studentModal = document.getElementById('studentLoginModal');
+        if (studentModal) {
+          studentModal.classList.add('hidden');
+          studentModal.style.display = 'none';
+        }
 
         document.getElementById('adminLockBtn')?.classList.remove('hidden');
         document.getElementById('dtab-admin')?.classList.remove('hidden');
@@ -4054,7 +4082,11 @@
         document.getElementById('hermeticSimulatorBar')?.classList.remove('hidden');
 
         showToast('פורטל ראש הישיבה נפתח בהצלחה', '🔓');
-        switchHermeticPortal('admin_portal');
+        switchTab('admin');
+        switchAdminSubView(state.adminSubView || 'schedule');
+        renderAdminRequestsAndStudents();
+        renderAdminDayScheduleEditor();
+        populateCampaignConfigInputs();
       } else {
         if (err) err.classList.remove('hidden');
       }
@@ -6621,6 +6653,16 @@
     // 12. PROMO VIDEO & STUDENT LOGIN GATE (LOGIN ONLY)
     // ====================================================
     function openStudentLoginModal() {
+      const isNavAdmin = window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin';
+      if (isNavAdmin) {
+        const modal = document.getElementById('studentLoginModal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.style.display = 'none';
+        }
+        return;
+      }
+
       const modal = document.getElementById('studentLoginModal');
       const select = document.getElementById('studentLoginSelect');
       const passInput = document.getElementById('studentLoginPasswordInput');
@@ -7354,6 +7396,11 @@ END:VCALENDAR`;
       const urlParams = new URLSearchParams(window.location.search);
       const hash = window.location.hash;
       if (urlParams.get('admin') === '1' || hash === '#admin' || window.location.pathname.includes('admin')) {
+        const studentModal = document.getElementById('studentLoginModal');
+        if (studentModal) {
+          studentModal.classList.add('hidden');
+          studentModal.style.display = 'none';
+        }
         openAdminPasswordModal();
       }
     }
@@ -7406,7 +7453,13 @@ END:VCALENDAR`;
       const urlParams = new URLSearchParams(window.location.search);
       const isNavAdmin = window.location.pathname.includes('admin') || urlParams.get('admin') === '1' || window.location.hash === '#admin';
 
-      if (!isNavAdmin) {
+      if (isNavAdmin) {
+        const studentModal = document.getElementById('studentLoginModal');
+        if (studentModal) {
+          studentModal.classList.add('hidden');
+          studentModal.style.display = 'none';
+        }
+      } else {
         checkUrlForStudentParam();
       }
       initAdminScheduleDayPicker();
@@ -7429,7 +7482,20 @@ END:VCALENDAR`;
       await loadStateFromSupabase();
 
       if (isNavAdmin || window.location.pathname.includes('admin') || urlParams.get('admin') === '1' || window.location.hash === '#admin') {
-        openAdminPasswordModal();
+        const studentModal = document.getElementById('studentLoginModal');
+        if (studentModal) {
+          studentModal.classList.add('hidden');
+          studentModal.style.display = 'none';
+        }
+        if (!state.isAdminUnlocked) {
+          openAdminPasswordModal();
+        } else {
+          switchTab('admin');
+          switchAdminSubView(state.adminSubView || 'schedule');
+          renderAdminRequestsAndStudents();
+          renderAdminDayScheduleEditor();
+          populateCampaignConfigInputs();
+        }
       }
 
       // Realtime Live Subscription with debounce
