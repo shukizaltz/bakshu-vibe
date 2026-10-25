@@ -74,7 +74,7 @@
       <!-- Right: Official Yeshiva Crest & Name (High Contrast & Prestigious) -->
       <div class="flex items-center gap-2.5 sm:gap-3">
         <div onclick="handleLogoSecretTap()" class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-[#0A1138] p-1 border border-indigo-950/20 overflow-hidden shadow-sm shrink-0 flex items-center justify-center cursor-pointer select-none active:scale-95 transition" title="ישיבת בקשו ירושלים">
-          <img src="logo-yeshiva.jpeg" alt="לוגו ישיבת בקשו ירושלים" class="w-full h-full object-cover rounded-xl pointer-events-none" />
+          <img id="yeshivaLogoImg" src="logo-yeshiva.jpeg" alt="לוגו ישיבת בקשו ירושלים" class="w-full h-full object-cover rounded-xl pointer-events-none" />
         </div>
         <div>
           <div class="flex items-center gap-1.5">
@@ -119,16 +119,23 @@
           <button onclick="switchTab('requests')" id="dtab-requests" class="dtab-btn px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-white/60">
             ✍️ בקשות לאישור
           </button>
-          <button onclick="state.isAdminUnlocked ? switchTab('admin') : openAdminPasswordModal()" id="dtab-admin" class="dtab-btn px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-white/60 flex items-center gap-1">
+          <button onclick="state.isAdminUnlocked ? switchTab('admin') : openAdminPasswordModal()" id="dtab-admin" class="hidden dtab-btn px-3.5 py-1.5 rounded-xl transition text-slate-600 hover:text-slate-900 hover:bg-white/60 flex items-center gap-1">
             <span>🔐</span>
             <span>פורטל ראש הישיבה</span>
           </button>
         </div>
 
-        <!-- Connection status indicator -->
-        <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono" dir="ltr">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>Supabase: Live (eu-central-1)</span>
+        <!-- Connection status indicator & Hermetic Simulator Bar (Hidden by default from students) -->
+        <div class="flex items-center gap-2">
+          <div id="hermeticSimulatorBar" class="hidden flex items-center gap-1.5">
+            <button id="simModeOpen" class="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700">פתוח</button>
+            <button id="simModeShabbat" class="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700">שבת</button>
+            <button id="simModeClosed" class="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700">נעול</button>
+          </div>
+          <div id="supabaseSyncStatusBtn" class="hidden flex items-center gap-1.5 text-[11px] text-slate-500 font-mono" dir="ltr">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Supabase: Live (eu-central-1)</span>
+          </div>
         </div>
       </div>
     </nav>
@@ -653,6 +660,24 @@
           </div>
         </div>
 
+        <!-- Calendar Campaign Dynamic Progress Bar: Passed vs Remaining Sedarim & Points -->
+        <div id="calendarCampaignProgressBarContainer" class="my-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="flex flex-wrap items-center justify-between text-xs font-bold gap-2 mb-1.5">
+            <div class="flex items-center gap-2 text-emerald-800">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+              <span id="calProgressPassedText">עברו: 0 ימים • 0 סדרים (0 נק׳)</span>
+            </div>
+            <div class="flex items-center gap-2 text-blue-800">
+              <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+              <span id="calProgressRemainingText">נותרו: 0 ימים • 0 סדרים (0 נק׳)</span>
+            </div>
+          </div>
+          <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden flex">
+            <div id="calPassedProgressBar" class="h-full bg-emerald-500 transition-all duration-500" style="width: 0%"></div>
+            <div id="calRemainingProgressBar" class="h-full bg-blue-500 transition-all duration-500" style="width: 100%"></div>
+          </div>
+        </div>
+
         <!-- Weekday Headers (Sun-Sat) -->
         <div class="hidden md:grid md:grid-cols-7 gap-2 text-center text-xs font-black text-slate-500 mb-1">
           <div>יום א׳</div><div>יום ב׳</div><div>יום ג׳</div><div>יום ד׳</div><div>יום ה׳</div><div>יום ו׳</div><div>שבת קודש</div>
@@ -1032,7 +1057,7 @@
     </button>
 
     <!-- Tab 4: Rosh HaYeshiva (Revealed dynamically when unlocked) -->
-    <button onclick="state.isAdminUnlocked ? switchTab('admin') : openAdminPasswordModal()" id="mtab-admin" class="mtab-btn flex-1 py-1 px-2 flex flex-col items-center gap-0.5 rounded-xl text-slate-400 font-bold">
+    <button onclick="state.isAdminUnlocked ? switchTab('admin') : openAdminPasswordModal()" id="mtab-admin" class="hidden mtab-btn flex-1 py-1 px-2 flex flex-col items-center gap-0.5 rounded-xl text-slate-400 font-bold">
       <span class="text-lg">🔐</span>
       <span class="text-[10px] leading-none">ראש הישיבה</span>
     </button>
@@ -3751,6 +3776,7 @@
       adminSubView: 'schedule',
       isAdminUnlocked: false,
       adminUnlocked: false,
+      activeStudentId: (initialStudentsList[0] && initialStudentsList[0].id) ? initialStudentsList[0].id : 1,
       adminPasswordHash: loadAdminPassword(),
       currentSelectedCalendarDayIndex: 0,
       calendarWeekOffset: 0,
@@ -3797,22 +3823,23 @@
       myRequests: []
     };
 
-    // Secret Tap Trigger on Header Logo
+    // Secret Tap Trigger on Header Logo: 5 clicks within 2.5 seconds
     let secretTapCount = 0;
     let secretTapTimer = null;
 
-    function handleSecretLogoTap() {
+    function handleLogoSecretTap() {
       secretTapCount++;
       clearTimeout(secretTapTimer);
       secretTapTimer = setTimeout(() => {
         secretTapCount = 0;
-      }, 2000);
+      }, 2500);
 
-      if (secretTapCount === 3) {
+      if (secretTapCount >= 5) {
         secretTapCount = 0;
         openAdminPasswordModal();
       }
     }
+    const handleSecretLogoTap = handleLogoSecretTap;
 
     // ====================================================
     // 5. NAVIGATION & TABS (ROSH HAYESHIVA PROTECTED)
@@ -3918,9 +3945,11 @@
         document.getElementById('adminLockBtn')?.classList.remove('hidden');
         document.getElementById('dtab-admin')?.classList.remove('hidden');
         document.getElementById('mtab-admin')?.classList.remove('hidden');
+        document.getElementById('supabaseSyncStatusBtn')?.classList.remove('hidden');
+        document.getElementById('hermeticSimulatorBar')?.classList.remove('hidden');
 
         showToast('פורטל ראש הישיבה נפתח בהצלחה', '🔓');
-        switchTab('admin');
+        switchHermeticPortal('admin_portal');
       } else {
         if (err) err.classList.remove('hidden');
       }
@@ -3929,13 +3958,28 @@
 
     function lockAdminPortal() {
       state.isAdminUnlocked = false;
+      state.adminUnlocked = false;
       
       document.getElementById('adminLockBtn')?.classList.add('hidden');
       document.getElementById('dtab-admin')?.classList.add('hidden');
       document.getElementById('mtab-admin')?.classList.add('hidden');
+      document.getElementById('supabaseSyncStatusBtn')?.classList.add('hidden');
+      document.getElementById('hermeticSimulatorBar')?.classList.add('hidden');
 
       showToast('פורטל ראש הישיבה ננעל', '🔒');
-      switchTab('student');
+      switchHermeticPortal('student_portal');
+    }
+
+    function switchHermeticPortal(portal) {
+      if (portal === 'admin_portal' || portal === 'admin') {
+        if (state.isAdminUnlocked) {
+          switchTab('admin');
+        } else {
+          openAdminPasswordModal();
+        }
+      } else {
+        switchTab('student');
+      }
     }
 
     // ====================================================
@@ -4140,7 +4184,8 @@
 
     function checkUrlForAdminParam() {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.has('admin') || window.location.hash === '#admin') {
+      const path = (window.location.pathname || '').toLowerCase();
+      if (urlParams.has('admin') || urlParams.get('admin') === '1' || window.location.hash === '#admin' || path.endsWith('/admin') || path.endsWith('/admin/')) {
         openAdminPasswordModal();
       }
     }
@@ -4150,6 +4195,9 @@
     // ====================================================
     function toggleActiveSederNoPhone(checked) {
       state.activeSederNoPhone = !!checked;
+      if (typeof recalculateScheduleAndPointsBars === 'function') {
+        recalculateScheduleAndPointsBars();
+      }
     }
 
     // Shabbat Batch Reporting Logic (Motzei Shabbat through Sunday 10:00 AM)
@@ -4480,7 +4528,8 @@
         showToast('סימון הנוכחות בוטל', 'ℹ️');
       }
 
-      const stIdx = state.students.findIndex(s => s.id === state.currentStudent.id);
+      const targetActiveId = state.activeStudentId || state.currentStudent.id || 1;
+      const stIdx = state.students.findIndex(s => s.id === targetActiveId);
       if (stIdx !== -1) {
         state.students[stIdx].score = state.currentStudent.baseScore;
         state.students[stIdx].presentToday = state.currentStudent.presentCurrent;
@@ -4490,10 +4539,118 @@
 
       saveAttendanceLogToSupabase('slot_1', state.currentStudent.presentCurrent);
 
+      recalculateScheduleAndPointsBars();
       renderStudentScreen();
       renderLeaderboard();
       renderProgressGraph();
       renderAdminRequestsAndStudents();
+    }
+    const toggleMyAttendance = handleStudentCheckIn;
+
+    function recalculateScheduleAndPointsBars() {
+      if (typeof rebuildSyncedCalendarAndToday === 'function') {
+        rebuildSyncedCalendarAndToday();
+      }
+
+      const pot = getCampaignPointsPotential();
+      const maxSedarimPoints = pot.maxSedarimPoints || 160;
+
+      // Update Calendar Top Progress Bar (Passed vs Remaining Sedarim & Points)
+      const calPassedText = document.getElementById('calProgressPassedText');
+      const calRemainingText = document.getElementById('calProgressRemainingText');
+      const passedBar = document.getElementById('calPassedProgressBar');
+      const remainingBar = document.getElementById('calRemainingProgressBar');
+
+      const passedPoints = (state.campaignDays || []).filter(d => d.status === 'passed').reduce((s, d) => s + (Number(d.pointsPool) || 0), 0);
+      const remainingPoints = (state.campaignDays || []).filter(d => d.status === 'today' || d.status === 'upcoming').reduce((s, d) => s + (Number(d.pointsPool) || 0), 0);
+
+      if (calPassedText) {
+        calPassedText.textContent = `עברו: ${pot.passedDaysCount} ימים • ${pot.passedSedarimCount} סדרים (${passedPoints} נק׳)`;
+      }
+      if (calRemainingText) {
+        calRemainingText.textContent = `נותרו: ${pot.remainingDaysCount} ימים • ${pot.remainingSedarimCount} סדרים (${remainingPoints} נק׳)`;
+      }
+
+      const passedPct = maxSedarimPoints > 0 ? Math.min(100, Math.round((passedPoints / maxSedarimPoints) * 100)) : 0;
+      const remainingPct = 100 - passedPct;
+
+      if (passedBar) passedBar.style.width = passedPct + '%';
+      if (remainingBar) remainingBar.style.width = remainingPct + '%';
+
+      // Update Student Personal Goal Bar & Full Seder Goal
+      const s = state.currentStudent;
+      if (s) {
+        const targets = state.config?.targets || {
+          min: { points: 70, name: 'יעד כניסה להגרלה' },
+          mid: { points: 100, name: 'יעד פרס כספי' },
+          max: { points: 130, name: 'יעד נסיעה ופרס ענק' }
+        };
+        const maxTarget = targets.max?.points || 130;
+        const personalBar = document.getElementById('personalGoalBar');
+        if (personalBar) {
+          const pPct = Math.min(100, Math.round(((s.baseScore || s.score || 0) / maxTarget) * 100));
+          personalBar.style.width = pPct + '%';
+        }
+
+        const presentCount = state.students.filter(st => st.presentToday).length;
+        const threshold = Math.max(1, state.config.groupFullThreshold || 1);
+        const groupBar = document.getElementById('groupProgressBar');
+        if (groupBar) {
+          const gPct = Math.min(100, Math.round((presentCount / threshold) * 100));
+          groupBar.style.width = gPct + '%';
+        }
+      }
+
+      updateTodaySlotsDailyPointsCard();
+    }
+
+    function updateTodaySlotsDailyPointsCard() {
+      const todaySlots = (state.todaySlots && state.todaySlots.length > 0)
+        ? state.todaySlots
+        : getSlotsForDate(getTodayDateStr());
+      
+      const noPhoneBonus = state.bonusConfig?.noPhoneBonus || 1;
+      let possibleToday = todaySlots.reduce((sum, sl) => sum + (Number(sl.points) || 1) + noPhoneBonus, 0);
+      if (possibleToday === 0) possibleToday = 1;
+
+      const s = state.currentStudent;
+      let earnedToday = 0;
+      if (s && s.presentCurrent) {
+        const activeSlot = todaySlots[0] || { points: 1 };
+        earnedToday += (Number(activeSlot.points) || 1);
+        if (state.activeSederNoPhone) earnedToday += noPhoneBonus;
+      }
+
+      const todayStr = getTodayDateStr();
+      const duty = (state.dutiesRoster && state.dutiesRoster[todayStr]) ? state.dutiesRoster[todayStr] : null;
+      if (duty && s) {
+        const isWaker = (duty.wakerStudentId === s.id || duty.wakeupStudentId === s.id || duty.wakerStudentName === s.name);
+        const isKitchen = (duty.kitchenStudentId === s.id || duty.kitchenStudentName === s.name);
+        if (isWaker && (duty.wakerDone || duty.wakeupDone)) {
+          earnedToday += (state.bonusConfig?.dutyWakerBonus || 3);
+          possibleToday += (state.bonusConfig?.dutyWakerBonus || 3);
+        } else if (isWaker) {
+          possibleToday += (state.bonusConfig?.dutyWakerBonus || 3);
+        }
+        if (isKitchen && duty.kitchenDone) {
+          earnedToday += (state.bonusConfig?.dutyKitchenBonus || 3);
+          possibleToday += (state.bonusConfig?.dutyKitchenBonus || 3);
+        } else if (isKitchen) {
+          possibleToday += (state.bonusConfig?.dutyKitchenBonus || 3);
+        }
+      }
+
+      const todayPct = Math.min(100, Math.round((earnedToday / possibleToday) * 100));
+
+      const earnedEl = document.getElementById('todayEarnedPointsText');
+      const possEl = document.getElementById('todayPossiblePointsText');
+      const pctEl = document.getElementById('todayProgressPctBadge');
+      const barEl = document.getElementById('todayDailyProgressBar');
+
+      if (earnedEl) earnedEl.textContent = earnedToday;
+      if (possEl) possEl.textContent = possibleToday;
+      if (pctEl) pctEl.textContent = todayPct + '%';
+      if (barEl) barEl.style.width = todayPct + '%';
     }
 
     function renderStudentScreen() {
@@ -4761,8 +4918,36 @@
             ? sederInfo.applicableEvents
             : (state.todaySlots || []);
 
+          const noPhoneBonus = state.bonusConfig?.noPhoneBonus || 1;
+          let possibleToday = slotsToRender.reduce((sum, sl) => sum + (Number(sl.points) || 1) + noPhoneBonus, 0);
+          if (possibleToday === 0) possibleToday = 1;
+
+          let earnedToday = 0;
+          if (s && s.presentCurrent) {
+            const activeSlot = slotsToRender[0] || { points: 1 };
+            earnedToday += (Number(activeSlot.points) || 1);
+            if (state.activeSederNoPhone) earnedToday += noPhoneBonus;
+          }
+
+          const todayPct = Math.min(100, Math.round((earnedToday / possibleToday) * 100));
+
+          const dailyScoreBarHtml = `
+            <div class="col-span-full mb-3 p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/90 via-white to-emerald-50/70 border border-indigo-200 shadow-sm">
+              <div class="flex flex-wrap items-center justify-between text-xs font-bold gap-2 mb-2">
+                <div class="flex items-center gap-1.5 text-slate-800">
+                  <span class="text-base">📊</span>
+                  <span>נקודות שנצברו היום מסדרים ובונוסים: <strong id="todayEarnedPointsText" class="text-emerald-700 font-black text-sm">${earnedToday}</strong> מתוך <strong id="todayPossiblePointsText" class="text-indigo-950 font-black text-sm">${possibleToday}</strong> נק׳ אפשריות היום</span>
+                </div>
+                <span id="todayProgressPctBadge" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-900 border border-indigo-200 font-mono">${todayPct}%</span>
+              </div>
+              <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-0.5">
+                <div id="todayDailyProgressBar" class="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 rounded-full transition-all duration-500" style="width: ${todayPct}%"></div>
+              </div>
+            </div>
+          `;
+
           if (slotsToRender.length === 0) {
-            todaySlotsList.innerHTML = `
+            todaySlotsList.innerHTML = dailyScoreBarHtml + `
               <div class="col-span-full p-4 rounded-2xl bg-amber-50/50 border border-amber-200 text-center text-xs">
                 <span class="text-xl block mb-1">🕊️</span>
                 <span class="font-bold text-amber-900">יום ריק מסדרים כברירת מחדל</span>
@@ -4770,7 +4955,7 @@
               </div>
             `;
           } else {
-            todaySlotsList.innerHTML = slotsToRender.map((slot, i) => {
+            const slotsHtml = slotsToRender.map((slot, i) => {
               const [oT, lT] = (slot.timeWindow || slot.time || '09:00 - 10:15').split('-').map(x => x.trim());
               const dur = calculateSlotDurationText(oT, lT);
               const isActive = (currentOrNext && currentOrNext.id === slot.id);
@@ -4790,6 +4975,7 @@
                 </div>
               `;
             }).join('');
+            todaySlotsList.innerHTML = dailyScoreBarHtml + slotsHtml;
           }
         }
       }
@@ -5177,17 +5363,21 @@
       state.slotsByDate[date][idx].points = parseInt(val, 10);
       saveScheduleSlots(state.slotsByDate);
       showToast('ניקוד סדר עודכן', '⭐');
+      recalculateScheduleAndPointsBars();
       updateCampaignTotalPointsLive();
     }
+    const updateEventPoints = updateSlotPoints;
 
     function removeSlotItem(date, idx) {
       if (!state.slotsByDate[date]) state.slotsByDate[date] = JSON.parse(JSON.stringify(getSlotsForDate(date)));
       state.slotsByDate[date].splice(idx, 1);
       saveScheduleSlots(state.slotsByDate);
       renderAdminDayScheduleEditor();
+      recalculateScheduleAndPointsBars();
       updateCampaignTotalPointsLive();
       showToast('סדר הוסר מהיום הנבחר', '🗑️');
     }
+    const removeEventItem = removeSlotItem;
 
     function applyCurrentDayToWeekdays() {
       const picker = document.getElementById('adminScheduleDayPicker');
@@ -5319,9 +5509,11 @@
       saveScheduleSlots(state.slotsByDate);
       closeAddSlotModal();
       renderAdminDayScheduleEditor();
+      recalculateScheduleAndPointsBars();
       updateCampaignTotalPointsLive();
       renderAllViews();
     }
+    const addNewEventItem = saveNewSlot;
 
     // ====================================================
     // 10. REQUESTS & BONUSES (ROSH HAYESHIVA)
@@ -5916,6 +6108,7 @@
     }
 
     function renderAllViews() {
+      recalculateScheduleAndPointsBars();
       const nameGreeting = document.getElementById('greetingStudentName');
       if (nameGreeting && state.currentStudent) {
         nameGreeting.textContent = state.currentStudent.name;
@@ -5926,6 +6119,7 @@
       renderAdminRequestsAndStudents();
       renderMyRequestsStatus();
     }
+    const renderAll = renderAllViews;
 
     function submitForgottenRequest() {
       const sel = document.getElementById('reqSlotSelect')?.value;
@@ -6920,11 +7114,17 @@ END:VCALENDAR`;
       showToast(msg, '🎉');
       state.activeSederNoPhone = false;
 
+      recalculateScheduleAndPointsBars();
       renderStudentScreen();
       renderLeaderboard();
       renderProgressGraph();
     }
-
+    const verifyQrCodeAndCheckIn = handleCheckInConfirmation;
+    const renderPublicScreen = () => {
+      renderProgressGraph();
+      renderDynamicCalendar();
+      renderLeaderboard();
+    };
 
     function checkUrlForStudentParam() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -6932,6 +7132,7 @@ END:VCALENDAR`;
       if (inviteId) {
         const student = state.students.find(s => s.id === inviteId || s.inviteCode === inviteId);
         if (student) {
+          state.activeStudentId = student.id;
           localStorage.setItem('bakshu_locked_student_id', student.id);
           localStorage.setItem('bakshu_logged_student_id', student.id);
           // If first time or default password:
