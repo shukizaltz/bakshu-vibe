@@ -33,9 +33,8 @@
           .order('full_name', { ascending: true });
 
         if (error) {
-          console.warn('Db.getStudents fallback:', error);
-          const res = await client.from('users').select('*').order('created_at', { ascending: true });
-          return (res.data || []).filter(u => u.role !== 'admin');
+          console.error('Db.getStudents error:', error);
+          return [];
         }
         return data || [];
       } catch (e) {
@@ -148,16 +147,6 @@
           });
         }
 
-        // גיבוי משלים מ-app_state אם קיים
-        const snap = await this.loadAppState();
-        if (snap?.scheduleSlots) {
-          Object.keys(snap.scheduleSlots).forEach(d => {
-            if (!grouped[d] || grouped[d].length === 0) {
-              grouped[d] = snap.scheduleSlots[d];
-            }
-          });
-        }
-
         return grouped;
       } catch (e) {
         console.error('Db.getScheduleSlots error:', e);
@@ -196,12 +185,6 @@
           points_pool: totalPts
         }).eq('iso_date', dateStr);
 
-        // סנכרון ל-app_state
-        const snap = await this.loadAppState() || {};
-        if (!snap.scheduleSlots) snap.scheduleSlots = {};
-        snap.scheduleSlots[dateStr] = slotsList || [];
-        await this.saveAppState(snap);
-
         return true;
       } catch (e) {
         console.error('Db.syncDateSlots error:', e);
@@ -215,30 +198,9 @@
         const clean = String(sederTitle).trim();
         await client.from('schedule_slots').delete().eq('title', clean);
 
-        // מחיקה גם מ-app_state
-        const snap = await this.loadAppState() || {};
-        if (snap.scheduleSlots) {
-          Object.keys(snap.scheduleSlots).forEach(d => {
-            snap.scheduleSlots[d] = snap.scheduleSlots[d].filter(s => s.title !== clean);
-          });
-          await this.saveAppState(snap);
-        }
-
         return true;
       } catch (e) {
         console.error('Db.deleteSlotSeries error:', e);
-        return false;
-      }
-    },
-
-    async deleteSlotItem(slotId, dateStr) {
-      if (!client) return false;
-      try {
-        if (slotId) {
-          await client.from('schedule_slots').delete().eq('id', slotId);
-        }
-        return true;
-      } catch (e) {
         return false;
       }
     },
@@ -250,24 +212,22 @@
       if (!client) return null;
       try {
         const { data: cfgRow } = await client.from('campaign_config').select('*').eq('id', 1).maybeSingle();
-        const snap = await this.loadAppState();
-
         const base = cfgRow || {};
-        const targetsRaw = base.targets_json || snap?.targets || {};
-        const extraTargets = targetsRaw.extra || snap?.extraTargets || [];
-        const trailStops = base.journey_stops || snap?.trailStops || [
+        const targetsRaw = base.targets_json || {};
+        const extraTargets = targetsRaw.extra || [];
+        const trailStops = base.journey_stops || [
           { id: 'stop_1', title: 'עצירה 1 – פיתחו יומנים!', isoDate: '2026-11-19', dateLabel: 'יום ה׳ ט׳ כסליו', description: 'חשיפת סדרי המשך ופרסי ביניים', isDecided: true },
           { id: 'stop_2', title: 'עצירה 2 – חלוקת שי חנוכה ומלגות', isoDate: '2026-12-08', dateLabel: 'נר חמישי של חנוכה', description: 'הדלקת נרות מרכזית וחלוקת מלגות', isDecided: true },
           { id: 'stop_3', title: 'הפסגה – מעמד הסיום הגדול!', isoDate: '2027-02-08', dateLabel: 'ר״ח אדר א׳', description: 'הכרזת הזוכים במסע ובפרס הענק', isDecided: false }
         ];
 
         return {
-          campaignName: base.campaign_name || snap?.campaignName || 'מבצע חורף תשפ״ז - עד הפסגה',
-          startDate: base.start_date || snap?.startDate || '2026-10-25',
-          endDate: base.end_date || snap?.endDate || '2027-02-08',
+          campaignName: base.campaign_name || 'מבצע חורף תשפ״ז - עד הפסגה',
+          startDate: base.start_date || '2026-10-25',
+          endDate: base.end_date || '2027-02-08',
           minTarget: base.min_target_score || 100,
-          adminPassword: base.admin_password || snap?.adminPassword || '2032',
-          qrSecret: (base.qr_secret || snap?.qrSecret || 'BK-892').trim().toUpperCase(),
+          adminPassword: base.admin_password || '2032',
+          qrSecret: (base.qr_secret || 'BK-892').trim().toUpperCase(),
           targets: {
             min: targetsRaw.min || { name: 'יעד 1 – כניסה להגרלה', points: 70, reward: 'כניסה להגרלה הגדולה' },
             mid: targetsRaw.mid || { name: 'יעד 2 – פרס כספי', points: 100, reward: 'מלגת 300 ₪ במזומן' },
@@ -275,12 +235,12 @@
           },
           extraTargets: extraTargets,
           trailStops: trailStops,
-          bonusConfig: base.bonus_config || snap?.bonusConfig || {
+          bonusConfig: base.bonus_config || {
             noPhoneBonus: 1,
             wakeupBonus: 3,
             kitchenBonus: 3
           },
-          recurringDuties: snap?.recurringDuties || {}
+          recurringDuties: base.duties_roster || {}
         };
       } catch (e) {
         console.error('Db.getConfig error:', e);
@@ -308,28 +268,14 @@
           qr_secret: String(cfg.qrSecret || 'BK-892').trim().toUpperCase(),
           targets_json: targetsData,
           journey_stops: cfg.trailStops || [],
-          bonus_config: cfg.bonusConfig || null
+          bonus_config: cfg.bonusConfig || null,
+          duties_roster: cfg.recurringDuties || null
         };
 
         const { error } = await client.from('campaign_config').upsert(payload, { onConflict: 'id' });
         if (error) {
           console.error('Db.saveConfig Supabase error:', error);
         }
-        
-        // גיבוי מלא ב-app_state
-        await this.saveAppState({
-          campaignName: cfg.campaignName,
-          startDate: cfg.startDate,
-          endDate: cfg.endDate,
-          adminPassword: cfg.adminPassword,
-          qrSecret: cfg.qrSecret,
-          targets: targetsData,
-          extraTargets: cfg.extraTargets || [],
-          trailStops: cfg.trailStops || [],
-          bonusConfig: cfg.bonusConfig,
-          recurringDuties: cfg.recurringDuties || {}
-        });
-
         return !error;
       } catch (e) {
         console.error('Db.saveConfig error:', e);
@@ -361,9 +307,9 @@
           });
         }
 
-        // שילוב תורנויות קבועות אם תאריך מסוים ריק
-        const snap = await this.loadAppState();
-        const recurring = snap?.recurringDuties || {};
+        // שילוב תורנויות קבועות מ-campaign_config אם תאריך מסוים ריק
+        const { data: cfgRow } = await client.from('campaign_config').select('duties_roster').eq('id', 1).maybeSingle();
+        const recurring = cfgRow?.duties_roster || {};
         Object.keys(map).forEach(iso => {
           const dObj = new Date(iso);
           const dayIdx = dObj.getDay(); // 0 is Sunday
@@ -438,10 +384,15 @@
     },
 
     async saveRecurringDuties(recurringMap) {
-      const snap = await this.loadAppState() || {};
-      snap.recurringDuties = recurringMap;
-      await this.saveAppState(snap);
-      return true;
+      if (!client) return false;
+      try {
+        const { error } = await client.from('campaign_config').update({
+          duties_roster: recurringMap
+        }).eq('id', 1);
+        return !error;
+      } catch (e) {
+        return false;
+      }
     },
 
     // ==========================================
@@ -634,33 +585,10 @@
     },
 
     // ==========================================
-    // 8. טבלת סנכרון app_state
+    // 8. תאימות לאחור
     // ==========================================
-    async saveAppState(payload) {
-      if (!client || !payload) return false;
-      try {
-        let merged = { ...payload };
-        const prev = await this.loadAppState();
-        if (prev) merged = { ...prev, ...payload };
-
-        await client.from('app_state').upsert([
-          { key: APP_STATE_KEY, data: merged, updated_at: new Date().toISOString() }
-        ], { onConflict: 'key' });
-        return true;
-      } catch (e) {
-        return false;
-      }
-    },
-
-    async loadAppState() {
-      if (!client) return null;
-      try {
-        const { data } = await client.from('app_state').select('data').eq('key', APP_STATE_KEY).maybeSingle();
-        return data?.data || null;
-      } catch (e) {
-        return null;
-      }
-    },
+    async saveAppState() { return true; },
+    async loadAppState() { return null; },
 
     // ==========================================
     // 9. סנכרון Realtime וסריקה אוטומטית (Heartbeat)
@@ -682,7 +610,6 @@
             .on('postgres_changes', { event: '*', schema: 'public', table: 'campaign_calendar' }, onUpdate)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_logs' }, onUpdate)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_requests' }, onUpdate)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state' }, onUpdate)
             .subscribe();
         } catch (e) {}
       }
