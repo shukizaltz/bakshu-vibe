@@ -215,6 +215,21 @@
           <span class="text-xs font-black px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-sm">+1 נק׳ בונוס</span>
         </div>
 
+        <!-- Group Full Seder Indicator -->
+        <div id="fullSederBanner" class="p-3 rounded-2xl bg-amber-500/10 border border-amber-300/60 flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">👑</span>
+            <div class="text-right">
+              <span class="font-black text-amber-950 block">מטרת על: "סדר מלא"</span>
+              <span class="text-[11px] text-amber-900" id="fullSederStatusText">התייצבות של לפחות 10 בחורים בסדר הנוכחי</span>
+            </div>
+          </div>
+          <div class="text-left shrink-0">
+            <span class="px-2.5 py-1 rounded-xl bg-amber-200 text-amber-950 font-black text-xs font-mono" id="fullSederCountBadge">0 / 10</span>
+            <span class="block text-[10px] font-bold text-amber-800 text-center mt-0.5" id="fullSederRewardText">+1 נק׳ לכולם</span>
+          </div>
+        </div>
+
         <!-- Big Action Button -->
         <button id="sederCheckInBtn" onclick="handleCheckInClick()" class="w-full py-4 rounded-2xl font-black text-base sm:text-lg transition shadow-xl flex items-center justify-center gap-2 bg-slate-200 text-slate-500 cursor-not-allowed" disabled>
           <span>🔒</span>
@@ -990,6 +1005,39 @@
         btn.className = 'w-full py-4 rounded-2xl font-black text-base sm:text-lg transition shadow flex items-center justify-center gap-2 bg-slate-200 text-slate-500 cursor-not-allowed';
         btnText.textContent = '🔒 הסדר עדיין לא פתוח';
       }
+
+      // Update Full Seder status
+      const fsBanner = document.getElementById('fullSederBanner');
+      const fsStatus = document.getElementById('fullSederStatusText');
+      const fsCount = document.getElementById('fullSederCountBadge');
+      const fsReward = document.getElementById('fullSederRewardText');
+
+      if (fsBanner) {
+        const threshold = state.config?.fullSederThreshold || 10;
+        const bonusPts = state.config?.fullSederBonusPts || 1;
+        const currentActiveTitle = active?.title || (next?.title || '');
+        const todayIso = getTodayIso();
+
+        const checkedCount = (state.students || []).filter(st => {
+          const list = state.slotAttendanceMap?.byDateSlot?.[todayIso]?.[currentActiveTitle] || [];
+          return list.includes(String(st.id));
+        }).length;
+
+        if (fsReward) fsReward.textContent = `+${bonusPts} נק׳ לכולם`;
+        if (fsCount) fsCount.textContent = `${checkedCount} / ${threshold}`;
+
+        if (checkedCount >= threshold && active) {
+          fsBanner.className = 'p-3 rounded-2xl bg-emerald-500/15 border-2 border-emerald-400 flex items-center justify-between text-xs shadow-sm';
+          if (fsStatus) fsStatus.textContent = `🎉 סדר מלא הושג! ${checkedCount} בחורים התייצבו יחד. כולם זוכים בבונוס!`;
+          if (fsCount) fsCount.className = 'px-2.5 py-1 rounded-xl bg-emerald-500 text-white font-black text-xs font-mono';
+        } else {
+          fsBanner.className = 'p-3 rounded-2xl bg-amber-500/10 border border-amber-300/60 flex items-center justify-between text-xs';
+          if (fsStatus) fsStatus.textContent = active 
+            ? `עוד ${Math.max(0, threshold - checkedCount)} בחורים לבונוס סדר מלא (+${bonusPts} נק׳ לכולם)` 
+            : `התייצבות של לפחות ${threshold} בחורים בסדר (+${bonusPts} נק׳)`;
+          if (fsCount) fsCount.className = 'px-2.5 py-1 rounded-xl bg-amber-200 text-amber-950 font-black text-xs font-mono';
+        }
+      }
     }
 
     function handleCheckInClick() {
@@ -1518,10 +1566,20 @@
         return;
       }
 
-      // Collective Scenic SVG Mountain
-      const fraction = Math.min(1, Math.max(0, climbScore / 140));
+      // Dynamic Summit Target & Stops from Database Config
+      const summit = Number(targets.max?.points) || 130;
+      const fraction = Math.min(1, Math.max(0, climbScore / summit));
       const bx = Math.round(80 + fraction * 720);
       const by = Math.round(220 - fraction * 175);
+
+      const stops = state.config?.trailStops || state.config?.journeyStops || [];
+      const s1 = stops[0] || { title: 'עצירה 1', dateLabel: 'ט׳ כסליו' };
+      const s2 = stops[1] || { title: 'עצירה 2', dateLabel: 'יוכרז בהמשך' };
+      const s3 = stops[2] || { title: 'הפסגה', dateLabel: 'יוכרז בהמשך' };
+
+      const s1Label = s1.title + (s1.dateLabel ? ` (${s1.dateLabel})` : '');
+      const s2Label = s2.title + (s2.dateLabel ? ` (${s2.dateLabel})` : '');
+      const s3Label = s3.title + (s3.dateLabel ? ` (${s3.dateLabel})` : '');
 
       container.innerHTML = `
         <svg viewBox="0 0 900 270" class="w-full h-auto overflow-visible select-none" xmlns="http://www.w3.org/2000/svg">
@@ -1568,10 +1626,10 @@
           <!-- Climbed Trail Portion (Glowing) -->
           <path d="M 80 220 Q 240 190, 400 150 T 800 45" fill="none" stroke="url(#trailGlow)" stroke-width="4.5" stroke-linecap="round" filter="url(#glowEffect)" stroke-dasharray="800" stroke-dashoffset="${Math.max(0, 800 - fraction * 800)}"/>
 
-          <!-- Waypoint 1: Stop 1 (ט׳ כסליו) -->
+          <!-- Waypoint 1: Stop 1 -->
           <g transform="translate(190, 188)">
             <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#38BDF8" stroke-width="2.5"/>
-            <text x="0" y="-12" text-anchor="middle" fill="#BAE6FD" font-size="10" font-weight="800" font-family="Heebo">📍 עצירה 1 (ט׳ כסליו)</text>
+            <text x="0" y="-12" text-anchor="middle" fill="#BAE6FD" font-size="10" font-weight="800" font-family="Heebo">📍 ${s1Label}</text>
           </g>
 
           <!-- Waypoint 2: Tier 1 Target -->
@@ -1583,7 +1641,7 @@
           <!-- Waypoint 3: Stop 2 -->
           <g transform="translate(480, 130)">
             <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#94A3B8" stroke-width="2"/>
-            <text x="0" y="-12" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="800" font-family="Heebo">❓ עצירה 2</text>
+            <text x="0" y="-12" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="800" font-family="Heebo">🚩 ${s2Label}</text>
           </g>
 
           <!-- Waypoint 4: Tier 2 Target -->
@@ -1595,13 +1653,13 @@
           <!-- Waypoint 5: Stop 3 -->
           <g transform="translate(710, 75)">
             <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#94A3B8" stroke-width="2"/>
-            <text x="0" y="-12" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="800" font-family="Heebo">❓ עצירה 3</text>
+            <text x="0" y="-12" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="800" font-family="Heebo">🚩 ${s3Label}</text>
           </g>
 
           <!-- Summit: Tier 3 Target -->
           <g transform="translate(800, 45)">
             <circle cx="0" cy="0" r="9" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2.5"/>
-            <text x="0" y="-15" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">🏔️ ${targets.max.name} (${targets.max.points}) 👑</text>
+            <text x="0" y="-15" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">🏔️ ${targets.max.name} (${summit}) 👑</text>
           </g>
 
           <!-- Climber Beacon -->
@@ -1700,13 +1758,13 @@
       }).join('');
     }
 
-    // --- Campaign Calendar ---
+    // --- Campaign Calendar (Arranged in Weeks Sunday to Saturday) ---
     function renderCalendar() {
       const container = document.getElementById('fullCalendarDaysList');
       if (!container) return;
 
       const startStr = state.config?.startDate || '2026-10-25';
-      const endStr = state.config?.endDate || '2026-12-10';
+      const endStr = state.config?.endDate || '2027-02-08';
 
       const days = [];
       const cur = new Date(startStr);
@@ -1719,38 +1777,84 @@
         const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(iso) : null;
         days.push({
           isoDate: iso,
+          dayOfWeek: dayIdx,
           dayName: `יום ${dayNames[dayIdx]}`,
           isShabbat: dayIdx === 6,
           hebShort: heb ? heb.shortHebrew : iso.slice(5),
-          hebFull: heb ? heb.fullHebrewDate : ''
+          hebFull: heb ? heb.fullHebrewDate : '',
+          gregShort: cur.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })
         });
         cur.setDate(cur.getDate() + 1);
       }
 
-      container.innerHTML = days.map(d => {
-        const slots = getSlotsForDate(d.isoDate);
-        const duty = state.duties[d.isoDate];
-        const isToday = d.isoDate === getTodayIso();
+      // Group days into weeks (Sunday to Saturday)
+      const weeks = [];
+      let currentWeek = [];
+
+      days.forEach(d => {
+        if (d.dayOfWeek === 0 && currentWeek.length > 0) {
+          weeks.push(currentWeek);
+          currentWeek = [];
+        }
+        currentWeek.push(d);
+      });
+      if (currentWeek.length > 0) {
+        weeks.push(currentWeek);
+      }
+
+      const todayIso = getTodayIso();
+
+      container.innerHTML = weeks.map((wk, wIdx) => {
+        const firstDay = wk[0];
+        const lastDay = wk[wk.length - 1];
+        const weekHebLabel = `${firstDay.hebShort} – ${lastDay.hebShort}`;
+        const hasToday = wk.some(d => d.isoDate === todayIso);
 
         return `
-          <div class="p-3.5 rounded-2xl ${isToday ? 'bg-indigo-50 border-2 border-indigo-400' : 'bg-white border border-slate-200'} space-y-2">
-            <div class="flex items-center justify-between text-xs">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="font-black text-slate-900">${d.dayName}</span>
-                <span class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[11px]">${d.hebShort}</span>
-                <span class="text-slate-400 font-outfit text-[11px]">(${d.isoDate})</span>
-                ${isToday ? '<span class="px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold">היום</span>' : ''}
-                ${duty?.specialEventTitle ? `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-black text-[10px] border border-amber-300 shadow-xs">🎉 ${duty.specialEventTitle}</span>` : ''}
+          <div class="rounded-3xl ${hasToday ? 'bg-indigo-50/70 border-2 border-indigo-400/80 shadow-md' : 'bg-slate-50/70 border border-slate-200/90'} p-4 space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b ${hasToday ? 'border-indigo-200' : 'border-slate-200'}">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full ${hasToday ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-white'} font-black text-xs">שבוע ${wIdx + 1}</span>
+                <span class="text-xs font-black text-slate-800">${weekHebLabel}</span>
+                ${hasToday ? '<span class="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px]">השבוע הנוכחי</span>' : ''}
               </div>
-              <span class="text-[11px] font-bold text-slate-500">${slots.length} סדרים מתוכננים</span>
+              <span class="text-[11px] font-mono text-slate-500 font-bold">${firstDay.gregShort} – ${lastDay.gregShort}</span>
             </div>
 
-            ${duty ? `
-              <div class="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-between">
-                <span>תורנות: ${duty.wakeupStudentId ? 'מעורר משובץ' : 'מעורר טרם שובץ'} • ${duty.kitchenStudentId ? 'מטבח משובץ' : 'מטבח טרם שובץ'}</span>
-                <span>🧹</span>
-              </div>
-            ` : ''}
+            <!-- Days Grid Sunday to Saturday -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2">
+              ${wk.map(d => {
+                const slots = getSlotsForDate(d.isoDate);
+                const duty = state.duties[d.isoDate];
+                const isToday = d.isoDate === todayIso;
+
+                return `
+                  <div class="p-3 rounded-2xl ${isToday ? 'bg-white border-2 border-indigo-500 shadow-sm' : (d.isShabbat ? 'bg-amber-50/80 border border-amber-300' : 'bg-white border border-slate-200')} flex flex-col justify-between gap-1.5 text-right">
+                    <div>
+                      <div class="flex items-center justify-between">
+                        <span class="text-xs font-black ${d.isShabbat ? 'text-amber-950 font-black' : 'text-slate-900'}">${d.dayName}</span>
+                        ${isToday ? '<span class="px-1.5 py-0.2 rounded-full bg-indigo-600 text-white font-bold text-[9px]">היום</span>' : ''}
+                      </div>
+                      <div class="text-[11px] font-bold text-slate-600 flex items-center justify-between mt-0.5">
+                        <span class="text-indigo-700">${d.hebShort}</span>
+                        <span class="text-slate-400 font-mono text-[10px]">${d.gregShort}</span>
+                      </div>
+                    </div>
+
+                    ${duty?.specialEventTitle ? `
+                      <div class="p-1 rounded-lg bg-amber-100/90 text-amber-950 text-[9px] font-black border border-amber-300/80 truncate">
+                        🎉 ${duty.specialEventTitle}
+                      </div>
+                    ` : ''}
+
+                    <div class="text-[10px] text-slate-500 pt-1 border-t border-slate-100 flex items-center justify-between">
+                      <span class="font-bold">${slots.length} סדרים</span>
+                      ${duty?.wakeupStudentId || duty?.kitchenStudentId ? '<span title="יש תורנים משובצים">🧹</span>' : ''}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
         `;
       }).join('');

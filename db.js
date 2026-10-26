@@ -240,6 +240,8 @@
             wakeupBonus: 3,
             kitchenBonus: 3
           },
+          fullSederThreshold: Number(base.full_seder_threshold) || 10,
+          fullSederBonusPts: Number(base.full_seder_bonus_pts) || 1,
           recurringDuties: base.duties_roster || {}
         };
       } catch (e) {
@@ -269,6 +271,8 @@
           targets_json: targetsData,
           journey_stops: cfg.trailStops || [],
           bonus_config: cfg.bonusConfig || null,
+          full_seder_threshold: Number(cfg.fullSederThreshold) || 10,
+          full_seder_bonus_pts: Number(cfg.fullSederBonusPts) || 1,
           duties_roster: cfg.recurringDuties || null
         };
 
