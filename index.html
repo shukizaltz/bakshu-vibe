@@ -163,6 +163,72 @@
         </div>
       </div>
 
+      <!-- STUDENT POTENTIAL POINTS MOTIVATION CARD -->
+      <div id="studentPotentialPointsCard" class="rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 border border-indigo-500/30 text-white shadow-xl space-y-4 relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 relative z-10">
+          <div class="flex items-center gap-2.5">
+            <span class="text-2xl p-2 rounded-2xl bg-amber-400/20 text-amber-300 border border-amber-400/30">🎯</span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-base sm:text-lg font-black text-white">פוטנציאל הנקודות המרבי שלך במבצע</h3>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">הדרך לפסגה</span>
+              </div>
+              <p class="text-xs text-slate-300">כמה נקודות תוכל לצבור אם תתמיד בכל הסדרים, תפקיד את הנייד ותבצע את התורנויות שלך!</p>
+            </div>
+          </div>
+
+          <div class="text-left bg-white/10 px-4 py-2 rounded-2xl border border-white/10 backdrop-blur-xs">
+            <span class="block text-[10px] text-slate-300 font-bold">פוטנציאל מלא:</span>
+            <span id="studentPotentialTotalPts" class="text-2xl sm:text-3xl font-black font-outfit text-amber-400">0</span>
+            <span class="text-[10px] text-amber-300 font-bold"> נקודות</span>
+          </div>
+        </div>
+
+        <!-- Progress Towards Potential -->
+        <div class="space-y-1.5 relative z-10">
+          <div class="flex items-center justify-between text-xs font-bold">
+            <span class="text-slate-300">התקדמות אישית עד כה:</span>
+            <span id="studentPotentialProgressLabel" class="text-emerald-400 font-outfit">0 מתוך 0 (0%)</span>
+          </div>
+          <div class="w-full h-3 rounded-full bg-white/10 overflow-hidden p-0.5 border border-white/15">
+            <div id="studentPotentialProgressBar" class="h-full rounded-full bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-300 transition-all duration-700" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- 4 Breakdown Pillars -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1 relative z-10 text-xs">
+          <!-- Sedarim -->
+          <div class="p-3 rounded-2xl bg-white/5 border border-white/10 space-y-1">
+            <span class="text-slate-400 block text-[11px] font-bold">📖 סדרי לימוד:</span>
+            <span id="studentPotSedarimPts" class="font-black text-white text-base font-outfit block">0</span>
+            <span class="text-[10px] text-indigo-300 font-medium block">סך הסדרים במבצע</span>
+          </div>
+
+          <!-- Phone Free -->
+          <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/20 space-y-1">
+            <span class="text-amber-200 block text-[11px] font-bold">📵 ללא טלפון:</span>
+            <span id="studentPotPhonePts" class="font-black text-amber-300 text-base font-outfit block">0</span>
+            <span class="text-[10px] text-amber-200/80 font-medium block">+1 נק׳ בונוס לכל סדר!</span>
+          </div>
+
+          <!-- Duties -->
+          <div class="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 space-y-1">
+            <span class="text-emerald-200 block text-[11px] font-bold">🧹 תורנויות:</span>
+            <span id="studentPotDutiesPts" class="font-black text-emerald-300 text-base font-outfit block">0</span>
+            <span class="text-[10px] text-emerald-200/80 font-medium block">מעורר / מטבח (+3 נק׳)</span>
+          </div>
+
+          <!-- Full Seder -->
+          <div class="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-400/20 space-y-1">
+            <span class="text-indigo-200 block text-[11px] font-bold">👑 סדר מלא:</span>
+            <span id="studentPotBonusPts" class="font-black text-indigo-300 text-base font-outfit block">0</span>
+            <span class="text-[10px] text-indigo-200/80 font-medium block">בונוסי התייצבות ישיבתית</span>
+          </div>
+        </div>
+      </div>
+
       <!-- SHABBAT BATCH REPORTING CARD (Motzei Shabbat through Sunday 10:00 AM) -->
       <div id="studentShabbatBatchCard" class="hidden rounded-3xl p-5 border-2 border-indigo-300 bg-gradient-to-r from-indigo-50/95 via-white to-amber-50/70 shadow-lg">
         <div class="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-indigo-100">
@@ -1212,6 +1278,36 @@
       renderStreakPills();
       renderTodayDuty();
       renderTodayScheduleList();
+      renderStudentPotentialCard();
+    }
+
+    function renderStudentPotentialCard() {
+      const st = state.currentStudent;
+      const card = document.getElementById('studentPotentialPointsCard');
+      if (!card) return;
+
+      const pot = (window.App && typeof App.calculateCampaignPotential === 'function')
+        ? App.calculateCampaignPotential(state.config, state.scheduleSlots, state.duties, st?.id)
+        : { totalPotential: 150, sedarimPoints: 70, phoneFreePoints: 70, dutiesPoints: 6, fullSederPts: 10 };
+
+      const score = Number(st?.score) || 0;
+      const pct = pot.totalPotential > 0 ? Math.min(100, Math.round((score / pot.totalPotential) * 100)) : 0;
+
+      const totEl = document.getElementById('studentPotentialTotalPts');
+      const progLbl = document.getElementById('studentPotentialProgressLabel');
+      const progBar = document.getElementById('studentPotentialProgressBar');
+      const sedEl = document.getElementById('studentPotSedarimPts');
+      const phEl = document.getElementById('studentPotPhonePts');
+      const dutEl = document.getElementById('studentPotDutiesPts');
+      const bonEl = document.getElementById('studentPotBonusPts');
+
+      if (totEl) totEl.textContent = pot.totalPotential;
+      if (progLbl) progLbl.textContent = `${score} מתוך ${pot.totalPotential} נקודות נצברו (${pct}%)`;
+      if (progBar) progBar.style.width = `${pct}%`;
+      if (sedEl) sedEl.textContent = `+${pot.sedarimPoints} נק׳`;
+      if (phEl) phEl.textContent = `+${pot.phoneFreePoints} נק׳`;
+      if (dutEl) dutEl.textContent = `+${pot.dutiesPoints} נק׳`;
+      if (bonEl) bonEl.textContent = `+${pot.fullSederPts} נק׳`;
     }
 
     function renderStreakPills() {

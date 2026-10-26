@@ -242,7 +242,15 @@
           },
           fullSederThreshold: Number(base.full_seder_threshold) || 10,
           fullSederBonusPts: Number(base.full_seder_bonus_pts) || 1,
-          recurringDuties: base.duties_roster || {}
+          recurringDuties: base.duties_roster?.recurring || base.duties_roster || {},
+          dutiesConfig: base.duties_roster?.dutiesConfig || {
+            duty1Name: 'תורן מעורר (בוקר)',
+            duty1Hour: '06:30',
+            duty1ReminderHour: '21:30',
+            duty2Name: 'תורן מטבח (צהריים/ערב)',
+            duty2Hour: '12:00',
+            duty2ReminderHour: '11:00'
+          }
         };
       } catch (e) {
         console.error('Db.getConfig error:', e);
@@ -260,6 +268,18 @@
           extra: cfg.extraTargets || []
         };
 
+        const dutiesRosterData = {
+          recurring: cfg.recurringDuties || {},
+          dutiesConfig: cfg.dutiesConfig || {
+            duty1Name: 'תורן מעורר (בוקר)',
+            duty1Hour: '06:30',
+            duty1ReminderHour: '21:30',
+            duty2Name: 'תורן מטבח (צהריים/ערב)',
+            duty2Hour: '12:00',
+            duty2ReminderHour: '11:00'
+          }
+        };
+
         const payload = {
           id: 1,
           campaign_name: cfg.campaignName || 'מבצע חורף תשפ״ז - עד הפסגה',
@@ -273,7 +293,7 @@
           bonus_config: cfg.bonusConfig || null,
           full_seder_threshold: Number(cfg.fullSederThreshold) || 10,
           full_seder_bonus_pts: Number(cfg.fullSederBonusPts) || 1,
-          duties_roster: cfg.recurringDuties || null
+          duties_roster: dutiesRosterData
         };
 
         const { error } = await client.from('campaign_config').upsert(payload, { onConflict: 'id' });

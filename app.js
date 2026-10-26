@@ -127,20 +127,100 @@
       return `שלום ${name}! 🚀\nברוך הבא למבצע 'עד הפסגה' בישיבת בקשו!\n\nהנה קישור הכניסה האישי שלך (כניסה אוטומטית):\n${link}\n\nסיסמתך האישית: ${pass}\nעולים ביחד לפסגה!`;
     },
 
-    buildDutyReminderText(student, isoDate, role, baseUrl) {
+    getTodayIsraelDate() {
+      try {
+        const nf = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem', year: 'numeric', month: '2-digit', day: '2-digit' });
+        return nf.format(new Date());
+      } catch (e) {
+        return new Date().toISOString().slice(0, 10);
+      }
+    },
+
+    buildDutyReminderText(student, isoDate, role, baseUrl, dutyHour) {
       const name = student?.full_name || student?.name || 'תלמיד יקר';
-      const isWaker = role.includes('מעורר');
-      const roleText = isWaker ? 'השכמת בוקר (מעורר לתפילה ב-06:45)' : 'תורנות מטבח וחדר אוכל (19:30)';
+      const hebDate = (this.getHebrewDateDetails ? this.getHebrewDateDetails(isoDate).fullWithDay : isoDate);
+      const timeStr = dutyHour ? ` (שעה: ${dutyHour})` : '';
       
       const gcalUrl = this.getGoogleCalendarUrl({
-        title: `תורנות בישיבה: ${roleText}`,
-        details: `תורנות אישית ששובצה עבורך בישיבת בקשו. (+3 נקודות למבצע)`,
-        startIso: isWaker ? `${isoDate}T06:45:00` : `${isoDate}T19:30:00`,
-        endIso: isWaker ? `${isoDate}T07:45:00` : `${isoDate}T20:30:00`,
+        title: `תורנות בישיבה: ${role}`,
+        details: `תורנות ששובצה עבורך בישיבת בקשו (${role}). יישר כוח ובהצלחה!`,
+        startIso: `${isoDate}T${dutyHour ? dutyHour.padStart(5, '0') : '07:00'}:00`,
+        endIso: `${isoDate}T${dutyHour ? dutyHour.padStart(5, '0') : '08:00'}:00`,
         isAllDay: false
       });
 
-      return `שלום ${name}! 🌟\nתזכורת לתורנות שלך בישיבת בקשו בתאריך ${isoDate}:\nתפקיד: ${roleText}\n\nלהוספה ישירה ליומן Google שלך:\n${gcalUrl}\n\nיישר כוח! (+3 נקודות)`;
+      return `שלום ${name}! 🌟\nתזכורת ידידותית: הינך משובץ לתורנות *${role}* בישיבה ב${hebDate}${timeStr}.\n\n📅 להוספה ישירה ליומן Google Calendar:\n${gcalUrl}\n\nיישר כוח ובהצלחה רבה! 💪`;
+    },
+
+    // ==========================================
+    // חישוב פוטנציאל נקודות מרבי במבצע
+    // ==========================================
+    calculateCampaignPotential(cfg, scheduleSlots, duties, studentId) {
+      const sDateStr = cfg?.startDate || '2026-10-25';
+      const eDateStr = cfg?.endDate || '2027-02-08';
+      const start = new Date(sDateStr);
+      const end = new Date(eDateStr);
+
+      let totalSlotsCount = 0;
+      let totalSlotsPoints = 0;
+      const slotsMap = scheduleSlots || {};
+
+      const cur = new Date(start);
+      while (cur <= end) {
+        const iso = cur.toISOString().slice(0, 10);
+        const daySlots = slotsMap[iso] || (cur.getDay() === 6 ? [] : [
+          { points: 1 }, { points: 1 }, { points: 1 }
+        ]);
+        daySlots.forEach(s => {
+          totalSlotsCount++;
+          totalSlotsPoints += (Number(s.points) || 1);
+        });
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      // 1. Sedarim Points
+      const sedarimPoints = totalSlotsPoints;
+
+      // 2. Phone Free Bonus (1 point per slot)
+      const noPhoneBonus = Number(cfg?.bonusConfig?.noPhoneBonus) || 1;
+      const phoneFreePoints = totalSlotsCount * noPhoneBonus;
+
+      // 3. Duties Points
+      const wBonus = Number(cfg?.bonusConfig?.wakeupBonus) || 3;
+      const kBonus = Number(cfg?.bonusConfig?.kitchenBonus) || 3;
+      let dutiesPoints = 0;
+      let assignedDutiesCount = 0;
+
+      if (duties && studentId) {
+        Object.values(duties).forEach(d => {
+          if (String(d.wakeupStudentId) === String(studentId)) {
+            dutiesPoints += wBonus;
+            assignedDutiesCount++;
+          }
+          if (String(d.kitchenStudentId) === String(studentId)) {
+            dutiesPoints += kBonus;
+            assignedDutiesCount++;
+          }
+        });
+      }
+
+      // Ensure minimum standard quota is displayed if unassigned
+      const potentialDutyPts = Math.max(dutiesPoints, (wBonus + kBonus));
+
+      // 4. Full Seder & Group bonus (estimated active full seders)
+      const fullSederPts = (Number(cfg?.fullSederBonusPts) || 1) * 10;
+
+      const totalPotential = sedarimPoints + phoneFreePoints + potentialDutyPts + fullSederPts;
+
+      return {
+        totalSlotsCount,
+        sedarimPoints,
+        phoneFreePoints,
+        dutiesPoints: potentialDutyPts,
+        assignedDutiesCount,
+        fullSederPts,
+        totalPotential
+      };
     },
 
     // ==========================================

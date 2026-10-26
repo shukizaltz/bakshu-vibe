@@ -141,6 +141,23 @@
           </div>
         </div>
 
+        <!-- Potential Points Campaign KPI Card -->
+        <div id="campaignPotentialAdminBanner" class="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/90 via-slate-50 to-amber-50/70 border border-indigo-200/90 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl p-2 rounded-xl bg-indigo-600 text-white shadow-xs">🎯</span>
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="font-black text-slate-900 text-xs sm:text-sm">פוטנציאל צבירה מרבי לתלמיד מצטיין:</h4>
+                <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black shadow-xs" id="campaignPotentialMaxBadge">טוען...</span>
+              </div>
+              <p class="text-[11px] text-slate-500">חישוב מלא של כל הסדרים, הפקדת טלפון (+1), תורנויות וסדר מלא במבצע</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 text-[10px] font-bold" id="campaignPotentialBreakdownBadges">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
         <!-- Students Table -->
         <div class="overflow-x-auto max-h-[65vh] custom-scroll">
           <table class="w-full text-right text-xs">
@@ -151,7 +168,7 @@
                 <th class="py-2.5 px-3">טלפון</th>
                 <th class="py-2.5 px-3">סיסמה אישית</th>
                 <th class="py-2.5 px-3 text-center">נוכחות היום</th>
-                <th class="py-2.5 px-3 text-left">ניקוד מצטבר</th>
+                <th class="py-2.5 px-3 text-left">ניקוד ומימוש פוטנציאל</th>
                 <th class="py-2.5 px-3 text-center">פעולות</th>
               </tr>
             </thead>
@@ -171,10 +188,16 @@
       <!-- Visual Campaign Calendar Grid -->
       <div class="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-3">
         <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-          <h4 class="text-sm font-black text-slate-900 flex items-center gap-2">
-            <span>🗓️</span>
-            <span>לוח שנה אינטראקטיבי של המבצע (בחר יום לעריכת סדרים ונוכחות)</span>
-          </h4>
+          <div class="flex items-center gap-2">
+            <h4 class="text-sm font-black text-slate-900 flex items-center gap-2">
+              <span>🗓️</span>
+              <span>לוח שנה אינטראקטיבי של המבצע (בחר יום לעריכת סדרים ונוכחות)</span>
+            </h4>
+            <button type="button" onclick="goToTodayAdminCalendar()" class="px-3 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-sm flex items-center gap-1 cursor-pointer transition" title="עבור לתאריך של היום">
+              <span>📍</span>
+              <span>היום</span>
+            </button>
+          </div>
           <span class="text-xs text-slate-500" id="campaignTotalDaysBadge">-- ימים</span>
         </div>
         
@@ -469,15 +492,19 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <button onclick="openPermanentDutyModal()" class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-xs transition flex items-center gap-1.5">
+            <button onclick="openDutySettingsModal()" class="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer" title="הגדרת שמות התורנויות ושעות תזכורת">
+              <span>⏰</span>
+              <span>שמות ושעות תזכורת</span>
+            </button>
+            <button onclick="openPermanentDutyModal()" class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
               <span>⚙️</span>
               <span>תורנות שבועית קבועה</span>
             </button>
-            <button onclick="addNewDutyPrompt()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition border border-slate-200 flex items-center gap-1">
+            <button onclick="addNewDutyPrompt()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition border border-slate-200 flex items-center gap-1 cursor-pointer">
               <span>➕</span>
               <span>הוסף תאריך</span>
             </button>
-            <button onclick="runFairDutiesLottery()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs shadow transition flex items-center gap-1.5">
+            <button onclick="runFairDutiesLottery()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs shadow transition flex items-center gap-1.5 cursor-pointer">
               <span>🎲</span>
               <span>הגרל תורנים שוויונית לכל הימים הפנויים</span>
             </button>
@@ -495,22 +522,22 @@
               </span>
               <span class="text-[10px] text-slate-500 font-mono" id="dutyPastCountBadge">0 בחורים</span>
             </div>
-            <div id="dutyPastListContainer" class="space-y-1.5 max-h-44 overflow-y-auto custom-scroll text-xs">
+            <div id="dutyPastListContainer" class="space-y-1.5 max-h-52 overflow-y-auto custom-scroll text-xs">
               <!-- Populated by JS -->
             </div>
           </div>
 
-          <!-- Col 2: מי הבאים בתור (טרם שובצו) -->
-          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-2xs">
-            <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-200">
-              <span class="text-xs font-black text-indigo-950 flex items-center gap-1">
+          <!-- Col 2: הבאים = שתי התורנויות הקרובות ביותר ותזכורת WhatsApp -->
+          <div class="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 shadow-2xs">
+            <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-indigo-200">
+              <span class="text-xs font-black text-indigo-950 flex items-center gap-1.5">
                 <span>⏳</span>
-                <span>מי הבאים בתור (טרם שובצו לתורנות)</span>
+                <span>הבאים בתור (2 התורנויות הקרובות)</span>
               </span>
-              <span class="text-[10px] text-slate-500 font-mono" id="dutyNextCountBadge">0 בחורים</span>
+              <span class="text-[10px] text-indigo-800 font-bold bg-white px-2 py-0.5 rounded-full border border-indigo-200" id="dutyNextCountBadge">2 קרובות</span>
             </div>
-            <div id="dutyNextListContainer" class="space-y-1.5 max-h-44 overflow-y-auto custom-scroll text-xs">
-              <!-- Populated by JS -->
+            <div id="dutyNextListContainer" class="space-y-2 max-h-52 overflow-y-auto custom-scroll text-xs">
+              <!-- Populated by JS with direct WhatsApp reminder buttons -->
             </div>
           </div>
         </div>
@@ -521,9 +548,9 @@
             <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold sticky top-0">
               <tr>
                 <th class="py-2.5 px-3">יום ותאריך</th>
-                <th class="py-2.5 px-3">תורן מעורר (בוקר)</th>
+                <th class="py-2.5 px-3" id="adminDuty1Header">תורן מעורר (בוקר)</th>
                 <th class="py-2.5 px-3 text-center">בוצע?</th>
-                <th class="py-2.5 px-3">תורן מטבח (צהריים/ערב)</th>
+                <th class="py-2.5 px-3" id="adminDuty2Header">תורן מטבח (צהריים/ערב)</th>
                 <th class="py-2.5 px-3 text-center">בוצע?</th>
                 <th class="py-2.5 px-3 text-center">תזכורת Google Cal</th>
                 <th class="py-2.5 px-3 text-center">מחיקה</th>
@@ -625,6 +652,82 @@
 
       <div id="adminStudentBreakdownModalContent">
         <!-- Dynamically rendered by inspectStudentFromAdmin() -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL: DUTY NAMES & REMINDER HOURS CONFIG MODAL           -->
+  <!-- ========================================================= -->
+  <div id="dutySettingsModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-right relative max-h-[90vh] overflow-y-auto custom-scroll space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+        <div>
+          <h4 class="text-base font-black text-slate-900 flex items-center gap-2">
+            <span>⏰</span>
+            <span>ניהול שמות התורנויות ושעות התזכורת</span>
+          </h4>
+          <p class="text-xs text-slate-500">קביעת שמות מותאמים אישית ושעת תזכורת עבור הודעות הוואטסאפ ויומן Google</p>
+        </div>
+        <button onclick="closeDutySettingsModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <!-- Duty 1 Config -->
+      <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-black text-amber-900 flex items-center gap-1.5">
+            <span>🌅</span>
+            <span>תורנות 1 (בוקר / השכמה)</span>
+          </span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-900">+3 נק׳ בונוס</span>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 mb-1">שם התורנות שיופיע במערכת ובהודעות:</label>
+          <input type="text" id="cfgDuty1NameInput" class="w-full p-2.5 rounded-xl border border-amber-300 font-bold text-xs bg-white" placeholder="למשל: תורן מעורר (בוקר)">
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-0.5">שעת התורנות בפועל:</label>
+            <input type="time" id="cfgDuty1HourInput" class="w-full p-2 rounded-xl border border-amber-200 font-bold bg-white text-xs text-center">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-0.5">שעת תזכורת מומלצת:</label>
+            <input type="time" id="cfgDuty1ReminderHourInput" class="w-full p-2 rounded-xl border border-amber-200 font-bold bg-white text-xs text-center">
+          </div>
+        </div>
+      </div>
+
+      <!-- Duty 2 Config -->
+      <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-black text-indigo-950 flex items-center gap-1.5">
+            <span>🍽️</span>
+            <span>תורנות 2 (צהריים / מטבח / ערב)</span>
+          </span>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-200 text-indigo-900">+3 נק׳ בונוס</span>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 mb-1">שם התורנות שיופיע במערכת ובהודעות:</label>
+          <input type="text" id="cfgDuty2NameInput" class="w-full p-2.5 rounded-xl border border-indigo-300 font-bold text-xs bg-white" placeholder="למשל: תורן מטבח וחדר אוכל">
+        </div>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-0.5">שעת התורנות בפועל:</label>
+            <input type="time" id="cfgDuty2HourInput" class="w-full p-2 rounded-xl border border-indigo-200 font-bold bg-white text-xs text-center">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-0.5">שעת תזכורת מומלצת:</label>
+            <input type="time" id="cfgDuty2ReminderHourInput" class="w-full p-2 rounded-xl border border-indigo-200 font-bold bg-white text-xs text-center">
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t border-slate-200 flex items-center justify-end gap-2">
+        <button type="button" onclick="closeDutySettingsModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer">ביטול</button>
+        <button type="button" onclick="saveDutySettings()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer">
+          <span>💾</span>
+          <span>שמור הגדרות תורנויות בשרת</span>
+        </button>
       </div>
     </div>
   </div>
@@ -1067,6 +1170,20 @@
       const tbody = document.getElementById('adminStudentsTableBody');
       if (!tbody) return;
 
+      // Update Campaign Potential Summary Banner
+      const generalPot = (window.App && App.calculateCampaignPotential) ? App.calculateCampaignPotential(adminState.config, adminState.scheduleSlots, adminState.duties, null) : null;
+      const bBadge = document.getElementById('campaignPotentialMaxBadge');
+      const bBadges = document.getElementById('campaignPotentialBreakdownBadges');
+      if (bBadge && generalPot) bBadge.textContent = `${generalPot.totalPotential} נקודות`;
+      if (bBadges && generalPot) {
+        bBadges.innerHTML = `
+          <span class="px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-900 border border-indigo-200">📖 סדרים: ${generalPot.sedarimPoints}</span>
+          <span class="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-900 border border-amber-200">📵 ללא טלפון: ${generalPot.phoneFreePoints}</span>
+          <span class="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-900 border border-emerald-200">🧹 תורנויות: ${generalPot.dutiesPoints}</span>
+          <span class="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-900 border border-purple-200">👑 סדר מלא: ${generalPot.fullSederPts}</span>
+        `;
+      }
+
       const filter = (document.getElementById('adminStudentSearchInput')?.value || '').trim().toLowerCase();
       const list = adminState.students.filter(s => {
         const n = (s.full_name || s.name || '').toLowerCase();
@@ -1079,33 +1196,42 @@
         return;
       }
 
-      tbody.innerHTML = list.map((st, i) => `
-        <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="inspectStudentFromAdmin('${st.id}')">
-          <td class="py-3 px-3 text-slate-400">${i + 1}</td>
-          <td class="py-3 px-3">
-            <span class="font-black text-slate-900 text-sm hover:text-indigo-600 transition">${st.full_name || st.name}</span>
-            <span class="block text-[10px] text-slate-400">לחץ לפירוט סדרים 🔍</span>
-          </td>
-          <td class="py-3 px-3 font-mono text-slate-600" dir="ltr">${st.phone || '--'}</td>
-          <td class="py-3 px-3 font-mono text-slate-600">${st.password || '1234'}</td>
-          <td class="py-3 px-3 text-center" onclick="event.stopPropagation()">
-            <button onclick="toggleStudentPresenceDirectly('${st.id}', ${!st.present_today})" class="px-2.5 py-1 rounded-full text-[10px] font-black transition ${st.present_today ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
-              ${st.present_today ? 'נכח היום ✓' : 'סמן נוכח'}
-            </button>
-          </td>
-          <td class="py-3 px-3 text-left font-outfit text-amber-600 font-black text-sm">${st.score || 0} נק׳</td>
-          <td class="py-3 px-3 text-center" onclick="event.stopPropagation()">
-            <div class="flex items-center justify-center gap-1.5">
-              <button onclick="openBonusForStudent('${st.id}')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs" title="הענק בונוס">
-                ⭐
+      tbody.innerHTML = list.map((st, i) => {
+        const pot = (window.App && App.calculateCampaignPotential) ? App.calculateCampaignPotential(adminState.config, adminState.scheduleSlots, adminState.duties, st.id) : { totalPotential: 150 };
+        const score = Number(st.score) || 0;
+        const pct = pot.totalPotential > 0 ? Math.min(100, Math.round((score / pot.totalPotential) * 100)) : 0;
+
+        return `
+          <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="inspectStudentFromAdmin('${st.id}')">
+            <td class="py-3 px-3 text-slate-400">${i + 1}</td>
+            <td class="py-3 px-3">
+              <span class="font-black text-slate-900 text-sm hover:text-indigo-600 transition">${st.full_name || st.name}</span>
+              <span class="block text-[10px] text-slate-400">לחץ לפירוט סדרים 🔍</span>
+            </td>
+            <td class="py-3 px-3 font-mono text-slate-600" dir="ltr">${st.phone || '--'}</td>
+            <td class="py-3 px-3 font-mono text-slate-600">${st.password || '1234'}</td>
+            <td class="py-3 px-3 text-center" onclick="event.stopPropagation()">
+              <button onclick="toggleStudentPresenceDirectly('${st.id}', ${!st.present_today})" class="px-2.5 py-1 rounded-full text-[10px] font-black transition ${st.present_today ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
+                ${st.present_today ? 'נכח היום ✓' : 'סמן נוכח'}
               </button>
-              <button onclick="inspectStudentFromAdmin('${st.id}')" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs" title="פירוט נוכחות מלא">
-                פירוט
-              </button>
-            </div>
-          </td>
-        </tr>
-      `).join('');
+            </td>
+            <td class="py-3 px-3 text-left">
+              <span class="font-black text-amber-600 text-sm font-outfit block">${score} נק׳</span>
+              <span class="text-[10px] text-indigo-700 font-bold block">מתוך ${pot.totalPotential} (${pct}%)</span>
+            </td>
+            <td class="py-3 px-3 text-center" onclick="event.stopPropagation()">
+              <div class="flex items-center justify-center gap-1.5">
+                <button onclick="openBonusForStudent('${st.id}')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs" title="הענק בונוס">
+                  ⭐
+                </button>
+                <button onclick="inspectStudentFromAdmin('${st.id}')" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs" title="פירוט נוכחות מלא">
+                  פירוט
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
     function handleStudentSearch() {
@@ -1137,6 +1263,9 @@
       const todaySlots = adminState.scheduleSlots[todayIso] || getSlotsForDate(todayIso);
 
       const stBonuses = adminState.bonusLogs.filter(b => String(b.user_id) === String(st.id));
+      const stPot = (window.App && App.calculateCampaignPotential) ? App.calculateCampaignPotential(adminState.config, adminState.scheduleSlots, adminState.duties, st.id) : { totalPotential: 150, sedarimPoints: 70, phoneFreePoints: 70, dutiesPoints: 6, fullSederPts: 10 };
+      const stScore = Number(st.score) || 0;
+      const stPct = stPot.totalPotential > 0 ? Math.min(100, Math.round((stScore / stPot.totalPotential) * 100)) : 0;
 
       content.innerHTML = `
         <div class="space-y-4">
@@ -1146,8 +1275,32 @@
               <p class="text-xs text-slate-500 font-mono" dir="ltr">${st.phone || 'אין טלפון'} • סיסמה אישית: ${st.password || '1234'}</p>
             </div>
             <div class="text-left">
-              <span class="block text-2xl font-black text-amber-600 font-outfit">${st.score || 0} נק׳</span>
+              <span class="block text-2xl font-black text-amber-600 font-outfit">${stScore} נק׳</span>
               <span class="text-[10px] text-slate-400 font-bold">סך הכל בקופה</span>
+            </div>
+          </div>
+
+          <!-- Student Personal Potential Card -->
+          <div class="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/90 via-slate-50 to-amber-50/70 border border-indigo-200/90 space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-black text-slate-900 flex items-center gap-1.5 text-xs sm:text-sm">
+                <span>🎯</span>
+                <span>פוטנציאל צבירה מרבי של הבחור במבצע:</span>
+              </span>
+              <span class="font-black font-outfit text-indigo-950 text-sm sm:text-base">${stPot.totalPotential} נקודות</span>
+            </div>
+            <div class="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
+              <div class="h-full rounded-full bg-gradient-to-r from-amber-400 to-emerald-500" style="width: ${stPct}%"></div>
+            </div>
+            <div class="flex flex-wrap items-center justify-between text-[11px] text-slate-600 font-medium">
+              <span>נצברו בפועל: <b class="text-emerald-700">${stScore} נק׳ (${stPct}%)</b></span>
+              <span>נותר לצבור עד הפסגה: <b class="text-indigo-700">${Math.max(0, stPot.totalPotential - stScore)} נק׳</b></span>
+            </div>
+            <div class="grid grid-cols-4 gap-1.5 text-[10px] text-center pt-1 font-bold">
+              <div class="p-1 rounded-lg bg-white border border-slate-200">סדרים: ${stPot.sedarimPoints}</div>
+              <div class="p-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200">ללא נייד: ${stPot.phoneFreePoints}</div>
+              <div class="p-1 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200">תורנויות: ${stPot.dutiesPoints}</div>
+              <div class="p-1 rounded-lg bg-purple-50 text-purple-900 border border-purple-200">בונוסים: ${stPot.fullSederPts}</div>
             </div>
           </div>
 
@@ -1275,6 +1428,7 @@
       const badge = document.getElementById('campaignTotalDaysBadge');
       if (!grid) return;
 
+      const todayIso = (window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10);
       const start = new Date(adminState.config?.startDate || '2026-10-25');
       const end = new Date(adminState.config?.endDate || '2027-02-08');
       const cur = new Date(start);
@@ -1308,14 +1462,33 @@
 
       const daysHtml = days.map(d => {
         const isSelected = d.iso === adminState.selectedDate;
+        const isToday = d.iso === todayIso;
         const slots = adminState.scheduleSlots[d.iso] || [];
         const hasEvent = adminState.duties[d.iso]?.specialEventTitle;
 
+        let borderClass = 'border-slate-200';
+        let bgClass = 'bg-white text-slate-800 hover:bg-slate-50';
+
+        if (isSelected) {
+          bgClass = 'bg-indigo-600 text-white shadow-md scale-102 ring-2 ring-indigo-300';
+          borderClass = 'border-indigo-700';
+        } else if (isToday) {
+          bgClass = 'bg-amber-50/95 text-amber-950 hover:bg-amber-100 ring-2 ring-amber-400';
+          borderClass = 'border-amber-400';
+        } else if (d.isShabbat) {
+          bgClass = 'bg-amber-50/90 text-amber-950 hover:bg-amber-100';
+          borderClass = 'border-amber-300';
+        } else if (hasEvent) {
+          bgClass = 'bg-indigo-50/80 text-indigo-950 hover:bg-indigo-100';
+          borderClass = 'border-indigo-300';
+        }
+
         return `
-          <button onclick="onAdminDateSelected('${d.iso}')" class="p-1 sm:p-2 rounded-xl text-center transition border ${isSelected ? 'bg-indigo-600 text-white border-indigo-700 shadow-md scale-102 ring-2 ring-indigo-300' : (d.isShabbat ? 'bg-amber-50/90 border-amber-300 text-amber-950 hover:bg-amber-100' : (hasEvent ? 'bg-indigo-50/80 border-indigo-300 text-indigo-950 hover:bg-indigo-100' : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50'))} cursor-pointer">
-            <span class="block text-[10px] font-bold ${isSelected ? 'text-indigo-200' : 'text-slate-400'}">${d.dayName}</span>
+          <button id="adminCalendarDay_${d.iso}" onclick="onAdminDateSelected('${d.iso}')" class="p-1 sm:p-2 rounded-xl text-center transition border ${bgClass} ${borderClass} cursor-pointer relative">
+            ${isToday ? `<span class="absolute -top-1.5 -right-1.5 px-1 py-0.2 rounded-full text-[8px] font-black ${isSelected ? 'bg-amber-400 text-slate-950' : 'bg-amber-500 text-white'} shadow-xs">היום</span>` : ''}
+            <span class="block text-[10px] font-bold ${isSelected ? 'text-indigo-200' : (isToday ? 'text-amber-800' : 'text-slate-400')}">${d.dayName}</span>
             <span class="block text-xs font-black truncate">${d.hebShort}</span>
-            <span class="block text-[9px] font-mono ${isSelected ? 'text-indigo-200' : 'text-slate-400'}">${d.gregShort}</span>
+            <span class="block text-[9px] font-mono ${isSelected ? 'text-indigo-200' : (isToday ? 'text-amber-700' : 'text-slate-400')}">${d.gregShort}</span>
             <span class="block text-[9px] mt-0.5 font-bold ${isSelected ? 'text-amber-300' : (slots.length > 0 ? 'text-emerald-700' : 'text-slate-400')}">${slots.length} סדרים</span>
             ${hasEvent ? `<span class="block text-[8px] truncate font-bold text-amber-600">🎉 ${hasEvent}</span>` : ''}
           </button>
@@ -1323,6 +1496,19 @@
       }).join('');
 
       grid.innerHTML = blanksHtml + daysHtml;
+    }
+
+    function goToTodayAdminCalendar() {
+      const todayIso = (window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10);
+      onAdminDateSelected(todayIso);
+      setTimeout(() => {
+        const el = document.getElementById('adminCalendarDay_' + todayIso);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          el.classList.add('ring-4', 'ring-amber-400');
+          setTimeout(() => el.classList.remove('ring-4', 'ring-amber-400'), 1500);
+        }
+      }, 100);
     }
 
     function onAdminDateSelected(isoDate) {
@@ -2262,9 +2448,26 @@ END:VEVENT
     // =========================================================
     // 4. DUTIES ROSTER & RECURRING DUTIES
     // =========================================================
+    function getAdminDutyConfig() {
+      return adminState.config?.dutiesConfig || {
+        duty1Name: 'תורן מעורר (בוקר)',
+        duty1Hour: '06:30',
+        duty1ReminderHour: '21:30',
+        duty2Name: 'תורן מטבח (צהריים/ערב)',
+        duty2Hour: '12:00',
+        duty2ReminderHour: '11:00'
+      };
+    }
+
     function renderAdminDutiesTable() {
       const tbody = document.getElementById('adminDutiesTableBody');
       if (!tbody) return;
+
+      const dCfg = getAdminDutyConfig();
+      const h1 = document.getElementById('adminDuty1Header');
+      const h2 = document.getElementById('adminDuty2Header');
+      if (h1) h1.innerHTML = `🌅 ${dCfg.duty1Name} <span class="text-[10px] text-slate-400 block font-normal">(⏰ ${dCfg.duty1Hour} | תזכורת: ${dCfg.duty1ReminderHour})</span>`;
+      if (h2) h2.innerHTML = `🍽️ ${dCfg.duty2Name} <span class="text-[10px] text-slate-400 block font-normal">(⏰ ${dCfg.duty2Hour} | תזכורת: ${dCfg.duty2ReminderHour})</span>`;
 
       const dates = Object.keys(adminState.duties).sort();
       if (dates.length === 0) {
@@ -2284,7 +2487,7 @@ END:VEVENT
               <span class="text-[10px] text-slate-400 font-outfit" dir="ltr">${d}</span>
             </td>
 
-            <!-- Wakeup Duty Select -->
+            <!-- Duty 1 (Wakeup) Select -->
             <td class="py-3 px-3">
               <select onchange="onDutyStudentChanged('${d}', 'wakeup_student_id', this.value)" class="p-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-white w-40">
                 <option value="">-- טרם שובץ --</option>
@@ -2295,7 +2498,7 @@ END:VEVENT
               <input type="checkbox" ${item.wakeupDone ? 'checked' : ''} onchange="onDutyToggleDone('${d}', 'wakeup_done', this.checked)" class="w-4 h-4 rounded text-emerald-600 cursor-pointer">
             </td>
 
-            <!-- Kitchen Duty Select -->
+            <!-- Duty 2 (Kitchen) Select -->
             <td class="py-3 px-3">
               <select onchange="onDutyStudentChanged('${d}', 'kitchen_student_id', this.value)" class="p-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-white w-40">
                 <option value="">-- טרם שובץ --</option>
@@ -2306,16 +2509,21 @@ END:VEVENT
               <input type="checkbox" ${item.kitchenDone ? 'checked' : ''} onchange="onDutyToggleDone('${d}', 'kitchen_done', this.checked)" class="w-4 h-4 rounded text-emerald-600 cursor-pointer">
             </td>
 
-            <!-- Send Reminder with Google Calendar Link -->
+            <!-- Direct WhatsApp Reminder Buttons -->
             <td class="py-3 px-3 text-center">
-              <button onclick="sendDutyReminderWhatsApp('${d}')" class="px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[11px] transition flex items-center justify-center gap-1 mx-auto" title="שלח תזכורת Google Calendar בוואטסאפ לתורנים">
-                <span>📅</span><span>שלח תזכורת</span>
-              </button>
+              <div class="flex items-center justify-center gap-1">
+                <button type="button" onclick="sendDirectDutyWhatsApp('${d}', 'wakeup')" class="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[10px] transition cursor-pointer" title="שלח תזכורת WhatsApp לתורן ${dCfg.duty1Name}">
+                  💬 ${dCfg.duty1Name.slice(0, 5)}..
+                </button>
+                <button type="button" onclick="sendDirectDutyWhatsApp('${d}', 'kitchen')" class="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[10px] transition cursor-pointer" title="שלח תזכורת WhatsApp לתורן ${dCfg.duty2Name}">
+                  💬 ${dCfg.duty2Name.slice(0, 5)}..
+                </button>
+              </div>
             </td>
 
             <!-- Delete Duty Date -->
             <td class="py-3 px-3 text-center">
-              <button onclick="deleteDutyDateConfirm('${d}')" class="p-1.5 text-rose-600 hover:text-rose-800 text-xs font-bold" title="מחק תאריך תורנות זה">
+              <button onclick="deleteDutyDateConfirm('${d}')" class="p-1.5 text-rose-600 hover:text-rose-800 text-xs font-bold cursor-pointer" title="מחק תאריך תורנות זה">
                 🗑️
               </button>
             </td>
@@ -2333,8 +2541,11 @@ END:VEVENT
 
       const roster = adminState.duties || {};
       const allStudents = adminState.students || [];
-      const dutyCountByStudent = {};
+      const dCfg = getAdminDutyConfig();
+      const todayIso = (window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10);
 
+      // Col 1: מי כבר היה תורן ומתי
+      const dutyCountByStudent = {};
       allStudents.forEach(s => { dutyCountByStudent[s.id] = 0; });
 
       Object.keys(roster).forEach(iso => {
@@ -2345,16 +2556,12 @@ END:VEVENT
       });
 
       const pastStudents = allStudents.filter(s => (dutyCountByStudent[s.id] || 0) > 0);
-      const nextStudents = allStudents.filter(s => (dutyCountByStudent[s.id] || 0) === 0);
-
       pastStudents.sort((a, b) => (dutyCountByStudent[b.id] || 0) - (dutyCountByStudent[a.id] || 0));
-      nextStudents.sort((a, b) => (a.full_name || a.name).localeCompare(b.full_name || b.name, 'he'));
 
       if (pastBadge) pastBadge.textContent = `${pastStudents.length} בחורים`;
-      if (nextBadge) nextBadge.textContent = `${nextStudents.length} בחורים`;
 
       if (pastStudents.length === 0) {
-        pastContainer.innerHTML = '<div class="text-[11px] text-slate-400 py-3 text-center">טרם שובצו תורנים במבצע</div>';
+        pastContainer.innerHTML = '<div class="text-[11px] text-slate-400 py-3 text-center">טרם בוצעו תורנויות במבצע</div>';
       } else {
         pastContainer.innerHTML = pastStudents.map(st => `
           <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200 text-xs">
@@ -2364,160 +2571,149 @@ END:VEVENT
         `).join('');
       }
 
-      if (nextStudents.length === 0) {
-        nextContainer.innerHTML = '<div class="text-[11px] text-emerald-600 font-bold py-3 text-center">כל הבחורים כבר שובצו לפחות פעם אחת! 🎉</div>';
+      // Col 2: הבאים = שתי התורנויות הקרובות ביותר ותזכורת WhatsApp לכל אחד
+      const allDates = Object.keys(roster).sort();
+      let upcomingDates = allDates.filter(d => d >= todayIso);
+      if (upcomingDates.length < 2) {
+        upcomingDates = allDates.slice(-2);
       } else {
-        nextContainer.innerHTML = nextStudents.map(st => `
-          <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200 text-xs">
-            <span class="font-bold text-slate-900">${st.full_name || st.name}</span>
-            <span class="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">טרם שובץ</span>
-          </div>
-        `).join('');
+        upcomingDates = upcomingDates.slice(0, 2);
+      }
+
+      if (nextBadge) nextBadge.textContent = `${upcomingDates.length} קרובות`;
+
+      if (upcomingDates.length === 0) {
+        nextContainer.innerHTML = '<div class="text-xs text-slate-400 py-3 text-center">אין תורנויות קרובות בלוח. לחץ "➕ הוסף תאריך".</div>';
+      } else {
+        nextContainer.innerHTML = upcomingDates.map((iso) => {
+          const item = roster[iso] || {};
+          const wSt = allStudents.find(s => String(s.id) === String(item.wakeupStudentId));
+          const kSt = allStudents.find(s => String(s.id) === String(item.kitchenStudentId));
+          const hebDetails = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(iso) : null;
+          const dayTitle = hebDetails ? `${hebDetails.dayName}, ${hebDetails.shortHebrew}` : (item.dayName || iso);
+          const isToday = iso === todayIso;
+
+          return `
+            <div class="p-3 rounded-2xl bg-white border ${isToday ? 'border-amber-300 ring-2 ring-amber-200/60 shadow-sm' : 'border-indigo-100'} space-y-2">
+              <div class="flex items-center justify-between pb-1.5 border-b border-slate-100">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-black text-slate-900 text-xs">${dayTitle}</span>
+                  ${isToday ? '<span class="px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-950 font-black text-[9px]">היום!</span>' : ''}
+                </div>
+                <span class="text-[10px] text-slate-400 font-mono" dir="ltr">${iso}</span>
+              </div>
+
+              <!-- Duty 1 (Wakeup) -->
+              <div class="flex items-center justify-between gap-2 p-1.5 rounded-xl bg-slate-50 border border-slate-200/70 text-xs">
+                <div class="flex-1 min-w-0">
+                  <span class="block font-black text-indigo-950 text-[11px] truncate">🌅 ${dCfg.duty1Name} <span class="text-[9px] font-normal text-slate-400">(תזכורת: ${dCfg.duty1ReminderHour})</span></span>
+                  <span class="block text-[11px] ${wSt ? 'font-bold text-slate-800' : 'font-semibold text-rose-500'} truncate">
+                    ${wSt ? `${wSt.full_name || wSt.name}` : '⚠️ טרם שובץ'}
+                  </span>
+                </div>
+                ${wSt ? `
+                  <button type="button" onclick="sendDirectDutyWhatsApp('${iso}', 'wakeup')" class="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] shadow-sm flex items-center gap-1 transition cursor-pointer whitespace-nowrap" title="שלח תזכורת בוואטסאפ">
+                    <span>💬</span><span>תזכר</span>
+                  </button>
+                ` : ''}
+              </div>
+
+              <!-- Duty 2 (Kitchen) -->
+              <div class="flex items-center justify-between gap-2 p-1.5 rounded-xl bg-slate-50 border border-slate-200/70 text-xs">
+                <div class="flex-1 min-w-0">
+                  <span class="block font-black text-indigo-950 text-[11px] truncate">🍽️ ${dCfg.duty2Name} <span class="text-[9px] font-normal text-slate-400">(תזכורת: ${dCfg.duty2ReminderHour})</span></span>
+                  <span class="block text-[11px] ${kSt ? 'font-bold text-slate-800' : 'font-semibold text-rose-500'} truncate">
+                    ${kSt ? `${kSt.full_name || kSt.name}` : '⚠️ טרם שובץ'}
+                  </span>
+                </div>
+                ${kSt ? `
+                  <button type="button" onclick="sendDirectDutyWhatsApp('${iso}', 'kitchen')" class="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] shadow-sm flex items-center gap-1 transition cursor-pointer whitespace-nowrap" title="שלח תזכורת בוואטסאפ">
+                    <span>💬</span><span>תזכר</span>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
       }
     }
 
-    async function onDutyStudentChanged(isoDate, field, studentId) {
-      const cur = adminState.duties[isoDate] || {};
-      const wId = field === 'wakeup_student_id' ? studentId : cur.wakeupStudentId;
-      const kId = field === 'kitchen_student_id' ? studentId : cur.kitchenStudentId;
-      await Db.saveDuty(isoDate, wId, kId, cur.wakeupDone, cur.kitchenDone);
-
-      if (adminState.duties[isoDate]) {
-        if (field === 'wakeup_student_id') adminState.duties[isoDate].wakeupStudentId = studentId;
-        if (field === 'kitchen_student_id') adminState.duties[isoDate].kitchenStudentId = studentId;
-      }
-      updateDutyRotationTrackerCards();
-      App.showToast('תורן שובץ ונשמר בשרת', '✓');
-    }
-
-    async function onDutyToggleDone(isoDate, doneField, isDone) {
-      const cur = adminState.duties[isoDate] || {};
-      const wDone = doneField === 'wakeup_done' ? isDone : cur.wakeupDone;
-      const kDone = doneField === 'kitchen_done' ? isDone : cur.kitchenDone;
-      await Db.saveDuty(isoDate, cur.wakeupStudentId, cur.kitchenStudentId, wDone, kDone);
-
-      if (adminState.duties[isoDate]) {
-        if (doneField === 'wakeup_done') adminState.duties[isoDate].wakeupDone = isDone;
-        if (doneField === 'kitchen_done') adminState.duties[isoDate].kitchenDone = isDone;
-      }
-      App.showToast('סטטוס ביצוע עודכן בשרת', '✓');
-    }
-
-    function addNewDutyPrompt() {
-      const d = prompt('הזן תאריך לתורנות חדשה (פורמט: YYYY-MM-DD):', new Date().toISOString().slice(0, 10));
-      if (d && /^\d{4}-\d{2}-\d{2}$/.test(d.trim())) {
-        const clean = d.trim();
-        Db.saveDuty(clean, null, null, false, false);
-        adminState.duties[clean] = {
-          isoDate: clean,
-          dayName: App.getHebrewDayName(clean),
-          wakeupStudentId: null,
-          kitchenStudentId: null,
-          wakeupDone: false,
-          kitchenDone: false
-        };
-        renderAdminDutiesTable();
-        App.showToast('תאריך תורנות נוסף ונשמר בשרת', '➕');
-      }
-    }
-
-    async function deleteDutyDateConfirm(isoDate) {
-      if (!confirm(`האם למחוק תורנות לתאריך ${isoDate}?`)) return;
-      delete adminState.duties[isoDate];
-      await Db.deleteDutyDate(isoDate);
-      renderAdminDutiesTable();
-      updateDutyRotationTrackerCards();
-      App.showToast('תאריך התורנות נמחק מהשרת', '🗑️');
-    }
-
-    async function runFairDutiesLottery() {
-      const allStudents = adminState.students || [];
-      const dutyDates = Object.keys(adminState.duties);
-
-      if (allStudents.length === 0 || dutyDates.length === 0) {
-        App.showToast('חסרים תלמידים או תאריכי תורנות להגרלה', '⚠️');
-        return;
-      }
-
-      if (!confirm('האם להגריל תורנים שוויונית לכל הימים הפנויים במבצע?')) return;
-
-      const dutyCounts = {};
-      allStudents.forEach(s => { dutyCounts[s.id] = 0; });
-
-      dutyDates.forEach(d => {
-        const item = adminState.duties[d];
-        if (item.wakeupStudentId && dutyCounts[item.wakeupStudentId] !== undefined) dutyCounts[item.wakeupStudentId]++;
-        if (item.kitchenStudentId && dutyCounts[item.kitchenStudentId] !== undefined) dutyCounts[item.kitchenStudentId]++;
-      });
-
-      let countAssigned = 0;
-      for (const d of dutyDates) {
-        const item = adminState.duties[d];
-        let changed = false;
-        
-        // Wakeup
-        if (!item.wakeupStudentId) {
-          const minW = Math.min(...allStudents.map(s => dutyCounts[s.id]));
-          const poolW = allStudents.filter(s => dutyCounts[s.id] === minW);
-          const pickedW = poolW[Math.floor(Math.random() * poolW.length)];
-          item.wakeupStudentId = pickedW.id;
-          dutyCounts[pickedW.id]++;
-          countAssigned++;
-          changed = true;
-        }
-
-        // Kitchen
-        if (!item.kitchenStudentId) {
-          const eligibleForK = allStudents.filter(s => String(s.id) !== String(item.wakeupStudentId));
-          const minK = Math.min(...eligibleForK.map(s => dutyCounts[s.id]));
-          const poolK = eligibleForK.filter(s => dutyCounts[s.id] === minK);
-          const pickedK = poolK[Math.floor(Math.random() * poolK.length)];
-          item.kitchenStudentId = pickedK.id;
-          dutyCounts[pickedK.id]++;
-          countAssigned++;
-          changed = true;
-        }
-
-        if (changed) {
-          await Db.saveDuty(d, item.wakeupStudentId, item.kitchenStudentId, item.wakeupDone, item.kitchenDone);
-        }
-      }
-
-      renderAdminDutiesTable();
-      updateDutyRotationTrackerCards();
-      App.showToast(`הוגרלו בהצלחה ${countAssigned} תורנויות שוויוניות ונשמרו בשרת!`, '🎉');
-    }
-
-    // Send Duty Reminder WhatsApp with direct Google Calendar link
-    function sendDutyReminderWhatsApp(isoDate) {
+    // Direct WhatsApp Reminder for a specific Duty and Student
+    function sendDirectDutyWhatsApp(isoDate, dutyType) {
       const duty = adminState.duties[isoDate];
       if (!duty) return;
 
-      const wStudent = adminState.students.find(s => String(s.id) === String(duty.wakeupStudentId));
-      const kStudent = adminState.students.find(s => String(s.id) === String(duty.kitchenStudentId));
-
-      const target = prompt('למי לשלוח תזכורת?\n1 - לתורן מעורר (' + (wStudent ? (wStudent.full_name || wStudent.name) : 'טרם שובץ') + ')\n2 - לתורן מטבח (' + (kStudent ? (kStudent.full_name || kStudent.name) : 'טרם שובץ') + ')', '1');
-
-      let st = null;
-      let roleText = '';
-
-      if (target === '1') {
-        st = wStudent;
-        roleText = 'מעורר לתפילה';
-      } else if (target === '2') {
-        st = kStudent;
-        roleText = 'תורנות מטבח';
-      }
+      const dCfg = getAdminDutyConfig();
+      const isW = dutyType === 'wakeup';
+      const stId = isW ? duty.wakeupStudentId : duty.kitchenStudentId;
+      const st = adminState.students.find(s => String(s.id) === String(stId));
 
       if (!st) {
-        App.showToast('לא נבחר תורן משובץ', '⚠️');
+        App.showToast('לא משובץ תורן לתפקיד זה', '⚠️');
         return;
       }
 
-      const msg = App.buildDutyReminderText(st, isoDate, roleText, window.location.origin);
+      const roleName = isW ? dCfg.duty1Name : dCfg.duty2Name;
+      const dutyHour = isW ? dCfg.duty1Hour : dCfg.duty2Hour;
+
+      const msg = App.buildDutyReminderText(st, isoDate, roleName, window.location.origin, dutyHour);
       const phoneClean = (st.phone || '').replace(/[^0-9]/g, '');
       const pStr = phoneClean.startsWith('0') ? phoneClean.slice(1) : phoneClean;
+
+      if (!pStr) {
+        App.showToast(`לבחור ${st.full_name || st.name} לא מוגדר מספר טלפון!`, '⚠️');
+        return;
+      }
+
       window.open(`https://wa.me/972${pStr}?text=${encodeURIComponent(msg)}`, '_blank');
+      App.showToast(`פותח WhatsApp לתזכורת עבור ${st.full_name || st.name}...`, '💬');
+    }
+
+    // Modal: Duty Names & Reminder Hours Management
+    function openDutySettingsModal() {
+      const cfg = getAdminDutyConfig();
+      const d1N = document.getElementById('cfgDuty1NameInput');
+      const d1H = document.getElementById('cfgDuty1HourInput');
+      const d1R = document.getElementById('cfgDuty1ReminderHourInput');
+      const d2N = document.getElementById('cfgDuty2NameInput');
+      const d2H = document.getElementById('cfgDuty2HourInput');
+      const d2R = document.getElementById('cfgDuty2ReminderHourInput');
+
+      if (d1N) d1N.value = cfg.duty1Name || 'תורן מעורר (בוקר)';
+      if (d1H) d1H.value = cfg.duty1Hour || '06:30';
+      if (d1R) d1R.value = cfg.duty1ReminderHour || '21:30';
+
+      if (d2N) d2N.value = cfg.duty2Name || 'תורן מטבח (צהריים/ערב)';
+      if (d2H) d2H.value = cfg.duty2Hour || '12:00';
+      if (d2R) d2R.value = cfg.duty2ReminderHour || '11:00';
+
+      document.getElementById('dutySettingsModal')?.classList.remove('hidden');
+    }
+
+    function closeDutySettingsModal() {
+      document.getElementById('dutySettingsModal')?.classList.add('hidden');
+    }
+
+    async function saveDutySettings() {
+      if (!adminState.config) adminState.config = {};
+      adminState.config.dutiesConfig = {
+        duty1Name: (document.getElementById('cfgDuty1NameInput')?.value || '').trim() || 'תורן מעורר (בוקר)',
+        duty1Hour: document.getElementById('cfgDuty1HourInput')?.value || '06:30',
+        duty1ReminderHour: document.getElementById('cfgDuty1ReminderHourInput')?.value || '21:30',
+        duty2Name: (document.getElementById('cfgDuty2NameInput')?.value || '').trim() || 'תורן מטבח (צהריים/ערב)',
+        duty2Hour: document.getElementById('cfgDuty2HourInput')?.value || '12:00',
+        duty2ReminderHour: document.getElementById('cfgDuty2ReminderHourInput')?.value || '11:00'
+      };
+
+      const ok = await Db.saveConfig(adminState.config);
+      if (ok) {
+        App.showToast('הגדרות שמות התורנויות ושעות התזכורת נשמרו בשרת!', '✓');
+        closeDutySettingsModal();
+        renderAdminDutiesTable();
+        updateDutyRotationTrackerCards();
+      } else {
+        App.showToast('שגיאה בשמירת הגדרות תורנויות לשרת', '⚠️');
+      }
     }
 
     // --- Permanent Recurring Duties Modal ---
