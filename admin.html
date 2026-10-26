@@ -2199,7 +2199,7 @@
       let allPassedToday = false;
 
       if (isPreCampaign) {
-        activeSeder = applicableEvents[0] || null;
+        activeSeder = null;
         nextSeder = applicableEvents[1] || applicableEvents[0] || null;
       } else {
         const openEvents = [];
@@ -2272,7 +2272,7 @@
       return {
         targetDate,
         dateInfo: dInfo,
-        activeSeder: activeSeder || (currentMinutes < 1200 ? (nextSeder || applicableEvents[0]) : (activeSeder || nextSeder || applicableEvents[0])),
+        activeSeder: activeSeder || null,
         nextSeder,
         applicableEvents,
         allPassedToday: false,
@@ -5236,9 +5236,16 @@
       renderProgressGraph();
     }
 
-    function handleStudentCheckIn() {
+    function handleStudentCheckIn(opts) {
       const curInfo = typeof getActiveOrNextSederInfo === 'function' ? getActiveOrNextSederInfo() : null;
-      const activeSlot = curInfo?.activeSeder || curInfo?.nextSeder;
+      // 1. אם אין כרגע סדר פעיל פתוח, חסום מיד את הפונקציה (return מיד בהתחלה)
+      if (!curInfo?.activeSeder) {
+        if (typeof showToast === 'function') {
+          showToast('אין כרגע סדר פעיל פתוח לדיווח נוכחות', '🔒');
+        }
+        return;
+      }
+      const activeSlot = curInfo.activeSeder;
       const todayStr = (typeof getTodayDateStr === 'function') ? getTodayDateStr() : '';
       const targetActiveId = state.activeStudentId || state.currentStudent?.id || 1;
       const stIdStr = String(targetActiveId);
@@ -5250,31 +5257,22 @@
         (typeof isStudentPresentInSlot === 'function' && isStudentPresentInSlot(targetActiveId, activeSlot, todayStr))
       );
 
-      // 1. לפני סימון הנוכחות (כאשר הבחור עדיין לא סימן נוכחות בסדר זה):
+      // 2. לפני סימון הנוכחות (כאשר הבחור עדיין לא סימן נוכחות בסדר זה):
+      // פתח סורק מצלמה לסריקת ה-QR ללא שום prompt, או סמן מיד אם נכנס מהקישור ?qr=
       if (!isSlotChecked) {
+        const isVerifiedFromCall = !!(opts && opts.verified);
         const secretObj = (typeof loadQrSecret === 'function') ? loadQrSecret() : { code: 'BK-892' };
         const activeSecretCode = String(secretObj?.code || 'BK-892').trim().toUpperCase();
 
         const urlParams = new URLSearchParams(window.location.search);
         const urlQr = urlParams.get('qr');
-        let isQrVerified = false;
+        const isUrlQrValid = !!(urlQr && String(urlQr).trim().toUpperCase() === activeSecretCode);
 
-        if (urlQr && String(urlQr).trim().toUpperCase() === activeSecretCode) {
-          isQrVerified = true;
-        }
-
-        if (!isQrVerified) {
-          const userInput = prompt('הזן את קוד ה-QR של בית המדרש:');
-          if (!userInput) return; // בחור ביטל או השאיר ריק
-          if (String(userInput).trim().toUpperCase() !== activeSecretCode) {
-            if (typeof showToast === 'function') {
-              showToast('קוד ברקוד שגוי! נא לבדוק את הקוד המוצג במסך בית המדרש', '⚠️');
-            } else {
-              alert('קוד ברקוד שגוי! נא לבדוק את הקוד המוצג במסך בית המדרש');
-            }
-            return;
+        if (!isVerifiedFromCall && !isUrlQrValid) {
+          if (typeof openBarcodeScannerModal === 'function') {
+            openBarcodeScannerModal();
           }
-          isQrVerified = true;
+          return;
         }
       }
 
@@ -5296,7 +5294,7 @@
           if (noPhoneBonus) state.demoStudentProfile.bonusPoints = (state.demoStudentProfile.bonusPoints || 0) + noPhoneBonus;
           state.demoStudentProfile.last10.shift();
           state.demoStudentProfile.last10.push(1);
-          let msg = 'נוכחות סומנה בהצלחה (לדוגמה)! +' + totalPointsEarned + ' נקודות';
+          let msg = (opts && opts.message) ? opts.message : ('נוכחות סומנה בהצלחה (לדוגמה)! +' + totalPointsEarned + ' נקודות');
           if (noPhoneBonus > 0) msg += ' (כולל בונוס ללא טלפון 📵)';
           showToast(msg, '🎉');
           state.activeSederNoPhone = false;
@@ -5341,7 +5339,7 @@
         state.currentStudent.baseScore = (Number(state.currentStudent.baseScore) || 0) + totalPointsEarned;
         state.currentStudent.last10.shift();
         state.currentStudent.last10.push(1);
-        let msg = 'נוכחות סומנה בהצלחה! +' + totalPointsEarned + ' נקודות';
+        let msg = (opts && opts.message) ? opts.message : ('נוכחות סומנה בהצלחה! +' + totalPointsEarned + ' נקודות');
         if (noPhoneBonus > 0) msg += ' (כולל בונוס ללא טלפון 📵)';
         showToast(msg, '🎉');
         state.activeSederNoPhone = false;
@@ -5486,11 +5484,9 @@
 
       const btnArea = document.getElementById('checkInActionArea');
       if (btnArea) {
-        const todaySlotsForStudent = getSlotsForDate(getTodayDateStr());
         const curSederInfo = typeof getActiveOrNextSederInfo === 'function' ? getActiveOrNextSederInfo() : null;
-        const activeSlot = curSederInfo?.activeSeder || curSederInfo?.nextSeder || todaySlotsForStudent[0] || { openTime: '09:00', lockTime: '23:59', title: 'סדר היום', points: 1 };
-        const timeStatus = getSederTimeStatus(activeSlot);
-        const isDemo = state.currentStudent && state.currentStudent.id === 'demo_student_1';
+        const activeSlot = curSederInfo?.activeSeder;
+        const isDemo = state.currentStudent && (state.currentStudent.id === 'demo_student_1' || state.currentStudent.id === 999 || state.currentStudent.isDemo);
 
         if (isPresent) {
           btnArea.innerHTML = `
@@ -5499,22 +5495,24 @@
                 <span class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-base">✓</span>
                 <span class="text-emerald-950 font-black text-sm sm:text-base">נוכחותך אומתה בסריקת ברקוד בבית המדרש!</span>
               </div>
-              <button onclick="handleStudentCheckIn()" class="px-3 py-1.5 rounded-xl bg-white border border-emerald-300 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition">
+              <button onclick="handleStudentCheckIn()" class="px-3 py-1.5 rounded-xl bg-white border border-emerald-300 text-emerald-800 text-xs font-bold hover:bg-emerald-100 transition cursor-pointer">
                 בטל סימון
               </button>
             </div>
           `;
-        } else if (!timeStatus.active && !isDemo) {
+        } else if (!activeSlot && !isDemo) {
+          const nextTitle = curSederInfo?.nextSeder?.title ? ('הסדר הבא: ' + curSederInfo.nextSeder.title) : 'אין כרגע סדר פעיל';
+          const nextTime = curSederInfo?.nextSeder?.timeWindow ? (' (' + curSederInfo.nextSeder.timeWindow + ')') : '';
           btnArea.innerHTML = `
-            <div class="w-full py-4 px-6 rounded-2xl bg-slate-100 border border-slate-300 text-slate-500 font-bold text-center flex items-center justify-center gap-2">
+            <button id="mainCheckInBtn" disabled class="w-full py-4 px-6 rounded-2xl bg-slate-100 border border-slate-300 text-slate-500 font-bold text-center flex items-center justify-center gap-2 cursor-not-allowed opacity-75">
               <span class="text-lg">🔒</span>
-              <span>${timeStatus.msg}</span>
-            </div>
+              <span>נעול כעת • ${nextTitle}${nextTime}</span>
+            </button>
           `;
         } else {
           const npBonus = state.bonusConfig ? (state.bonusConfig.noPhoneBonus || 1) : 1;
           btnArea.innerHTML = `
-            <button onclick="openBarcodeScannerModal()" id="mainCheckInBtn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-900 hover:from-indigo-700 hover:to-indigo-950 text-white font-black text-base sm:text-lg shadow-xl shadow-indigo-950/20 active:scale-[0.98] transition flex items-center justify-center gap-3 animate-pulse">
+            <button onclick="handleStudentCheckIn()" id="mainCheckInBtn" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-900 hover:from-indigo-700 hover:to-indigo-950 text-white font-black text-base sm:text-lg shadow-xl shadow-indigo-950/20 active:scale-[0.98] transition flex items-center justify-center gap-3 animate-pulse">
               <span class="text-2xl">📸</span>
               <span>סרוק ברקוד בבית המדרש לסימון נוכחות</span>
             </button>
@@ -8790,58 +8788,19 @@ END:VCALENDAR`;
         alert('אנא הזן קוד ברקוד');
         return;
       }
+      const secObj = (typeof loadQrSecret === 'function') ? loadQrSecret() : { code: 'BK-892' };
+      const expected = String(secObj?.code || 'BK-892').trim().toUpperCase();
+      if (code.toUpperCase() !== expected) {
+        alert('קוד ברקוד שגוי! נא להזין את הקוד המוצג על גבי מסך בית המדרש');
+        return;
+      }
       handleCheckInConfirmation('קוד בית המדרש (' + code + ') אומת בהצלחה!');
       if (codeInput) codeInput.value = '';
     }
 
     function handleCheckInConfirmation(successMessage) {
       closeBarcodeScannerModal();
-      
-      const noPhoneBonus = state.activeSederNoPhone ? (state.bonusConfig.noPhoneBonus || 1) : 0;
-      const totalPointsEarned = 1 + noPhoneBonus;
-
-      if (state.isDemoUser || state.currentStudent?.id === 999 || state.currentStudent?.isDemo) {
-        state.demoStudentProfile.presentCurrent = true;
-        state.demoStudentProfile.baseScore = (Number(state.demoStudentProfile.baseScore) || 0) + totalPointsEarned;
-        state.demoStudentProfile.sedarimPoints = (state.demoStudentProfile.sedarimPoints || 0) + 1;
-        if (noPhoneBonus) state.demoStudentProfile.bonusPoints = (state.demoStudentProfile.bonusPoints || 0) + noPhoneBonus;
-        state.demoStudentProfile.last10.shift();
-        state.demoStudentProfile.last10.push(1);
-        state.currentStudent = state.demoStudentProfile;
-        state.activeSederNoPhone = false;
-        let msg = successMessage + ' (+' + totalPointsEarned + ' נקודה';
-        if (noPhoneBonus > 0) msg += ' כולל בונוס ללא טלפון 📵';
-        msg += ' - מצב הדגמה)';
-        showToast(msg, '🎉');
-        recalculateScheduleAndPointsBars();
-        renderStudentScreen();
-        return;
-      }
-
-      state.currentStudent.presentCurrent = true;
-      state.currentStudent.baseScore = (Number(state.currentStudent.baseScore) || 0) + totalPointsEarned;
-      state.currentStudent.last10.shift();
-      state.currentStudent.last10.push(1);
-
-      const stIdx = state.students.findIndex(s => s.id === state.currentStudent.id);
-      if (stIdx !== -1) {
-        state.students[stIdx].score = state.currentStudent.baseScore;
-        state.students[stIdx].presentToday = true;
-        state.students[stIdx].persistenceCount = state.currentStudent.last10.filter(x => x === 1).length;
-        saveLocalStudents();
-      }
-
-      saveAttendanceLogToSupabase('slot_1', true);
-      let msg = successMessage + ' (+' + totalPointsEarned + ' נקודה';
-      if (noPhoneBonus > 0) msg += ' כולל בונוס ללא טלפון 📵';
-      msg += ')';
-      showToast(msg, '🎉');
-      state.activeSederNoPhone = false;
-
-      recalculateScheduleAndPointsBars();
-      renderStudentScreen();
-      renderLeaderboard();
-      renderProgressGraph();
+      handleStudentCheckIn({ verified: true, message: successMessage });
     }
     const verifyQrCodeAndCheckIn = handleCheckInConfirmation;
 
@@ -9556,16 +9515,26 @@ END:VCALENDAR`;
     if (active) {
       if (alreadyChecked) {
         btn.disabled = false;
+        if (btn.removeAttribute) btn.removeAttribute('disabled');
         btn.className = 'w-full py-4 px-6 rounded-2xl bg-emerald-600 text-white font-black text-base shadow-md flex items-center justify-center gap-2 cursor-pointer';
         btn.innerHTML = '<span>✅</span><span>נוכחותך ב' + active.title + ' סומנה בהצלחה! (לחץ לביטול)</span>';
         btn.onclick = function() { if (typeof handleStudentCheckIn === 'function') handleStudentCheckIn(); };
       } else {
         btn.disabled = false;
         if (btn.removeAttribute) btn.removeAttribute('disabled');
-        btn.className = 'w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base sm:text-lg shadow-lg transition flex items-center justify-center gap-2 cursor-pointer';
-        btn.innerHTML = '<span>📸</span><span>סמן נוכחות כעת ב' + active.title + ' (' + (active.openTime || '') + '–' + (active.lockTime || '') + ')</span>';
+        btn.className = 'w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-900 hover:from-indigo-700 hover:to-indigo-950 text-white font-black text-base sm:text-lg shadow-xl shadow-indigo-950/20 active:scale-[0.98] transition flex items-center justify-center gap-3 cursor-pointer';
+        btn.innerHTML = '<span>📸</span><span>סרוק ברקוד בבית המדרש לסימון נוכחות ב' + active.title + '</span>';
         btn.onclick = function() { if (typeof handleStudentCheckIn === 'function') handleStudentCheckIn(); };
       }
+    } else {
+      btn.disabled = true;
+      if (btn.setAttribute) btn.setAttribute('disabled', 'disabled');
+      btn.className = 'w-full py-4 px-6 rounded-2xl bg-slate-100 border border-slate-300 text-slate-500 font-bold text-center flex items-center justify-center gap-2 cursor-not-allowed opacity-75';
+      const nextTxt = next ? ('נעול כעת • הסדר הבא: ' + next.title + (next.timeWindow ? ' (' + next.timeWindow + ')' : '')) : 'נעול כעת • אין סדר פעיל פתוח';
+      btn.innerHTML = '<span>🔒</span><span>' + nextTxt + '</span>';
+      btn.onclick = function() {
+        if (typeof showToast === 'function') showToast('אין כרגע סדר פעיל פתוח לדיווח נוכחות', '🔒');
+      };
     }
   }
 
@@ -9813,6 +9782,11 @@ END:VCALENDAR`;
     const qrVal = params.get('qr');
     if (!qrVal) return;
     setTimeout(() => {
+      const curInfo = typeof getActiveOrNextSederInfo === 'function' ? getActiveOrNextSederInfo() : null;
+      if (!curInfo?.activeSeder) {
+        if (typeof showToast === 'function') showToast('הסריקה נקלטה, אך אין כרגע סדר פעיל פתוח לדיווח נוכחות', '🔒');
+        return;
+      }
       if (typeof state !== 'undefined' && state.currentStudent && !state.currentStudent.presentCurrent) {
         if (typeof handleStudentCheckIn === 'function') handleStudentCheckIn();
       }
