@@ -962,7 +962,7 @@
         </div>
 
         <div class="pt-2 flex items-center gap-2">
-          <button onclick="handleSaveEditedSlotModal()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+          <button type="button" id="btnSaveEditedSlotModal" onclick="handleSaveEditedSlotModal()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
             <span>💾</span>
             <span>שמור שינויים בשרת</span>
           </button>
@@ -1019,6 +1019,7 @@
   <script>
     const adminState = {
       isLoggedIn: false,
+      isSyncing: false,
       currentTab: 'students',
       students: [],
       config: null,
@@ -1087,6 +1088,7 @@
 
     // --- Data Loading ---
     async function reloadAdminData(isBackground = false) {
+      if (adminState.isSyncing) return;
       try {
         const [stList, cfg, slots, duts, reqs, bLogs, slotAtt] = await Promise.all([
           Db.getStudents(),
@@ -1651,73 +1653,119 @@
     }
 
     async function handleSaveEditedSlotModal() {
-      const d = adminState.selectedDate;
-      ensureCurrentDaySlots(d);
-      const idx = parseInt(document.getElementById('editSlotIndex')?.value, 10);
-      if (isNaN(idx) || !adminState.scheduleSlots[d]?.[idx]) return;
+      const btn = document.getElementById('btnSaveEditedSlotModal');
+      const originalBtnHtml = btn ? btn.innerHTML : '';
 
-      const oldSlot = adminState.scheduleSlots[d][idx];
-      const oldTitle = oldSlot.title;
-
-      const title = (document.getElementById('editSlotTitle')?.value || '').trim();
-      const openTime = document.getElementById('editSlotOpenTime')?.value || '09:00';
-      const lockTime = document.getElementById('editSlotLockTime')?.value || '13:00';
-      const points = Number(document.getElementById('editSlotPoints')?.value) || 1;
-      const scope = document.querySelector('input[name="editSlotScope"]:checked')?.value || 'single';
-
-      if (!title) {
-        App.showToast('נא להזין כותרת לסדר', '⚠️');
-        return;
-      }
-
-      const start = new Date(adminState.config?.startDate || '2026-10-25');
-      const end = new Date(adminState.config?.endDate || '2027-02-08');
-      const cur = new Date(start);
-
-      if (scope === 'single') {
-        adminState.scheduleSlots[d][idx].title = title;
-        adminState.scheduleSlots[d][idx].openTime = openTime;
-        adminState.scheduleSlots[d][idx].lockTime = lockTime;
-        adminState.scheduleSlots[d][idx].points = points;
-        await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
-      } else {
-        const selDay = new Date(d).getDay();
-        let affectedCount = 0;
-
-        while (cur <= end) {
-          const iso = cur.toISOString().slice(0, 10);
-          let match = false;
-          if (scope === 'same_weekday' && cur.getDay() === selDay) match = true;
-          if (scope === 'weekdays' && cur.getDay() >= 0 && cur.getDay() <= 4) match = true;
-          if (scope === 'series') match = true;
-
-          if (match) {
-            ensureCurrentDaySlots(iso);
-            let updated = false;
-            adminState.scheduleSlots[iso].forEach(sl => {
-              if (sl.title === oldTitle) {
-                sl.title = title;
-                sl.openTime = openTime;
-                sl.lockTime = lockTime;
-                sl.points = points;
-                updated = true;
-              }
-            });
-            if (updated) {
-              await Db.syncDateSlots(iso, adminState.scheduleSlots[iso]);
-              affectedCount++;
-            }
-          }
-          cur.setDate(cur.getDate() + 1);
+      try {
+        const d = adminState.selectedDate;
+        ensureCurrentDaySlots(d);
+        const idx = parseInt(document.getElementById('editSlotIndex')?.value, 10);
+        if (isNaN(idx) || !adminState.scheduleSlots[d] || !adminState.scheduleSlots[d][idx]) {
+          App.showToast('לא נמצא סדר תואם לעריכה', '⚠️');
+          return;
         }
-        App.showToast(`סדר "${title}" עודכן ב-${affectedCount} ימים במבצע!`, '🔄');
-      }
 
-      closeEditSlotModal();
-      renderAdminSchedule();
-      renderAdminInteractiveCalendarGrid();
-      if (scope === 'single') {
-        App.showToast(`סדר "${title}" עודכן ונשמר בהצלחה בשרת!`, '💾');
+        const oldSlot = adminState.scheduleSlots[d][idx];
+        const oldTitle = (oldSlot.title || '').trim();
+
+        const title = (document.getElementById('editSlotTitle')?.value || '').trim();
+        const openTime = document.getElementById('editSlotOpenTime')?.value || '09:00';
+        const lockTime = document.getElementById('editSlotLockTime')?.value || '13:00';
+        const points = Number(document.getElementById('editSlotPoints')?.value) || 1;
+        const scope = document.querySelector('input[name="editSlotScope"]:checked')?.value || 'single';
+
+        if (!title) {
+          App.showToast('נא להזין כותרת לסדר', '⚠️');
+          return;
+        }
+
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = '<span>⏳</span><span>שומר שינויים בשרת...</span>';
+        }
+
+        adminState.isSyncing = true; // Protect in-memory state against realtime races
+
+        if (scope === 'single') {
+          adminState.scheduleSlots[d][idx].title = title;
+          adminState.scheduleSlots[d][idx].openTime = openTime;
+          adminState.scheduleSlots[d][idx].lockTime = lockTime;
+          adminState.scheduleSlots[d][idx].points = points;
+          adminState.scheduleSlots[d][idx].timeWindow = `${openTime} - ${lockTime}`;
+
+          const ok = await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+          if (!ok) {
+            throw new Error('שגיאה בשמירת הסדר במסד הנתונים');
+          }
+          App.showToast(`סדר "${title}" עודכן ונשמר בהצלחה בשרת!`, '💾');
+        } else {
+          const start = new Date(adminState.config?.startDate || '2026-10-25');
+          const end = new Date(adminState.config?.endDate || '2027-02-08');
+          const cur = new Date(start);
+          const selDay = new Date(d).getDay();
+          const dateSlotsToSync = {};
+          let affectedCount = 0;
+
+          // Helper to match slot by exact title, common prefix, or slot position
+          const isSlotMatch = (sl, sIdx) => {
+            if (!sl) return false;
+            const slT = (sl.title || '').trim();
+            if (slT === oldTitle) return true;
+            if (sIdx === idx) return true;
+            if (oldTitle.startsWith('סדר א') && slT.startsWith('סדר א')) return true;
+            if (oldTitle.startsWith('סדר ב') && slT.startsWith('סדר ב')) return true;
+            if (oldTitle.startsWith('סדר ג') && slT.startsWith('סדר ג')) return true;
+            return false;
+          };
+
+          while (cur <= end) {
+            const iso = cur.toISOString().slice(0, 10);
+            const dayOfWeek = cur.getDay();
+            let match = false;
+            if (scope === 'same_weekday' && dayOfWeek === selDay) match = true;
+            if (scope === 'weekdays' && dayOfWeek >= 0 && dayOfWeek <= 4) match = true;
+            if (scope === 'series') match = true;
+
+            if (match) {
+              ensureCurrentDaySlots(iso);
+              let updated = false;
+              (adminState.scheduleSlots[iso] || []).forEach((sl, sIdx) => {
+                if (isSlotMatch(sl, sIdx)) {
+                  sl.title = title;
+                  sl.openTime = openTime;
+                  sl.lockTime = lockTime;
+                  sl.points = points;
+                  sl.timeWindow = `${openTime} - ${lockTime}`;
+                  updated = true;
+                }
+              });
+              if (updated) {
+                dateSlotsToSync[iso] = adminState.scheduleSlots[iso];
+                affectedCount++;
+              }
+            }
+            cur.setDate(cur.getDate() + 1);
+          }
+
+          const ok = await Db.syncMultipleDateSlots(dateSlotsToSync);
+          if (!ok) {
+            throw new Error('שגיאה בסנכרון סדרה לשרת');
+          }
+          App.showToast(`סדר "${title}" עודכן ונשמר בהצלחה ב-${affectedCount} ימים במבצע!`, '🔄');
+        }
+
+        closeEditSlotModal();
+        renderAdminSchedule();
+        renderAdminInteractiveCalendarGrid();
+      } catch (err) {
+        console.error('handleSaveEditedSlotModal error:', err);
+        App.showToast(`שגיאה בעדכון הסדר: ${err.message || 'אנא נסה שוב'}`, '⚠️');
+      } finally {
+        adminState.isSyncing = false;
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalBtnHtml;
+        }
       }
     }
 
@@ -1731,19 +1779,36 @@
     async function saveAllCurrentDaySlots() {
       const d = adminState.selectedDate;
       ensureCurrentDaySlots(d);
-      await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
-      renderAdminSchedule();
-      renderAdminInteractiveCalendarGrid();
-      App.showToast(`כל ${adminState.scheduleSlots[d].length} הסדרים של יום זה נשמרו בשרת!`, '💾');
+      adminState.isSyncing = true;
+      try {
+        const ok = await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+        if (ok) {
+          App.showToast(`כל ${adminState.scheduleSlots[d].length} הסדרים של יום זה נשמרו בשרת!`, '💾');
+        } else {
+          App.showToast('שגיאה בשמירת סדרי היום לשרת', '⚠️');
+        }
+      } catch (e) {
+        console.error('saveAllCurrentDaySlots error:', e);
+        App.showToast('שגיאה בשמירה לשרת', '⚠️');
+      } finally {
+        adminState.isSyncing = false;
+        renderAdminSchedule();
+        renderAdminInteractiveCalendarGrid();
+      }
     }
 
     async function updateSlotTitle(idx, val) {
       const d = adminState.selectedDate;
       ensureCurrentDaySlots(d);
       if (adminState.scheduleSlots[d]?.[idx]) {
-        adminState.scheduleSlots[d][idx].title = val;
-        await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
-        App.showToast('כותרת הסדר עודכנה בשרת', '✓');
+        adminState.scheduleSlots[d][idx].title = (val || '').trim();
+        adminState.isSyncing = true;
+        try {
+          await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+          App.showToast('כותרת הסדר עודכנה בשרת', '✓');
+        } finally {
+          adminState.isSyncing = false;
+        }
       }
     }
 
@@ -1752,8 +1817,13 @@
       ensureCurrentDaySlots(d);
       if (adminState.scheduleSlots[d]?.[idx]) {
         adminState.scheduleSlots[d][idx][field] = val;
-        await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
-        App.showToast('שעות הסדר עודכנו בשרת', '⏰');
+        adminState.isSyncing = true;
+        try {
+          await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+          App.showToast('שעות הסדר עודכנו בשרת', '⏰');
+        } finally {
+          adminState.isSyncing = false;
+        }
       }
     }
 
@@ -1762,8 +1832,13 @@
       ensureCurrentDaySlots(d);
       if (adminState.scheduleSlots[d]?.[idx]) {
         adminState.scheduleSlots[d][idx].points = Number(val) || 1;
-        await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
-        App.showToast('ניקוד הסדר עודכן בשרת', '⭐');
+        adminState.isSyncing = true;
+        try {
+          await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+          App.showToast('ניקוד הסדר עודכן בשרת', '⭐');
+        } finally {
+          adminState.isSyncing = false;
+        }
       }
     }
 
@@ -1771,16 +1846,29 @@
       const d = adminState.selectedDate;
       if (!confirm('האם למחוק סדר זה מהיום הנבחר?')) return;
       adminState.scheduleSlots[d].splice(idx, 1);
-      await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
-      renderAdminSchedule();
-      App.showToast('הסדר נמחק מיום זה', '🗑️');
+      adminState.isSyncing = true;
+      try {
+        await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+        App.showToast('הסדר נמחק מיום זה', '🗑️');
+      } finally {
+        adminState.isSyncing = false;
+        renderAdminSchedule();
+        renderAdminInteractiveCalendarGrid();
+      }
     }
 
     async function removeSlotSeries(seriesTitle) {
       if (!confirm(`האם למחוק את כל סדרת "${seriesTitle}" מכל ימי המבצע בשרת?`)) return;
-      await Db.deleteSlotSeries(seriesTitle);
-      await reloadAdminData(true);
-      App.showToast(`סדרת "${seriesTitle}" נמחקה בהצלחה מכל הימים בשרת!`, '🗑️');
+      adminState.isSyncing = true;
+      try {
+        await Db.deleteSlotSeries(seriesTitle);
+        await reloadAdminData(true);
+        App.showToast(`סדרת "${seriesTitle}" נמחקה בהצלחה מכל הימים בשרת!`, '🗑️');
+      } finally {
+        adminState.isSyncing = false;
+        renderAdminSchedule();
+        renderAdminInteractiveCalendarGrid();
+      }
     }
 
     async function applyCurrentDayToWeekdays() {
@@ -1789,18 +1877,30 @@
       const current = adminState.scheduleSlots[d] || [];
 
       const start = new Date(adminState.config?.startDate || '2026-10-25');
-      const end = new Date(adminState.config?.endDate || '2026-12-10');
+      const end = new Date(adminState.config?.endDate || '2027-02-08');
       const cur = new Date(start);
+      const dateSlotsToSync = {};
+      let count = 0;
 
       while (cur <= end) {
         if (cur.getDay() >= 0 && cur.getDay() <= 4) { // Sun-Thu
           const iso = cur.toISOString().slice(0, 10);
           adminState.scheduleSlots[iso] = JSON.parse(JSON.stringify(current));
-          await Db.syncDateSlots(iso, adminState.scheduleSlots[iso]);
+          dateSlotsToSync[iso] = adminState.scheduleSlots[iso];
+          count++;
         }
         cur.setDate(cur.getDate() + 1);
       }
-      App.showToast('הסדרים הוחלו על כל ימי החול בשרת!', '🔄');
+
+      adminState.isSyncing = true;
+      try {
+        await Db.syncMultipleDateSlots(dateSlotsToSync);
+        App.showToast(`הסדרים הוחלו על ${count} ימי חול במבצע!`, '🔄');
+      } finally {
+        adminState.isSyncing = false;
+        renderAdminSchedule();
+        renderAdminInteractiveCalendarGrid();
+      }
     }
 
     async function applyCurrentDayToShabbats() {
@@ -1809,27 +1909,45 @@
       const current = adminState.scheduleSlots[d] || [];
 
       const start = new Date(adminState.config?.startDate || '2026-10-25');
-      const end = new Date(adminState.config?.endDate || '2026-12-10');
+      const end = new Date(adminState.config?.endDate || '2027-02-08');
       const cur = new Date(start);
+      const dateSlotsToSync = {};
+      let count = 0;
 
       while (cur <= end) {
         if (cur.getDay() === 6) { // Saturday
           const iso = cur.toISOString().slice(0, 10);
           adminState.scheduleSlots[iso] = JSON.parse(JSON.stringify(current));
-          await Db.syncDateSlots(iso, adminState.scheduleSlots[iso]);
+          dateSlotsToSync[iso] = adminState.scheduleSlots[iso];
+          count++;
         }
         cur.setDate(cur.getDate() + 1);
       }
-      App.showToast('הסדרים הוחלו על כל השבתות בשרת!', '🕯️');
+
+      adminState.isSyncing = true;
+      try {
+        await Db.syncMultipleDateSlots(dateSlotsToSync);
+        App.showToast(`הסדרים הוחלו על ${count} שבתות במבצע!`, '🕯️');
+      } finally {
+        adminState.isSyncing = false;
+        renderAdminSchedule();
+        renderAdminInteractiveCalendarGrid();
+      }
     }
 
     async function clearCurrentDaySlots() {
       const d = adminState.selectedDate;
       if (!confirm(`האם לרוקן את כל הסדרים מתאריך ${d}?`)) return;
       adminState.scheduleSlots[d] = [];
-      await Db.syncDateSlots(d, []);
-      renderAdminSchedule();
-      App.showToast('יום רוקן מסדרים', '🗑️');
+      adminState.isSyncing = true;
+      try {
+        await Db.syncDateSlots(d, []);
+        App.showToast('יום רוקן מסדרים', '🗑️');
+      } finally {
+        adminState.isSyncing = false;
+        renderAdminSchedule();
+        renderAdminInteractiveCalendarGrid();
+      }
     }
 
     function openAddSlotModal() {
@@ -1885,6 +2003,7 @@
         }
       }
 
+      const dateSlotsToSync = {};
       for (const dayStr of targetDays) {
         ensureCurrentDaySlots(dayStr);
         // Avoid duplicate by title & openTime
@@ -1894,16 +2013,26 @@
             title,
             openTime,
             lockTime,
-            points
+            points,
+            timeWindow: `${openTime} - ${lockTime}`
           });
-          await Db.syncDateSlots(dayStr, adminState.scheduleSlots[dayStr]);
+          dateSlotsToSync[dayStr] = adminState.scheduleSlots[dayStr];
         }
       }
 
-      closeAddSlotModal();
-      renderAdminSchedule();
-      renderAdminInteractiveCalendarGrid();
-      App.showToast(targetDays.length > 1 ? `הסדר "${title}" נוסף בהצלחה ל-${targetDays.length} ימים במבצע!` : 'סדר חדש נוסף ונשמר בשרת', '➕');
+      adminState.isSyncing = true;
+      try {
+        await Db.syncMultipleDateSlots(dateSlotsToSync);
+        closeAddSlotModal();
+        renderAdminSchedule();
+        renderAdminInteractiveCalendarGrid();
+        App.showToast(targetDays.length > 1 ? `הסדר "${title}" נוסף בהצלחה ל-${targetDays.length} ימים במבצע!` : 'סדר חדש נוסף ונשמר בשרת', '➕');
+      } catch (e) {
+        console.error('handleSaveNewSlot error:', e);
+        App.showToast('שגיאה בשמירת סדר חדש לשרת', '⚠️');
+      } finally {
+        adminState.isSyncing = false;
+      }
     }
 
     // =========================================================

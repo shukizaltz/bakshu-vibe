@@ -154,19 +154,32 @@
       }
     },
 
+    _formatTime(t, fallback = '09:00') {
+      if (!t || typeof t !== 'string') return fallback;
+      const clean = t.trim();
+      const m = clean.match(/^(\d{1,2}):(\d{2})/);
+      if (m) {
+        return `${m[1].padStart(2, '0')}:${m[2]}`;
+      }
+      return fallback;
+    },
+
     async syncDateSlots(dateStr, slotsList) {
       if (!client || !dateStr) return false;
       try {
         // מחיקת כל הסדרים הישנים לתאריך זה למניעת כפילויות
-        await client.from('schedule_slots').delete().eq('slot_date', dateStr);
+        const { error: delErr } = await client.from('schedule_slots').delete().eq('slot_date', dateStr);
+        if (delErr) {
+          console.error('Db.syncDateSlots delete error:', delErr);
+        }
 
         if (Array.isArray(slotsList) && slotsList.length > 0) {
           const rows = slotsList.map((s, idx) => {
-            const openT = (s.openTime && s.openTime.length === 5) ? s.openTime : '09:00';
-            const lockT = (s.lockTime && s.lockTime.length === 5) ? s.lockTime : '10:15';
+            const openT = this._formatTime(s.openTime, '09:00');
+            const lockT = this._formatTime(s.lockTime, '10:15');
             return {
               slot_date: dateStr,
-              title: s.title || `סדר ${idx + 1}`,
+              title: (s.title || `סדר ${idx + 1}`).trim(),
               time_window: `${openT} - ${lockT}`,
               open_time: `${dateStr}T${openT}:00+02:00`,
               lock_time: `${dateStr}T${lockT}:00+02:00`,
@@ -175,7 +188,11 @@
             };
           });
 
-          await client.from('schedule_slots').insert(rows);
+          const { error: insErr } = await client.from('schedule_slots').insert(rows);
+          if (insErr) {
+            console.error('Db.syncDateSlots insert error:', insErr);
+            return false;
+          }
         }
 
         // סנכרון כמות סדרים וניקוד יומי ב-campaign_calendar
@@ -188,6 +205,62 @@
         return true;
       } catch (e) {
         console.error('Db.syncDateSlots error:', e);
+        return false;
+      }
+    },
+
+    async syncMultipleDateSlots(dateSlotsMap) {
+      if (!client || !dateSlotsMap || typeof dateSlotsMap !== 'object') return false;
+      const dates = Object.keys(dateSlotsMap);
+      if (dates.length === 0) return true;
+
+      try {
+        // 1. מחיקת כל הסדרים הישנים בתאריכים הרלוונטיים במקבצים של 50
+        const CHUNK_SIZE = 50;
+        for (let i = 0; i < dates.length; i += CHUNK_SIZE) {
+          const chunkDates = dates.slice(i, i + CHUNK_SIZE);
+          const { error: delErr } = await client.from('schedule_slots').delete().in('slot_date', chunkDates);
+          if (delErr) {
+            console.error('Db.syncMultipleDateSlots delete error:', delErr);
+          }
+        }
+
+        // 2. הכנת שורות ההכנסה במבנה מתואם
+        const allRows = [];
+        dates.forEach(d => {
+          const list = dateSlotsMap[d];
+          if (Array.isArray(list) && list.length > 0) {
+            list.forEach((s, idx) => {
+              const openT = this._formatTime(s.openTime, '09:00');
+              const lockT = this._formatTime(s.lockTime, '10:15');
+              allRows.push({
+                slot_date: d,
+                title: (s.title || `סדר ${idx + 1}`).trim(),
+                time_window: `${openT} - ${lockT}`,
+                open_time: `${d}T${openT}:00+02:00`,
+                lock_time: `${d}T${lockT}:00+02:00`,
+                base_points: Number(s.points) || 1,
+                full_seder_achieved: false
+              });
+            });
+          }
+        });
+
+        // 3. הכנסה מרוכזת במנות של 100
+        if (allRows.length > 0) {
+          for (let i = 0; i < allRows.length; i += 100) {
+            const chunkRows = allRows.slice(i, i + 100);
+            const { error: insErr } = await client.from('schedule_slots').insert(chunkRows);
+            if (insErr) {
+              console.error('Db.syncMultipleDateSlots insert error:', insErr);
+              return false;
+            }
+          }
+        }
+
+        return true;
+      } catch (e) {
+        console.error('Db.syncMultipleDateSlots error:', e);
         return false;
       }
     },
