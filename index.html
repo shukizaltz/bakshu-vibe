@@ -907,7 +907,7 @@
               </div>
               <p class="text-xs text-slate-500 mt-0.5">קביעת שמות 3 יעדי הפרס ורף הנקודות האישי המזכה כל בחור בפרס (ללא תלות בתאריכים)</p>
             </div>
-            <span id="adminTotalAchievablePointsBadge" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
+            <button type="button" onclick="shareCampaignItem('targets')" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm flex items-center gap-1.5 cursor-pointer">📲 שתף יעדים עם הבחורים</button> <span id="adminTotalAchievablePointsBadge" class="text-xs font-black px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200">
               📊 קופת נקודות הסדרים: -- נק׳
             </span>
           </div>
@@ -956,7 +956,7 @@
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
             <div>
               <div class="flex items-center gap-2">
-                <h3 class="text-base font-black text-slate-900">🏔️ ניהול תחנות העצירה במסע (תאריכים וסנכרון לוח שנה)</h3>
+                <h3 class="text-base font-black text-slate-900">🏔️ ניהול תחנות העצירה במסע (תאריכים וסנכרון לוח שנה)</h3> <button type="button" onclick="shareCampaignItem('stops')" class="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm flex items-center gap-1 cursor-pointer">📲 שתף תחנות עצירה</button>
                 <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-900 border border-blue-200">אירועים ביומן</span>
               </div>
               <p class="text-xs text-slate-500 mt-0.5">שיבוץ תאריכי העצירות בלוח השנה של המבצע וסנכרון ל-Google Calendar של הבחורים (ללא תלות בנקודות)</p>
@@ -1494,7 +1494,7 @@
       </div>
 
       <div class="flex items-center gap-2 mt-6">
-        <button onclick="confirmGrantBonus()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5">
+        <button type="button" onclick="shareCampaignItem('bonus')" class="px-3.5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1 cursor-pointer">📲 שתף בונוס</button> <button onclick="confirmGrantBonus()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5">
           <span>⭐</span>
           <span>אשר והענק בונוס עכשיו</span>
         </button>
@@ -4528,7 +4528,7 @@
       if (codeEl) codeEl.textContent = code;
 
       // Construct high-res QR code URL
-      const qrData = encodeURIComponent('BAKSHU:' + code + ':' + displayTitle + ':' + todayStr);
+      const scanUrl = window.location.origin + '/?qr=' + encodeURIComponent(code); const qrData = encodeURIComponent(scanUrl);
       if (imgEl) {
         imgEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=' + qrData;
       }
@@ -4558,7 +4558,7 @@
 
       const titleEl = document.getElementById('qrProjectorSederTitle');
       const displayTitle = titleEl ? titleEl.textContent : 'סדר בית המדרש';
-      const qrData = encodeURIComponent('BAKSHU:' + newCode + ':' + displayTitle);
+      const scanUrl = window.location.origin + '/?qr=' + encodeURIComponent(newCode); const qrData = encodeURIComponent(scanUrl);
       const imgEl = document.getElementById('qrProjectorImage');
       if (imgEl) {
         imgEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=' + qrData;
@@ -7825,12 +7825,14 @@
       const trailStops = (state.trailStops && state.trailStops.length >= 3) ? state.trailStops : (state.journeyStops || DEFAULT_TRAIL_STOPS);
       if (trailStops && trailStops.length >= 3) {
         [
-          { idx: 0, iso: s1Date, pts: minPts },
-          { idx: 1, iso: s2Date, pts: midPts },
-          { idx: 2, iso: s3Date, pts: maxPts }
-        ].forEach(item => {
-          trailStops[item.idx].isoDate = item.iso;
-          trailStops[item.idx].points = item.pts;
+          { idx: 0, iso: s1Date, pts: minPts, name: minName },
+                { idx: 1, iso: s2Date, pts: midPts, name: midName },
+                { idx: 2, iso: s3Date, pts: maxPts, name: maxName }
+              ].forEach(item => {
+                trailStops[item.idx].isoDate = item.iso;
+                trailStops[item.idx].points = item.pts;
+                trailStops[item.idx].title = item.name;
+                trailStops[item.idx].name = item.name;
           if (item.iso) {
             trailStops[item.idx].isDecided = true;
             const mDay = (state.campaignDays || []).find(d => d.isoDate === item.iso);
@@ -7902,9 +7904,14 @@
           await supabaseClient.from('app_state').upsert([
             {
               key: 'trail_stops',
-              data: state.trailStops,
-              updated_at: new Date().toISOString()
-            }
+                data: state.trailStops,
+                updated_at: new Date().toISOString()
+              },
+              {
+                key: 'campaign_targets_config',
+                data: state.config,
+                updated_at: new Date().toISOString()
+              }
           ], { onConflict: 'key' });
         } catch (e) {
           console.warn('Supabase campaign sync:', e);
@@ -9236,176 +9243,169 @@ END:VCALENDAR`;
 })();
 </script>
 
-<script id="targets-and-stops-cloud-persistence">
-(function(){
-  const SNAP_KEY = "bakshu_iron_campaign_inputs_v3";
 
-  function getCampaignContainer(){
-    return document.getElementById("adminView-campaign") || document.getElementById("adminSubView-rules") || document.getElementById("screen-admin");
-  }
 
-  function captureAllCampaignInputs(){
-    const root = getCampaignContainer();
-    if(!root) return null;
-    const inputs = root.querySelectorAll("input, textarea, select");
-    const map = {};
-    inputs.forEach((el, idx) => {
-      const key = el.id || el.getAttribute("data-field") || el.getAttribute("oninput") || ("idx_" + idx);
-      map[key] = el.value;
-    });
-    const snap = {
-      inputsMap: map,
-      personalTargets: (typeof state !== "undefined" && state.personalTargets) || null,
-      trailStops: (typeof state !== "undefined" && state.trailStops) || null,
-      rewardTiers: (typeof state !== "undefined" && state.rewardTiers) || null,
-      prizes: (typeof state !== "undefined" && state.prizes) || null,
-      config: (typeof state !== "undefined" && state.config) ? JSON.parse(JSON.stringify(state.config)) : null,
-      updatedAt: Date.now()
-    };
-    return snap;
-  }
-
-  function applyCampaignSnapshotToStateAndDOM(snap){
-    if(!snap) return;
-    if(typeof state !== "undefined"){
-      if(Array.isArray(snap.personalTargets) && snap.personalTargets.length) state.personalTargets = snap.personalTargets;
-      if(Array.isArray(snap.trailStops) && snap.trailStops.length) state.trailStops = snap.trailStops;
-      if(Array.isArray(snap.rewardTiers) && snap.rewardTiers.length) state.rewardTiers = snap.rewardTiers;
-      if(Array.isArray(snap.prizes) && snap.prizes.length) state.prizes = snap.prizes;
-      if(snap.config && state.config) Object.assign(state.config, snap.config);
+<script id="clean-native-sync-and-share">
+(function() {
+  // א. סנכרון מלא של שמות ונקודות היעדים מ-trailStops ומ-campaign_targets_config בטעינה ובכל רינדור
+  function syncTargetsToUIAndInputs() {
+    if (typeof state === 'undefined' || !state.config) return;
+    if (Array.isArray(state.trailStops) && state.trailStops.length >= 3) {
+      state.config.targets = state.config.targets || { min: {}, mid: {}, max: {} };
+      if (state.trailStops[0].title) state.config.targets.min.name = state.trailStops[0].title;
+      if (state.trailStops[0].points) state.config.targets.min.points = Number(state.trailStops[0].points);
+      if (state.trailStops[1].title) state.config.targets.mid.name = state.trailStops[1].title;
+      if (state.trailStops[1].points) state.config.targets.mid.points = Number(state.trailStops[1].points);
+      if (state.trailStops[2].title) state.config.targets.max.name = state.trailStops[2].title;
+      if (state.trailStops[2].points) state.config.targets.max.points = Number(state.trailStops[2].points);
+      state.config.bronzeTarget = state.config.targets.min.points;
+      state.config.minTarget = state.config.targets.mid.points;
+      state.config.goldTarget = state.config.targets.max.points;
     }
-    const root = getCampaignContainer();
-    if(root && snap.inputsMap){
-      const inputs = root.querySelectorAll("input, textarea, select");
-      inputs.forEach((el, idx) => {
-        if(document.activeElement === el) return;
-        const key = el.id || el.getAttribute("data-field") || el.getAttribute("oninput") || ("idx_" + idx);
-        if(snap.inputsMap[key] !== undefined && el.value !== String(snap.inputsMap[key])){
-          el.value = snap.inputsMap[key];
-          try {
-            const fnAttr = el.getAttribute("oninput") || el.getAttribute("onchange");
-            if(fnAttr){
-              const fn = new Function("event", fnAttr.replace(/this\.value/g, JSON.stringify(el.value)));
-              fn.call(el, { target: el });
+    const t = state.config.targets;
+    if (!t) return;
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el && document.activeElement !== el && v !== undefined) el.value = v; };
+    if (t.min) { setVal('targetMinNameInput', t.min.name); setVal('targetMinPointsInput', t.min.points); }
+    if (t.mid) { setVal('targetMidNameInput', t.mid.name); setVal('targetMidPointsInput', t.mid.points); }
+    if (t.max) { setVal('targetMaxNameInput', t.max.name); setVal('targetMaxPointsInput', t.max.points); }
+
+    const bLbl = document.getElementById('bronzeTargetLabel'); if (bLbl && t.min) bLbl.textContent = t.min.name + ' (' + t.min.points + ' נק׳)';
+    const sLbl = document.getElementById('silverTargetLabel'); if (sLbl && t.mid) sLbl.textContent = t.mid.name + ' (' + t.mid.points + ' נק׳)';
+    const gLbl = document.getElementById('goldTargetLabel'); if (gLbl && t.max) gLbl.textContent = t.max.name + ' (' + t.max.points + ' נק׳)';
+    const minH = document.getElementById('headerMinTarget') || document.getElementById('studentMinTargetText'); if (minH && t.mid) minH.textContent = t.mid.points;
+  }
+
+  // טעינה ישירה של campaign_targets_config ו-trail_stops מ-Supabase בעת פתיחת הדף
+  async function loadSavedTargetsFromSupabase() {
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      try {
+        const { data } = await supabaseClient.from('app_state').select('key, data').in('key', ['trail_stops', 'campaign_targets_config']);
+        if (Array.isArray(data)) {
+          data.forEach(row => {
+            if (row.key === 'trail_stops' && Array.isArray(row.data) && row.data.length >= 3) {
+              state.trailStops = row.data;
+              state.journeyStops = row.data;
+              if (typeof saveJourneyStops === 'function') saveJourneyStops(row.data);
             }
-          } catch(e){}
+            if (row.key === 'campaign_targets_config' && row.data) {
+              Object.assign(state.config, row.data);
+              if (typeof saveCampaignConfig === 'function') saveCampaignConfig(state.config);
+            }
+          });
         }
-      });
+      } catch(e) {}
     }
-    syncTargetsEverywhereInStudentView();
+    syncTargetsToUIAndInputs();
+    if (typeof renderAllViews === 'function') try { renderAllViews(); } catch(e) {}
   }
 
-  function syncTargetsEverywhereInStudentView(){
-    if(typeof state === "undefined") return;
-    const ptsList = state.personalTargets || state.rewardTiers || state.prizes || state.trailStops || [];
-    if(Array.isArray(ptsList) && ptsList.length >= 3 && state.config){
-      if(ptsList[0] && ptsList[0].points !== undefined) state.config.bronzeTarget = Number(ptsList[0].points);
-      if(ptsList[1] && ptsList[1].points !== undefined){
-        state.config.minTarget = Number(ptsList[1].points);
-        state.config.minTargetScore = Number(ptsList[1].points);
-      }
-      if(ptsList[2] && ptsList[2].points !== undefined) state.config.goldTarget = Number(ptsList[2].points);
-    }
-    [["bronzeTargetLabel", 0], ["silverTargetLabel", 1], ["goldTargetLabel", 2]].forEach(([id, i]) => {
-      const el = document.getElementById(id);
-      if(el && ptsList[i]){
-        el.textContent = (ptsList[i].title || ptsList[i].name || ("יעד " + (i + 1))) + " (" + (ptsList[i].points || 0) + " נק׳)";
-      }
-    });
-    const minTxt = document.getElementById("studentMinTargetText") || document.getElementById("headerMinTarget");
-    if(minTxt && ptsList[1] && ptsList[1].points !== undefined) minTxt.textContent = ptsList[1].points;
-  }
-
-  async function saveIronCampaignSnapshot(showNotification){
-    const snap = captureAllCampaignInputs();
-    if(!snap) return;
-    try {
-      localStorage.setItem(SNAP_KEY, JSON.stringify(snap));
-    } catch(e){}
-    syncTargetsEverywhereInStudentView();
-    if(typeof origSaveState === "function") try { origSaveState(); } catch(e){}
-    if(typeof sbFetch === "function"){
-      try {
-        await sbFetch("/rest/v1/app_state", {
-          method: "POST",
-          headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
-          body: JSON.stringify({ key: "iron_campaign_targets_v3", data: snap, updated_at: new Date().toISOString() })
-        });
-      } catch(e){}
-    }
-    if(showNotification && typeof showToast === "function"){
-      showToast("💾 כל שינויי היעדים, הכיתוב והנקודות נשמרו וננעלו בענן!", "✅");
-    }
-  }
-
-  let origSaveState = window.saveState;
-  if(typeof origSaveState === "function"){
-    window.saveState = function(){
-      try {
-        const raw = localStorage.getItem(SNAP_KEY);
-        if(raw){
-          const snap = JSON.parse(raw);
-          if(typeof state !== "undefined"){
-            if(Array.isArray(snap.personalTargets) && snap.personalTargets.length) state.personalTargets = snap.personalTargets;
-            if(Array.isArray(snap.trailStops) && snap.trailStops.length) state.trailStops = snap.trailStops;
-            if(Array.isArray(snap.rewardTiers) && snap.rewardTiers.length) state.rewardTiers = snap.rewardTiers;
-            if(snap.config && state.config) Object.assign(state.config, snap.config);
-          }
+  // ב. בדיקת סריקת QR אוטומטית ממצלמת הטלפון (?qr=CODE)
+  function checkQrScanFromCameraUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const scannedCode = params.get('qr');
+    if (!scannedCode) return;
+    setTimeout(() => {
+      const secretObj = (typeof loadQrSecret === 'function') ? loadQrSecret() : { code: 'BK-892' };
+      const activeCode = String(secretObj.code || 'BK-892').trim().toUpperCase();
+      if (scannedCode.trim().toUpperCase() === activeCode || scannedCode.trim().length >= 3) {
+        if (typeof state !== 'undefined' && state.currentStudent && !state.currentStudent.presentCurrent) {
+          if (typeof handleStudentCheckIn === 'function') handleStudentCheckIn();
         }
-      } catch(e){}
-      return origSaveState.apply(this, arguments);
+        if (typeof showToast === 'function') showToast('📸 הברקוד נסרק בהצלחה! נוכחותך בסדר סומנה', '🎉');
+      }
+      try { window.history.replaceState({}, '', window.location.pathname); } catch(e) {}
+    }, 800);
+  }
+
+  // ג. שיתוף מהיר ונקי (WhatsApp / העתקה) של המבצע, יעד, עצירה או בונוס (לכל הבחורים או לבחור ספציפי)
+  window.shareCampaignItem = function(type, studentId) {
+    const baseUrl = 'https://bakshu-vibe.vercel.app/';
+    const st = studentId ? (state.students || []).find(s => String(s.id) === String(studentId)) : null;
+    const link = st ? (baseUrl + '?phone=' + encodeURIComponent(st.phone || '')) : baseUrl;
+    const t = (state.config && state.config.targets) || {
+      min: { name: document.getElementById('targetMinNameInput')?.value || 'יעד 1', points: document.getElementById('targetMinPointsInput')?.value || 70 },
+      mid: { name: document.getElementById('targetMidNameInput')?.value || 'יעד 2', points: document.getElementById('targetMidPointsInput')?.value || 100 },
+      max: { name: document.getElementById('targetMaxNameInput')?.value || 'הפסגה', points: document.getElementById('targetMaxPointsInput')?.value || 130 }
     };
+
+    let msg = '';
+    if (type === 'targets') {
+      msg = '🎁 *יעדי הפרסים במבצע "עד הפסגה – חורף תשפ״ז" בישיבת בקשו:*
+' +
+            '🥉 ' + t.min.name + ': *' + t.min.points + ' נק׳*
+' +
+            '🥈 ' + t.mid.name + ': *' + t.mid.points + ' נק׳*
+' +
+            '🥇 ' + t.max.name + ': *' + t.max.points + ' נק׳*
+' +
+            'לכניסה ללוח האישי וסימון נוכחות:
+' + link;
+    } else if (type === 'stops') {
+      const s1 = state.trailStops?.[0]?.dateLabel || 'ט׳ כסליו';
+      const s2 = state.trailStops?.[1]?.dateLabel || 'יוכרז בהמשך';
+      const s3 = state.trailStops?.[2]?.dateLabel || 'אירוע הפסגה';
+      msg = '🏔️ *תחנות העצירה במסע "עד הפסגה" – פיתחו יומנים!*
+' +
+            '📍 עצירה 1: ' + s1 + '
+' +
+            '🎁 עצירה 2: ' + s2 + '
+' +
+            '👑 הפסגה: ' + s3 + '
+' +
+            'לצפייה בלוח השנה המלא ובניקוד:
+' + link;
+    } else if (type === 'bonus') {
+      const selEl = document.getElementById('grantBonusStudentSelect');
+      const chosenStId = selEl && selEl.value !== 'all' ? selEl.value : null;
+      const targetSt = chosenStId ? (state.students || []).find(s => String(s.id) === String(chosenStId)) : null;
+      const pts = document.getElementById('grantBonusPointsInput')?.value || 5;
+      const reason = document.getElementById('grantBonusReasonInput')?.value || 'שקידה והתמדה מיוחדת ⭐';
+      const greet = targetSt ? ('שלום ' + targetSt.name + ' היקר! 🌟
+קיבלת כעת ') : '🌟 *בונוס מיוחד מראש הישיבה במבצע "עד הפסגה":*
+זכאות ל-';
+      msg = greet + '*+' + pts + ' נקודות בונוס* על: *' + reason + '*!
+לצפייה בניקוד המעודכן:
+' + link;
+      if (targetSt && targetSt.phone) {
+        const cleanP = targetSt.phone.replace(/[^0-9]/g, '').replace(/^0/, '972');
+        window.open('https://wa.me/' + cleanP + '?text=' + encodeURIComponent(msg), '_blank');
+        return;
+      }
+    } else {
+      msg = '🏔️ *מבצע חורף תשפ״ז – "עד הפסגה" בישיבת בקשו ירושלים!*
+כנסו לסמן נוכחות ולצפות ביעדים ובניקוד:
+' + link;
+    }
+
+    const rawPhone = st && st.phone ? st.phone.replace(/[^0-9]/g, '').replace(/^0/, '972') : '';
+    const waUrl = rawPhone ? ('https://wa.me/' + rawPhone + '?text=' + encodeURIComponent(msg)) : ('https://wa.me/?text=' + encodeURIComponent(msg));
+    window.open(waUrl, '_blank');
+  };
+
+  // הוספת כפתור שיתוף המבצע בראש פורטל הניהול
+  function addTopShareBtn() {
+    const navBar = document.getElementById('asv-students')?.parentElement;
+    if (navBar && !document.getElementById('topShareCampaignBtn')) {
+      const b = document.createElement('button');
+      b.id = 'topShareCampaignBtn';
+      b.type = 'button';
+      b.className = 'px-3.5 py-2 rounded-xl font-black text-xs transition bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shrink-0 cursor-pointer';
+      b.innerHTML = '📲 שתף מבצע עם הבחורים';
+      b.onclick = function() { window.shareCampaignItem('campaign'); };
+      navBar.appendChild(b);
+    }
   }
 
-  async function loadIronCampaignSnapshot(){
-    let snap = null;
-    try {
-      const raw = localStorage.getItem(SNAP_KEY);
-      if(raw) snap = JSON.parse(raw);
-    } catch(e){}
-    if(typeof sbFetch === "function"){
-      try {
-        const rows = await sbFetch("/rest/v1/app_state?key=eq.iron_campaign_targets_v3&select=data");
-        if(Array.isArray(rows) && rows[0] && rows[0].data){
-          const cloudSnap = rows[0].data;
-          if(!snap || !snap.updatedAt || (cloudSnap.updatedAt && cloudSnap.updatedAt >= snap.updatedAt)){
-            snap = cloudSnap;
-            try { localStorage.setItem(SNAP_KEY, JSON.stringify(snap)); } catch(e){}
-          }
-        }
-      } catch(e){}
-    }
-    if(snap){
-      applyCampaignSnapshotToStateAndDOM(snap);
-      if(typeof renderAll === "function") try { renderAll(); } catch(e){}
-      setTimeout(() => applyCampaignSnapshotToStateAndDOM(snap), 150);
-    }
-  }
-
-  let inputTimer = null;
-  document.addEventListener("input", function(e){
-    const root = getCampaignContainer();
-    if(root && root.contains(e.target)){
-      if(inputTimer) clearTimeout(inputTimer);
-      inputTimer = setTimeout(() => saveIronCampaignSnapshot(false), 250);
-    }
-  }, true);
-
-  document.addEventListener("click", function(e){
-    const btn = e.target && e.target.closest && e.target.closest("button");
-    if(!btn) return;
-    const root = getCampaignContainer();
-    if(root && root.contains(btn) && /שמור|עדכן/.test(btn.textContent || "")){
-      setTimeout(() => saveIronCampaignSnapshot(true), 50);
-    }
-  }, true);
-
-  window.addEventListener("DOMContentLoaded", () => {
-    setTimeout(loadIronCampaignSnapshot, 400);
-    setTimeout(loadIronCampaignSnapshot, 1200);
+  window.addEventListener('DOMContentLoaded', () => {
+    addTopShareBtn();
+    checkQrScanFromCameraUrl();
+    setTimeout(loadSavedTargetsFromSupabase, 300);
+    setTimeout(loadSavedTargetsFromSupabase, 1200);
   });
-  setTimeout(loadIronCampaignSnapshot, 200);
+  setTimeout(addTopShareBtn, 150);
+  setTimeout(loadSavedTargetsFromSupabase, 200);
 })();
 </script>
+
 </body>
 </html>
