@@ -8946,464 +8946,751 @@ END:VCALENDAR`;
     </div>
   </div>
 
-<script id="admin-isolation-and-schedule-save-patch">
-(function(){
-  function getFixedQr(){
-    const saved = localStorage.getItem("bakshu_fixed_qr_code");
-    if(saved) return saved;
-    const cur = (typeof state !== "undefined" && (state.qrCodeToken || state.qrSecretCode || (state.config && state.config.qrSecretCode))) || "7704";
-    localStorage.setItem("bakshu_fixed_qr_code", String(cur));
-    return String(cur);
-  }
 
-  function syncQrUI(code){
-    if(typeof state !== "undefined"){
-      state.qrCodeToken = code;
-      state.qrSecretCode = code;
-      if(state.config) state.config.qrSecretCode = code;
-    }
-    ["projectorBackupCode","qrProjectorCodeText","backupCodeHint","adminCurrentQrBadge","qrProjectorManualCode"].forEach(id => {
+
+
+
+
+
+
+
+
+
+<!-- ========================================================== -->
+<!-- UNIFIED MODALS: SHARE, PASSWORD CHANGE, SPECIAL REQUEST    -->
+<!-- ========================================================== -->
+<div id="universalShareModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 text-right space-y-4 relative">
+    <button onclick="document.getElementById('universalShareModal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center">✕</button>
+    <div class="flex items-center gap-2.5">
+      <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-xl">📲</div>
+      <div>
+        <h3 class="text-base font-black text-slate-900">שיתוף מהיר עם הבחורים (כולם או לבחור ספציפי)</h3>
+        <p class="text-xs text-slate-500">שלח קישור למבצע, יעד, תחנת עצירה או בונוס מיוחד ב-WhatsApp / SMS</p>
+      </div>
+    </div>
+    <div>
+      <label class="block text-xs font-bold text-slate-700 mb-1">1. למי לשלוח?</label>
+      <select id="shareRecipientSelect" onchange="window.buildShareText()" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white text-slate-900"></select>
+    </div>
+    <div>
+      <label class="block text-xs font-bold text-slate-700 mb-1">2. מה לשתף?</label>
+      <div class="flex flex-wrap gap-1.5 mb-2">
+        <button type="button" onclick="window.selectShareType('campaign')" class="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 text-[11px] font-bold cursor-pointer">🏔️ קישור למבצע</button>
+        <button type="button" onclick="window.selectShareType('targets')" class="px-2.5 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-[11px] font-bold cursor-pointer">🎁 יעדי הנקודות</button>
+        <button type="button" onclick="window.selectShareType('stops')" class="px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 text-[11px] font-bold cursor-pointer">📍 תאריכי עצירה</button>
+        <button type="button" onclick="window.selectShareType('seder')" class="px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 text-[11px] font-bold cursor-pointer">⏰ סדר פעיל/קרוב</button>
+        <button type="button" onclick="window.selectShareType('bonus')" class="px-2.5 py-1 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-900 border border-rose-200 text-[11px] font-bold cursor-pointer">⭐ בונוס מיוחד</button>
+      </div>
+      <textarea id="shareMessageBox" rows="5" class="w-full p-3 rounded-2xl border border-slate-300 text-xs font-bold text-slate-800 bg-slate-50 focus:bg-white leading-relaxed"></textarea>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+      <button type="button" onclick="window.sendShareVia('whatsapp')" class="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm cursor-pointer">💬 שלח ב-WhatsApp</button>
+      <button type="button" onclick="window.sendShareVia('sms')" class="py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-sm cursor-pointer">📱 שלח ב-SMS</button>
+      <button type="button" onclick="window.sendShareVia('copy')" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-black text-xs shadow-sm cursor-pointer">📋 העתק הודעה</button>
+    </div>
+  </div>
+</div>
+
+<div id="changePasswordModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-right space-y-4 relative">
+    <button onclick="document.getElementById('changePasswordModal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center">✕</button>
+    <h3 class="text-base font-black text-slate-900">🔑 שינוי סיסמה אישית</h3>
+    <p class="text-xs text-slate-500">קבע סיסמה חדשה לחשבונך (נשמרת בענן לכל כניסה עתידית)</p>
+    <div>
+      <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה חדשה:</label>
+      <input type="text" id="newPersonalPasswordInput" placeholder="הקלד סיסמה חדשה (לפחות 4 תווים)..." class="w-full p-3 rounded-2xl border border-slate-300 text-sm font-black font-mono text-center" />
+    </div>
+    <button type="button" onclick="window.saveNewPersonalPassword()" class="w-full py-3 rounded-xl bg-[#0A1138] hover:bg-black text-white font-black text-xs shadow-md cursor-pointer">💾 שמור סיסמה חדשה</button>
+  </div>
+</div>
+
+<div id="specialRequestModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+  <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-right space-y-4 relative">
+    <button onclick="document.getElementById('specialRequestModal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center">✕</button>
+    <h3 class="text-base font-black text-slate-900">✋ שליחת בקשה לאישור מיוחד / שכחתי לסמן</h3>
+    <p class="text-xs text-slate-500">הבקשה תישלח ישירות לפורטל ראש הישיבה לאישור נקודות</p>
+    <div>
+      <label class="block text-xs font-bold text-slate-700 mb-1">עבור איזה סדר / נושא?</label>
+      <input type="text" id="specialReqSlotTitle" placeholder="לדוגמה: סדר א׳ הבוקר / תפילת שחרית / אישור מיוחד" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold" />
+    </div>
+    <div>
+      <label class="block text-xs font-bold text-slate-700 mb-1">פירוט הבקשה לראש הישיבה:</label>
+      <textarea id="specialReqNoteInput" rows="3" placeholder="הסבר קצר (למשל: נכחתי בבית המדרש ושכחתי לסרוק בזמן)..." class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold"></textarea>
+    </div>
+    <button type="button" onclick="window.submitSpecialRequestToCloud()" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-md cursor-pointer">📨 שלח בקשה לאישור ראש הישיבה</button>
+  </div>
+</div>
+
+<script id="bakshu-unified-v1">
+(function() {
+  const MASTER_CFG_KEY = 'bakshu_master_config_v5';
+
+  // =========================================================================
+  // 1. בידוד מוחלט של ראש הישיבה מהסרגל העליון (לעולם לא עובר למסך בחור ספציפי)
+  // =========================================================================
+  function enforceAdminIsolation() {
+    const isAdminUrl = window.location.pathname.includes('admin') || window.location.search.includes('admin=1');
+    const isAdminMode = (typeof state !== 'undefined' && state.adminUnlocked) || isAdminUrl;
+    ['dtab-student', 'mtab-student', 'adminStudentInspectionHeader'].forEach(id => {
       const el = document.getElementById(id);
-      if(el) el.textContent = code;
-    });
-    ["adminRoshQrDecisionInput","customRoshQrInput"].forEach(id => {
-      const el = document.getElementById(id);
-      if(el && document.activeElement !== el) el.value = code;
-    });
-    const qrImg = document.getElementById("qrProjectorImg") || document.getElementById("qrProjectorImage");
-    if(qrImg) qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=" + encodeURIComponent("BAKSHU_QR_" + code);
-    if(typeof renderQrSvgPattern === "function") {
-      try { renderQrSvgPattern(code); } catch(e){}
-    }
-  }
-
-  async function saveFixedQrToCloud(code){
-    localStorage.setItem("bakshu_fixed_qr_code", String(code));
-    syncQrUI(String(code));
-    if(typeof saveState === "function") saveState();
-    if(typeof sbFetch === "function"){
-      try {
-        await sbFetch("/rest/v1/app_state", {
-          method: "POST",
-          headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
-          body: JSON.stringify({ key: "fixed_qr_code", data: { code: String(code) }, updated_at: new Date().toISOString() })
-        });
-      } catch(e){}
-    }
-  }
-
-  window.getActiveSlotQrCode = function(){ return getFixedQr(); };
-  window.computeSlotQrCode = function(){ return getFixedQr(); };
-  window.generateDynamicQrToken = function(){ return getFixedQr(); };
-
-  window.refreshQrCodeToken = async function(){
-    const newCode = String(Math.floor(1000 + Math.random() * 9000));
-    await saveFixedQrToCloud(newCode);
-    if(typeof showToast === "function") showToast("🔄 קוד ה-QR הוחלף בהוראתך ל-" + newCode + " ויישאר קבוע לכל הסדרים עד להחלפה הבאה!", "👑");
-  };
-
-  window.setCustomQrByRoshYeshiva = async function(src){
-    const id = src === "modal" ? "customRoshQrInput" : "adminRoshQrDecisionInput";
-    const el = document.getElementById(id) || document.getElementById("customRoshQrInput") || document.getElementById("adminRoshQrDecisionInput");
-    const val = (el && el.value || "").trim();
-    if(!val){
-      if(typeof showToast === "function") showToast("נא להזין קוד QR חדש", "⚠️");
-      return;
-    }
-    await saveFixedQrToCloud(val);
-    if(typeof showToast === "function") showToast("👑 קוד ה-QR נקבע ל-" + val + " ויישאר קבוע בין סדר לסדר עד שתורה להחליפו!", "👑");
-  };
-
-  function isoAdmin(){
-    const isA = (typeof state !== "undefined" && state.adminUnlocked) || location.pathname.includes("admin") || location.search.includes("admin=1");
-    ["dtab-student","mtab-student","adminStudentInspectionHeader"].forEach(id => {
-      const el = document.getElementById(id);
-      if(el){
-        if(isA) el.style.setProperty("display","none","important");
-        else el.style.removeProperty("display");
+      if (el) {
+        if (isAdminMode) el.style.setProperty('display', 'none', 'important');
+        else el.style.removeProperty('display');
       }
     });
-    syncQrUI(getFixedQr());
   }
 
-  const oSw = window.switchTab;
-  if(typeof oSw === "function"){
-    window.switchTab = function(t){
-      const isA = (typeof state !== "undefined" && state.adminUnlocked) || location.pathname.includes("admin") || location.search.includes("admin=1");
-      if(t === "student" && isA) t = "admin";
-      const r = oSw.apply(this, [t]);
-      isoAdmin();
-      return r;
+  const origSwitchTab = window.switchTab;
+  if (typeof origSwitchTab === 'function') {
+    window.switchTab = function(tabId) {
+      const isAdminUrl = window.location.pathname.includes('admin') || window.location.search.includes('admin=1');
+      if (tabId === 'student' && ((typeof state !== 'undefined' && state.adminUnlocked) || isAdminUrl)) {
+        tabId = 'admin';
+      }
+      const res = origSwitchTab.apply(this, [tabId]);
+      enforceAdminIsolation();
+      return res;
     };
   }
 
-  window.resetDayScheduleToDefault = function(){
-    if(typeof showToast === "function") showToast("איפוס לברירת מחדל מבוטל", "🔒");
-  };
-  window.resetDefaultSchedules = window.resetDayScheduleToDefault;
-
-  window.saveExplicitDayScheduleChanges = async function(){
-    const pk = document.getElementById("adminScheduleDayPicker");
-    const iso = (pk && pk.value) || (typeof state !== "undefined" && state.selectedCalendarIso) || (typeof TODAY_ISO !== "undefined" ? TODAY_ISO : "");
-    if(!iso || typeof state === "undefined") return;
-
-    const slots = typeof getSlotsForDate === "function" ? getSlotsForDate(iso) : (typeof getScheduleForDate === "function" ? getScheduleForDate(iso) : (state.slotsByDate && state.slotsByDate[iso]) || []);
-    state.slotsByDate = state.slotsByDate || {};
-    state.slotsByDate[iso] = slots.map(s => ({
-      ...s,
-      timeWindow: (s.openTime || "09:00") + " – " + (s.lockTime || "10:15")
-    }));
-
-    try {
-      localStorage.setItem("bakshu_slots_by_date_v1", JSON.stringify(state.slotsByDate));
-      if (typeof saveScheduleSlots === "function") saveScheduleSlots(state.slotsByDate);
-    } catch(e){}
-
-    if(typeof saveState === "function") saveState();
-    if(typeof pushSlotOverrideToSupabase === "function") await pushSlotOverrideToSupabase(iso, state.slotsByDate[iso]);
-    if(typeof saveDailyScheduleToSupabase === "function") await saveDailyScheduleToSupabase(iso, state.slotsByDate[iso]);
-    if(typeof renderAll === "function") renderAll();
-    if(typeof renderAdminDayScheduleEditor === "function") renderAdminDayScheduleEditor();
-    if(typeof showToast === "function") showToast("💾 זמני הסדר נשמרו בהצלחה בלוח השנה ובענן!");
+  window.resetDayScheduleToDefault = function() {
+    if (typeof showToast === 'function') showToast('איפוס לברירת מחדל מבוטל כדי להגן על הלו"ז', '🔒');
   };
 
-  const oEd = window.renderAdminDayScheduleEditor;
-  if(typeof oEd === "function"){
-    window.renderAdminDayScheduleEditor = function(){
-      oEd.apply(this, arguments);
-      const c = document.getElementById("adminDaySlotsEditorList") || document.getElementById("adminDaySlotsContainer");
-      if(!c) return;
-      c.querySelectorAll("button[onclick*='removeScheduleSlotFromDay'], button[onclick*='removeSlotItem']").forEach(b => {
-        if(b.parentElement && !b.parentElement.querySelector(".explicit-slot-save-btn")){
-          const sb = document.createElement("button");
-          sb.type = "button";
-          sb.className = "explicit-slot-save-btn px-3 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 font-black text-xs transition shadow-sm";
-          sb.innerHTML = "💾 שמור שינוי";
-          sb.onclick = function(){ window.saveExplicitDayScheduleChanges(); };
-          b.parentElement.insertBefore(sb, b);
+  // =========================================================================
+  // 2. ניהול יעדים (כולל הוספת יעדי נקודות חדשים!) ותחנות עצירה (כולל הוספת עצירות!)
+  // =========================================================================
+  function ensureDynamicListsInState() {
+    if (typeof state === 'undefined') return;
+    state.config = state.config || {};
+    const t = state.config.targets || {
+      min: { name: 'יעד כניסה להגרלה', points: 70 },
+      mid: { name: 'יעד פרס כספי', points: 100 },
+      max: { name: 'יעד נסיעה ופרס ענק', points: 130 }
+    };
+    state.config.targets = t;
+    if (!Array.isArray(state.config.extraTargets)) {
+      state.config.extraTargets = [];
+    }
+    if (!Array.isArray(state.trailStops) || state.trailStops.length < 3) {
+      state.trailStops = (typeof DEFAULT_TRAIL_STOPS !== 'undefined') ? JSON.parse(JSON.stringify(DEFAULT_TRAIL_STOPS)) : [
+        { idx: 0, badge: '📍 עצירה 1', title: 'עצירה 1 – פיתחו יומנים!', isoDate: '2026-11-19', dateLabel: 'יום ה׳ • ט׳ כסליו', points: 70, isDecided: true },
+        { idx: 1, badge: '🎁 עצירה 2', title: 'עצירה 2 – יעד נושא מתנה!', isoDate: '', dateLabel: 'יוכרז בהמשך', points: 100, isDecided: false },
+        { idx: 2, badge: '🏔️ הפסגה', title: 'הפסגה – המטרה הגדולה!', isoDate: '', dateLabel: 'יוכרז בהמשך', points: 130, isDecided: false }
+      ];
+    }
+  }
+
+  // רינדור תיבות הוספת יעדי נקודות נוספים ותחנות עצירה נוספות במסך הניהול
+  function injectDynamicTargetsAndStopsUI() {
+    ensureDynamicListsInState();
+    // א. הזרקת אזור "הוסף יעד נקודות נוסף" מתחת ל-3 היעדים הקיימים
+    const maxPtsEl = document.getElementById('targetMaxPointsInput');
+    const targetsCard = maxPtsEl ? maxPtsEl.closest('.soft-card') : null;
+    if (targetsCard && !document.getElementById('dynamicExtraTargetsWrapper')) {
+      const wrap = document.createElement('div');
+      wrap.id = 'dynamicExtraTargetsWrapper';
+      wrap.className = 'mt-4 pt-3 border-t border-slate-100 space-y-3';
+      targetsCard.appendChild(wrap);
+    }
+    renderExtraTargetsList();
+
+    // ב. הזרקת אזור "הוסף תחנת עצירה חדשה" + עריכת שם עצירה מתחת ל-3 העצירות
+    const stop3Sel = document.getElementById('adminStop3DateSelect');
+    const stopsCard = stop3Sel ? stop3Sel.closest('.soft-card') : null;
+    if (stopsCard && !document.getElementById('dynamicExtraStopsWrapper')) {
+      // הוספת שדות עריכת כותרת ל-3 העצירות הקיימות
+      [0, 1, 2].forEach(i => {
+        const sel = document.getElementById('adminStop' + (i + 1) + 'DateSelect');
+        if (sel && !document.getElementById('adminStop' + (i + 1) + 'TitleInput')) {
+          const inp = document.createElement('input');
+          inp.type = 'text';
+          inp.id = 'adminStop' + (i + 1) + 'TitleInput';
+          inp.className = 'w-full text-xs font-bold p-2 rounded-xl border border-slate-300 bg-white mb-2';
+          inp.placeholder = 'שם תחנת העצירה...';
+          inp.value = (state.trailStops[i] && state.trailStops[i].title) || ('עצירה ' + (i + 1));
+          inp.oninput = function() {
+            if (state.trailStops[i]) state.trailStops[i].title = this.value;
+          };
+          sel.parentElement.insertBefore(inp, sel);
         }
       });
+
+      const wrap = document.createElement('div');
+      wrap.id = 'dynamicExtraStopsWrapper';
+      wrap.className = 'mt-4 pt-3 border-t border-slate-100 space-y-3';
+      stopsCard.appendChild(wrap);
+    }
+    renderExtraStopsList();
+  }
+
+  window.renderExtraTargetsList = function() {
+    const wrap = document.getElementById('dynamicExtraTargetsWrapper');
+    if (!wrap || typeof state === 'undefined') return;
+    const extras = state.config.extraTargets || [];
+    wrap.innerHTML = (extras.length > 0 ? '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">' + extras.map((et, idx) => `
+      <div class="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200 relative">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs font-black text-emerald-950">🏆 יעד נוסף ${idx + 4}</span>
+          <button type="button" onclick="window.removeExtraTarget(${idx})" class="text-[11px] font-bold text-rose-600 hover:underline">מחק ✕</button>
+        </div>
+        <input type="text" value="${(et.name || '').replace(/"/g, '&quot;')}" oninput="state.config.extraTargets[${idx}].name=this.value" placeholder="שם היעד..." class="w-full text-xs font-bold p-2 rounded-xl border border-emerald-300 bg-white mb-1.5" />
+        <input type="number" value="${et.points || 150}" oninput="state.config.extraTargets[${idx}].points=parseInt(this.value,10)||0" class="w-full text-xs font-black p-2 rounded-xl border border-emerald-300 bg-white" />
+      </div>
+    `).join('') + '</div>' : '') + `
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <button type="button" onclick="window.addExtraPointTarget()" class="px-3.5 py-2 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 font-black text-xs border border-amber-300 transition cursor-pointer">+ הוסף יעד נקודות נוסף</button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="window.openUniversalShare('targets')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm cursor-pointer">📲 שתף יעדים עם הבחורים</button>
+          <button type="button" onclick="window.saveAllMasterConfig(true)" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-sm cursor-pointer">💾 שמור יעדי פרסים בענן</button>
+        </div>
+      </div>
+    `;
+  };
+
+  window.addExtraPointTarget = function() {
+    ensureDynamicListsInState();
+    state.config.extraTargets.push({ name: 'יעד מצטיינים מיוחד 🎁', points: 155 });
+    window.renderExtraTargetsList();
+    window.saveAllMasterConfig(false);
+  };
+
+  window.removeExtraTarget = function(idx) {
+    ensureDynamicListsInState();
+    state.config.extraTargets.splice(idx, 1);
+    window.renderExtraTargetsList();
+    window.saveAllMasterConfig(false);
+  };
+
+  window.renderExtraStopsList = function() {
+    const wrap = document.getElementById('dynamicExtraStopsWrapper');
+    if (!wrap || typeof state === 'undefined') return;
+    const allStops = state.trailStops || [];
+    const extraStops = allStops.slice(3);
+    const dayOpts = '<option value="">-- יוכרז בהמשך --</option>' + (state.campaignDays || []).map(d => `<option value="${d.isoDate}">${d.dayName} • ${d.hebrewDate || d.dateStr} (${d.isoDate})</option>`).join('');
+
+    wrap.innerHTML = (extraStops.length > 0 ? '<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">' + extraStops.map((st, i) => {
+      const realIdx = i + 3;
+      return `
+        <div class="p-3.5 rounded-2xl bg-blue-50/50 border border-blue-200">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-black text-blue-950">📍 עצירה ${realIdx + 1}</span>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="openGoogleCalendarForStop(${realIdx})" class="text-[10px] font-bold text-blue-700 hover:underline">📅 יומן</button>
+              <button type="button" onclick="window.removeExtraStop(${realIdx})" class="text-[10px] font-bold text-rose-600 hover:underline">מחק ✕</button>
+            </div>
+          </div>
+          <input type="text" value="${(st.title || '').replace(/"/g, '&quot;')}" oninput="state.trailStops[${realIdx}].title=this.value" placeholder="שם האירוע / העצירה..." class="w-full text-xs font-bold p-2 rounded-xl border border-blue-300 bg-white mb-1.5" />
+          <select onchange="window.onExtraStopDateChange(${realIdx}, this.value)" class="w-full text-xs font-bold p-2 rounded-xl border border-blue-300 bg-white">
+            ${dayOpts.replace('value="' + (st.isoDate || '') + '"', 'value="' + (st.isoDate || '') + '" selected')}
+          </select>
+        </div>
+      `;
+    }).join('') + '</div>' : '') + `
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <button type="button" onclick="window.addExtraTrailStop()" class="px-3.5 py-2 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-950 font-black text-xs border border-blue-300 transition cursor-pointer">+ הוסף תאריך עצירה / אירוע</button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="window.exportAdminFullGoogleCalendar()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-black text-xs shadow-sm cursor-pointer">📅 הורד יומן מלא לראש הישיבה (.ics)</button>
+          <button type="button" onclick="window.openUniversalShare('stops')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm cursor-pointer">📲 שתף עצירות עם הבחורים</button>
+          <button type="button" onclick="window.saveAllMasterConfig(true)" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-sm cursor-pointer">💾 שמור תאריכי עצירות בענן</button>
+        </div>
+      </div>
+    `;
+  };
+
+  window.addExtraTrailStop = function() {
+    ensureDynamicListsInState();
+    const nextNum = state.trailStops.length + 1;
+    state.trailStops.push({
+      idx: nextNum - 1,
+      badge: '📍 עצירה ' + nextNum,
+      title: 'עצירה ' + nextNum + ' – אירוע מיוחד!',
+      isoDate: '',
+      dateLabel: 'ללא תאריך קבוע עדיין (יוכרז בהמשך)',
+      dateStr: 'יוכרז בהמשך',
+      points: 120,
+      isDecided: false
+    });
+    window.renderExtraStopsList();
+    window.saveAllMasterConfig(false);
+  };
+
+  window.removeExtraStop = function(realIdx) {
+    if (!state.trailStops || realIdx < 3) return;
+    state.trailStops.splice(realIdx, 1);
+    state.trailStops.forEach((s, idx) => { s.idx = idx; });
+    window.renderExtraStopsList();
+    window.saveAllMasterConfig(false);
+  };
+
+  window.onExtraStopDateChange = function(realIdx, isoVal) {
+    if (!state.trailStops || !state.trailStops[realIdx]) return;
+    const st = state.trailStops[realIdx];
+    st.isoDate = isoVal;
+    if (isoVal) {
+      st.isDecided = true;
+      const meta = typeof getDayMeta === 'function' ? getDayMeta(isoVal) : null;
+      st.dateLabel = meta ? (meta.dayNameHe + ' ' + meta.hebrewDate + ' (' + meta.gregShort + ')') : isoVal;
+      st.dateStr = meta ? (meta.dayNameHe + ' ' + meta.hebrewDate) : isoVal;
+    } else {
+      st.isDecided = false;
+      st.dateLabel = 'ללא תאריך קבוע עדיין (יוכרז בהמשך)';
+      st.dateStr = 'יוכרז בהמשך';
+    }
+    window.saveAllMasterConfig(false);
+  };
+
+  // שמירה מאוחדת ויסודית של כל היעדים, העצירות וההגדרות ל-Supabase (ללא דריסה!)
+  window.saveAllMasterConfig = async function(showToastFlag) {
+    if (typeof state === 'undefined') return;
+    ensureDynamicListsInState();
+
+    const gVal = (id, fb) => { const el = document.getElementById(id); return (el && el.value !== undefined) ? el.value : fb; };
+    const minName = gVal('targetMinNameInput', state.config.targets.min.name).trim();
+    const minPts  = parseInt(gVal('targetMinPointsInput', state.config.targets.min.points), 10) || 70;
+    const midName = gVal('targetMidNameInput', state.config.targets.mid.name).trim();
+    const midPts  = parseInt(gVal('targetMidPointsInput', state.config.targets.mid.points), 10) || 100;
+    const maxName = gVal('targetMaxNameInput', state.config.targets.max.name).trim();
+    const maxPts  = parseInt(gVal('targetMaxPointsInput', state.config.targets.max.points), 10) || 130;
+
+    state.config.targets = {
+      min: { name: minName, points: minPts },
+      mid: { name: midName, points: midPts },
+      max: { name: maxName, points: maxPts }
     };
-  }
+    state.config.bronzeTarget = minPts;
+    state.config.minTarget = midPts;
+    state.config.minTargetScore = midPts;
+    state.config.goldTarget = maxPts;
 
-  window.addEventListener("DOMContentLoaded", async () => {
-    isoAdmin();
-    if(typeof sbFetch === "function"){
-      try {
-        const rows = await sbFetch("/rest/v1/app_state?key=eq.fixed_qr_code&select=data");
-        if(Array.isArray(rows) && rows[0] && rows[0].data && rows[0].data.code){
-          localStorage.setItem("bakshu_fixed_qr_code", String(rows[0].data.code));
-          syncQrUI(String(rows[0].data.code));
-        }
-      } catch(e){}
-    }
-    setInterval(isoAdmin, 800);
-  });
-  setTimeout(isoAdmin, 100);
-})();
-</script>
+    // עדכון 3 העצירות הראשונות מהשדות שלהן
+    const s1Iso = gVal('adminStop1DateSelect', state.config.stop1IsoDate || '2026-11-19');
+    const s2Iso = gVal('adminStop2DateSelect', state.config.stop2IsoDate || '');
+    const s3Iso = gVal('adminStop3DateSelect', state.config.stop3IsoDate || '');
+    state.config.stop1IsoDate = s1Iso;
+    state.config.stop2IsoDate = s2Iso;
+    state.config.stop3IsoDate = s3Iso;
 
-
-
-<script id="live-seder-time-sync-fix">
-(function(){
-  function getIsraelTodayIso(){
-    const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
-    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-  }
-
-  function toMin(t){
-    if(!t || typeof t !== "string") return -1;
-    const m = t.trim().match(/(\d{1,2}):(\d{2})/);
-    return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : -1;
-  }
-
-  function extractOpenLock(slot){
-    let o = slot.openTime || slot.open_time || "";
-    let l = slot.lockTime || slot.lock_time || "";
-    if(slot.timeWindow){
-      const parts = String(slot.timeWindow).split(/[–\-]/);
-      if(parts.length >= 2){
-        if(!o) o = parts[0].trim();
-        if(!l) l = parts[1].trim();
-      }
-    }
-    return { open: o || "09:00", lock: l || "23:59" };
-  }
-
-  function forceSyncActiveSederCard(){
-    if(typeof state === "undefined") return;
-    const todayIso = (typeof TODAY_ISO !== "undefined" && TODAY_ISO) || (typeof getTodayDateStr === "function" && getTodayDateStr()) || getIsraelTodayIso();
-    const slots = (typeof getSlotsForDate === "function" ? getSlotsForDate(todayIso) : (typeof getScheduleForDate === "function" ? getScheduleForDate(todayIso) : (state.slotsByDate && state.slotsByDate[todayIso]))) || [];
-    if(!slots.length) return;
-
-    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
-    const nowMin = now.getHours() * 60 + now.getMinutes();
-
-    let activeSlot = null;
-    let upcomingSlot = null;
-
-    slots.forEach(s => {
-      const times = extractOpenLock(s);
-      s.openTime = times.open;
-      s.lockTime = times.lock;
-      s.timeWindow = times.open + " – " + times.lock;
-      const oM = toMin(times.open);
-      let lM = toMin(times.lock);
-      if(lM !== -1 && oM !== -1 && lM < oM) lM += 1440;
-      if(oM !== -1 && lM !== -1){
-        if(nowMin >= oM && nowMin <= lM && !activeSlot) activeSlot = s;
-        else if(nowMin < oM && !upcomingSlot) upcomingSlot = s;
-      }
-    });
-
-    const chosen = activeSlot || upcomingSlot || slots[slots.length - 1];
-    if(!chosen) return;
-
-    const isOpenNow = !!activeSlot;
-    const pill = document.getElementById("sederStatusPill") || document.getElementById("activeSederStatusBadge");
-    const titleEl = document.getElementById("activeSederTitle");
-    const metaEl = document.getElementById("activeSederMeta") || document.getElementById("activeSederWindow");
-    const ptsEl = document.getElementById("activeSederPtsBadge") || document.getElementById("activeSederPointsBadge");
-
-    if(titleEl) titleEl.textContent = chosen.title;
-    if(ptsEl) ptsEl.textContent = "שווי: +" + (chosen.points || chosen.base_points || 1) + " נק׳";
-
-    const dayObj = (typeof CAMPAIGN_DAYS !== "undefined" && Array.isArray(CAMPAIGN_DAYS) && CAMPAIGN_DAYS.find(d => d.iso === todayIso)) || (typeof getDayMeta === "function" ? getDayMeta(todayIso) : null);
-    const hebLabel = dayObj ? ((dayObj.hebrewDate && dayObj.hebrewDate.includes(dayObj.dayName)) ? dayObj.hebrewDate : ((dayObj.dayName || dayObj.dayNameHe || "") + " • " + (dayObj.hebrewDate || ""))) : "היום";
-    if(metaEl) metaEl.textContent = hebLabel + " • חלון סימון: " + chosen.openTime + " – " + chosen.lockTime;
-
-    if(pill){
-      if(isOpenNow){
-        let lockMin = toMin(chosen.lockTime);
-        if(lockMin < toMin(chosen.openTime)) lockMin += 1440;
-        const left = Math.max(1, lockMin - nowMin);
-        pill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200";
-        pill.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span><span>🟢 סדר פעיל כעת (' + chosen.openTime + '–' + chosen.lockTime + ') • נותרו ' + left + ' דק׳ לסימון</span>';
+    [
+      { idx: 0, iso: s1Iso, pts: minPts, title: gVal('adminStop1TitleInput', state.trailStops[0]?.title || 'עצירה 1 – פיתחו יומנים!') },
+      { idx: 1, iso: s2Iso, pts: midPts, title: gVal('adminStop2TitleInput', state.trailStops[1]?.title || 'עצירה 2 – יעד נושא מתנה!') },
+      { idx: 2, iso: s3Iso, pts: maxPts, title: gVal('adminStop3TitleInput', state.trailStops[2]?.title || 'הפסגה – המטרה הגדולה!') }
+    ].forEach(item => {
+      if (!state.trailStops[item.idx]) return;
+      state.trailStops[item.idx].title = item.title;
+      state.trailStops[item.idx].isoDate = item.iso;
+      state.trailStops[item.idx].points = item.pts;
+      if (item.iso) {
+        state.trailStops[item.idx].isDecided = true;
+        const meta = typeof getDayMeta === 'function' ? getDayMeta(item.iso) : null;
+        state.trailStops[item.idx].dateLabel = meta ? `${meta.dayNameHe} ${meta.hebrewDate} (${meta.gregShort})` : item.iso;
+        state.trailStops[item.idx].dateStr = meta ? `${meta.dayNameHe} ${meta.hebrewDate}` : item.iso;
       } else {
-        const wait = Math.max(1, toMin(chosen.openTime) - nowMin);
-        const h = Math.floor(wait / 60), m = wait % 60;
-        pill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200";
-        pill.innerHTML = '<span>⏳</span><span>הסדר הקרוב: ' + chosen.title + ' (ייפתח בעוד ' + (h > 0 ? h + ' שעות ו-' : '') + m + ' דק׳ ב-' + chosen.openTime + ')</span>';
-      }
-    }
-
-    const st = state.currentStudent;
-    const stId = state.currentStudentId || state.activeStudentId || st?.id;
-    const attKey = todayIso + "__" + chosen.id;
-    const already = st?.presentCurrent || (stId && state.attendance && state.attendance[attKey] && state.attendance[attKey][stId]) || (typeof isStudentPresentInSlot === "function" && isStudentPresentInSlot(stId, chosen, todayIso));
-
-    const candidates = [];
-    const byId = document.getElementById("mainCheckInBtn") || document.getElementById("checkInBtn") || document.getElementById("studentCheckInBtn");
-    if(byId) candidates.push(byId);
-
-    const area = document.getElementById("checkInActionArea");
-    if(area){
-      const innerBtn = area.querySelector("button, div");
-      if(innerBtn) candidates.push(innerBtn);
-      else candidates.push(area);
-    }
-
-    document.querySelectorAll("#screen-student button, #screen-student div").forEach(el => {
-      if(el.children.length <= 3 && /ייפתח בשעה|סרוק QR|סמן נוכחות כעת|חלון הסימון נעול/.test(el.textContent || "")){
-        candidates.push(el);
+        state.trailStops[item.idx].isDecided = false;
+        state.trailStops[item.idx].dateLabel = 'ללא תאריך קבוע עדיין (יוכרז בהמשך)';
+        state.trailStops[item.idx].dateStr = 'יוכרז בהמשך';
       }
     });
 
-    candidates.forEach(el => {
-      if(already){
-        el.disabled = false;
-        el.className = "w-full py-4 px-6 rounded-2xl bg-emerald-600 text-white font-black text-base sm:text-lg shadow-md flex items-center justify-center gap-2 my-3";
-        el.innerHTML = '<span>✅</span><span>נוכחותך ב' + chosen.title + ' סומנה בהצלחה!</span>';
-      } else if(isOpenNow){
-        el.disabled = false;
-        if(el.removeAttribute) el.removeAttribute("disabled");
-        el.className = "w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base sm:text-lg shadow-lg transition flex items-center justify-center gap-2 cursor-pointer my-3";
-        el.innerHTML = '<span>📸</span><span>סרוק QR / סמן נוכחות כעת ב' + chosen.title + ' (פתוח עד ' + chosen.lockTime + ')</span>';
-        el.onclick = function(){
-          if(typeof openBarcodeScannerModal === "function") openBarcodeScannerModal();
-          else if(typeof handleStudentCheckIn === "function") handleStudentCheckIn(todayIso, chosen.id);
-          else if(typeof openQrScannerModal === "function") openQrScannerModal(todayIso, chosen.id);
-        };
-      } else {
-        const wait = Math.max(1, toMin(chosen.openTime) - nowMin);
-        const h = Math.floor(wait / 60), m = wait % 60;
-        el.className = "w-full py-4 px-6 rounded-2xl bg-slate-100 text-slate-500 border border-slate-200 font-black text-sm sm:text-base cursor-not-allowed flex items-center justify-center gap-2 my-3";
-        el.innerHTML = '<span>🔒</span><span>הסדר ייפתח בשעה ' + chosen.openTime + ' (בעוד ' + (h > 0 ? h + ' שעות ו-' : '') + m + ' דקות)</span>';
-      }
-    });
-  }
+    state.config.startDate = gVal('campaignStartDateInput', state.config.startDate || '2026-10-25');
+    state.config.endDate   = gVal('campaignEndDateInput', state.config.endDate || '2026-12-10');
+    state.config.groupFullThreshold = parseInt(gVal('campaignThresholdInput', state.config.groupFullThreshold || 10), 10) || 10;
+    state.config.groupFullBonus     = parseInt(gVal('campaignFullBonusInput', state.config.groupFullBonus || 4), 10) || 4;
+    state.config.xyNeed   = parseInt(gVal('campaignXyNeedInput', state.config.xyNeed || 5), 10) || 5;
+    state.config.xyWindow = parseInt(gVal('campaignXyWindowInput', state.config.xyWindow || 10), 10) || 10;
+    state.config.xyBonus  = parseInt(gVal('campaignXyBonusInput', state.config.xyBonus || 3), 10) || 3;
 
-  window.syncTodaySedarimLive = forceSyncActiveSederCard;
-  window.addEventListener("DOMContentLoaded", () => {
-    setTimeout(forceSyncActiveSederCard, 150);
-    setInterval(forceSyncActiveSederCard, 500);
-  });
-  setTimeout(forceSyncActiveSederCard, 100);
-})();
-</script>
+    state.journeyStops = state.trailStops;
+    if (typeof saveJourneyStops === 'function') saveJourneyStops(state.trailStops);
+    if (typeof saveCampaignConfig === 'function') saveCampaignConfig(state.config);
 
+    const masterPayload = {
+      config: state.config,
+      trailStops: state.trailStops,
+      updatedAt: Date.now()
+    };
+    try { localStorage.setItem(MASTER_CFG_KEY, JSON.stringify(masterPayload)); } catch(e) {}
 
-
-<script id="clean-native-sync-and-share">
-(function() {
-  // א. סנכרון מלא של שמות ונקודות היעדים מ-trailStops ומ-campaign_targets_config בטעינה ובכל רינדור
-  function syncTargetsToUIAndInputs() {
-    if (typeof state === 'undefined' || !state.config) return;
-    if (Array.isArray(state.trailStops) && state.trailStops.length >= 3) {
-      state.config.targets = state.config.targets || { min: {}, mid: {}, max: {} };
-      if (state.trailStops[0].title) state.config.targets.min.name = state.trailStops[0].title;
-      if (state.trailStops[0].points) state.config.targets.min.points = Number(state.trailStops[0].points);
-      if (state.trailStops[1].title) state.config.targets.mid.name = state.trailStops[1].title;
-      if (state.trailStops[1].points) state.config.targets.mid.points = Number(state.trailStops[1].points);
-      if (state.trailStops[2].title) state.config.targets.max.name = state.trailStops[2].title;
-      if (state.trailStops[2].points) state.config.targets.max.points = Number(state.trailStops[2].points);
-      state.config.bronzeTarget = state.config.targets.min.points;
-      state.config.minTarget = state.config.targets.mid.points;
-      state.config.goldTarget = state.config.targets.max.points;
-    }
-    const t = state.config.targets;
-    if (!t) return;
-    const setVal = (id, v) => { const el = document.getElementById(id); if (el && document.activeElement !== el && v !== undefined) el.value = v; };
-    if (t.min) { setVal('targetMinNameInput', t.min.name); setVal('targetMinPointsInput', t.min.points); }
-    if (t.mid) { setVal('targetMidNameInput', t.mid.name); setVal('targetMidPointsInput', t.mid.points); }
-    if (t.max) { setVal('targetMaxNameInput', t.max.name); setVal('targetMaxPointsInput', t.max.points); }
-
-    const bLbl = document.getElementById('bronzeTargetLabel'); if (bLbl && t.min) bLbl.textContent = t.min.name + ' (' + t.min.points + ' נק׳)';
-    const sLbl = document.getElementById('silverTargetLabel'); if (sLbl && t.mid) sLbl.textContent = t.mid.name + ' (' + t.mid.points + ' נק׳)';
-    const gLbl = document.getElementById('goldTargetLabel'); if (gLbl && t.max) gLbl.textContent = t.max.name + ' (' + t.max.points + ' נק׳)';
-    const minH = document.getElementById('headerMinTarget') || document.getElementById('studentMinTargetText'); if (minH && t.mid) minH.textContent = t.mid.points;
-  }
-
-  // טעינה ישירה של campaign_targets_config ו-trail_stops מ-Supabase בעת פתיחת הדף
-  async function loadSavedTargetsFromSupabase() {
     if (typeof supabaseClient !== 'undefined' && supabaseClient) {
       try {
-        const { data } = await supabaseClient.from('app_state').select('key, data').in('key', ['trail_stops', 'campaign_targets_config']);
-        if (Array.isArray(data)) {
-          data.forEach(row => {
-            if (row.key === 'trail_stops' && Array.isArray(row.data) && row.data.length >= 3) {
-              state.trailStops = row.data;
-              state.journeyStops = row.data;
-              if (typeof saveJourneyStops === 'function') saveJourneyStops(row.data);
-            }
-            if (row.key === 'campaign_targets_config' && row.data) {
-              Object.assign(state.config, row.data);
-              if (typeof saveCampaignConfig === 'function') saveCampaignConfig(state.config);
-            }
-          });
+        await supabaseClient.from('app_state').upsert([
+          { key: MASTER_CFG_KEY, data: masterPayload, updated_at: new Date().toISOString() },
+          { key: 'trail_stops', data: state.trailStops, updated_at: new Date().toISOString() }
+        ], { onConflict: 'key' });
+
+        await supabaseClient.from('campaign_config').upsert({
+          id: 1,
+          start_date: state.config.startDate,
+          end_date: state.config.endDate,
+          min_target_score: midPts,
+          full_seder_threshold: state.config.groupFullThreshold,
+          full_seder_bonus_pts: state.config.groupFullBonus,
+          xy_required_count: state.config.xyNeed,
+          xy_window_size: state.config.xyWindow,
+          xy_bonus_pts: state.config.xyBonus
+        }, { onConflict: 'id' });
+      } catch(e) { console.warn('Master config save warning:', e); }
+    }
+
+    applyMasterConfigToAllViews();
+    if (showToastFlag && typeof showToast === 'function') {
+      showToast('💾 כל היעדים (כיתוב ונקודות) ותאריכי העצירה נשמרו בענן ומסונכרנים לכל הבחורים!', '🎁');
+    }
+  };
+
+  window.saveAdminRules = function() { return window.saveAllMasterConfig(true); };
+  window.saveCampaignConfigToSupabase = function() { return window.saveAllMasterConfig(true); };
+
+  function applyMasterConfigToAllViews() {
+    if (typeof state === 'undefined' || !state.config || !state.config.targets) return;
+    const t = state.config.targets;
+    const setIn = (id, v) => { const el = document.getElementById(id); if (el && document.activeElement !== el && v !== undefined) el.value = v; };
+    setIn('targetMinNameInput', t.min.name); setIn('targetMinPointsInput', t.min.points);
+    setIn('targetMidNameInput', t.mid.name); setIn('targetMidPointsInput', t.mid.points);
+    setIn('targetMaxNameInput', t.max.name); setIn('targetMaxPointsInput', t.max.points);
+    setIn('adminStop1DateSelect', state.config.stop1IsoDate || '');
+    setIn('adminStop2DateSelect', state.config.stop2IsoDate || '');
+    setIn('adminStop3DateSelect', state.config.stop3IsoDate || '');
+    if (state.trailStops[0]) setIn('adminStop1TitleInput', state.trailStops[0].title);
+    if (state.trailStops[1]) setIn('adminStop2TitleInput', state.trailStops[1].title);
+    if (state.trailStops[2]) setIn('adminStop3TitleInput', state.trailStops[2].title);
+
+    if (typeof syncTargetsWithCalendar === 'function') try { syncTargetsWithCalendar(); } catch(e) {}
+    if (typeof renderAllViews === 'function') try { renderAllViews(); } catch(e) {}
+
+    // עדכון תצוגת היעדים בכרטיס הבחור ובגרף הציבורי (כולל יעדים נוספים אם נוספו!)
+    const bLbl = document.getElementById('bronzeTargetLabel'); if (bLbl) bLbl.textContent = t.min.name + ' (' + t.min.points + ' נק׳)';
+    const sLbl = document.getElementById('silverTargetLabel'); if (sLbl) sLbl.textContent = t.mid.name + ' (' + t.mid.points + ' נק׳)';
+    const gLbl = document.getElementById('goldTargetLabel'); if (gLbl) gLbl.textContent = t.max.name + ' (' + t.max.points + ' נק׳)';
+  }
+
+  async function loadMasterConfigFromCloud() {
+    let loaded = null;
+    try {
+      const localRaw = localStorage.getItem(MASTER_CFG_KEY);
+      if (localRaw) loaded = JSON.parse(localRaw);
+    } catch(e) {}
+
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      try {
+        const { data } = await supabaseClient.from('app_state').select('data').eq('key', MASTER_CFG_KEY).maybeSingle();
+        if (data && data.data && (!loaded || (data.data.updatedAt || 0) >= (loaded.updatedAt || 0))) {
+          loaded = data.data;
+          try { localStorage.setItem(MASTER_CFG_KEY, JSON.stringify(loaded)); } catch(e) {}
         }
       } catch(e) {}
     }
-    syncTargetsToUIAndInputs();
-    if (typeof renderAllViews === 'function') try { renderAllViews(); } catch(e) {}
+
+    if (loaded) {
+      if (loaded.config) Object.assign(state.config, loaded.config);
+      if (Array.isArray(loaded.trailStops) && loaded.trailStops.length >= 3) {
+        state.trailStops = loaded.trailStops;
+        state.journeyStops = loaded.trailStops;
+      }
+      applyMasterConfigToAllViews();
+      renderExtraTargetsList();
+      renderExtraStopsList();
+    }
   }
 
-  // ב. בדיקת סריקת QR אוטומטית ממצלמת הטלפון (?qr=CODE)
-  function checkQrScanFromCameraUrl() {
-    const params = new URLSearchParams(window.location.search);
-    const scannedCode = params.get('qr');
-    if (!scannedCode) return;
-    setTimeout(() => {
-      const secretObj = (typeof loadQrSecret === 'function') ? loadQrSecret() : { code: 'BK-892' };
-      const activeCode = String(secretObj.code || 'BK-892').trim().toUpperCase();
-      if (scannedCode.trim().toUpperCase() === activeCode || scannedCode.trim().length >= 3) {
-        if (typeof state !== 'undefined' && state.currentStudent && !state.currentStudent.presentCurrent) {
-          if (typeof handleStudentCheckIn === 'function') handleStudentCheckIn();
-        }
-        if (typeof showToast === 'function') showToast('📸 הברקוד נסרק בהצלחה! נוכחותך בסדר סומנה', '🎉');
+  // =========================================================================
+  // 3. סנכרון חי של הסדר הפעיל והכפתור הירוק אצל הבחור (ללא כפתור אפור נעול כשפתוח!)
+  // =========================================================================
+  function syncActiveSederButtonAndHeader() {
+    if (typeof state === 'undefined' || typeof getActiveOrNextSederInfo !== 'function') return;
+    const info = getActiveOrNextSederInfo();
+    if (!info) return;
+    const active = info.activeSeder;
+    const next = info.nextSeder;
+    const chosen = active || next;
+    if (!chosen) return;
+
+    const area = document.getElementById('checkInActionArea');
+    let btn = document.getElementById('mainCheckInBtn') || (area && area.querySelector('button, div'));
+    if (!btn) return;
+
+    const alreadyChecked = state.currentStudent && state.currentStudent.presentCurrent;
+    if (active) {
+      if (alreadyChecked) {
+        btn.disabled = false;
+        btn.className = 'w-full py-4 px-6 rounded-2xl bg-emerald-600 text-white font-black text-base shadow-md flex items-center justify-center gap-2 cursor-pointer';
+        btn.innerHTML = '<span>✅</span><span>נוכחותך ב' + active.title + ' סומנה בהצלחה! (לחץ לביטול)</span>';
+        btn.onclick = function() { if (typeof handleStudentCheckIn === 'function') handleStudentCheckIn(); };
+      } else {
+        btn.disabled = false;
+        if (btn.removeAttribute) btn.removeAttribute('disabled');
+        btn.className = 'w-full py-4 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base sm:text-lg shadow-lg transition flex items-center justify-center gap-2 cursor-pointer';
+        btn.innerHTML = '<span>📸</span><span>סמן נוכחות כעת ב' + active.title + ' (' + (active.openTime || '') + '–' + (active.lockTime || '') + ')</span>';
+        btn.onclick = function() { if (typeof handleStudentCheckIn === 'function') handleStudentCheckIn(); };
       }
+    }
+  }
+
+  window.saveExplicitDayScheduleChanges = async function() {
+    if (typeof saveDailyScheduleToSupabase === 'function') {
+      await saveDailyScheduleToSupabase();
+    }
+    syncActiveSederButtonAndHeader();
+  };
+
+  // =========================================================================
+  // 4. Google Calendar מלא לראש הישיבה ולבחורים (.ics + קישור ישיר ליומן גוגל)
+  // =========================================================================
+  window.exportAdminFullGoogleCalendar = function() {
+    if (typeof state === 'undefined') return;
+    const lines = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Bakshu Yeshiva Jerusalem//Ad HaPisga 5787//HE',
+      'X-WR-CALNAME:לוח מנהל ראש הישיבה - מבצע עד הפסגה תשפ״ז'
+    ];
+    (state.trailStops || []).forEach((st, i) => {
+      if (!st.isoDate) return;
+      const dClean = st.isoDate.replace(/-/g, '');
+      lines.push(
+        'BEGIN:VEVENT',
+        'UID:stop_' + i + '_' + dClean + '@bakshu.yeshiva',
+        'DTSTART;VALUE=DATE:' + dClean,
+        'SUMMARY:🏔️ ' + (st.title || ('תחנת עצירה ' + (i + 1))) + ' - ישיבת בקשו',
+        'DESCRIPTION:תחנת עצירה במבצע עד הפסגה (' + (st.dateLabel || '') + ')',
+        'END:VEVENT'
+      );
+    });
+    (state.campaignDays || []).forEach(day => {
+      if (!day.isoDate) return;
+      const dClean = day.isoDate.replace(/-/g, '');
+      const wSt = (state.students || []).find(s => Number(s.id) === Number(day.wakeupStudentId));
+      const kSt = (state.students || []).find(s => Number(s.id) === Number(day.kitchenStudentId));
+      if (wSt || kSt) {
+        lines.push(
+          'BEGIN:VEVENT',
+          'UID:duty_' + dClean + '@bakshu.yeshiva',
+          'DTSTART;VALUE=DATE:' + dClean,
+          'SUMMARY:⏰ תורנים: מעורר - ' + (wSt ? wSt.name : 'לא שובץ') + ' | מטבח - ' + (kSt ? kSt.name : 'לא שובץ'),
+          'DESCRIPTION:תורנויות ישיבת בקשו ליום ' + (day.hebrewDate || day.dateStr || ''),
+          'END:VEVENT'
+        );
+      }
+    });
+    lines.push('END:VCALENDAR');
+    const blob = new Blob([lines.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'bakshu-rosh-yeshiva-calendar.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    if (typeof showToast === 'function') showToast('📅 קובץ יומן Google Calendar המלא של ראש הישיבה ירד למכשיר!', '📥');
+  };
+
+  // =========================================================================
+  // 5. שינוי סיסמה אישית לבחור + שליחת בקשה לאישור מיוחד
+  // =========================================================================
+  window.saveNewPersonalPassword = async function() {
+    const inp = document.getElementById('newPersonalPasswordInput');
+    const newPass = (inp && inp.value || '').trim();
+    if (newPass.length < 4) {
+      if (typeof showToast === 'function') showToast('נא להזין סיסמה בת 4 תווים לפחות', '⚠️');
+      return;
+    }
+    const stId = (state.currentStudent && state.currentStudent.id) || state.activeStudentId || 1;
+    const st = (state.students || []).find(s => Number(s.id) === Number(stId));
+    if (st) st.password = newPass;
+    if (state.currentStudent) state.currentStudent.password = newPass;
+    if (typeof saveLocalStudents === 'function') saveLocalStudents();
+
+    const passMap = JSON.parse(localStorage.getItem('bakshu_student_passwords_v1') || '{}');
+    passMap[stId] = newPass;
+    localStorage.setItem('bakshu_student_passwords_v1', JSON.stringify(passMap));
+
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      try {
+        await supabaseClient.from('app_state').upsert({
+          key: 'student_passwords',
+          data: passMap,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key' });
+      } catch(e) {}
+    }
+    document.getElementById('changePasswordModal').classList.add('hidden');
+    if (typeof showToast === 'function') showToast('🔑 הסיסמה האישית שלך עודכנה ונשמרה בענן בהצלחה!', '✅');
+  };
+
+  window.submitSpecialRequestToCloud = async function() {
+    const slotTitle = (document.getElementById('specialReqSlotTitle')?.value || 'בקשה לאישור מיוחד').trim();
+    const note = (document.getElementById('specialReqNoteInput')?.value || 'בקשת אישור נוכחות/נקודות').trim();
+    const stName = (state.currentStudent && state.currentStudent.name) || 'בחור בישיבה';
+    const stId = (state.currentStudent && state.currentStudent.id) || state.activeStudentId || 1;
+
+    state.pendingRequests = state.pendingRequests || [];
+    state.pendingRequests.unshift({
+      id: 'req_' + Date.now(),
+      studentId: stId,
+      studentName: stName,
+      slotTitle: slotTitle,
+      timeSent: new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+      note: note
+    });
+    if (typeof savePendingRequests === 'function') savePendingRequests(state.pendingRequests);
+
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      try {
+        await supabaseClient.from('app_state').upsert({
+          key: 'pending_requests',
+          data: state.pendingRequests,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key' });
+      } catch(e) {}
+    }
+    document.getElementById('specialRequestModal').classList.add('hidden');
+    if (typeof renderAllViews === 'function') try { renderAllViews(); } catch(e) {}
+    if (typeof showToast === 'function') showToast('📨 הבקשה המיוחדת נשלחה לראש הישיבה ותופיע בלשונית "בקשות"!', '✅');
+  };
+
+  // =========================================================================
+  // 6. שיתוף אוניברסלי (עם כולם או עם בחור ספציפי ב-WhatsApp / SMS / העתקה)
+  // =========================================================================
+  window.openUniversalShare = function(type, studentId) {
+    const modal = document.getElementById('universalShareModal');
+    if (!modal) return;
+    const sel = document.getElementById('shareRecipientSelect');
+    if (sel && Array.isArray(state.students)) {
+      sel.innerHTML = '<option value="ALL">👥 כל הבחורים יחד (הודעה לקבוצת הישיבה)</option>' +
+        state.students.map(s => `<option value="${s.id}">👤 ${s.name} (${s.phone || ''})</option>`).join('');
+      sel.value = studentId ? String(studentId) : 'ALL';
+    }
+    window._shareType = type || 'campaign';
+    window.buildShareText();
+    modal.classList.remove('hidden');
+  };
+
+  window.selectShareType = function(type) {
+    window._shareType = type;
+    window.buildShareText();
+  };
+
+  window.buildShareText = function() {
+    const sel = document.getElementById('shareRecipientSelect');
+    const box = document.getElementById('shareMessageBox');
+    if (!box || typeof state === 'undefined') return;
+    const stId = sel ? sel.value : 'ALL';
+    const st = stId !== 'ALL' ? (state.students || []).find(s => String(s.id) === String(stId)) : null;
+    const baseUrl = 'https://bakshu-vibe.vercel.app/';
+    const link = st && st.phone ? (baseUrl + '?phone=' + encodeURIComponent(st.phone)) : baseUrl;
+    const greet = st ? `שלום ${st.name} היקר! 🌟\n` : `שלום לכל בחורי ישיבת "בקשו" היקרים! 🏔️🔥\n`;
+    const t = (state.config && state.config.targets) || { min: { name: 'יעד 1', points: 70 }, mid: { name: 'יעד 2', points: 100 }, max: { name: 'הפסגה', points: 130 } };
+    const extras = (state.config && state.config.extraTargets) || [];
+
+    if (window._shareType === 'targets') {
+      let lines = [
+        greet + '🎁 *יעדי הפרסים במבצע "עד הפסגה – חורף תשפ״ז":*',
+        `🥉 ${t.min.name}: *${t.min.points} נק׳*`,
+        `🥈 ${t.mid.name}: *${t.mid.points} נק׳*`,
+        `🥇 ${t.max.name}: *${t.max.points} נק׳*`
+      ];
+      extras.forEach(et => lines.push(`🏆 ${et.name}: *${et.points} נק׳*`));
+      lines.push('לכניסה ללוח האישי וסימון נוכחות:\n' + link);
+      box.value = lines.join('\n');
+    } else if (window._shareType === 'stops') {
+      let lines = [greet + '📍 *תחנות העצירה במסע "עד הפסגה" – פיתחו יומנים!*'];
+      (state.trailStops || []).forEach((s, i) => lines.push(`${i + 1}️⃣ *${s.title}*: ${s.dateLabel || 'יוכרז בהמשך'}`));
+      lines.push('לצפייה בלוח השנה המלא וסנכרון ליומן:\n' + link);
+      box.value = lines.join('\n');
+    } else if (window._shareType === 'seder') {
+      const sTitle = document.getElementById('activeSederTitle')?.textContent || 'סדר לימוד בבית המדרש';
+      box.value = greet + `⏰ *תזכורת: ${sTitle} בבית המדרש!*\nהיכנסו כעת לסריקת ה-QR וסימון נוכחות:\n` + link;
+    } else if (window._shareType === 'bonus') {
+      const pts = document.getElementById('grantBonusPointsInput')?.value || 5;
+      const rsn = document.getElementById('grantBonusReasonInput')?.value || 'שקידה והתמדה מיוחדת ⭐';
+      box.value = greet + `⭐ *בונוס מיוחד מראש הישיבה: +${pts} נקודות!*\nעבור: *${rsn}*\nלצפייה בניקוד המעודכן שלך:\n` + link;
+    } else {
+      box.value = greet + `🏔️ *מבצע חורף תשפ״ז – "עד הפסגה" בישיבת בקשו ירושלים!*\nלא משנה איפה נעצור – השנה מטפסים עד לפסגה!\nהיכנסו לקישור לסימון נוכחות ומעקב אחר היעדים והפרסים:\n` + link;
+    }
+  };
+
+  window.sendShareVia = function(method) {
+    const sel = document.getElementById('shareRecipientSelect');
+    const msg = document.getElementById('shareMessageBox')?.value || '';
+    const stId = sel ? sel.value : 'ALL';
+    const st = stId !== 'ALL' ? (state.students || []).find(s => String(s.id) === String(stId)) : null;
+    const phone = st && st.phone ? st.phone.replace(/[^0-9]/g, '').replace(/^0/, '972') : '';
+
+    if (method === 'whatsapp') {
+      window.open(phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    } else if (method === 'sms') {
+      const rawP = st && st.phone ? st.phone.replace(/[^0-9]/g, '') : '';
+      window.open(`sms:${rawP}?body=${encodeURIComponent(msg)}`, '_blank');
+    } else {
+      if (navigator.clipboard) navigator.clipboard.writeText(msg);
+      if (typeof showToast === 'function') showToast('📋 ההודעה והקישור הועתקו ללוח!', '✅');
+    }
+  };
+
+  // הזרקת כפתורים מהירים בראש הניהול ובמסך הבחור (שינוי סיסמה + בקשה מיוחדת + שיתוף)
+  function injectQuickActionButtons() {
+    // כפתור שיתוף + יומן מנהל בראש פורטל ראש הישיבה
+    const adminNav = document.getElementById('asv-students')?.parentElement;
+    if (adminNav && !document.getElementById('adminUnifiedShareBtn')) {
+      const shBtn = document.createElement('button');
+      shBtn.id = 'adminUnifiedShareBtn';
+      shBtn.type = 'button';
+      shBtn.className = 'px-3.5 py-2 rounded-xl font-black text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shrink-0 cursor-pointer';
+      shBtn.innerHTML = '📲 שתף מבצע / יעד / בונוס';
+      shBtn.onclick = function() { window.openUniversalShare('campaign'); };
+      adminNav.appendChild(shBtn);
+
+      const calBtn = document.createElement('button');
+      calBtn.type = 'button';
+      calBtn.className = 'px-3.5 py-2 rounded-xl font-bold text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 shrink-0 cursor-pointer';
+      calBtn.innerHTML = '📅 יומן גוגל לראש הישיבה';
+      calBtn.onclick = function() { window.exportAdminFullGoogleCalendar(); };
+      adminNav.appendChild(calBtn);
+    }
+
+    // כפתורי "✋ בקשה לאישור מיוחד" ו-"🔑 שנה סיסמה" במסך הבחור
+    const studentSec = document.getElementById('screen-student');
+    if (studentSec && !document.getElementById('studentExtraActionsBar')) {
+      const bar = document.createElement('div');
+      bar.id = 'studentExtraActionsBar';
+      bar.className = 'flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-white border border-slate-200 shadow-2xs text-xs';
+      bar.innerHTML = `
+        <div class="font-bold text-slate-600">פעולות אישיות מהירות:</div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="document.getElementById('specialRequestModal').classList.remove('hidden')" class="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-black cursor-pointer">✋ בקשה לאישור מיוחד / שכחתי לסמן</button>
+          <button type="button" onclick="document.getElementById('changePasswordModal').classList.remove('hidden')" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold cursor-pointer">🔑 שינוי סיסמה אישית</button>
+        </div>
+      `;
+      studentSec.insertBefore(bar, studentSec.firstChild);
+    }
+  }
+
+  // בדיקת סריקת QR ממצלמת הטלפון (?qr=CODE)
+  function handleUrlQrAutoCheckIn() {
+    const params = new URLSearchParams(window.location.search);
+    const qrVal = params.get('qr');
+    if (!qrVal) return;
+    setTimeout(() => {
+      if (typeof state !== 'undefined' && state.currentStudent && !state.currentStudent.presentCurrent) {
+        if (typeof handleStudentCheckIn === 'function') handleStudentCheckIn();
+      }
+      if (typeof showToast === 'function') showToast('📸 הברקוד נסרק בהצלחה! נוכחותך בסדר סומנה', '🎉');
       try { window.history.replaceState({}, '', window.location.pathname); } catch(e) {}
     }, 800);
   }
 
-  // ג. שיתוף מהיר ונקי (WhatsApp / העתקה) של המבצע, יעד, עצירה או בונוס (לכל הבחורים או לבחור ספציפי)
-  window.shareCampaignItem = function(type, studentId) {
-    const baseUrl = 'https://bakshu-vibe.vercel.app/';
-    const st = studentId ? (state.students || []).find(s => String(s.id) === String(studentId)) : null;
-    const link = st ? (baseUrl + '?phone=' + encodeURIComponent(st.phone || '')) : baseUrl;
-    const t = (state.config && state.config.targets) || {
-      min: { name: document.getElementById('targetMinNameInput')?.value || 'יעד 1', points: document.getElementById('targetMinPointsInput')?.value || 70 },
-      mid: { name: document.getElementById('targetMidNameInput')?.value || 'יעד 2', points: document.getElementById('targetMidPointsInput')?.value || 100 },
-      max: { name: document.getElementById('targetMaxNameInput')?.value || 'הפסגה', points: document.getElementById('targetMaxPointsInput')?.value || 130 }
-    };
-
-    let msg = '';
-    if (type === 'targets') {
-      msg = '🎁 *יעדי הפרסים במבצע "עד הפסגה – חורף תשפ״ז" בישיבת בקשו:*
-' +
-            '🥉 ' + t.min.name + ': *' + t.min.points + ' נק׳*
-' +
-            '🥈 ' + t.mid.name + ': *' + t.mid.points + ' נק׳*
-' +
-            '🥇 ' + t.max.name + ': *' + t.max.points + ' נק׳*
-' +
-            'לכניסה ללוח האישי וסימון נוכחות:
-' + link;
-    } else if (type === 'stops') {
-      const s1 = state.trailStops?.[0]?.dateLabel || 'ט׳ כסליו';
-      const s2 = state.trailStops?.[1]?.dateLabel || 'יוכרז בהמשך';
-      const s3 = state.trailStops?.[2]?.dateLabel || 'אירוע הפסגה';
-      msg = '🏔️ *תחנות העצירה במסע "עד הפסגה" – פיתחו יומנים!*
-' +
-            '📍 עצירה 1: ' + s1 + '
-' +
-            '🎁 עצירה 2: ' + s2 + '
-' +
-            '👑 הפסגה: ' + s3 + '
-' +
-            'לצפייה בלוח השנה המלא ובניקוד:
-' + link;
-    } else if (type === 'bonus') {
-      const selEl = document.getElementById('grantBonusStudentSelect');
-      const chosenStId = selEl && selEl.value !== 'all' ? selEl.value : null;
-      const targetSt = chosenStId ? (state.students || []).find(s => String(s.id) === String(chosenStId)) : null;
-      const pts = document.getElementById('grantBonusPointsInput')?.value || 5;
-      const reason = document.getElementById('grantBonusReasonInput')?.value || 'שקידה והתמדה מיוחדת ⭐';
-      const greet = targetSt ? ('שלום ' + targetSt.name + ' היקר! 🌟
-קיבלת כעת ') : '🌟 *בונוס מיוחד מראש הישיבה במבצע "עד הפסגה":*
-זכאות ל-';
-      msg = greet + '*+' + pts + ' נקודות בונוס* על: *' + reason + '*!
-לצפייה בניקוד המעודכן:
-' + link;
-      if (targetSt && targetSt.phone) {
-        const cleanP = targetSt.phone.replace(/[^0-9]/g, '').replace(/^0/, '972');
-        window.open('https://wa.me/' + cleanP + '?text=' + encodeURIComponent(msg), '_blank');
-        return;
-      }
-    } else {
-      msg = '🏔️ *מבצע חורף תשפ״ז – "עד הפסגה" בישיבת בקשו ירושלים!*
-כנסו לסמן נוכחות ולצפות ביעדים ובניקוד:
-' + link;
-    }
-
-    const rawPhone = st && st.phone ? st.phone.replace(/[^0-9]/g, '').replace(/^0/, '972') : '';
-    const waUrl = rawPhone ? ('https://wa.me/' + rawPhone + '?text=' + encodeURIComponent(msg)) : ('https://wa.me/?text=' + encodeURIComponent(msg));
-    window.open(waUrl, '_blank');
-  };
-
-  // הוספת כפתור שיתוף המבצע בראש פורטל הניהול
-  function addTopShareBtn() {
-    const navBar = document.getElementById('asv-students')?.parentElement;
-    if (navBar && !document.getElementById('topShareCampaignBtn')) {
-      const b = document.createElement('button');
-      b.id = 'topShareCampaignBtn';
-      b.type = 'button';
-      b.className = 'px-3.5 py-2 rounded-xl font-black text-xs transition bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shrink-0 cursor-pointer';
-      b.innerHTML = '📲 שתף מבצע עם הבחורים';
-      b.onclick = function() { window.shareCampaignItem('campaign'); };
-      navBar.appendChild(b);
-    }
-  }
-
   window.addEventListener('DOMContentLoaded', () => {
-    addTopShareBtn();
-    checkQrScanFromCameraUrl();
-    setTimeout(loadSavedTargetsFromSupabase, 300);
-    setTimeout(loadSavedTargetsFromSupabase, 1200);
+    enforceAdminIsolation();
+    injectQuickActionButtons();
+    injectDynamicTargetsAndStopsUI();
+    handleUrlQrAutoCheckIn();
+    setTimeout(loadMasterConfigFromCloud, 300);
+    setTimeout(loadMasterConfigFromCloud, 1200);
+    setInterval(() => {
+      enforceAdminIsolation();
+      syncActiveSederButtonAndHeader();
+    }, 1000);
   });
-  setTimeout(addTopShareBtn, 150);
-  setTimeout(loadSavedTargetsFromSupabase, 200);
 })();
 </script>
 
