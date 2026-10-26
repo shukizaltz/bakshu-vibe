@@ -2202,6 +2202,7 @@
         activeSeder = applicableEvents[0] || null;
         nextSeder = applicableEvents[1] || applicableEvents[0] || null;
       } else {
+        const openEvents = [];
         for (let i = 0; i < applicableEvents.length; i++) {
           const ev = applicableEvents[i];
           const [openStr, lockStr] = (ev.timeWindow || '09:00 - 10:15').split('-').map(s => s.trim());
@@ -2211,11 +2212,42 @@
           const lockMin = lh * 60 + (lm || 0);
 
           if (currentMinutes >= openMin && currentMinutes <= lockMin) {
-            activeSeder = ev;
-            nextSeder = applicableEvents[i + 1] || null;
-            break;
+            openEvents.push({ ev, idx: i });
           } else if (currentMinutes < openMin) {
             if (!nextSeder) nextSeder = ev;
+          }
+        }
+
+        if (openEvents.length === 1) {
+          activeSeder = openEvents[0].ev;
+          nextSeder = applicableEvents[openEvents[0].idx + 1] || nextSeder;
+        } else if (openEvents.length > 1) {
+          // אם יש שני סדרים עם שעות חופפות שפתוחים כרגע, החזר את הסדר שהבחור עדיין לא סימן בו נוכחות
+          const todayDateKey = (typeof getTodayDateStr === 'function') ? getTodayDateStr() : targetDate.toISOString().slice(0, 10);
+          const stId = (state.currentStudent && state.currentStudent.id) || state.activeStudentId || 1;
+          const s = (state.isDemoUser || state.currentStudent?.isDemo) ? state.demoStudentProfile : state.currentStudent;
+
+          const isSlotChecked = (slot) => {
+            if (!slot) return false;
+            if (typeof isStudentPresentInSlot === 'function' && isStudentPresentInSlot(stId, slot, todayDateKey)) {
+              return true;
+            }
+            if (s && s.checkedSlotIds && s.checkedSlotIds[slot.id]) {
+              return true;
+            }
+            if (s && s.presentCurrent && (s.activeCheckedSlotId === slot.id || !s.activeCheckedSlotId)) {
+              return true;
+            }
+            return false;
+          };
+
+          const unverifiedItem = openEvents.find(item => !isSlotChecked(item.ev));
+          if (unverifiedItem) {
+            activeSeder = unverifiedItem.ev;
+            nextSeder = applicableEvents[unverifiedItem.idx + 1] || nextSeder;
+          } else {
+            activeSeder = openEvents[0].ev;
+            nextSeder = applicableEvents[openEvents[0].idx + 1] || nextSeder;
           }
         }
 
@@ -5205,14 +5237,62 @@
     }
 
     function handleStudentCheckIn() {
+      const curInfo = typeof getActiveOrNextSederInfo === 'function' ? getActiveOrNextSederInfo() : null;
+      const activeSlot = curInfo?.activeSeder || curInfo?.nextSeder;
+      const todayStr = (typeof getTodayDateStr === 'function') ? getTodayDateStr() : '';
+      const targetActiveId = state.activeStudentId || state.currentStudent?.id || 1;
+      const stIdStr = String(targetActiveId);
+
+      const s = (state.isDemoUser || state.currentStudent?.id === 999 || state.currentStudent?.isDemo) ? state.demoStudentProfile : state.currentStudent;
+      const isSlotChecked = activeSlot && (
+        (s && s.checkedSlotIds && s.checkedSlotIds[activeSlot.id]) ||
+        (s && s.presentCurrent && (s.activeCheckedSlotId === activeSlot.id || !s.activeCheckedSlotId)) ||
+        (typeof isStudentPresentInSlot === 'function' && isStudentPresentInSlot(targetActiveId, activeSlot, todayStr))
+      );
+
+      // 1. לפני סימון הנוכחות (כאשר הבחור עדיין לא סימן נוכחות בסדר זה):
+      if (!isSlotChecked) {
+        const secretObj = (typeof loadQrSecret === 'function') ? loadQrSecret() : { code: 'BK-892' };
+        const activeSecretCode = String(secretObj?.code || 'BK-892').trim().toUpperCase();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlQr = urlParams.get('qr');
+        let isQrVerified = false;
+
+        if (urlQr && String(urlQr).trim().toUpperCase() === activeSecretCode) {
+          isQrVerified = true;
+        }
+
+        if (!isQrVerified) {
+          const userInput = prompt('הזן את קוד ה-QR של בית המדרש:');
+          if (!userInput) return; // בחור ביטל או השאיר ריק
+          if (String(userInput).trim().toUpperCase() !== activeSecretCode) {
+            if (typeof showToast === 'function') {
+              showToast('קוד ברקוד שגוי! נא לבדוק את הקוד המוצג במסך בית המדרש', '⚠️');
+            } else {
+              alert('קוד ברקוד שגוי! נא לבדוק את הקוד המוצג במסך בית המדרש');
+            }
+            return;
+          }
+          isQrVerified = true;
+        }
+      }
+
       // Isolate demo student in memory
       if (state.isDemoUser || state.currentStudent?.id === 999 || state.currentStudent?.isDemo) {
-        state.demoStudentProfile.presentCurrent = !state.demoStudentProfile.presentCurrent;
-        if (state.demoStudentProfile.presentCurrent) {
+        const willBePresent = !isSlotChecked;
+        state.demoStudentProfile.presentCurrent = willBePresent;
+        state.demoStudentProfile.checkedSlotIds = state.demoStudentProfile.checkedSlotIds || {};
+        if (activeSlot && activeSlot.id) {
+          state.demoStudentProfile.checkedSlotIds[activeSlot.id] = willBePresent;
+          state.demoStudentProfile.activeCheckedSlotId = willBePresent ? activeSlot.id : null;
+        }
+
+        if (willBePresent) {
           const noPhoneBonus = state.activeSederNoPhone ? (state.bonusConfig?.noPhoneBonus || 1) : 0;
-          const totalPointsEarned = 1 + noPhoneBonus;
-          state.demoStudentProfile.baseScore += totalPointsEarned;
-          state.demoStudentProfile.sedarimPoints = (state.demoStudentProfile.sedarimPoints || 0) + 1;
+          const totalPointsEarned = (Number(activeSlot?.points) || 1) + noPhoneBonus;
+          state.demoStudentProfile.baseScore = (Number(state.demoStudentProfile.baseScore) || 0) + totalPointsEarned;
+          state.demoStudentProfile.sedarimPoints = (state.demoStudentProfile.sedarimPoints || 0) + (Number(activeSlot?.points) || 1);
           if (noPhoneBonus) state.demoStudentProfile.bonusPoints = (state.demoStudentProfile.bonusPoints || 0) + noPhoneBonus;
           state.demoStudentProfile.last10.shift();
           state.demoStudentProfile.last10.push(1);
@@ -5221,8 +5301,9 @@
           showToast(msg, '🎉');
           state.activeSederNoPhone = false;
         } else {
-          state.demoStudentProfile.baseScore = Math.max(0, state.demoStudentProfile.baseScore - 1);
-          state.demoStudentProfile.sedarimPoints = Math.max(0, (state.demoStudentProfile.sedarimPoints || 0) - 1);
+          const ptsToRemove = Number(activeSlot?.points) || 1;
+          state.demoStudentProfile.baseScore = Math.max(0, (Number(state.demoStudentProfile.baseScore) || 0) - ptsToRemove);
+          state.demoStudentProfile.sedarimPoints = Math.max(0, (state.demoStudentProfile.sedarimPoints || 0) - ptsToRemove);
           state.demoStudentProfile.last10.pop();
           state.demoStudentProfile.last10.unshift(0);
           showToast('סימון הנוכחות בוטל (לדוגמה)', 'ℹ️');
@@ -5230,15 +5311,34 @@
         state.currentStudent = state.demoStudentProfile;
         recalculateScheduleAndPointsBars();
         renderStudentScreen();
+        if (typeof syncActiveSederButtonAndHeader === 'function') syncActiveSederButtonAndHeader();
         return;
       }
 
-      state.currentStudent.presentCurrent = !state.currentStudent.presentCurrent;
-      
-      if (state.currentStudent.presentCurrent) {
+      const willBePresent = !isSlotChecked;
+      state.currentStudent.presentCurrent = willBePresent;
+      state.currentStudent.checkedSlotIds = state.currentStudent.checkedSlotIds || {};
+
+      if (activeSlot && activeSlot.id) {
+        state.currentStudent.checkedSlotIds[activeSlot.id] = willBePresent;
+        state.currentStudent.activeCheckedSlotId = willBePresent ? activeSlot.id : null;
+
+        if (!state.attendanceByDateSlot) state.attendanceByDateSlot = {};
+        if (!state.attendanceByDateSlot[todayStr]) state.attendanceByDateSlot[todayStr] = {};
+        if (!state.attendanceByDateSlot[todayStr][activeSlot.id]) state.attendanceByDateSlot[todayStr][activeSlot.id] = [];
+        const slotList = state.attendanceByDateSlot[todayStr][activeSlot.id];
+        const pIdx = slotList.indexOf(stIdStr);
+        if (willBePresent && pIdx === -1) {
+          slotList.push(stIdStr);
+        } else if (!willBePresent && pIdx !== -1) {
+          slotList.splice(pIdx, 1);
+        }
+      }
+
+      if (willBePresent) {
         const noPhoneBonus = state.activeSederNoPhone ? (state.bonusConfig.noPhoneBonus || 1) : 0;
-        const totalPointsEarned = 1 + noPhoneBonus;
-        state.currentStudent.baseScore += totalPointsEarned;
+        const totalPointsEarned = (Number(activeSlot?.points) || 1) + noPhoneBonus;
+        state.currentStudent.baseScore = (Number(state.currentStudent.baseScore) || 0) + totalPointsEarned;
         state.currentStudent.last10.shift();
         state.currentStudent.last10.push(1);
         let msg = 'נוכחות סומנה בהצלחה! +' + totalPointsEarned + ' נקודות';
@@ -5246,13 +5346,13 @@
         showToast(msg, '🎉');
         state.activeSederNoPhone = false;
       } else {
-        state.currentStudent.baseScore = Math.max(0, state.currentStudent.baseScore - 1);
+        const ptsToRemove = Number(activeSlot?.points) || 1;
+        state.currentStudent.baseScore = Math.max(0, (Number(state.currentStudent.baseScore) || 0) - ptsToRemove);
         state.currentStudent.last10.pop();
         state.currentStudent.last10.unshift(0);
         showToast('סימון הנוכחות בוטל', 'ℹ️');
       }
 
-      const targetActiveId = state.activeStudentId || state.currentStudent.id || 1;
       const stIdx = state.students.findIndex(s => s.id === targetActiveId);
       if (stIdx !== -1) {
         state.students[stIdx].score = state.currentStudent.baseScore;
@@ -5261,13 +5361,14 @@
         saveLocalStudents();
       }
 
-      saveAttendanceLogToSupabase('slot_1', state.currentStudent.presentCurrent);
+      saveAttendanceLogToSupabase((activeSlot && activeSlot.id) || 'slot_1', state.currentStudent.presentCurrent);
 
       recalculateScheduleAndPointsBars();
       renderStudentScreen();
       renderLeaderboard();
       renderProgressGraph();
       renderAdminRequestsAndStudents();
+      if (typeof syncActiveSederButtonAndHeader === 'function') syncActiveSederButtonAndHeader();
     }
     const toggleMyAttendance = handleStudentCheckIn;
 
@@ -9443,7 +9544,15 @@ END:VCALENDAR`;
     let btn = document.getElementById('mainCheckInBtn') || (area && area.querySelector('button, div'));
     if (!btn) return;
 
-    const alreadyChecked = state.currentStudent && state.currentStudent.presentCurrent;
+    const s = (state.isDemoUser || state.currentStudent?.isDemo) ? state.demoStudentProfile : state.currentStudent;
+    const todayDateKey = (typeof getTodayDateStr === 'function') ? getTodayDateStr() : '';
+    const stId = (state.currentStudent && state.currentStudent.id) || state.activeStudentId || 1;
+    const isSlotAttended = active && (
+      (s && s.checkedSlotIds && s.checkedSlotIds[active.id]) ||
+      (s && s.presentCurrent && (s.activeCheckedSlotId === active.id || !s.activeCheckedSlotId)) ||
+      (typeof isStudentPresentInSlot === 'function' && isStudentPresentInSlot(stId, active, todayDateKey))
+    );
+    const alreadyChecked = !!isSlotAttended;
     if (active) {
       if (alreadyChecked) {
         btn.disabled = false;
