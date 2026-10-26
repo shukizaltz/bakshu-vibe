@@ -1701,11 +1701,12 @@
         return `
           <div class="p-3.5 rounded-2xl ${isToday ? 'bg-indigo-50 border-2 border-indigo-400' : 'bg-white border border-slate-200'} space-y-2">
             <div class="flex items-center justify-between text-xs">
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <span class="font-black text-slate-900">${d.dayName}</span>
                 <span class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[11px]">${d.hebShort}</span>
                 <span class="text-slate-400 font-outfit text-[11px]">(${d.isoDate})</span>
                 ${isToday ? '<span class="px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold">היום</span>' : ''}
+                ${duty?.specialEventTitle ? `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-black text-[10px] border border-amber-300 shadow-xs">🎉 ${duty.specialEventTitle}</span>` : ''}
               </div>
               <span class="text-[11px] font-bold text-slate-500">${slots.length} סדרים מתוכננים</span>
             </div>

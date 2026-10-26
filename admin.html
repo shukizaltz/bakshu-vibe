@@ -196,6 +196,10 @@
 
           <!-- Actions -->
           <div class="flex flex-wrap items-center gap-2">
+            <button onclick="saveAllCurrentDaySlots()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow transition flex items-center gap-1.5" title="שמור את כל סדרי יום זה ישירות בשרת Supabase">
+              <span>💾</span>
+              <span>שמור יום זה בשרת</span>
+            </button>
             <button onclick="applyCurrentDayToWeekdays()" class="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-xs transition" title="החל את סדרי יום זה על כל ימי החול במבצע">
               🔄 החל על ימי חול
             </button>
@@ -210,6 +214,17 @@
               <span>הוסף סדר ליום זה</span>
             </button>
           </div>
+        </div>
+
+        <!-- Special Event / Station Banner for this date -->
+        <div class="flex flex-wrap items-center gap-2.5 p-3 rounded-2xl bg-indigo-50/70 border border-indigo-200">
+          <span class="text-xs font-black text-indigo-900 shrink-0 flex items-center gap-1">
+            <span>🎉</span><span>אירוע מיוחד / תחנת מסע ביום זה:</span>
+          </span>
+          <input type="text" id="adminDaySpecialEventInput" placeholder="למשל: הדלקת נרות חנוכה בישיבה, משמר ליל שישי, שבת אחדות..." class="flex-1 min-w-[200px] p-2 rounded-xl border border-indigo-200 text-xs font-bold bg-white text-indigo-950 focus:ring-2 focus:ring-indigo-500">
+          <button onclick="saveSelectedDaySpecialEvent()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm flex items-center gap-1 cursor-pointer">
+            <span>💾</span><span>שמור אירוע</span>
+          </button>
         </div>
 
         <!-- Slots List Container -->
@@ -657,6 +672,54 @@
   </div>
 
   <!-- ========================================================= -->
+  <!-- MODAL: EDIT SCHEDULE SLOT / EVENT                         -->
+  <!-- ========================================================= -->
+  <div id="editSlotModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-right relative">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
+        <div>
+          <h4 class="text-sm font-black text-slate-900">עריכת סדר / אירוע</h4>
+          <p id="editSlotModalSubtitle" class="text-[11px] text-slate-500">תאריך: --</p>
+        </div>
+        <button onclick="closeEditSlotModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <input type="hidden" id="editSlotIndex">
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">שם הסדר / אירוע:</label>
+          <input type="text" id="editSlotTitle" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">שעת פתיחה:</label>
+            <input type="time" id="editSlotOpenTime" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">שעת נעילה:</label>
+            <input type="time" id="editSlotLockTime" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">נקודות לסדר זה:</label>
+          <input type="number" id="editSlotPoints" class="w-20 p-2 rounded-xl border border-slate-300 text-xs font-bold text-center font-black">
+        </div>
+
+        <div class="pt-2 flex items-center gap-2">
+          <button onclick="handleSaveEditedSlotModal()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer">
+            <span>💾</span>
+            <span>שמור שינויים בשרת</span>
+          </button>
+          <button onclick="handleDeleteFromEditModal()" class="px-3 py-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition cursor-pointer" title="מחק סדר זה">
+            🗑️
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
   <!-- MODAL: ADVANCED INVITES & REMINDERS SHARE MODAL           -->
   <!-- ========================================================= -->
   <div id="shareModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden">
@@ -1090,6 +1153,12 @@
       if (title) title.textContent = heb ? `${heb.dayName}, ${heb.fullHebrewDate}` : `עריכת יום: ${dateStr}`;
       if (hBadge) hBadge.textContent = heb ? `${heb.shortHebrew} (${dateStr.slice(5)})` : dateStr;
 
+      // Populate special event input for this day
+      const evInput = document.getElementById('adminDaySpecialEventInput');
+      if (evInput) {
+        evInput.value = adminState.duties[dateStr]?.specialEventTitle || '';
+      }
+
       ensureCurrentDaySlots(dateStr);
       const slots = adminState.scheduleSlots[dateStr] || getSlotsForDate(dateStr);
 
@@ -1103,14 +1172,14 @@
         const count = list.length;
 
         return `
-          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 transition hover:border-indigo-300">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div class="flex items-center gap-2">
                 <span class="font-black text-indigo-900 text-sm">#${idx + 1}</span>
-                <input type="text" value="${sl.title}" onchange="updateSlotTitle(${idx}, this.value)" class="p-2 rounded-xl border border-slate-300 text-xs font-bold w-40 sm:w-56 bg-white">
+                <input type="text" value="${sl.title}" onchange="updateSlotTitle(${idx}, this.value)" class="p-2 rounded-xl border border-slate-300 text-xs font-bold w-40 sm:w-56 bg-white focus:ring-2 focus:ring-indigo-500">
               </div>
 
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <div class="flex items-center gap-1 text-xs">
                   <span class="text-slate-500 font-bold">שעות:</span>
                   <input type="time" value="${sl.openTime}" onchange="updateSlotTime(${idx}, 'openTime', this.value)" class="p-1.5 rounded-lg border border-slate-300 text-xs font-bold bg-white">
@@ -1123,15 +1192,20 @@
                   <input type="number" value="${sl.points || 1}" onchange="updateSlotPoints(${idx}, this.value)" class="w-14 p-1.5 rounded-lg border border-slate-300 text-xs font-black text-center bg-white">
                 </div>
 
-                <button onclick="toggleSlotAttendanceList('slot_att_${idx}')" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-xs transition flex items-center gap-1">
+                <button onclick="openEditSlotModal(${idx})" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer" title="פתח חלון עריכה מלא לסדר זה">
+                  <span>✏️</span>
+                  <span>ערוך</span>
+                </button>
+
+                <button onclick="toggleSlotAttendanceList('slot_att_${idx}')" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-xs transition flex items-center gap-1 cursor-pointer">
                   <span>👥</span>
                   <span>נוכחות (${count})</span>
                 </button>
 
-                <button onclick="removeSingleSlot(${idx})" class="p-1.5 text-rose-600 hover:text-rose-800 text-xs font-bold" title="מחק סדר זה מיום זה בלבד">
+                <button onclick="removeSingleSlot(${idx})" class="p-1.5 text-rose-600 hover:text-rose-800 text-xs font-bold cursor-pointer" title="מחק סדר זה מיום זה בלבד">
                   🗑️ יום זה
                 </button>
-                <button onclick="removeSlotSeries('${sl.title}')" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold border border-rose-200" title="מחק סדרה זו מכל ימי המבצע!">
+                <button onclick="removeSlotSeries('${sl.title}')" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold border border-rose-200 cursor-pointer" title="מחק סדרה זו מכל ימי המבצע!">
                   מחק סדרה מכל הימים
                 </button>
               </div>
@@ -1166,8 +1240,83 @@
       if (el) el.classList.toggle('hidden');
     }
 
+    async function saveSelectedDaySpecialEvent() {
+      const d = adminState.selectedDate;
+      const val = (document.getElementById('adminDaySpecialEventInput')?.value || '').trim();
+      await Db.saveCalendarEvent(d, val);
+      if (!adminState.duties[d]) adminState.duties[d] = {};
+      adminState.duties[d].specialEventTitle = val;
+      App.showToast(val ? `אירוע "${val}" נשמר בשרת ליום ${d}` : 'האירוע הוסר מיום זה', '🎉');
+      renderAdminInteractiveCalendarGrid();
+    }
+
+    function openEditSlotModal(idx) {
+      const d = adminState.selectedDate;
+      ensureCurrentDaySlots(d);
+      const slot = adminState.scheduleSlots[d]?.[idx];
+      if (!slot) return;
+      document.getElementById('editSlotIndex').value = idx;
+      document.getElementById('editSlotTitle').value = slot.title || '';
+      document.getElementById('editSlotOpenTime').value = slot.openTime || '09:00';
+      document.getElementById('editSlotLockTime').value = slot.lockTime || '13:00';
+      document.getElementById('editSlotPoints').value = slot.points || 1;
+      const sub = document.getElementById('editSlotModalSubtitle');
+      const heb = App.getHebrewDateDetails(d);
+      if (sub) sub.textContent = `${heb.dayName}, ${heb.shortHebrew} (${d})`;
+      document.getElementById('editSlotModal')?.classList.remove('hidden');
+    }
+
+    function closeEditSlotModal() {
+      document.getElementById('editSlotModal')?.classList.add('hidden');
+    }
+
+    async function handleSaveEditedSlotModal() {
+      const d = adminState.selectedDate;
+      ensureCurrentDaySlots(d);
+      const idx = parseInt(document.getElementById('editSlotIndex')?.value, 10);
+      if (isNaN(idx) || !adminState.scheduleSlots[d]?.[idx]) return;
+
+      const title = (document.getElementById('editSlotTitle')?.value || '').trim();
+      const openTime = document.getElementById('editSlotOpenTime')?.value || '09:00';
+      const lockTime = document.getElementById('editSlotLockTime')?.value || '13:00';
+      const points = Number(document.getElementById('editSlotPoints')?.value) || 1;
+
+      if (!title) {
+        App.showToast('נא להזין כותרת לסדר', '⚠️');
+        return;
+      }
+
+      adminState.scheduleSlots[d][idx].title = title;
+      adminState.scheduleSlots[d][idx].openTime = openTime;
+      adminState.scheduleSlots[d][idx].lockTime = lockTime;
+      adminState.scheduleSlots[d][idx].points = points;
+
+      await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+      closeEditSlotModal();
+      renderAdminSchedule();
+      renderAdminInteractiveCalendarGrid();
+      App.showToast(`סדר "${title}" עודכן ונשמר בהצלחה בשרת!`, '💾');
+    }
+
+    async function handleDeleteFromEditModal() {
+      const idx = parseInt(document.getElementById('editSlotIndex')?.value, 10);
+      if (isNaN(idx)) return;
+      closeEditSlotModal();
+      await removeSingleSlot(idx);
+    }
+
+    async function saveAllCurrentDaySlots() {
+      const d = adminState.selectedDate;
+      ensureCurrentDaySlots(d);
+      await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+      renderAdminSchedule();
+      renderAdminInteractiveCalendarGrid();
+      App.showToast(`כל ${adminState.scheduleSlots[d].length} הסדרים של יום זה נשמרו בשרת!`, '💾');
+    }
+
     async function updateSlotTitle(idx, val) {
       const d = adminState.selectedDate;
+      ensureCurrentDaySlots(d);
       if (adminState.scheduleSlots[d]?.[idx]) {
         adminState.scheduleSlots[d][idx].title = val;
         await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
@@ -1177,6 +1326,7 @@
 
     async function updateSlotTime(idx, field, val) {
       const d = adminState.selectedDate;
+      ensureCurrentDaySlots(d);
       if (adminState.scheduleSlots[d]?.[idx]) {
         adminState.scheduleSlots[d][idx][field] = val;
         await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
@@ -1186,6 +1336,7 @@
 
     async function updateSlotPoints(idx, val) {
       const d = adminState.selectedDate;
+      ensureCurrentDaySlots(d);
       if (adminState.scheduleSlots[d]?.[idx]) {
         adminState.scheduleSlots[d][idx].points = Number(val) || 1;
         await Db.syncDateSlots(d, adminState.scheduleSlots[d]);

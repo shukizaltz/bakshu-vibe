@@ -189,6 +189,13 @@
           await client.from('schedule_slots').insert(rows);
         }
 
+        // סנכרון כמות סדרים וניקוד יומי ב-campaign_calendar
+        const totalPts = (slotsList || []).reduce((sum, x) => sum + (Number(x.points) || 1), 0);
+        await client.from('campaign_calendar').update({
+          sedarim_count: (slotsList || []).length,
+          points_pool: totalPts
+        }).eq('iso_date', dateStr);
+
         // סנכרון ל-app_state
         const snap = await this.loadAppState() || {};
         if (!snap.scheduleSlots) snap.scheduleSlots = {};
@@ -333,7 +340,9 @@
               wakeupStudentId: r.wakeup_student_id,
               kitchenStudentId: r.kitchen_student_id,
               wakeupDone: !!r.wakeup_done,
-              kitchenDone: !!r.kitchen_done
+              kitchenDone: !!r.kitchen_done,
+              specialEventTitle: r.special_event_title || '',
+              stationTitle: r.station_title || ''
             };
           });
         }
@@ -396,6 +405,20 @@
         await client.from('campaign_calendar').delete().eq('iso_date', isoDate);
         return true;
       } catch (e) {
+        return false;
+      }
+    },
+
+    async saveCalendarEvent(isoDate, specialEventTitle, stationTitle) {
+      if (!client || !isoDate) return false;
+      try {
+        const updateData = { updated_at: new Date().toISOString() };
+        if (specialEventTitle !== undefined) updateData.special_event_title = specialEventTitle;
+        if (stationTitle !== undefined) updateData.station_title = stationTitle;
+        const { error } = await client.from('campaign_calendar').update(updateData).eq('iso_date', isoDate);
+        return !error;
+      } catch (e) {
+        console.error('Db.saveCalendarEvent error:', e);
         return false;
       }
     },
