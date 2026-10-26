@@ -719,15 +719,19 @@
     }
 
     function updateHebrewDateBadge() {
+      const todayIso = new Date().toISOString().slice(0, 10);
+      const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(todayIso) : null;
       const today = new Date();
-      const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-      const dayName = days[today.getDay()];
       const dStr = today.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
       const badge = document.getElementById('topDateBadge');
-      if (badge) badge.textContent = `יום ${dayName}, ${dStr}`;
+      if (badge) {
+        badge.textContent = heb ? `${heb.dayName}, ${heb.fullHebrewDate} (${dStr})` : `היום • ${dStr}`;
+      }
 
       const hBadge = document.getElementById('hebrewTodayDateBadge');
-      if (hBadge) hBadge.textContent = `יום ${dayName} • ${dStr}`;
+      if (hBadge) {
+        hBadge.textContent = heb ? `${heb.dayName} • ${heb.fullHebrewDate}` : `היום • ${dStr}`;
+      }
     }
 
     // --- Authentication & Session ---
@@ -1678,10 +1682,13 @@
       while (cur <= end) {
         const iso = cur.toISOString().slice(0, 10);
         const dayIdx = cur.getDay();
+        const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(iso) : null;
         days.push({
           isoDate: iso,
           dayName: `יום ${dayNames[dayIdx]}`,
-          isShabbat: dayIdx === 6
+          isShabbat: dayIdx === 6,
+          hebShort: heb ? heb.shortHebrew : iso.slice(5),
+          hebFull: heb ? heb.fullHebrewDate : ''
         });
         cur.setDate(cur.getDate() + 1);
       }
@@ -1696,7 +1703,8 @@
             <div class="flex items-center justify-between text-xs">
               <div class="flex items-center gap-2">
                 <span class="font-black text-slate-900">${d.dayName}</span>
-                <span class="text-slate-500 font-outfit">${d.isoDate}</span>
+                <span class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[11px]">${d.hebShort}</span>
+                <span class="text-slate-400 font-outfit text-[11px]">(${d.isoDate})</span>
                 ${isToday ? '<span class="px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold">היום</span>' : ''}
               </div>
               <span class="text-[11px] font-bold text-slate-500">${slots.length} סדרים מתוכננים</span>

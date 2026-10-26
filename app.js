@@ -10,17 +10,82 @@
       return new Date().toISOString().slice(0, 10);
     },
 
+    toHebrewNumber(n) {
+      if (!n || n <= 0) return '';
+      if (n === 15) return 'ט״ו';
+      if (n === 16) return 'ט״ז';
+      const map = [
+        [400, 'ת'], [300, 'ש'], [200, 'ר'], [100, 'ק'],
+        [90, 'צ'], [80, 'פ'], [70, 'ע'], [60, 'ס'], [50, 'נ'], [40, 'מ'], [30, 'ל'], [20, 'כ'], [10, 'י'],
+        [9, 'ט'], [8, 'ח'], [7, 'ז'], [6, 'ו'], [5, 'ה'], [4, 'ד'], [3, 'ג'], [2, 'ב'], [1, 'א']
+      ];
+      let res = '';
+      let rem = n;
+      for (const [val, char] of map) {
+        while (rem >= val) {
+          if (rem === 15) { res += 'טו'; rem = 0; break; }
+          if (rem === 16) { res += 'טז'; rem = 0; break; }
+          res += char;
+          rem -= val;
+        }
+      }
+      if (res.length === 1) return res + '׳';
+      return res.slice(0, -1) + '״' + res.slice(-1);
+    },
+
+    getHebrewDateDetails(isoDate) {
+      try {
+        const d = isoDate ? new Date(isoDate + (isoDate.length === 10 ? 'T12:00:00' : '')) : new Date();
+        const formatter = new Intl.DateTimeFormat('he-u-ca-hebrew', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        });
+        const parts = formatter.formatToParts(d);
+        let dayNum = 1, monthName = '', yearNum = 5787;
+        for (const p of parts) {
+          if (p.type === 'day') dayNum = parseInt(p.value, 10);
+          if (p.type === 'month') monthName = p.value;
+          if (p.type === 'year') yearNum = parseInt(p.value, 10);
+        }
+        const dayHeb = this.toHebrewNumber(dayNum);
+        const yearHeb = this.toHebrewNumber(yearNum % 1000);
+        const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+        const dayName = days[d.getDay()];
+
+        return {
+          dayHeb,
+          monthName,
+          yearHeb,
+          dayName: `יום ${dayName}`,
+          fullHebrewDate: `${dayHeb} ב${monthName} ${yearHeb}`,
+          fullWithDay: `יום ${dayName}, ${dayHeb} ב${monthName} ${yearHeb}`,
+          shortHebrew: `${dayHeb} ${monthName}`
+        };
+      } catch (e) {
+        return {
+          dayHeb: '',
+          monthName: '',
+          yearHeb: '',
+          dayName: this.getHebrewDayName(isoDate),
+          fullHebrewDate: '',
+          fullWithDay: this.getHebrewDayName(isoDate),
+          shortHebrew: ''
+        };
+      }
+    },
+
     getHebrewDayName(isoDate) {
-      const d = isoDate ? new Date(isoDate) : new Date();
+      const d = isoDate ? new Date(isoDate + (isoDate.length === 10 ? 'T12:00:00' : '')) : new Date();
       const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
       return `יום ${days[d.getDay()]}`;
     },
 
     formatHebrewDateBadge(isoDate) {
-      const d = isoDate ? new Date(isoDate) : new Date();
-      const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-      const dStr = d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
-      return `יום ${days[d.getDay()]} • ${dStr}`;
+      const heb = this.getHebrewDateDetails(isoDate);
+      const d = isoDate ? new Date(isoDate + (isoDate.length === 10 ? 'T12:00:00' : '')) : new Date();
+      const greg = d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
+      return `${heb.fullWithDay} • ${greg}`;
     },
 
     // ==========================================

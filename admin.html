@@ -1045,10 +1045,13 @@
 
       const dayNames = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
       while (cur <= end) {
+        const iso = cur.toISOString().slice(0, 10);
+        const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(iso) : null;
         days.push({
-          iso: cur.toISOString().slice(0, 10),
+          iso: iso,
           dayName: dayNames[cur.getDay()],
-          isShabbat: cur.getDay() === 6
+          isShabbat: cur.getDay() === 6,
+          hebShort: heb ? heb.shortHebrew : iso.slice(5)
         });
         cur.setDate(cur.getDate() + 1);
       }
@@ -1057,12 +1060,12 @@
 
       grid.innerHTML = days.map(d => {
         const isSelected = d.iso === adminState.selectedDate;
-        const slots = adminState.scheduleSlots[d.iso] || [];
+        const slots = adminState.scheduleSlots[d.iso] || getSlotsForDate(d.iso);
 
         return `
           <button onclick="onAdminDateSelected('${d.iso}')" class="p-2 rounded-xl text-center transition border ${isSelected ? 'bg-indigo-600 text-white border-indigo-700 shadow-md scale-105' : (d.isShabbat ? 'bg-amber-50 border-amber-200 text-amber-950' : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100')}">
             <span class="block text-[10px] font-bold opacity-80">${d.dayName}</span>
-            <span class="block text-xs font-black font-outfit">${d.iso.slice(5)}</span>
+            <span class="block text-xs font-black font-outfit">${d.hebShort}</span>
             <span class="block text-[9px] mt-0.5 font-bold ${isSelected ? 'text-amber-300' : 'text-slate-400'}">${slots.length} סדרים</span>
           </button>
         `;
@@ -1079,12 +1082,16 @@
     function renderAdminSchedule() {
       const container = document.getElementById('adminSlotsListContainer');
       const title = document.getElementById('adminSelectedDateTitle');
+      const hBadge = document.getElementById('adminSelectedDateHebrew');
       if (!container) return;
 
       const dateStr = adminState.selectedDate;
-      if (title) title.textContent = `עריכת יום: ${dateStr}`;
+      const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(dateStr) : null;
+      if (title) title.textContent = heb ? `${heb.dayName}, ${heb.fullHebrewDate}` : `עריכת יום: ${dateStr}`;
+      if (hBadge) hBadge.textContent = heb ? `${heb.shortHebrew} (${dateStr.slice(5)})` : dateStr;
 
-      const slots = adminState.scheduleSlots[dateStr] || [];
+      ensureCurrentDaySlots(dateStr);
+      const slots = adminState.scheduleSlots[dateStr] || getSlotsForDate(dateStr);
 
       if (slots.length === 0) {
         container.innerHTML = '<div class="text-xs text-slate-400 py-6 text-center">אין סדרים מוגדרים ליום זה. לחץ "+ הוסף סדר" להוספה.</div>';
