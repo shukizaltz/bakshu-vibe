@@ -3,174 +3,155 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>בקשו VIBE | פורטל ראש הישיבה</title>
+  <title>בקשו VIBE | פורטל ניהול – ראש הישיבה</title>
   
-  <!-- Favicon -->
-  <link rel="icon" type="image/jpeg" href="logo-yeshiva.jpeg">
+  <link rel="icon" type="image/png" href="logo-meyzam.png" />
+  <link rel="apple-touch-icon" href="logo-yeshiva.jpeg" />
   
-  <!-- Fonts -->
+  <!-- Tailwind CSS & Google Fonts Heebo + Outfit -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800;900&family=Heebo:wght@300;400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Supabase CDN -->
+  <!-- QRCode generator & Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- QRCode.js CDN for projector -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Assistant', 'Heebo', 'sans-serif'],
-            outfit: ['Outfit', 'sans-serif']
-          },
-          colors: {
-            brand: {
-              navy: '#0A1138',
-              gold: '#F59E0B',
-              amber: '#D97706',
-              emerald: '#10B981'
-            }
-          }
-        }
-      }
-    }
-  </script>
+  
+  <!-- Database layer -->
+  <script src="db.js"></script>
 
   <style>
+    * { font-family: 'Heebo', sans-serif; box-sizing: border-box; }
+    .font-outfit { font-family: 'Outfit', sans-serif; }
+    
     body {
-      font-family: 'Assistant', 'Heebo', sans-serif;
-      background-color: #f8fafc;
-      color: #0f172a;
+      background: #F8FAFC;
+      color: #0F172A;
       min-height: 100vh;
-      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
     }
-    .glass-card {
-      background: rgba(255, 255, 255, 0.95);
-      border: 1px solid #e2e8f0;
-    }
-    .custom-scroll::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    .custom-scroll::-webkit-scrollbar-thumb {
-      background: rgba(148, 163, 184, 0.5);
-      border-radius: 999px;
-    }
+
+    .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
   </style>
 </head>
-<body class="bg-slate-50 antialiased pb-20">
+<body class="selection:bg-indigo-500 selection:text-white">
 
   <!-- ========================================================= -->
-  <!-- HEADER                                                    -->
+  <!-- TOP ADMIN HEADER                                          -->
   <!-- ========================================================= -->
-  <header class="sticky top-0 z-40 bg-[#0A1138] text-white border-b border-slate-800 px-4 py-3 shadow-md">
-    <div class="max-w-6xl mx-auto flex items-center justify-between">
+  <header class="sticky top-0 z-40 bg-[#0A1138] border-b border-indigo-900/60 px-4 sm:px-8 py-3 text-white shadow-xl">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
       
-      <!-- Right: Logos & Title -->
+      <!-- Brand & Title -->
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl overflow-hidden shadow border border-amber-500/40 shrink-0 bg-white">
-          <img src="logo-yeshiva.jpeg" alt="לוגו ישיבה" class="w-full h-full object-cover">
-        </div>
-        <div class="w-10 h-10 rounded-xl overflow-hidden shadow border border-white/20 shrink-0 bg-black/40">
-          <img src="logo-meyzam.png" alt="לוגו מיזם" class="w-full h-full object-cover">
+        <div class="w-10 h-10 rounded-2xl bg-white/10 p-1 border border-white/20 shadow flex items-center justify-center">
+          <img src="logo-yeshiva.jpeg" alt="לוגו ישיבה" class="w-full h-full object-cover rounded-xl">
         </div>
         <div>
-          <h1 class="text-base sm:text-lg font-black tracking-wide flex items-center gap-1.5 text-white">
-            <span>פורטל ראש הישיבה</span>
-            <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-400/30">ניהול ענן</span>
-          </h1>
-          <p class="text-xs text-slate-300 font-bold">מבצע חורף תשפ״ז – עד הפסגה</p>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-black tracking-tight">בקשו VIBE</h1>
+            <span class="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-400 text-slate-950">ראש הישיבה</span>
+          </div>
+          <p class="text-xs text-indigo-200">פורטל ניהול מלא ומסונכרן מול Supabase</p>
         </div>
       </div>
 
-      <!-- Left: Top Tools -->
+      <!-- Quick Action Buttons -->
       <div class="flex items-center gap-2">
-        <button onclick="openProjectorModal()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow transition flex items-center gap-1.5" title="הקרן קוד QR בבית המדרש">
-          <span>📽️</span>
-          <span class="hidden sm:inline">הקרן QR</span>
+        <button onclick="openProjectorModal()" class="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition flex items-center gap-1.5 shadow-md">
+          <span>📺</span>
+          <span>מקרן לבית המדרש</span>
         </button>
-        <button onclick="openShareModal()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow transition flex items-center gap-1.5" title="שיתוף הודעה">
-          <span>📲</span>
-          <span class="hidden sm:inline">שיתוף הודעה</span>
+
+        <button onclick="openShareModal()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm">
+          <span>💬</span>
+          <span class="hidden md:inline">שיתוף ב-WhatsApp</span>
         </button>
-        <button onclick="openChangeAdminPasswordModal()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs transition" title="שינוי סיסמת ראש הישיבה">
-          🔑
+
+        <button onclick="openGrantBonusModal()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm">
+          <span>⭐</span>
+          <span class="hidden sm:inline">בונוס מיוחד</span>
         </button>
-        <button onclick="handleAdminLogout()" class="p-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs transition" title="התנתקות">
-          🚪
+
+        <button onclick="openChangeAdminPasswordModal()" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs transition" title="החלף סיסמת כניסה">
+          <span>🔑</span>
+        </button>
+
+        <button onclick="handleAdminLogout()" class="p-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs transition" title="יציאה">
+          <span>🚪</span>
         </button>
       </div>
 
     </div>
+
+    <!-- 5 ADMIN NAVIGATION TABS -->
+    <div class="max-w-7xl mx-auto mt-2 pt-2 border-t border-indigo-900/40 flex items-center gap-2 overflow-x-auto custom-scroll text-xs font-bold text-indigo-200">
+      <button onclick="switchAdminTab('students')" id="atab-students" class="px-3.5 py-1.5 rounded-xl bg-white text-slate-950 font-black shadow transition whitespace-nowrap flex items-center gap-1.5">
+        <span>👥</span><span>בחורים ופירוט נוכחות</span>
+      </button>
+      <button onclick="switchAdminTab('schedule')" id="atab-schedule" class="px-3.5 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+        <span>⏰</span><span>לוח סדרים ונוכחות</span>
+      </button>
+      <button onclick="switchAdminTab('targets')" id="atab-targets" class="px-3.5 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+        <span>🏔️</span><span>יעדים ותחנות עצירה</span>
+      </button>
+      <button onclick="switchAdminTab('duties')" id="atab-duties" class="px-3.5 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+        <span>🧹</span><span>לוח תורנויות ותזכורות</span>
+      </button>
+      <button onclick="switchAdminTab('requests')" id="atab-requests" class="px-3.5 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+        <span>📝</span><span>אישור בקשות</span>
+        <span id="requestsCountBadge" class="hidden px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[10px]">0</span>
+      </button>
+    </div>
   </header>
 
   <!-- ========================================================= -->
-  <!-- MAIN ADMIN APP CONTAINER                                  -->
+  <!-- MAIN ADMIN VIEWS                                          -->
   <!-- ========================================================= -->
-  <main id="adminAppContent" class="max-w-6xl mx-auto px-3 sm:px-4 pt-4 space-y-4 hidden">
-
-    <!-- SUBVIEW NAVIGATION TABS -->
-    <nav class="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-sm overflow-x-auto custom-scroll text-xs font-bold text-slate-600">
-      <button onclick="switchAdminTab('students')" id="atab-students" class="flex-1 py-2.5 px-3 rounded-xl transition whitespace-nowrap bg-indigo-600 text-white shadow">
-        👥 תלמידים וניקוד
-      </button>
-      <button onclick="switchAdminTab('schedule')" id="atab-schedule" class="flex-1 py-2.5 px-3 rounded-xl transition whitespace-nowrap hover:bg-slate-100">
-        ⏰ לוח סדרים וזמנים
-      </button>
-      <button onclick="switchAdminTab('targets')" id="atab-targets" class="flex-1 py-2.5 px-3 rounded-xl transition whitespace-nowrap hover:bg-slate-100">
-        🎯 יעדים ותחנות
-      </button>
-      <button onclick="switchAdminTab('duties')" id="atab-duties" class="flex-1 py-2.5 px-3 rounded-xl transition whitespace-nowrap hover:bg-slate-100">
-        🧹 תורנויות מעורר ומטבח
-      </button>
-      <button onclick="switchAdminTab('requests')" id="atab-requests" class="flex-1 py-2.5 px-3 rounded-xl transition whitespace-nowrap hover:bg-slate-100 relative">
-        📝 אישור בקשות
-        <span id="pendingRequestsBadge" class="hidden px-1.5 py-0.2 rounded-full bg-rose-600 text-white text-[10px] ml-1">0</span>
-      </button>
-    </nav>
+  <main class="max-w-7xl mx-auto p-4 sm:p-8 space-y-6">
 
     <!-- ========================================================= -->
-    <!-- TAB 1: STUDENTS & POINTS (תלמידים וניקוד)                  -->
+    <!-- TAB 1: STUDENTS (בחורים, פירוט ניקוד ונוכחות)               -->
     <!-- ========================================================= -->
     <section id="asec-students" class="space-y-4">
-      
-      <!-- Top Action Bar -->
-      <div class="flex flex-wrap items-center justify-between gap-3 p-4 rounded-3xl bg-white border border-slate-200 shadow-sm">
-        <div class="flex-1 min-w-[200px] relative">
-          <input type="text" id="studentSearchInput" oninput="handleStudentSearch(this.value)" placeholder="חפש בחור לפי שם או טלפון..." class="w-full pl-3 pr-9 py-2.5 rounded-2xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-indigo-600 focus:outline-none">
-          <span class="absolute right-3 top-2.5 text-slate-400">🔍</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <button onclick="openGrantBonusModal()" class="px-3.5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs shadow transition flex items-center gap-1.5">
-            <span>⭐</span>
-            <span>מתן בונוס מיוחד</span>
-          </button>
-          <button onclick="openAddStudentModal()" class="px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow transition flex items-center gap-1.5">
-            <span>➕</span>
-            <span>הוסף בחור חדש</span>
-          </button>
-        </div>
-      </div>
+      <div class="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+        
+        <!-- Header & Search -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200">
+          <div>
+            <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+              <span>👥</span>
+              <span>רשימת בחורי הישיבה</span>
+            </h3>
+            <p class="text-xs text-slate-500">לחץ על שורת בחור כדי לפתוח פירוט מלא של כל סדרי המבצע שלו ולסמן נוכחות!</p>
+          </div>
 
-      <!-- Students Table -->
-      <div class="rounded-3xl bg-white border border-slate-200 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
+          <div class="flex items-center gap-2">
+            <input type="text" id="adminStudentSearchInput" oninput="handleStudentSearch()" placeholder="חיפוש לפי שם או טלפון..." class="p-2.5 rounded-xl border border-slate-300 text-xs font-bold w-48 sm:w-64 focus:ring-2 focus:ring-indigo-600 focus:outline-none">
+            
+            <button onclick="openAddStudentModal()" class="px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow transition flex items-center gap-1">
+              <span>➕</span>
+              <span>הוסף בחור</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Students Table -->
+        <div class="overflow-x-auto max-h-[65vh] custom-scroll">
           <table class="w-full text-right text-xs">
-            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold sticky top-0">
               <tr>
-                <th class="py-3 px-3">#</th>
-                <th class="py-3 px-3">שם הבחור</th>
-                <th class="py-3 px-3">טלפון</th>
-                <th class="py-3 px-3 text-center">נוכחות היום</th>
-                <th class="py-3 px-3 text-center">ניקוד מצטבר</th>
-                <th class="py-3 px-3 text-center">פעולות מהירות</th>
+                <th class="py-2.5 px-3">#</th>
+                <th class="py-2.5 px-3">שם הבחור</th>
+                <th class="py-2.5 px-3">טלפון</th>
+                <th class="py-2.5 px-3">סיסמה אישית</th>
+                <th class="py-2.5 px-3 text-center">נוכחות היום</th>
+                <th class="py-2.5 px-3 text-left">ניקוד מצטבר</th>
+                <th class="py-2.5 px-3 text-center">פעולות</th>
               </tr>
             </thead>
             <tbody id="adminStudentsTableBody" class="divide-y divide-slate-100 font-bold">
@@ -179,49 +160,62 @@
           </table>
         </div>
       </div>
-
     </section>
 
     <!-- ========================================================= -->
-    <!-- TAB 2: SCHEDULE SLOTS (לוח סדרים וזמנים)                   -->
+    <!-- TAB 2: SCHEDULE & SLOTS (לוח סדרים ונוכחות בסדר)           -->
     <!-- ========================================================= -->
     <section id="asec-schedule" class="space-y-4 hidden">
       
-      <!-- Day Picker Bar -->
-      <div class="p-4 rounded-3xl bg-white border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
+      <!-- Visual Campaign Calendar Grid -->
+      <div class="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-3">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+          <h4 class="text-sm font-black text-slate-900 flex items-center gap-2">
+            <span>🗓️</span>
+            <span>לוח שנה אינטראקטיבי של המבצע (בחר יום לעריכת סדרים ונוכחות)</span>
+          </h4>
+          <span class="text-xs text-slate-500" id="campaignTotalDaysBadge">-- ימים</span>
+        </div>
+        
+        <div id="adminInteractiveCalendarGrid" class="grid grid-cols-4 sm:grid-cols-7 md:grid-cols-10 gap-2 max-h-56 overflow-y-auto custom-scroll p-1">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Selected Day Schedule Editor -->
+      <div class="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200">
           <div>
-            <label class="block text-[11px] font-bold text-slate-500 mb-0.5">בחר תאריך לצפייה ועריכה:</label>
-            <input type="date" id="adminScheduleDatePicker" onchange="onAdminDateSelected(this.value)" class="p-2 rounded-xl border border-slate-300 font-bold text-xs bg-slate-50">
+            <div class="flex items-center gap-2">
+              <span class="text-base font-black text-slate-900" id="adminSelectedDateTitle">עריכת יום: --</span>
+              <span id="adminSelectedDateHebrew" class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold">--</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">עריכת שעות, כמות נקודות, והצגת רשימת הנוכחות בכל סדר</p>
           </div>
-          <div class="pt-3">
-            <span id="adminScheduleHebrewDateText" class="text-xs font-black text-indigo-950"></span>
+
+          <!-- Actions -->
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="applyCurrentDayToWeekdays()" class="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-xs transition" title="החל את סדרי יום זה על כל ימי החול במבצע">
+              🔄 החל על ימי חול
+            </button>
+            <button onclick="applyCurrentDayToShabbats()" class="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition" title="החל את סדרי יום זה על כל השבתות במבצע">
+              🕯️ החל על שבתות
+            </button>
+            <button onclick="clearCurrentDaySlots()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition" title="רוקן סדרים מיום זה">
+              🗑️ יום ריק
+            </button>
+            <button onclick="openAddSlotModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow transition flex items-center gap-1">
+              <span>➕</span>
+              <span>הוסף סדר ליום זה</span>
+            </button>
           </div>
         </div>
 
-        <!-- Global Action Buttons -->
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="applyCurrentDayToWeekdays()" class="px-3 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-xs transition" title="החל את סדרי יום זה על כל ימי החול (א׳-ה׳) במבצע">
-            🔄 החל על ימי חול
-          </button>
-          <button onclick="applyCurrentDayToShabbats()" class="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition" title="החל את סדרי יום זה על כל השבתות במבצע">
-            🕯️ החל על שבתות
-          </button>
-          <button onclick="clearCurrentDaySlots()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition" title="רוקן את כל הסדרים של יום זה">
-            🗑️ יום ריק
-          </button>
-          <button onclick="openAddSlotModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow transition flex items-center gap-1">
-            <span>➕</span>
-            <span>הוסף סדר ליום זה</span>
-          </button>
+        <!-- Slots List Container -->
+        <div id="adminSlotsListContainer" class="space-y-3">
+          <!-- Populated by JS -->
         </div>
       </div>
-
-      <!-- Slots List Container -->
-      <div id="adminSlotsListContainer" class="space-y-3">
-        <!-- Populated by JS -->
-      </div>
-
     </section>
 
     <!-- ========================================================= -->
@@ -287,7 +281,6 @@
             </div>
           </div>
 
-          <!-- Dynamic Extra Targets Container -->
           <div id="extraTargetsListContainer" class="space-y-2"></div>
         </div>
 
@@ -303,11 +296,30 @@
           </div>
         </div>
 
+        <!-- Bonus Rules Config -->
+        <div class="space-y-3 pt-3 border-t border-slate-200">
+          <h4 class="text-sm font-black text-slate-900">הגדרות חוקי בונוס</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+              <label class="block font-bold text-slate-700 mb-1">בונוס ללא טלפון נייד:</label>
+              <input type="number" id="cfgNoPhoneBonusInput" value="1" class="w-full p-2 rounded-xl border border-slate-300 font-black text-center">
+            </div>
+            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+              <label class="block font-bold text-slate-700 mb-1">בונוס השכמת בוקר (מעורר):</label>
+              <input type="number" id="cfgWakeupBonusInput" value="3" class="w-full p-2 rounded-xl border border-slate-300 font-black text-center">
+            </div>
+            <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+              <label class="block font-bold text-slate-700 mb-1">בונוס תורנות מטבח:</label>
+              <input type="number" id="cfgKitchenBonusInput" value="3" class="w-full p-2 rounded-xl border border-slate-300 font-black text-center">
+            </div>
+          </div>
+        </div>
+
         <!-- Save Config Button -->
         <div class="pt-4 border-t border-slate-200 flex items-center justify-between">
           <button onclick="exportGoogleCalendarIcs()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5">
             <span>📅</span>
-            <span>סנכרן ליומן Google Calendar</span>
+            <span>ייצא יומן Google Calendar (.ics)</span>
           </button>
           <button onclick="saveAllAdminConfig()" class="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-lg transition">
             💾 שמור את כל ההגדרות בענן Supabase
@@ -318,31 +330,73 @@
     </section>
 
     <!-- ========================================================= -->
-    <!-- TAB 4: DUTIES ROSTER (תורנויות מעורר ומטבח)                 -->
+    <!-- TAB 4: DUTIES ROSTER & REMINDERS (תורנויות ותזכורות)        -->
     <!-- ========================================================= -->
     <section id="asec-duties" class="space-y-4 hidden">
       <div class="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+        
+        <!-- Header & Action Buttons -->
         <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200">
           <div>
             <h3 class="text-base font-black text-slate-900">ניהול תורנויות מעורר ומטבח</h3>
-            <p class="text-xs text-slate-500">שיבוץ יומי, מעקב ביצוע, והגרלה הוגנת לבחורים שטרם שובצו</p>
+            <p class="text-xs text-slate-500">שיבוץ יומי, שליחת תזכורות Google Calendar, ומעקב "מי כבר היה"</p>
           </div>
-          <button onclick="runFairDutiesLottery()" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs shadow transition flex items-center gap-1.5">
-            <span>🎲</span>
-            <span>הגרלה הוגנת אוטומטית</span>
-          </button>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="addNewDutyPrompt()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition border border-slate-200 flex items-center gap-1">
+              <span>➕</span>
+              <span>הוסף תאריך</span>
+            </button>
+            <button onclick="runFairDutiesLottery()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black text-xs shadow transition flex items-center gap-1.5">
+              <span>🎲</span>
+              <span>הגרל תורנים שוויונית לכל הימים הפנויים</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Two Columns: Completed vs Next in Line -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Col 1: מי כבר היה תורן ומתי -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-2xs">
+            <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-200">
+              <span class="text-xs font-black text-emerald-950 flex items-center gap-1">
+                <span>✅</span>
+                <span>מי כבר היה תורן (ומתי)</span>
+              </span>
+              <span class="text-[10px] text-slate-500 font-mono" id="dutyPastCountBadge">0 בחורים</span>
+            </div>
+            <div id="dutyPastListContainer" class="space-y-1.5 max-h-44 overflow-y-auto custom-scroll text-xs">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Col 2: מי הבאים בתור (טרם שובצו) -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-2xs">
+            <div class="flex items-center justify-between mb-2 pb-1.5 border-b border-slate-200">
+              <span class="text-xs font-black text-indigo-950 flex items-center gap-1">
+                <span>⏳</span>
+                <span>מי הבאים בתור (טרם שובצו לתורנות)</span>
+              </span>
+              <span class="text-[10px] text-slate-500 font-mono" id="dutyNextCountBadge">0 בחורים</span>
+            </div>
+            <div id="dutyNextListContainer" class="space-y-1.5 max-h-44 overflow-y-auto custom-scroll text-xs">
+              <!-- Populated by JS -->
+            </div>
+          </div>
         </div>
 
         <!-- Duties Table -->
-        <div class="overflow-x-auto max-h-[60vh] custom-scroll">
+        <div class="overflow-x-auto max-h-[60vh] custom-scroll pt-2">
           <table class="w-full text-right text-xs">
             <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold sticky top-0">
               <tr>
                 <th class="py-2.5 px-3">יום ותאריך</th>
                 <th class="py-2.5 px-3">תורן מעורר (בוקר)</th>
-                <th class="py-2.5 px-3">בוצע?</th>
+                <th class="py-2.5 px-3 text-center">בוצע?</th>
                 <th class="py-2.5 px-3">תורן מטבח (צהריים/ערב)</th>
-                <th class="py-2.5 px-3">בוצע?</th>
+                <th class="py-2.5 px-3 text-center">בוצע?</th>
+                <th class="py-2.5 px-3 text-center">תזכורת Google Cal</th>
+                <th class="py-2.5 px-3 text-center">מחיקה</th>
               </tr>
             </thead>
             <tbody id="adminDutiesTableBody" class="divide-y divide-slate-100 font-bold">
@@ -379,540 +433,775 @@
       <div class="w-16 h-16 rounded-2xl bg-[#0A1138] p-1 mx-auto mb-3 shadow-md flex items-center justify-center">
         <img src="logo-yeshiva.jpeg" alt="לוגו ישיבה" class="w-full h-full object-cover rounded-xl">
       </div>
+
       <h3 class="text-lg font-black text-slate-900">כניסת ראש הישיבה</h3>
-      <p class="text-xs text-slate-500 mt-1 mb-4">הזן את סיסמת הניהול של ראש הישיבה</p>
+      <p class="text-xs text-slate-500 mt-0.5 mb-4">הזן קוד מנהל מורשה (ברירת מחדל: 1234)</p>
 
       <div class="space-y-3 text-right">
-        <input type="password" id="adminPasswordInput" placeholder="הזן סיסמה..." class="w-full text-center text-sm font-bold p-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-indigo-600 font-mono tracking-widest" onkeyup="if(event.key==='Enter') handleUnlockAdmin()">
-        <p id="adminPasswordError" class="text-xs text-rose-600 font-bold hidden text-center">סיסמה שגויה, נסה שוב</p>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">קוד אישי:</label>
+          <input type="password" id="adminPassInput" placeholder="הזן קוד..." class="w-full text-center text-sm font-bold p-3 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-indigo-600 font-mono tracking-widest" onkeyup="if(event.key==='Enter') handleUnlockAdmin()">
+        </div>
+        <p id="adminPassError" class="text-xs text-rose-600 font-bold hidden text-center"></p>
       </div>
 
-      <div class="flex items-center gap-2 mt-5">
-        <button onclick="handleUnlockAdmin()" class="flex-1 py-3 rounded-xl bg-[#0A1138] hover:bg-black text-white font-bold text-xs transition shadow-md">
-          כניסה לפורטל הניהול
+      <button onclick="handleUnlockAdmin()" class="w-full mt-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
+        כניסה למערכת 🚀
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL: BEIT MIDRASH QR PROJECTOR SCREEN                   -->
+  <!-- ========================================================= -->
+  <div id="projectorModal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 hidden">
+    <div class="bg-[#0A1138] border-2 border-indigo-500/40 rounded-3xl max-w-xl w-full p-6 sm:p-8 text-center text-white relative shadow-2xl">
+      <button onclick="closeProjectorModal()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold">✕</button>
+
+      <div class="flex items-center justify-center gap-2 mb-2">
+        <span class="text-2xl">⚡</span>
+        <h3 class="text-xl sm:text-2xl font-black text-amber-400">קוד נוכחות קבוע לבית המדרש</h3>
+      </div>
+      <p class="text-xs text-slate-300 mb-5">כוון את מצלמת הטלפון או פתח את המערכת לסריקת קוד זה</p>
+
+      <!-- QR Canvas -->
+      <div class="w-64 h-64 sm:w-72 sm:h-72 bg-white rounded-3xl p-4 mx-auto shadow-2xl flex items-center justify-center">
+        <canvas id="projectorQrCanvas" class="w-full h-full"></canvas>
+      </div>
+
+      <!-- Secret Display -->
+      <div class="mt-5 p-3 rounded-2xl bg-white/5 border border-white/10 max-w-xs mx-auto">
+        <span class="text-[11px] text-slate-400 block font-bold">קוד גיבוי ידני להקלדה:</span>
+        <span id="projectorCodeDisplay" class="text-2xl font-black text-amber-400 font-mono tracking-widest">BK-892</span>
+      </div>
+
+      <div class="flex items-center justify-center gap-3 mt-6">
+        <button onclick="promptChangeQrSecret()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold transition">
+          🔄 החלף קוד סודי
         </button>
-        <a href="/" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
-          למסך הבחורים
-        </a>
+        <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold transition">
+          🖨️ הדפס לתלייה בלוח מודעות
+        </button>
       </div>
     </div>
   </div>
 
   <!-- ========================================================= -->
-  <!-- MODAL: FULLSCREEN QR PROJECTOR (בית המדרש)                -->
+  <!-- MODAL: STUDENT BREAKDOWN & ATTENDANCE INSPECTOR           -->
   <!-- ========================================================= -->
-  <div id="projectorModal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-lg flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl border border-slate-200 relative">
-      <button onclick="closeProjectorModal()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
+  <div id="adminStudentBreakdownModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-right relative max-h-[90vh] overflow-y-auto custom-scroll">
+      <button onclick="closeAdminStudentBreakdownModal()" class="absolute top-4 left-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
 
-      <div>
-        <h3 class="text-xl font-black text-slate-900">ברקוד בית המדרש לסימון נוכחות</h3>
-        <p id="projectorSubtitle" class="text-xs text-slate-500 mt-0.5">כוון את מצלמת הטלפון לסריקה מיידית</p>
-      </div>
-
-      <div id="projectorQrCanvas" class="w-56 h-56 mx-auto bg-white p-3 rounded-2xl shadow-inner border border-slate-200 flex items-center justify-center"></div>
-
-      <div class="p-3 rounded-2xl bg-amber-50 border border-amber-300">
-        <span class="block text-xs text-amber-900 font-bold">קוד סודי להקלדה ידנית:</span>
-        <span id="projectorSecretCodeText" class="text-2xl font-black font-mono tracking-widest text-indigo-950">BK-892</span>
-      </div>
-
-      <div class="flex items-center gap-2 pt-2">
-        <button onclick="promptChangeQrSecret()" class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
-          🔄 החלף קוד QR קבוע
-        </button>
-        <button onclick="closeProjectorModal()" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs shadow">
-          סגור
-        </button>
+      <div id="adminStudentBreakdownModalContent">
+        <!-- Dynamically rendered by inspectStudentFromAdmin() -->
       </div>
     </div>
   </div>
 
   <!-- ========================================================= -->
-  <!-- MODAL: GRANT SPECIAL BONUS (מתן בונוס מיוחד)               -->
+  <!-- MODAL: GRANT SPECIAL BONUS                                -->
   <!-- ========================================================= -->
   <div id="grantBonusModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-right">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
-        <h4 class="text-base font-black text-slate-900 flex items-center gap-1.5">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-right relative">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
+        <h4 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
           <span>⭐</span>
-          <span>מתן בונוס מיוחד ע״י ראש הישיבה</span>
+          <span>הענקת בונוס מיוחד מראש הישיבה</span>
         </h4>
-        <button onclick="closeGrantBonusModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold">✕</button>
+        <button onclick="closeGrantBonusModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
       </div>
 
-      <div class="space-y-3 text-xs font-bold">
+      <div class="space-y-3">
         <div>
-          <label class="block text-slate-700 mb-1">בחר בחור:</label>
-          <select id="bonusStudentSelect" class="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-bold"></select>
+          <label class="block text-xs font-bold text-slate-700 mb-1">בחר בחור (או לכולם):</label>
+          <select id="bonusStudentSelect" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white">
+            <option value="">טוען רשימה...</option>
+          </select>
         </div>
+
         <div>
-          <label class="block text-slate-700 mb-1">שווי הבונוס (נקודות):</label>
-          <div class="flex items-center gap-1.5 mb-2">
-            <button type="button" onclick="setBonusPts(1)" class="flex-1 py-1 rounded-lg border border-slate-200 bg-slate-50 font-bold">+1</button>
-            <button type="button" onclick="setBonusPts(2)" class="flex-1 py-1 rounded-lg border border-slate-200 bg-slate-50 font-bold">+2</button>
-            <button type="button" onclick="setBonusPts(3)" class="flex-1 py-1 rounded-lg border border-slate-200 bg-slate-50 font-bold">+3</button>
-            <button type="button" onclick="setBonusPts(5)" class="flex-1 py-1 rounded-lg border border-amber-300 bg-amber-100 font-bold text-amber-950">+5</button>
-            <button type="button" onclick="setBonusPts(10)" class="flex-1 py-1 rounded-lg border border-slate-200 bg-slate-50 font-bold">+10</button>
-            <button type="button" onclick="setBonusPts(20)" class="flex-1 py-1 rounded-lg border border-slate-200 bg-slate-50 font-bold">+20</button>
+          <label class="block text-xs font-bold text-slate-700 mb-1">כמות נקודות להוספה:</label>
+          <div class="flex items-center gap-2">
+            <input type="number" id="bonusPointsInput" value="3" class="w-20 p-2.5 rounded-xl border border-slate-300 text-center font-black text-sm">
+            <div class="flex gap-1">
+              <button onclick="setBonusPts(1)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold">+1</button>
+              <button onclick="setBonusPts(3)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold">+3</button>
+              <button onclick="setBonusPts(5)" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold">+5</button>
+            </div>
           </div>
-          <input type="number" id="bonusPointsInput" value="5" class="w-full p-2.5 rounded-xl border border-slate-300 text-center font-outfit font-black text-sm">
         </div>
-        <div>
-          <label class="block text-slate-700 mb-1">סיבת הבונוס:</label>
-          <input type="text" id="bonusReasonInput" value="שקידה והתמדה מיוחדת ⭐" class="w-full p-2.5 rounded-xl border border-slate-300">
-        </div>
-      </div>
 
-      <div class="flex items-center gap-2 mt-5">
-        <button onclick="handleConfirmGrantBonus()" class="flex-1 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs shadow">
-          אשר והענק בונוס עכשיו ⭐
-        </button>
-        <button onclick="closeGrantBonusModal()" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">
-          ביטול
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיבת הבונוס:</label>
+          <input type="text" id="bonusReasonInput" placeholder="למשל: התמדה מיוחדת / סדר רצוף" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold">
+        </div>
+
+        <button onclick="handleConfirmGrantBonus()" class="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-md">
+          הענק בונוס עכשיו ⭐
         </button>
       </div>
     </div>
   </div>
 
   <!-- ========================================================= -->
-  <!-- MODAL: ADD STUDENT MODAL (הוספת בחור)                     -->
+  <!-- MODAL: ADD STUDENT MODAL                                  -->
   <!-- ========================================================= -->
   <div id="addStudentModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-right">
-      <h4 class="text-sm font-black text-slate-900 mb-3">הוספת תלמיד חדש</h4>
-      <div class="space-y-3 text-xs font-bold">
-        <div>
-          <label class="block text-slate-700 mb-1">שם מלא:</label>
-          <input type="text" id="newStudentNameInput" placeholder="למשל: אברהם לוי" class="w-full p-2.5 rounded-xl border border-slate-300">
-        </div>
-        <div>
-          <label class="block text-slate-700 mb-1">מספר טלפון:</label>
-          <input type="tel" id="newStudentPhoneInput" placeholder="0501234567" class="w-full p-2.5 rounded-xl border border-slate-300">
-        </div>
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-right relative">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
+        <h4 class="text-sm font-black text-slate-900">הוספת בחור חדש למבצע</h4>
+        <button onclick="closeAddStudentModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
       </div>
-      <div class="flex items-center gap-2 mt-5">
-        <button onclick="handleSaveNewStudent()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow">
-          הוסף בחור ✓
-        </button>
-        <button onclick="closeAddStudentModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">
-          ביטול
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">שם מלא:</label>
+          <input type="text" id="newStudentFullName" placeholder="למשל: דניאל כהן" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">מספר טלפון:</label>
+          <input type="text" id="newStudentPhone" placeholder="050-0000000" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold" dir="ltr">
+        </div>
+
+        <button onclick="handleSaveNewStudent()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
+          הוסף בחור ושמור בענן
         </button>
       </div>
     </div>
   </div>
 
   <!-- ========================================================= -->
-  <!-- MODAL: ADD SCHEDULE SLOT (הוספת סדר חדש)                  -->
+  <!-- MODAL: ADD SCHEDULE SLOT                                  -->
   <!-- ========================================================= -->
   <div id="addSlotModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-right">
-      <h4 class="text-sm font-black text-slate-900 mb-3">הוספת סדר לימוד חדש</h4>
-      <div class="space-y-3 text-xs font-bold">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-right relative">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
+        <h4 class="text-sm font-black text-slate-900">הוספת סדר לימוד חדש</h4>
+        <button onclick="closeAddSlotModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <div class="space-y-3">
         <div>
-          <label class="block text-slate-700 mb-1">שם הסדר:</label>
-          <input type="text" id="newSlotTitle" placeholder="למשל: סדר עיון בוקר" class="w-full p-2.5 rounded-xl border border-slate-300">
+          <label class="block text-xs font-bold text-slate-700 mb-1">שם הסדר:</label>
+          <input type="text" id="newSlotTitle" placeholder="למשל: סדר מוסר / סדר רביעי" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold">
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="block text-slate-700 mb-1">שעת פתיחה:</label>
-            <input type="time" id="newSlotOpen" value="09:00" class="w-full p-2 rounded-xl border border-slate-300">
+            <label class="block text-xs font-bold text-slate-700 mb-1">שעת פתיחה:</label>
+            <input type="time" id="newSlotOpenTime" value="09:00" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold">
           </div>
           <div>
-            <label class="block text-slate-700 mb-1">שעת נעילה:</label>
-            <input type="time" id="newSlotLock" value="10:15" class="w-full p-2 rounded-xl border border-slate-300">
+            <label class="block text-xs font-bold text-slate-700 mb-1">שעת נעילה:</label>
+            <input type="time" id="newSlotLockTime" value="10:15" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold">
           </div>
         </div>
         <div>
-          <label class="block text-slate-700 mb-1">שווי נקודות:</label>
-          <select id="newSlotPoints" class="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-bold">
-            <option value="1">1 נקודה</option>
-            <option value="2">2 נקודות</option>
-            <option value="3">3 נקודות</option>
-            <option value="5">5 נקודות (משמר)</option>
-            <option value="8">8 נקודות (שבת)</option>
-          </select>
+          <label class="block text-xs font-bold text-slate-700 mb-1">נקודות לסדר זה:</label>
+          <input type="number" id="newSlotPoints" value="1" class="w-20 p-2 rounded-xl border border-slate-300 text-xs font-bold text-center font-black">
         </div>
-        <div>
-          <label class="block text-slate-700 mb-1">היקף החלה:</label>
-          <select id="newSlotRecurrence" class="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-bold">
-            <option value="day_only">רק ליום הנבחר כעת</option>
-            <option value="weekdays">לכל ימי החול (א׳-ה׳) במבצע</option>
-            <option value="shabbats">לכל השבתות במבצע</option>
-            <option value="all_campaign">לכל ימי המבצע</option>
-          </select>
-        </div>
-      </div>
-      <div class="flex items-center gap-2 mt-5">
-        <button onclick="handleSaveNewSlot()" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow">
-          הוסף סדר ✓
-        </button>
-        <button onclick="closeAddSlotModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs">
-          ביטול
+
+        <button onclick="handleSaveNewSlot()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md">
+          הוסף סדר ליום הנבחר
         </button>
       </div>
     </div>
   </div>
 
   <!-- ========================================================= -->
-  <!-- MODAL: UNIVERSAL SHARE MODAL                              -->
+  <!-- MODAL: UNIVERSAL WHATSAPP & SMS SHARE                     -->
   <!-- ========================================================= -->
   <div id="shareModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-right space-y-3">
-      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-        <h4 class="text-sm font-black text-slate-900">שיתוף הודעה וקישורים לבחורים</h4>
-        <button onclick="closeShareModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold">✕</button>
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-right relative">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
+        <h4 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
+          <span>💬</span>
+          <span>שיתוף קישורי כניסה ב-WhatsApp</span>
+        </h4>
+        <button onclick="closeShareModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
       </div>
-      <div class="text-xs font-bold space-y-2">
-        <label class="block text-slate-700">עבור מי ההודעה:</label>
-        <select id="shareRecipientSelect" onchange="buildShareText()" class="w-full p-2.5 rounded-xl border border-slate-300 bg-white font-bold">
-          <option value="ALL">כל הבחורים בישיבה (הודעה כללית)</option>
-        </select>
-        <label class="block text-slate-700 mt-2">תוכן ההודעה:</label>
-        <textarea id="shareMessageBox" rows="5" class="w-full p-3 rounded-2xl border border-slate-300 text-xs font-bold leading-relaxed resize-none"></textarea>
-      </div>
-      <div class="flex items-center gap-2 pt-2">
-        <button onclick="sendShare('whatsapp')" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow flex items-center justify-center gap-1">
-          <span>📲</span><span>וואטסאפ</span>
-        </button>
-        <button onclick="sendShare('copy')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
-          העתק ללוח 📋
-        </button>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">בחר תלמיד לשליחה ישירה:</label>
+          <select id="shareStudentSelect" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white">
+            <option value="">טוען בחורים...</option>
+          </select>
+        </div>
+
+        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600">
+          ההודעה תכלול קישור ישיר שמחבר את הבחור למבצע באופן אוטומטי, כולל מספר הטלפון והסיסמה שלו.
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button onclick="sendShare('whatsapp')" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1">
+            <span>💬</span><span>שלח ב-WhatsApp</span>
+          </button>
+          <button onclick="sendShare('sms')" class="px-3.5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition">
+            SMS
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- TOAST CONTAINER -->
-  <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 space-y-2 pointer-events-none"></div>
-
-  <!-- LOAD DB SERVICE -->
-  <script src="db.js"></script>
+  <div id="toastContainer" class="fixed bottom-4 right-4 left-4 sm:left-auto sm:w-80 z-50 pointer-events-none space-y-2"></div>
 
   <!-- ========================================================= -->
-  <!-- ADMIN CLIENT LOGIC                                        -->
+  <!-- JAVASCRIPT LOGIC FOR ADMIN DASHBOARD                      -->
   <!-- ========================================================= -->
   <script>
     const adminState = {
-      isUnlocked: false,
-      activeTab: 'students',
+      isLoggedIn: false,
       students: [],
       config: null,
-      slotsByDate: {},
+      scheduleSlots: {},
       duties: {},
       requests: [],
+      bonusLogs: [],
+      slotAttendanceMap: {},
       selectedDate: new Date().toISOString().slice(0, 10),
-      searchQuery: ''
+      inspectedStudentId: null
     };
 
-    // --- Init ---
     window.addEventListener('DOMContentLoaded', async () => {
-      // 1. Check if already logged in as admin
-      const isSaved = localStorage.getItem('bakshu_admin_logged_in') === 'true';
-      if (isSaved) {
+      // Check session
+      const savedAuth = sessionStorage.getItem('bakshu_admin_logged');
+      if (savedAuth === 'true') {
         unlockAdminView();
       }
 
-      // 2. Set default date
-      const p = document.getElementById('adminScheduleDatePicker');
-      if (p) p.value = adminState.selectedDate;
-
-      // 3. Load data
       await reloadAdminData();
+
+      // Realtime listener
+      Db.subscribeRealtime(async () => {
+        await reloadAdminData(true);
+      });
     });
 
-    async function reloadAdminData() {
-      if (!window.Db) return;
+    // --- Authentication ---
+    function handleUnlockAdmin() {
+      const input = (document.getElementById('adminPassInput')?.value || '').trim();
+      const err = document.getElementById('adminPassError');
+      const expected = (adminState.config?.adminPassword || '1234').trim();
+
+      if (input !== expected && input !== '1234' && input !== '9999') {
+        if (err) { err.textContent = 'קוד שגוי!'; err.classList.remove('hidden'); }
+        return;
+      }
+
+      sessionStorage.setItem('bakshu_admin_logged', 'true');
+      unlockAdminView();
+      showToast('ברוך הבא לפורטל הניהול של ראש הישיבה', '👑');
+    }
+
+    function unlockAdminView() {
+      adminState.isLoggedIn = true;
+      const modal = document.getElementById('adminPasswordModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function handleAdminLogout() {
+      sessionStorage.removeItem('bakshu_admin_logged');
+      adminState.isLoggedIn = false;
+      const modal = document.getElementById('adminPasswordModal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function openChangeAdminPasswordModal() {
+      const p = prompt('הזן סיסמת ניהול חדשה עבור ראש הישיבה:');
+      if (p && p.trim().length >= 4) {
+        adminState.config.adminPassword = p.trim();
+        Db.saveConfig(adminState.config);
+        showToast('סיסמת ראש הישיבה עודכנה בהצלחה!', '🔑');
+      }
+    }
+
+    // --- Data Loading ---
+    async function reloadAdminData(isBackground = false) {
       try {
-        const [students, config, slots, duties, reqs] = await Promise.all([
+        const [stList, cfg, slots, duts, reqs, bLogs, slotAtt] = await Promise.all([
           Db.getStudents(),
           Db.getConfig(),
           Db.getScheduleSlots(),
           Db.getCalendarDuties(),
-          Db.getRequests()
+          Db.getRequests(),
+          Db.getBonusLogs(),
+          Db.getSlotAttendanceMap()
         ]);
 
-        adminState.students = students;
-        adminState.config = config;
-        adminState.slotsByDate = slots;
-        adminState.duties = duties;
-        adminState.requests = reqs;
+        adminState.students = stList || [];
+        adminState.config = cfg || {};
+        adminState.scheduleSlots = slots || {};
+        adminState.duties = duts || {};
+        adminState.requests = reqs || [];
+        adminState.bonusLogs = bLogs || [];
+        adminState.slotAttendanceMap = slotAtt || { byDateSlot: {}, phoneFree: {} };
+
+        // Ensure default date has slots
+        ensureCurrentDaySlots(adminState.selectedDate);
 
         renderAdminStudentsTable();
+        renderAdminInteractiveCalendarGrid();
         renderAdminSchedule();
         populateAdminConfig();
         renderAdminDutiesTable();
+        updateDutyRotationTrackerCards();
         renderAdminRequests();
         populateBonusStudentSelect();
         populateShareSelect();
+
+        if (adminState.inspectedStudentId) {
+          inspectStudentFromAdmin(adminState.inspectedStudentId);
+        }
       } catch (e) {
         console.error('reloadAdminData error:', e);
       }
     }
 
-    // --- Authentication ---
-    function handleUnlockAdmin() {
-      const pass = document.getElementById('adminPasswordInput')?.value.trim();
-      const err = document.getElementById('adminPasswordError');
-      const expected = String(adminState.config?.adminPassword || '1234').trim();
-
-      if (pass === expected || pass === '1234' || pass === 'bakshu2026') {
-        localStorage.setItem('bakshu_admin_logged_in', 'true');
-        unlockAdminView();
-        showToast('כניסת ראש הישיבה אושרה בהצלחה! 🛡️', '✓');
-      } else {
-        if (err) err.classList.remove('hidden');
-      }
-    }
-
-    function unlockAdminView() {
-      adminState.isUnlocked = true;
-      document.getElementById('adminPasswordModal')?.classList.add('hidden');
-      document.getElementById('adminAppContent')?.classList.remove('hidden');
-    }
-
-    function handleAdminLogout() {
-      localStorage.removeItem('bakshu_admin_logged_in');
-      adminState.isUnlocked = false;
-      document.getElementById('adminAppContent')?.classList.add('hidden');
-      document.getElementById('adminPasswordModal')?.classList.remove('hidden');
-      showToast('התנתקת מפורטל הניהול', '🔒');
-    }
-
-    // --- Tab Switching ---
-    function switchAdminTab(tabId) {
-      adminState.activeTab = tabId;
+    // --- Tabs Switching ---
+    function switchAdminTab(tabName) {
       ['students', 'schedule', 'targets', 'duties', 'requests'].forEach(t => {
-        const sec = document.getElementById('asec-' + t);
-        const btn = document.getElementById('atab-' + t);
-        if (sec) {
-          if (t === tabId) sec.classList.remove('hidden');
-          else sec.classList.add('hidden');
-        }
-        if (btn) {
-          if (t === tabId) {
-            btn.className = 'flex-1 py-2.5 px-3 rounded-xl transition whitespace-nowrap bg-indigo-600 text-white shadow font-bold text-xs';
+        const sec = document.getElementById(`asec-${t}`);
+        const tabBtn = document.getElementById(`atab-${t}`);
+        if (sec) sec.classList.toggle('hidden', t !== tabName);
+        if (tabBtn) {
+          if (t === tabName) {
+            tabBtn.className = 'px-3.5 py-1.5 rounded-xl bg-white text-slate-950 font-black shadow transition whitespace-nowrap flex items-center gap-1.5';
           } else {
-            btn.className = 'flex-1 py-2.5 px-3 rounded-xl transition whitespace-nowrap hover:bg-slate-100 text-slate-600 font-bold text-xs';
+            tabBtn.className = 'px-3.5 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition whitespace-nowrap flex items-center gap-1.5';
           }
         }
       });
     }
 
-    // --- TAB 1: Students & Points ---
+    // =========================================================
+    // 1. STUDENTS MANAGEMENT & INSPECTOR
+    // =========================================================
     function renderAdminStudentsTable() {
       const tbody = document.getElementById('adminStudentsTableBody');
       if (!tbody) return;
 
-      const q = adminState.searchQuery.toLowerCase();
-      const filtered = adminState.students.filter(s => 
-        (s.full_name || '').toLowerCase().includes(q) || (s.phone || '').includes(q)
-      );
+      const filter = (document.getElementById('adminStudentSearchInput')?.value || '').trim().toLowerCase();
+      const list = adminState.students.filter(s => {
+        const n = (s.full_name || s.name || '').toLowerCase();
+        const p = (s.phone || '').toLowerCase();
+        return n.includes(filter) || p.includes(filter);
+      });
 
-      tbody.innerHTML = filtered.map((st, idx) => {
-        const score = Number(st.score ?? st.manual_bonus_pts ?? 0);
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-slate-400">לא נמצאו בחורים תואמים</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = list.map((st, i) => `
+        <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="inspectStudentFromAdmin('${st.id}')">
+          <td class="py-3 px-3 text-slate-400">${i + 1}</td>
+          <td class="py-3 px-3">
+            <span class="font-black text-slate-900 text-sm hover:text-indigo-600 transition">${st.full_name || st.name}</span>
+            <span class="block text-[10px] text-slate-400">לחץ לפירוט סדרים 🔍</span>
+          </td>
+          <td class="py-3 px-3 font-mono text-slate-600" dir="ltr">${st.phone || '--'}</td>
+          <td class="py-3 px-3 font-mono text-slate-600">${st.password || '1234'}</td>
+          <td class="py-3 px-3 text-center" onclick="event.stopPropagation()">
+            <button onclick="toggleStudentPresenceDirectly('${st.id}', ${!st.present_today})" class="px-2.5 py-1 rounded-full text-[10px] font-black transition ${st.present_today ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
+              ${st.present_today ? 'נכח היום ✓' : 'סמן נוכח'}
+            </button>
+          </td>
+          <td class="py-3 px-3 text-left font-outfit text-amber-600 font-black text-sm">${st.score || 0} נק׳</td>
+          <td class="py-3 px-3 text-center" onclick="event.stopPropagation()">
+            <div class="flex items-center justify-center gap-1.5">
+              <button onclick="openBonusForStudent('${st.id}')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs" title="הענק בונוס">
+                ⭐
+              </button>
+              <button onclick="inspectStudentFromAdmin('${st.id}')" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs" title="פירוט נוכחות מלא">
+                פירוט
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function handleStudentSearch() {
+      renderAdminStudentsTable();
+    }
+
+    async function toggleStudentPresenceDirectly(studentId, isPresent) {
+      await Db.updateStudentScore(studentId, isPresent ? 1 : -1, isPresent);
+      const st = adminState.students.find(s => String(s.id) === String(studentId));
+      if (st) {
+        st.present_today = isPresent;
+        st.score = (Number(st.score) || 0) + (isPresent ? 1 : -1);
+      }
+      renderAdminStudentsTable();
+      showToast('סטטוס נוכחות עודכן', '✓');
+    }
+
+    // Detailed Student Modal Inspector
+    function inspectStudentFromAdmin(studentId) {
+      const st = adminState.students.find(s => String(s.id) === String(studentId));
+      if (!st) return;
+      adminState.inspectedStudentId = st.id;
+
+      const modal = document.getElementById('adminStudentBreakdownModal');
+      const content = document.getElementById('adminStudentBreakdownModalContent');
+      if (!modal || !content) return;
+
+      const todayIso = adminState.selectedDate || new Date().toISOString().slice(0, 10);
+      const todaySlots = adminState.scheduleSlots[todayIso] || getSlotsForDate(todayIso);
+
+      const stBonuses = adminState.bonusLogs.filter(b => String(b.user_id) === String(st.id));
+
+      content.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+            <div>
+              <h3 class="text-lg font-black text-slate-900">${st.full_name || st.name}</h3>
+              <p class="text-xs text-slate-500 font-mono" dir="ltr">${st.phone || 'אין טלפון'} • סיסמה אישית: ${st.password || '1234'}</p>
+            </div>
+            <div class="text-left">
+              <span class="block text-2xl font-black text-amber-600 font-outfit">${st.score || 0} נק׳</span>
+              <span class="text-[10px] text-slate-400 font-bold">סך הכל בקופה</span>
+            </div>
+          </div>
+
+          <!-- Sedarim Attendance Check-in for Selected Day -->
+          <div class="space-y-2">
+            <h4 class="text-xs font-black text-slate-900 flex items-center justify-between">
+              <span>סדרי לימוד ליום הנבחר (${todayIso}):</span>
+              <span class="text-[11px] text-indigo-600 font-bold">סמן נוכחות בלחיצה</span>
+            </h4>
+            
+            <div class="space-y-1.5">
+              ${todaySlots.map((slot, sIdx) => {
+                const list = adminState.slotAttendanceMap?.byDateSlot?.[todayIso]?.[slot.id || slot.title] || [];
+                const pfList = adminState.slotAttendanceMap?.phoneFree?.[todayIso]?.[slot.id || slot.title] || [];
+                const isPresent = list.includes(String(st.id));
+                const isPf = pfList.includes(String(st.id));
+
+                return `
+                  <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                    <div>
+                      <span class="font-black text-slate-900">${slot.title}</span>
+                      <span class="text-[10px] text-slate-500 font-outfit mr-1">${slot.openTime} - ${slot.lockTime} • ${slot.points || 1} נק׳</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <button onclick="adminToggleStudentSlotAttendance('${todayIso}', '${slot.id || slot.title}', '${st.id}', ${!isPresent}, ${isPf}, ${slot.points || 1})" class="px-3 py-1 rounded-lg font-black text-xs transition border ${isPresent ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">
+                        ${isPresent ? '✓ נכח' : 'סמן נוכחות'}
+                      </button>
+                      <button onclick="adminToggleStudentSlotAttendance('${todayIso}', '${slot.id || slot.title}', '${st.id}', ${isPresent}, ${!isPf}, ${slot.points || 1})" class="px-2 py-1 rounded-lg font-black text-xs transition border ${isPf ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}" title="בונוס ללא טלפון">
+                        📵 ${isPf ? 'ללא טלפון (+1)' : 'ללא טלפון'}
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Bonus Logs -->
+          <div class="space-y-2 pt-2 border-t border-slate-200">
+            <h4 class="text-xs font-black text-slate-900">בונוסים שקיבל ראש הישיבה:</h4>
+            ${stBonuses.length === 0 ? '<p class="text-xs text-slate-400 py-1">טרם הוענקו בונוסים אישיים</p>' : `
+              <div class="space-y-1.5 max-h-32 overflow-y-auto custom-scroll">
+                ${stBonuses.map(b => `
+                  <div class="flex items-center justify-between p-2 rounded-xl bg-amber-50/60 border border-amber-200 text-xs">
+                    <div>
+                      <span class="font-bold text-amber-950">${b.reason}</span>
+                      <span class="text-[10px] text-slate-400 mr-1">(${new Date(b.created_at).toLocaleDateString('he-IL')})</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-black text-amber-700 font-outfit">+${b.points} נק׳</span>
+                      <button onclick="deleteBonusLog('${b.id}', '${st.id}', ${b.points})" class="text-rose-600 hover:text-rose-800 font-bold text-xs" title="מחק בונוס זה">✕</button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="flex items-center gap-2 pt-3 border-t border-slate-200">
+            <button onclick="openBonusForStudent('${st.id}')" class="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm">
+              ⭐ הענק בונוס מיוחד לבחור זה
+            </button>
+            <button onclick="changeStudentPasswordPrompt('${st.id}')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition border border-slate-200">
+              🔑 שנה סיסמה
+            </button>
+          </div>
+        </div>
+      `;
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeAdminStudentBreakdownModal() {
+      const modal = document.getElementById('adminStudentBreakdownModal');
+      if (modal) modal.classList.add('hidden');
+      adminState.inspectedStudentId = null;
+    }
+
+    async function adminToggleStudentSlotAttendance(dateStr, slotId, studentId, isPresent, noPhone, points) {
+      await Db.toggleSlotStudentAttendance(dateStr, slotId, studentId, isPresent, noPhone, points);
+      await reloadAdminData(true);
+      showToast('נוכחות עודכנה בהצלחה', '✓');
+    }
+
+    async function deleteBonusLog(logId, studentId, points) {
+      if (!confirm('האם לבטל בונוס זה ולנכות את הנקודות?')) return;
+      await Db.deleteBonusLog(logId, studentId, points);
+      await reloadAdminData(true);
+      showToast('הבונוס בוטל בהצלחה', '🗑️');
+    }
+
+    function changeStudentPasswordPrompt(studentId) {
+      const st = adminState.students.find(s => String(s.id) === String(studentId));
+      if (!st) return;
+      const p = prompt(`הזן סיסמה אישית חדשה עבור ${st.full_name || st.name}:`, st.password || '1234');
+      if (p && p.trim()) {
+        Db.updateStudentPassword(studentId, p.trim());
+        st.password = p.trim();
+        inspectStudentFromAdmin(studentId);
+        showToast('הסיסמה עודכנה בהצלחה', '🔑');
+      }
+    }
+
+    // =========================================================
+    // 2. SCHEDULE & SLOTS
+    // =========================================================
+    function getSlotsForDate(isoDate) {
+      return [
+        { id: 'slot_1', title: 'סדר א׳ (עיון)', openTime: '09:00', lockTime: '13:00', points: 1 },
+        { id: 'slot_2', title: 'סדר ב׳ (בקיאות)', openTime: '16:00', lockTime: '19:00', points: 1 },
+        { id: 'slot_3', title: 'סדר ג׳ (ערב)', openTime: '20:30', lockTime: '22:30', points: 1 }
+      ];
+    }
+
+    function ensureCurrentDaySlots(isoDate) {
+      if (!adminState.scheduleSlots[isoDate]) {
+        adminState.scheduleSlots[isoDate] = getSlotsForDate(isoDate);
+      }
+    }
+
+    function renderAdminInteractiveCalendarGrid() {
+      const grid = document.getElementById('adminInteractiveCalendarGrid');
+      const badge = document.getElementById('campaignTotalDaysBadge');
+      if (!grid) return;
+
+      const start = new Date(adminState.config?.startDate || '2026-10-25');
+      const end = new Date(adminState.config?.endDate || '2026-12-10');
+      const cur = new Date(start);
+      const days = [];
+
+      const dayNames = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+      while (cur <= end) {
+        days.push({
+          iso: cur.toISOString().slice(0, 10),
+          dayName: dayNames[cur.getDay()],
+          isShabbat: cur.getDay() === 6
+        });
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      if (badge) badge.textContent = `${days.length} ימים במבצע`;
+
+      grid.innerHTML = days.map(d => {
+        const isSelected = d.iso === adminState.selectedDate;
+        const slots = adminState.scheduleSlots[d.iso] || [];
+        const duty = adminState.duties[d.iso];
+
         return `
-          <tr class="hover:bg-slate-50 transition">
-            <td class="py-3 px-3 text-slate-400 font-outfit">${idx + 1}</td>
-            <td class="py-3 px-3 text-slate-900">${st.full_name}</td>
-            <td class="py-3 px-3 text-slate-500 font-mono" dir="ltr">${st.phone || '-'}</td>
-            <td class="py-3 px-3 text-center">
-              <button onclick="toggleStudentPresenceDirectly('${st.id}', ${!st.present_today})" class="px-2.5 py-1 rounded-xl text-xs font-bold transition border ${st.present_today ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-500 border-slate-200'}">
-                ${st.present_today ? '✓ נכח היום' : 'סמן נוכחות'}
-              </button>
-            </td>
-            <td class="py-3 px-3 text-center font-outfit text-sm font-black text-indigo-950">${score}</td>
-            <td class="py-3 px-3 text-center">
-              <button onclick="openBonusForStudent('${st.id}')" class="px-2.5 py-1 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs">
-                ⭐ בונוס
-              </button>
-            </td>
-          </tr>
+          <button onclick="onAdminDateSelected('${d.iso}')" class="p-2 rounded-xl text-center transition border ${isSelected ? 'bg-indigo-600 text-white border-indigo-700 shadow-md scale-105' : (d.isShabbat ? 'bg-amber-50 border-amber-200 text-amber-950' : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100')}">
+            <span class="block text-[10px] font-bold opacity-80">${d.dayName}</span>
+            <span class="block text-xs font-black font-outfit">${d.iso.slice(5)}</span>
+            <span class="block text-[9px] mt-0.5 font-bold ${isSelected ? 'text-amber-300' : 'text-slate-400'}">${slots.length} סדרים</span>
+          </button>
         `;
       }).join('');
     }
 
-    function handleStudentSearch(val) {
-      adminState.searchQuery = val;
-      renderAdminStudentsTable();
-    }
-
-    async function toggleStudentPresenceDirectly(studentId, willBePresent) {
-      const st = adminState.students.find(s => s.id === studentId);
-      if (!st) return;
-
-      const ok = await Db.updateStudentScore(studentId, willBePresent ? 1 : -1, willBePresent);
-      if (ok) {
-        st.present_today = willBePresent;
-        st.score = (Number(st.score) || 0) + (willBePresent ? 1 : -1);
-        renderAdminStudentsTable();
-        showToast(`נוכחות עודכנה עבור ${st.full_name}`, '✓');
-      }
-    }
-
-    // --- TAB 2: Schedule Slots ---
-    function onAdminDateSelected(dateVal) {
-      adminState.selectedDate = dateVal;
+    function onAdminDateSelected(isoDate) {
+      adminState.selectedDate = isoDate;
+      ensureCurrentDaySlots(isoDate);
+      renderAdminInteractiveCalendarGrid();
       renderAdminSchedule();
     }
 
     function renderAdminSchedule() {
       const container = document.getElementById('adminSlotsListContainer');
-      const dateTxt = document.getElementById('adminScheduleHebrewDateText');
+      const title = document.getElementById('adminSelectedDateTitle');
+      const hBadge = document.getElementById('adminSelectedDateHebrew');
       if (!container) return;
 
-      const d = new Date(adminState.selectedDate + 'T12:00:00');
-      if (dateTxt) {
-        try {
-          const hebF = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' });
-          const dayF = new Intl.DateTimeFormat('he-IL', { weekday: 'long' });
-          dateTxt.textContent = `${dayF.format(d)} | ${hebF.format(d)}`;
-        } catch (e) {}
-      }
+      const dateStr = adminState.selectedDate;
+      if (title) title.textContent = `עריכת יום: ${dateStr}`;
 
-      const slots = adminState.slotsByDate[adminState.selectedDate] || [
-        { id: 's1', title: 'סדר א׳ (עיון)', timeWindow: '09:00 - 10:15', openTime: '09:00', lockTime: '10:15', points: 1 },
-        { id: 's2', title: 'סדר ב׳ (בקיאות)', timeWindow: '15:30 - 16:45', openTime: '15:30', lockTime: '16:45', points: 1 },
-        { id: 's3', title: 'סדר ג׳ (לילה)', timeWindow: '20:30 - 21:45', openTime: '20:30', lockTime: '21:45', points: 2 }
-      ];
+      const slots = adminState.scheduleSlots[dateStr] || [];
 
       if (slots.length === 0) {
-        container.innerHTML = `
-          <div class="p-8 rounded-3xl bg-white border border-slate-200 text-center space-y-2">
-            <span class="text-3xl">📭</span>
-            <p class="text-xs font-bold text-slate-500">יום זה ריק מסדרי לימוד (0 נקודות)</p>
-          </div>
-        `;
+        container.innerHTML = '<div class="text-xs text-slate-400 py-6 text-center">אין סדרים מוגדרים ליום זה. לחץ "+ הוסף סדר" להוספה.</div>';
         return;
       }
 
-      container.innerHTML = slots.map((s, idx) => `
-        <div class="p-4 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex-1 min-w-[200px]">
-              <input type="text" value="${s.title}" onchange="updateSlotTitle(${idx}, this.value)" class="text-sm font-black text-slate-900 w-full p-1 border-b border-transparent hover:border-slate-300 focus:border-indigo-600 focus:outline-none">
-              <div class="flex items-center gap-2 mt-1 text-xs text-slate-500">
-                <span>פתיחה:</span>
-                <input type="time" value="${s.openTime || '09:00'}" onchange="updateSlotTime(${idx}, 'openTime', this.value)" class="p-1 rounded-lg border border-slate-300 font-mono text-xs">
-                <span>נעילה:</span>
-                <input type="time" value="${s.lockTime || '10:15'}" onchange="updateSlotTime(${idx}, 'lockTime', this.value)" class="p-1 rounded-lg border border-slate-300 font-mono text-xs">
+      container.innerHTML = slots.map((sl, idx) => {
+        const list = adminState.slotAttendanceMap?.byDateSlot?.[dateStr]?.[sl.id || sl.title] || [];
+        const count = list.length;
+
+        return `
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <span class="font-black text-indigo-900 text-sm">#${idx + 1}</span>
+                <input type="text" value="${sl.title}" onchange="updateSlotTitle(${idx}, this.value)" class="p-2 rounded-xl border border-slate-300 text-xs font-bold w-40 sm:w-56 bg-white">
+              </div>
+
+              <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1 text-xs">
+                  <span class="text-slate-500 font-bold">שעות:</span>
+                  <input type="time" value="${sl.openTime}" onchange="updateSlotTime(${idx}, 'openTime', this.value)" class="p-1.5 rounded-lg border border-slate-300 text-xs font-bold bg-white">
+                  <span>-</span>
+                  <input type="time" value="${sl.lockTime}" onchange="updateSlotTime(${idx}, 'lockTime', this.value)" class="p-1.5 rounded-lg border border-slate-300 text-xs font-bold bg-white">
+                </div>
+
+                <div class="flex items-center gap-1 text-xs">
+                  <span class="text-slate-500 font-bold">נק׳:</span>
+                  <input type="number" value="${sl.points || 1}" onchange="updateSlotPoints(${idx}, this.value)" class="w-14 p-1.5 rounded-lg border border-slate-300 text-xs font-black text-center bg-white">
+                </div>
+
+                <button onclick="toggleSlotAttendanceList('slot_att_${idx}')" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-xs transition flex items-center gap-1">
+                  <span>👥</span>
+                  <span>נוכחות (${count})</span>
+                </button>
+
+                <button onclick="removeSingleSlot(${idx})" class="p-1.5 text-rose-600 hover:text-rose-800 text-xs font-bold" title="מחק סדר זה מיום זה בלבד">
+                  🗑️ יום זה
+                </button>
+                <button onclick="removeSlotSeries('${sl.title}')" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold border border-rose-200" title="מחק סדרה זו מכל ימי המבצע!">
+                  מחק סדרה מכל הימים
+                </button>
               </div>
             </div>
-            <div class="flex items-center gap-2">
-              <label class="text-xs font-bold text-slate-500">שווי:</label>
-              <select onchange="updateSlotPoints(${idx}, this.value)" class="text-xs font-black p-1.5 rounded-xl border border-slate-300 bg-amber-50 text-amber-900">
-                <option value="1" ${s.points === 1 ? 'selected' : ''}>1 נק׳</option>
-                <option value="2" ${s.points === 2 ? 'selected' : ''}>2 נק׳</option>
-                <option value="3" ${s.points === 3 ? 'selected' : ''}>3 נק׳</option>
-                <option value="5" ${s.points === 5 ? 'selected' : ''}>5 נק׳ (משמר)</option>
-                <option value="8" ${s.points === 8 ? 'selected' : ''}>8 נק׳ (שבת)</option>
-              </select>
-              <button onclick="removeSlotSeries('${s.title}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs flex items-center gap-1" title="מחק סדר זה מכל ימי המבצע">
-                <span>🗑️</span><span>מחק סדרה</span>
-              </button>
-              <button onclick="removeSingleSlot(${idx})" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-bold" title="מחק סדר זה מהיום">✕</button>
+
+            <!-- Expandable Student Attendance Checklist for this specific slot -->
+            <div id="slot_att_${idx}" class="hidden p-3 rounded-xl bg-white border border-slate-200 space-y-2">
+              <div class="flex items-center justify-between text-xs pb-1 border-b border-slate-100">
+                <span class="font-black text-slate-800">רשימת בחורים שסימנו נוכחות בסדר זה (${sl.title}):</span>
+                <span class="text-[10px] text-slate-400">סמן/בטל נוכחות בלחיצה</span>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto custom-scroll text-xs">
+                ${adminState.students.map(st => {
+                  const isPresent = list.includes(String(st.id));
+                  return `
+                    <label class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer border ${isPresent ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-100'}">
+                      <input type="checkbox" ${isPresent ? 'checked' : ''} onchange="adminToggleStudentSlotAttendance('${dateStr}', '${sl.id || sl.title}', '${st.id}', this.checked, false, ${sl.points || 1})" class="w-3.5 h-3.5 rounded text-emerald-600">
+                      <span class="truncate font-bold ${isPresent ? 'text-emerald-950 font-black' : 'text-slate-700'}">${st.full_name || st.name}</span>
+                    </label>
+                  `;
+                }).join('')}
+              </div>
             </div>
+
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+    }
+
+    function toggleSlotAttendanceList(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('hidden');
     }
 
     async function updateSlotTitle(idx, val) {
-      ensureCurrentDaySlots();
-      adminState.slotsByDate[adminState.selectedDate][idx].title = val;
-      await Db.syncDateSlots(adminState.selectedDate, adminState.slotsByDate[adminState.selectedDate]);
-      showToast('כותרת עודכנה ונשמרה בענן', '✏️');
+      const d = adminState.selectedDate;
+      if (adminState.scheduleSlots[d]?.[idx]) {
+        adminState.scheduleSlots[d][idx].title = val;
+        await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+      }
     }
 
     async function updateSlotTime(idx, field, val) {
-      ensureCurrentDaySlots();
-      adminState.slotsByDate[adminState.selectedDate][idx][field] = val;
-      const s = adminState.slotsByDate[adminState.selectedDate][idx];
-      s.timeWindow = `${s.openTime || '09:00'} - ${s.lockTime || '10:15'}`;
-      await Db.syncDateSlots(adminState.selectedDate, adminState.slotsByDate[adminState.selectedDate]);
-      showToast('שעה עודכנה ונשמרה בענן', '⏱️');
+      const d = adminState.selectedDate;
+      if (adminState.scheduleSlots[d]?.[idx]) {
+        adminState.scheduleSlots[d][idx][field] = val;
+        await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+      }
     }
 
     async function updateSlotPoints(idx, val) {
-      ensureCurrentDaySlots();
-      adminState.slotsByDate[adminState.selectedDate][idx].points = Number(val) || 1;
-      await Db.syncDateSlots(adminState.selectedDate, adminState.slotsByDate[adminState.selectedDate]);
-      showToast('ניקוד סדר עודכן ונשמר בענן', '⭐');
+      const d = adminState.selectedDate;
+      if (adminState.scheduleSlots[d]?.[idx]) {
+        adminState.scheduleSlots[d][idx].points = Number(val) || 1;
+        await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+      }
     }
 
     async function removeSingleSlot(idx) {
-      ensureCurrentDaySlots();
-      adminState.slotsByDate[adminState.selectedDate].splice(idx, 1);
-      await Db.syncDateSlots(adminState.selectedDate, adminState.slotsByDate[adminState.selectedDate]);
+      const d = adminState.selectedDate;
+      if (!confirm('האם למחוק סדר זה מהיום הנבחר?')) return;
+      adminState.scheduleSlots[d].splice(idx, 1);
+      await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
       renderAdminSchedule();
-      showToast('סדר הוסר מהיום הנבחר', '🗑️');
+      showToast('הסדר נמחק מיום זה', '🗑️');
     }
 
-    async function removeSlotSeries(sederTitle) {
-      if (!confirm(`האם אתה בטוח שברצונך למחוק את הסדר "${sederTitle}" מכל ימי המבצע ב-Supabase?`)) return;
-      await Db.deleteSlotSeries(sederTitle);
-      Object.keys(adminState.slotsByDate).forEach(d => {
-        if (Array.isArray(adminState.slotsByDate[d])) {
-          adminState.slotsByDate[d] = adminState.slotsByDate[d].filter(s => s.title !== sederTitle);
-        }
-      });
-      renderAdminSchedule();
-      showToast(`הסדר "${sederTitle}" נמחק מכל הימים במבצע`, '🗑️');
+    async function removeSlotSeries(seriesTitle) {
+      if (!confirm(`האם למחוק את כל סדרת "${seriesTitle}" מכל ימי המבצע?`)) return;
+      await Db.deleteSlotSeries(seriesTitle);
+      await reloadAdminData(true);
+      showToast(`סדרת "${seriesTitle}" נמחקה בהצלחה מכל הימים`, '🗑️');
     }
 
     async function applyCurrentDayToWeekdays() {
-      ensureCurrentDaySlots();
-      const current = adminState.slotsByDate[adminState.selectedDate];
-      const start = new Date(adminState.config?.startDate + 'T12:00:00');
-      const end = new Date(adminState.config?.endDate + 'T12:00:00');
-      const curr = new Date(start);
+      if (!confirm('האם להחיל את סדרי יום זה על כל ימי החול (א׳-ה׳) במבצע?')) return;
+      const d = adminState.selectedDate;
+      const current = adminState.scheduleSlots[d] || [];
 
-      while (curr <= end) {
-        if (curr.getDay() >= 0 && curr.getDay() <= 4) { // Sun - Thu
-          const iso = curr.toISOString().slice(0, 10);
-          adminState.slotsByDate[iso] = JSON.parse(JSON.stringify(current));
-          await Db.syncDateSlots(iso, current);
+      const start = new Date(adminState.config?.startDate || '2026-10-25');
+      const end = new Date(adminState.config?.endDate || '2026-12-10');
+      const cur = new Date(start);
+
+      while (cur <= end) {
+        if (cur.getDay() >= 0 && cur.getDay() <= 4) { // Sun-Thu
+          const iso = cur.toISOString().slice(0, 10);
+          adminState.scheduleSlots[iso] = JSON.parse(JSON.stringify(current));
+          await Db.syncDateSlots(iso, adminState.scheduleSlots[iso]);
         }
-        curr.setDate(curr.getDate() + 1);
+        cur.setDate(cur.getDate() + 1);
       }
-      showToast('סדרי יום זה הוחלו על כל ימי החול (א׳-ה׳) בענן! 🔄', '✓');
+      showToast('הסדרים הוחלו על כל ימי החול!', '🔄');
     }
 
     async function applyCurrentDayToShabbats() {
-      ensureCurrentDaySlots();
-      const current = adminState.slotsByDate[adminState.selectedDate];
-      const start = new Date(adminState.config?.startDate + 'T12:00:00');
-      const end = new Date(adminState.config?.endDate + 'T12:00:00');
-      const curr = new Date(start);
+      if (!confirm('האם להחיל את סדרי יום זה על כל השבתות במבצע?')) return;
+      const d = adminState.selectedDate;
+      const current = adminState.scheduleSlots[d] || [];
 
-      while (curr <= end) {
-        if (curr.getDay() === 6) { // Shabbat
-          const iso = curr.toISOString().slice(0, 10);
-          adminState.slotsByDate[iso] = JSON.parse(JSON.stringify(current));
-          await Db.syncDateSlots(iso, current);
+      const start = new Date(adminState.config?.startDate || '2026-10-25');
+      const end = new Date(adminState.config?.endDate || '2026-12-10');
+      const cur = new Date(start);
+
+      while (cur <= end) {
+        if (cur.getDay() === 6) { // Saturday
+          const iso = cur.toISOString().slice(0, 10);
+          adminState.scheduleSlots[iso] = JSON.parse(JSON.stringify(current));
+          await Db.syncDateSlots(iso, adminState.scheduleSlots[iso]);
         }
-        curr.setDate(curr.getDate() + 1);
+        cur.setDate(cur.getDate() + 1);
       }
-      showToast('סדרי יום זה הוחלו על כל השבתות בענן! 🕯️', '✓');
+      showToast('הסדרים הוחלו על כל השבתות!', '🕯️');
     }
 
     async function clearCurrentDaySlots() {
-      adminState.slotsByDate[adminState.selectedDate] = [];
-      await Db.syncDateSlots(adminState.selectedDate, []);
+      const d = adminState.selectedDate;
+      if (!confirm(`האם לרוקן את כל הסדרים מתאריך ${d}?`)) return;
+      adminState.scheduleSlots[d] = [];
+      await Db.syncDateSlots(d, []);
       renderAdminSchedule();
-      showToast('יום זה אופס (0 סדרים)', '🗑️');
+      showToast('יום רוקן מסדרים', '🗑️');
     }
 
-    function ensureCurrentDaySlots() {
-      if (!adminState.slotsByDate[adminState.selectedDate]) {
-        adminState.slotsByDate[adminState.selectedDate] = [
-          { id: 's1', title: 'סדר א׳ (עיון)', timeWindow: '09:00 - 10:15', openTime: '09:00', lockTime: '10:15', points: 1 },
-          { id: 's2', title: 'סדר ב׳ (בקיאות)', timeWindow: '15:30 - 16:45', openTime: '15:30', lockTime: '16:45', points: 1 },
-          { id: 's3', title: 'סדר ג׳ (לילה)', timeWindow: '20:30 - 21:45', openTime: '20:30', lockTime: '21:45', points: 2 }
-        ];
-      }
-    }
-
-    // --- Add Slot Modal ---
     function openAddSlotModal() {
       document.getElementById('addSlotModal')?.classList.remove('hidden');
     }
@@ -921,71 +1210,84 @@
     }
 
     async function handleSaveNewSlot() {
-      const title = document.getElementById('newSlotTitle')?.value.trim();
-      const open = document.getElementById('newSlotOpen')?.value;
-      const lock = document.getElementById('newSlotLock')?.value;
-      const pts = Number(document.getElementById('newSlotPoints')?.value) || 1;
-      const rec = document.getElementById('newSlotRecurrence')?.value;
+      const title = (document.getElementById('newSlotTitle')?.value || '').trim();
+      const openTime = document.getElementById('newSlotOpenTime')?.value || '09:00';
+      const lockTime = document.getElementById('newSlotLockTime')?.value || '10:15';
+      const points = Number(document.getElementById('newSlotPoints')?.value) || 1;
 
       if (!title) {
-        showToast('אנא הזן שם סדר', '⚠️');
+        showToast('נא להזין שם לסדר', '⚠️');
         return;
       }
 
-      const newSlot = {
+      const d = adminState.selectedDate;
+      ensureCurrentDaySlots(d);
+      adminState.scheduleSlots[d].push({
         id: 'slot_' + Date.now(),
         title,
-        openTime: open,
-        lockTime: lock,
-        timeWindow: `${open} - ${lock}`,
-        points: pts
-      };
+        openTime,
+        lockTime,
+        points
+      });
 
-      ensureCurrentDaySlots();
-      adminState.slotsByDate[adminState.selectedDate].push(newSlot);
-      await Db.syncDateSlots(adminState.selectedDate, adminState.slotsByDate[adminState.selectedDate]);
-
+      await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
       closeAddSlotModal();
       renderAdminSchedule();
-      showToast(`סדר "${title}" נוסף בהצלחה!`, '✓');
+      showToast('סדר חדש נוסף בהצלחה', '➕');
     }
 
-    // --- TAB 3: Targets & Config ---
+    // =========================================================
+    // 3. TARGETS, STOPS & BONUSES
+    // =========================================================
     function populateAdminConfig() {
-      if (!adminState.config) return;
-      const c = adminState.config;
-      const t = c.targets || { min: { name: 'יעד 1', points: 70 }, mid: { name: 'יעד 2', points: 100 }, max: { name: 'הפסגה', points: 130 } };
+      const cfg = adminState.config;
+      if (!cfg) return;
 
-      const sInp = document.getElementById('cfgStartDateInput'); if (sInp) sInp.value = c.startDate || '2026-10-25';
-      const eInp = document.getElementById('cfgEndDateInput'); if (eInp) eInp.value = c.endDate || '2026-12-10';
+      const sInp = document.getElementById('cfgStartDateInput');
+      const eInp = document.getElementById('cfgEndDateInput');
+      if (sInp) sInp.value = cfg.startDate || '2026-10-25';
+      if (eInp) eInp.value = cfg.endDate || '2026-12-10';
 
-      const t1N = document.getElementById('targetMinNameInput'); if (t1N) t1N.value = t.min.name;
-      const t1P = document.getElementById('targetMinPointsInput'); if (t1P) t1P.value = t.min.points;
+      const t1N = document.getElementById('targetMinNameInput');
+      const t1P = document.getElementById('targetMinPointsInput');
+      const t2N = document.getElementById('targetMidNameInput');
+      const t2P = document.getElementById('targetMidPointsInput');
+      const t3N = document.getElementById('targetMaxNameInput');
+      const t3P = document.getElementById('targetMaxPointsInput');
 
-      const t2N = document.getElementById('targetMidNameInput'); if (t2N) t2N.value = t.mid.name;
-      const t2P = document.getElementById('targetMidPointsInput'); if (t2P) t2P.value = t.mid.points;
+      if (t1N) t1N.value = cfg.targets?.min?.name || 'יעד 1 – כניסה להגרלה';
+      if (t1P) t1P.value = cfg.targets?.min?.points || 70;
+      if (t2N) t2N.value = cfg.targets?.mid?.name || 'יעד 2 – פרס כספי';
+      if (t2P) t2P.value = cfg.targets?.mid?.points || 100;
+      if (t3N) t3N.value = cfg.targets?.max?.name || 'הפסגה – נסיעה ופרס ענק';
+      if (t3P) t3P.value = cfg.targets?.max?.points || 130;
 
-      const t3N = document.getElementById('targetMaxNameInput'); if (t3N) t3N.value = t.max.name;
-      const t3P = document.getElementById('targetMaxPointsInput'); if (t3P) t3P.value = t.max.points;
+      const npInp = document.getElementById('cfgNoPhoneBonusInput');
+      const wkInp = document.getElementById('cfgWakeupBonusInput');
+      const ktInp = document.getElementById('cfgKitchenBonusInput');
+      if (npInp) npInp.value = cfg.bonusConfig?.noPhoneBonus || 1;
+      if (wkInp) wkInp.value = cfg.bonusConfig?.wakeupBonus || 3;
+      if (ktInp) ktInp.value = cfg.bonusConfig?.kitchenBonus || 3;
 
       renderJourneyStopsEditor();
     }
 
     function renderJourneyStopsEditor() {
       const container = document.getElementById('adminJourneyStopsContainer');
-      if (!container || !adminState.config) return;
+      if (!container) return;
 
-      const stops = adminState.config.trailStops || [];
-      container.innerHTML = stops.map((s, idx) => `
-        <div class="flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold">
+      const stops = adminState.config?.trailStops || [];
+      container.innerHTML = stops.map((st, i) => `
+        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
           <div class="flex items-center gap-2">
-            <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-outfit">${idx + 1}</span>
-            <input type="text" value="${s.title}" onchange="updateStopField(${idx}, 'title', this.value)" class="p-1 rounded border border-slate-300 bg-white">
+            <span class="font-black text-slate-800">#${i + 1}</span>
+            <input type="text" value="${st.title}" onchange="updateStopField(${i}, 'title', this.value)" class="p-1.5 rounded-lg border border-slate-300 font-bold bg-white w-48">
+            <input type="text" value="${st.dateLabel || ''}" onchange="updateStopField(${i}, 'dateLabel', this.value)" placeholder="תווית תאריך (ט׳ כסליו)" class="p-1.5 rounded-lg border border-slate-300 font-bold bg-white w-32">
+            <input type="date" value="${st.isoDate || ''}" onchange="updateStopField(${i}, 'isoDate', this.value)" class="p-1.5 rounded-lg border border-slate-300 font-bold bg-white">
           </div>
-          <div class="flex items-center gap-2">
-            <span>תאריך:</span>
-            <input type="date" value="${s.isoDate || ''}" onchange="updateStopField(${idx}, 'isoDate', this.value)" class="p-1 rounded border border-slate-300 bg-white">
-            <input type="text" value="${s.dateLabel || ''}" placeholder="כיתוב עברי (יוכרז בהמשך)" onchange="updateStopField(${idx}, 'dateLabel', this.value)" class="p-1 rounded border border-slate-300 bg-white w-32">
+          <div class="flex items-center gap-1.5">
+            <input type="number" value="${st.points || 70}" onchange="updateStopField(${i}, 'points', this.value)" class="w-16 p-1.5 rounded-lg border border-slate-300 text-center font-black bg-white">
+            <span class="font-bold text-slate-500">נק׳</span>
           </div>
         </div>
       `).join('');
@@ -998,197 +1300,425 @@
     }
 
     function addNewCustomTargetPrompt() {
-      const name = prompt('הזן שם עבור היעד החדש:');
-      if (!name) return;
-      const pts = parseInt(prompt('הזן שווי נקודות ליעד:'), 10) || 150;
-      if (!adminState.config.extraTargets) adminState.config.extraTargets = [];
-      adminState.config.extraTargets.push({ name, points: pts });
-      populateAdminConfig();
+      const name = prompt('הזן שם ליעד הנוסף:');
+      const pts = prompt('הזן כמות נקודות ליעד זה:');
+      if (name && pts) {
+        if (!adminState.config.extraTargets) adminState.config.extraTargets = [];
+        adminState.config.extraTargets.push({ name, points: Number(pts) || 50 });
+        showToast('יעד נוסף נוסף, זכור ללחוץ שמירה', '➕');
+      }
     }
 
     function addNewJourneyStopPrompt() {
       const title = prompt('הזן כותרת לעצירה החדשה:');
-      if (!title) return;
-      if (!adminState.config.trailStops) adminState.config.trailStops = [];
-      adminState.config.trailStops.push({
-        id: 'stop_' + Date.now(),
-        title,
-        isoDate: '',
-        dateLabel: 'יוכרז בהמשך'
-      });
-      renderJourneyStopsEditor();
+      if (title) {
+        if (!adminState.config.trailStops) adminState.config.trailStops = [];
+        adminState.config.trailStops.push({
+          id: 'stop_' + Date.now(),
+          title,
+          dateLabel: 'תאריך יוכרז בהמשך',
+          isoDate: '',
+          points: 85,
+          isDecided: false
+        });
+        renderJourneyStopsEditor();
+        showToast('עצירה חדשה נוספה, זכור ללחוץ שמירה', '➕');
+      }
     }
 
     async function saveAllAdminConfig() {
-      const c = adminState.config || {};
-      c.startDate = document.getElementById('cfgStartDateInput')?.value || c.startDate;
-      c.endDate = document.getElementById('cfgEndDateInput')?.value || c.endDate;
+      const sInp = document.getElementById('cfgStartDateInput')?.value;
+      const eInp = document.getElementById('cfgEndDateInput')?.value;
+      if (sInp) adminState.config.startDate = sInp;
+      if (eInp) adminState.config.endDate = eInp;
 
-      c.targets = {
-        min: { name: document.getElementById('targetMinNameInput')?.value, points: Number(document.getElementById('targetMinPointsInput')?.value) || 70 },
-        mid: { name: document.getElementById('targetMidNameInput')?.value, points: Number(document.getElementById('targetMidPointsInput')?.value) || 100 },
-        max: { name: document.getElementById('targetMaxNameInput')?.value, points: Number(document.getElementById('targetMaxPointsInput')?.value) || 130 }
+      adminState.config.targets = {
+        min: {
+          name: document.getElementById('targetMinNameInput')?.value || 'יעד 1 – כניסה להגרלה',
+          points: Number(document.getElementById('targetMinPointsInput')?.value) || 70
+        },
+        mid: {
+          name: document.getElementById('targetMidNameInput')?.value || 'יעד 2 – פרס כספי',
+          points: Number(document.getElementById('targetMidPointsInput')?.value) || 100
+        },
+        max: {
+          name: document.getElementById('targetMaxNameInput')?.value || 'הפסגה – נסיעה ופרס ענק',
+          points: Number(document.getElementById('targetMaxPointsInput')?.value) || 130
+        }
       };
 
-      const ok = await Db.saveConfig(c);
-      if (ok) {
-        showToast('כל ההגדרות, היעדים והתחנות נשמרו בענן Supabase! 💾', '✓');
-      } else {
-        showToast('שגיאה בשמירת ההגדרות', '❌');
-      }
+      adminState.config.bonusConfig = {
+        noPhoneBonus: Number(document.getElementById('cfgNoPhoneBonusInput')?.value) || 1,
+        wakeupBonus: Number(document.getElementById('cfgWakeupBonusInput')?.value) || 3,
+        kitchenBonus: Number(document.getElementById('cfgKitchenBonusInput')?.value) || 3
+      };
+
+      await Db.saveConfig(adminState.config);
+      showToast('כל ההגדרות נשמרו בהצלחה בענן Supabase!', '💾');
     }
 
     function exportGoogleCalendarIcs() {
-      showToast('קובץ לוח שנה ICS הוכן להורדה 📅', '✓');
+      const events = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Bakshu VIBE//Campaign Roster//HE',
+        'CALSCALE:GREGORIAN',
+        'X-WR-CALNAME:מבצע בקשו VIBE - עד הפסגה',
+        'BEGIN:VEVENT',
+        'UID:stop1@bakshu',
+        'SUMMARY:🎁 עצירה 1 במסע - ישיבת בקשו',
+        'DTSTART;VALUE=DATE:20261119',
+        'DTEND;VALUE=DATE:20261120',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([events], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `לוח_מבצע_בקשו.ics`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('קובץ היומן ירד בהצלחה', '📅');
     }
 
-    // --- TAB 4: Duties ---
+    // =========================================================
+    // 4. DUTIES ROSTER & GOOGLE CALENDAR REMINDERS
+    // =========================================================
     function renderAdminDutiesTable() {
       const tbody = document.getElementById('adminDutiesTableBody');
-      if (!tbody || !adminState.config) return;
+      if (!tbody) return;
 
-      const start = new Date(adminState.config.startDate + 'T12:00:00');
-      const end = new Date(adminState.config.endDate + 'T12:00:00');
-      const curr = new Date(start);
-
-      let html = '';
-      while (curr <= end) {
-        const iso = curr.toISOString().slice(0, 10);
-        const dayF = new Intl.DateTimeFormat('he-IL', { weekday: 'long' });
-        const hebF = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'numeric' });
-        const d = adminState.duties[iso] || {};
-
-        html += `
-          <tr class="hover:bg-slate-50 transition">
-            <td class="py-2.5 px-3 font-bold">${dayF.format(curr)} (${hebF.format(curr)})</td>
-            <td class="py-2.5 px-3">
-              <select onchange="onDutyStudentChanged('${iso}', 'wakeup_student_id', this.value)" class="p-1 rounded-lg border border-slate-300 bg-white font-bold text-xs">
-                <option value="">-- ללא תורן --</option>
-                ${adminState.students.map(s => `<option value="${s.id}" ${s.id === d.wakeupStudentId ? 'selected' : ''}>${s.full_name}</option>`).join('')}
-              </select>
-            </td>
-            <td class="py-2.5 px-3 text-center">
-              <input type="checkbox" ${d.wakeupDone ? 'checked' : ''} onchange="onDutyToggleDone('${iso}', 'wakeup_done', this.checked)" class="w-4 h-4 text-emerald-600 rounded">
-            </td>
-            <td class="py-2.5 px-3">
-              <select onchange="onDutyStudentChanged('${iso}', 'kitchen_student_id', this.value)" class="p-1 rounded-lg border border-slate-300 bg-white font-bold text-xs">
-                <option value="">-- ללא תורן --</option>
-                ${adminState.students.map(s => `<option value="${s.id}" ${s.id === d.kitchenStudentId ? 'selected' : ''}>${s.full_name}</option>`).join('')}
-              </select>
-            </td>
-            <td class="py-2.5 px-3 text-center">
-              <input type="checkbox" ${d.kitchenDone ? 'checked' : ''} onchange="onDutyToggleDone('${iso}', 'kitchen_done', this.checked)" class="w-4 h-4 text-emerald-600 rounded">
-            </td>
-          </tr>
-        `;
-        curr.setDate(curr.getDate() + 1);
-      }
-
-      tbody.innerHTML = html;
-    }
-
-    async function onDutyStudentChanged(iso, field, val) {
-      await Db.updateDuty(iso, field, val);
-      if (!adminState.duties[iso]) adminState.duties[iso] = {};
-      if (field === 'wakeup_student_id') adminState.duties[iso].wakeupStudentId = val;
-      if (field === 'kitchen_student_id') adminState.duties[iso].kitchenStudentId = val;
-      showToast('שיבוץ תורנות עודכן', '✓');
-    }
-
-    async function onDutyToggleDone(iso, field, isChecked) {
-      await Db.toggleDutyDone(iso, field, isChecked);
-      if (!adminState.duties[iso]) adminState.duties[iso] = {};
-      if (field === 'wakeup_done') adminState.duties[iso].wakeupDone = isChecked;
-      if (field === 'kitchen_done') adminState.duties[iso].kitchenDone = isChecked;
-      showToast('סטטוס תורנות עודכן', '✓');
-    }
-
-    async function runFairDutiesLottery() {
-      if (!confirm('האם לבצע הגרלה הוגנת אוטומטית לשיבוץ תורנויות הבחורים שטרם היו תורנים?')) return;
-      showToast('הגרלה הוגנת בוצעה בהצלחה! 🎉', '🎲');
-    }
-
-    // --- TAB 5: Requests ---
-    function renderAdminRequests() {
-      const container = document.getElementById('adminRequestsListContainer');
-      const badge = document.getElementById('pendingRequestsBadge');
-      if (!container) return;
-
-      const pending = adminState.requests.filter(r => r.status === 'pending');
-      if (badge) {
-        if (pending.length > 0) {
-          badge.textContent = pending.length;
-          badge.classList.remove('hidden');
-        } else {
-          badge.classList.add('hidden');
-        }
-      }
-
-      if (adminState.requests.length === 0) {
-        container.innerHTML = '<p class="text-xs text-slate-400 text-center py-8">אין כרגע בקשות הממתינות לאישור</p>';
+      const dates = Object.keys(adminState.duties).sort();
+      if (dates.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-slate-400">אין תורנויות רשומות. לחץ "➕ הוסף תאריך" או הפעל הגרלה אוטומטית.</td></tr>';
         return;
       }
 
-      container.innerHTML = adminState.requests.map(r => `
-        <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div>
-            <span class="font-black text-slate-900 block text-sm">${r.student_name}</span>
-            <span class="text-slate-500 font-bold">${r.slot_title} | תאריך: ${r.date_str}</span>
-            <p class="text-slate-600 mt-1 italic">"${r.reason || 'אין הסבר'}"</p>
-          </div>
-          <div class="flex items-center gap-2">
-            ${r.status === 'pending' ? `
-              <button onclick="approveRequest('${r.id}', '${r.student_id}', '${r.student_name}', '${r.slot_title}')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow">
-                ✓ אשר והענק ניקוד
+      tbody.innerHTML = dates.map(d => {
+        const item = adminState.duties[d];
+        const wId = item.wakeupStudentId || '';
+        const kId = item.kitchenStudentId || '';
+
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="py-3 px-3">
+              <span class="font-black text-slate-900 block">${item.dayName || d}</span>
+              <span class="text-[10px] text-slate-400 font-outfit" dir="ltr">${d}</span>
+            </td>
+
+            <!-- Wakeup Duty Select -->
+            <td class="py-3 px-3">
+              <select onchange="onDutyStudentChanged('${d}', 'wakeup_student_id', this.value)" class="p-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-white w-40">
+                <option value="">-- טרם שובץ --</option>
+                ${adminState.students.map(s => `<option value="${s.id}" ${String(s.id) === String(wId) ? 'selected' : ''}>${s.full_name || s.name}</option>`).join('')}
+              </select>
+            </td>
+            <td class="py-3 px-3 text-center">
+              <input type="checkbox" ${item.wakeupDone ? 'checked' : ''} onchange="onDutyToggleDone('${d}', 'wakeup_done', this.checked)" class="w-4 h-4 rounded text-emerald-600 cursor-pointer">
+            </td>
+
+            <!-- Kitchen Duty Select -->
+            <td class="py-3 px-3">
+              <select onchange="onDutyStudentChanged('${d}', 'kitchen_student_id', this.value)" class="p-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-white w-40">
+                <option value="">-- טרם שובץ --</option>
+                ${adminState.students.map(s => `<option value="${s.id}" ${String(s.id) === String(kId) ? 'selected' : ''}>${s.full_name || s.name}</option>`).join('')}
+              </select>
+            </td>
+            <td class="py-3 px-3 text-center">
+              <input type="checkbox" ${item.kitchenDone ? 'checked' : ''} onchange="onDutyToggleDone('${d}', 'kitchen_done', this.checked)" class="w-4 h-4 rounded text-emerald-600 cursor-pointer">
+            </td>
+
+            <!-- Send Reminder with Google Calendar Link -->
+            <td class="py-3 px-3 text-center">
+              <button onclick="sendDutyReminderWhatsApp('${d}')" class="px-2.5 py-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[11px] transition flex items-center justify-center gap-1 mx-auto" title="שלח תזכורת Google Calendar בוואטסאפ לתורנים">
+                <span>📅</span><span>שלח תזכורת</span>
               </button>
-              <button onclick="rejectRequest('${r.id}')" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200">
-                ✕ דחה
+            </td>
+
+            <!-- Delete Duty Date -->
+            <td class="py-3 px-3 text-center">
+              <button onclick="deleteDutyDateConfirm('${d}')" class="p-1.5 text-rose-600 hover:text-rose-800 text-xs font-bold" title="מחק תאריך תורנות זה">
+                🗑️
               </button>
-            ` : `
-              <span class="px-3 py-1 rounded-full text-xs font-bold ${r.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-                ${r.status === 'approved' ? 'אושר ✓' : 'נדחה ✕'}
-              </span>
-            `}
-          </div>
-        </div>
-      `).join('');
+            </td>
+          </tr>
+        `;
+      }).join('');
     }
 
-    async function approveRequest(id, stId, name, title) {
-      await Db.updateRequestStatus(id, 'approved', stId, name, title, 1);
-      const r = adminState.requests.find(x => x.id === id);
-      if (r) r.status = 'approved';
-      renderAdminRequests();
-      showToast(`בקשת ${name} אושרה והניקוד עודכן!`, '✓');
+    function updateDutyRotationTrackerCards() {
+      const pastContainer = document.getElementById('dutyPastListContainer');
+      const nextContainer = document.getElementById('dutyNextListContainer');
+      const pastBadge = document.getElementById('dutyPastCountBadge');
+      const nextBadge = document.getElementById('dutyNextCountBadge');
+      if (!pastContainer || !nextContainer) return;
+
+      const roster = adminState.duties || {};
+      const allStudents = adminState.students || [];
+      const dutyCountByStudent = {};
+
+      allStudents.forEach(s => { dutyCountByStudent[s.id] = 0; });
+
+      Object.keys(roster).forEach(iso => {
+        const dObj = roster[iso];
+        if (!dObj) return;
+        if (dObj.wakeupStudentId && dutyCountByStudent[dObj.wakeupStudentId] !== undefined) dutyCountByStudent[dObj.wakeupStudentId]++;
+        if (dObj.kitchenStudentId && dutyCountByStudent[dObj.kitchenStudentId] !== undefined) dutyCountByStudent[dObj.kitchenStudentId]++;
+      });
+
+      const pastStudents = allStudents.filter(s => (dutyCountByStudent[s.id] || 0) > 0);
+      const nextStudents = allStudents.filter(s => (dutyCountByStudent[s.id] || 0) === 0);
+
+      pastStudents.sort((a, b) => (dutyCountByStudent[b.id] || 0) - (dutyCountByStudent[a.id] || 0));
+      nextStudents.sort((a, b) => (a.full_name || a.name).localeCompare(b.full_name || b.name, 'he'));
+
+      if (pastBadge) pastBadge.textContent = `${pastStudents.length} בחורים`;
+      if (nextBadge) nextBadge.textContent = `${nextStudents.length} בחורים`;
+
+      if (pastStudents.length === 0) {
+        pastContainer.innerHTML = '<div class="text-[11px] text-slate-400 py-3 text-center">טרם שובצו תורנים במבצע</div>';
+      } else {
+        pastContainer.innerHTML = pastStudents.map(st => `
+          <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200 text-xs">
+            <span class="font-bold text-slate-900">${st.full_name || st.name}</span>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black">${dutyCountByStudent[st.id]} פעמים</span>
+          </div>
+        `).join('');
+      }
+
+      if (nextStudents.length === 0) {
+        nextContainer.innerHTML = '<div class="text-[11px] text-emerald-600 font-bold py-3 text-center">כל הבחורים כבר שובצו לפחות פעם אחת! 🎉</div>';
+      } else {
+        nextContainer.innerHTML = nextStudents.map(st => `
+          <div class="flex items-center justify-between p-2 rounded-xl bg-white border border-slate-200 text-xs">
+            <span class="font-bold text-slate-900">${st.full_name || st.name}</span>
+            <span class="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">טרם שובץ</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    async function onDutyStudentChanged(isoDate, field, studentId) {
+      await Db.updateDuty(isoDate, field, studentId);
+      if (adminState.duties[isoDate]) {
+        if (field === 'wakeup_student_id') adminState.duties[isoDate].wakeupStudentId = studentId;
+        if (field === 'kitchen_student_id') adminState.duties[isoDate].kitchenStudentId = studentId;
+      }
+      updateDutyRotationTrackerCards();
+      showToast('תורן שובץ בהצלחה', '✓');
+    }
+
+    async function onDutyToggleDone(isoDate, doneField, isDone) {
+      await Db.toggleDutyDone(isoDate, doneField, isDone);
+      if (adminState.duties[isoDate]) {
+        if (doneField === 'wakeup_done') adminState.duties[isoDate].wakeupDone = isDone;
+        if (doneField === 'kitchen_done') adminState.duties[isoDate].kitchenDone = isDone;
+      }
+      showToast('סטטוס ביצוע עודכן', '✓');
+    }
+
+    function addNewDutyPrompt() {
+      const d = prompt('הזן תאריך לתורנות חדשה (פורמט: YYYY-MM-DD):', new Date().toISOString().slice(0, 10));
+      if (d && /^\d{4}-\d{2}-\d{2}$/.test(d.trim())) {
+        const clean = d.trim();
+        adminState.duties[clean] = {
+          isoDate: clean,
+          dayName: `יום ${clean.slice(5)}`,
+          wakeupStudentId: null,
+          kitchenStudentId: null,
+          wakeupDone: false,
+          kitchenDone: false
+        };
+        Db.saveDutiesRoster(adminState.duties);
+        renderAdminDutiesTable();
+        showToast('תאריך תורנות נוסף', '➕');
+      }
+    }
+
+    async function deleteDutyDateConfirm(isoDate) {
+      if (!confirm(`האם למחוק תורנות לתאריך ${isoDate}?`)) return;
+      delete adminState.duties[isoDate];
+      await Db.deleteDutyDate(isoDate);
+      renderAdminDutiesTable();
+      updateDutyRotationTrackerCards();
+      showToast('תאריך התורנות נמחק', '🗑️');
+    }
+
+    async function runFairDutiesLottery() {
+      const allStudents = adminState.students || [];
+      const dutyDates = Object.keys(adminState.duties);
+
+      if (allStudents.length === 0 || dutyDates.length === 0) {
+        showToast('חסרים תלמידים או תאריכי תורנות להגרלה', '⚠️');
+        return;
+      }
+
+      if (!confirm('האם להגריל תורנים שוויונית לכל הימים הפנויים במבצע?')) return;
+
+      const dutyCounts = {};
+      allStudents.forEach(s => { dutyCounts[s.id] = 0; });
+
+      dutyDates.forEach(d => {
+        const item = adminState.duties[d];
+        if (item.wakeupStudentId && dutyCounts[item.wakeupStudentId] !== undefined) dutyCounts[item.wakeupStudentId]++;
+        if (item.kitchenStudentId && dutyCounts[item.kitchenStudentId] !== undefined) dutyCounts[item.kitchenStudentId]++;
+      });
+
+      let countAssigned = 0;
+      dutyDates.forEach(d => {
+        const item = adminState.duties[d];
+        
+        // Wakeup
+        if (!item.wakeupStudentId) {
+          const minW = Math.min(...allStudents.map(s => dutyCounts[s.id]));
+          const poolW = allStudents.filter(s => dutyCounts[s.id] === minW);
+          const pickedW = poolW[Math.floor(Math.random() * poolW.length)];
+          item.wakeupStudentId = pickedW.id;
+          dutyCounts[pickedW.id]++;
+          countAssigned++;
+        }
+
+        // Kitchen
+        if (!item.kitchenStudentId) {
+          const eligibleForK = allStudents.filter(s => String(s.id) !== String(item.wakeupStudentId));
+          const minK = Math.min(...eligibleForK.map(s => dutyCounts[s.id]));
+          const poolK = eligibleForK.filter(s => dutyCounts[s.id] === minK);
+          const pickedK = poolK[Math.floor(Math.random() * poolK.length)];
+          item.kitchenStudentId = pickedK.id;
+          dutyCounts[pickedK.id]++;
+          countAssigned++;
+        }
+      });
+
+      await Db.saveDutiesRoster(adminState.duties);
+      renderAdminDutiesTable();
+      updateDutyRotationTrackerCards();
+      showToast(`הוגרלו בהצלחה ${countAssigned} תורנויות שוויוניות!`, '🎉');
+    }
+
+    // Send Duty Reminder WhatsApp with direct Google Calendar link
+    function sendDutyReminderWhatsApp(isoDate) {
+      const duty = adminState.duties[isoDate];
+      if (!duty) return;
+
+      const wStudent = adminState.students.find(s => String(s.id) === String(duty.wakeupStudentId));
+      const kStudent = adminState.students.find(s => String(s.id) === String(duty.kitchenStudentId));
+
+      const target = prompt('למי לשלוח תזכורת?\n1 - לתורן מעורר (' + (wStudent ? (wStudent.full_name || wStudent.name) : 'טרם שובץ') + ')\n2 - לתורן מטבח (' + (kStudent ? (kStudent.full_name || kStudent.name) : 'טרם שובץ') + ')', '1');
+
+      let st = null;
+      let roleText = '';
+      let isWaker = true;
+
+      if (target === '1') {
+        st = wStudent;
+        roleText = 'השכמת בוקר (מעורר לתפילה)';
+        isWaker = true;
+      } else if (target === '2') {
+        st = kStudent;
+        roleText = 'תורנות מטבח וחדר אוכל';
+        isWaker = false;
+      }
+
+      if (!st) {
+        showToast('לא נבחר תורן משובץ', '⚠️');
+        return;
+      }
+
+      const gcalUrl = Db.getGoogleCalendarUrl({
+        title: `תורנות בישיבה: ${roleText} | מבצע בקשו VIBE`,
+        details: `שלום ${st.full_name || st.name}! תזכורת לתורנות שלך בישיבת בקשו ירושלים. נא להגיע בזמן! (+3 נקודות למבצע)`,
+        startIso: isWaker ? `${isoDate}T06:45:00` : `${isoDate}T13:30:00`,
+        endIso: isWaker ? `${isoDate}T07:45:00` : `${isoDate}T14:30:00`,
+        isAllDay: false
+      });
+
+      const text = encodeURIComponent(`שלום ${st.full_name || st.name}! 🌟\nתזכורת לתורנות שלך בישיבת בקשו ירושלים בתאריך ${isoDate}:\nתפקיד: ${roleText}\n\nלחץ על הקישור להוספת התורנות ישירות ליומן Google שלך:\n${gcalUrl}\n\nבהצלחה ויישר כוח!`);
+      const phoneClean = (st.phone || '').replace(/[^0-9]/g, '');
+
+      window.open(`https://wa.me/972${phoneClean.startsWith('0') ? phoneClean.slice(1) : phoneClean}?text=${text}`, '_blank');
+    }
+
+    // =========================================================
+    // 5. ATTENDANCE REQUESTS
+    // =========================================================
+    function renderAdminRequests() {
+      const container = document.getElementById('adminRequestsListContainer');
+      const badge = document.getElementById('requestsCountBadge');
+      if (!container) return;
+
+      const pendings = adminState.requests.filter(r => r.status === 'pending');
+      if (badge) {
+        badge.textContent = pendings.length;
+        badge.classList.toggle('hidden', pendings.length === 0);
+      }
+
+      if (adminState.requests.length === 0) {
+        container.innerHTML = '<div class="text-xs text-slate-400 py-6 text-center">אין בקשות אישור במערכת</div>';
+        return;
+      }
+
+      container.innerHTML = adminState.requests.map(r => {
+        const isPending = r.status === 'pending';
+        return `
+          <div class="p-4 rounded-2xl ${isPending ? 'bg-amber-50/70 border-2 border-amber-300' : 'bg-slate-50 border border-slate-200'} space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2">
+                <span class="font-black text-slate-900">${r.student_name || 'תלמיד'}</span>
+                <span class="text-slate-500 font-bold">• ${r.slot_title} (${r.date_str})</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${r.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : (r.status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800')}">
+                ${r.status === 'approved' ? 'אושר ✓' : (r.status === 'rejected' ? 'נדחה' : 'ממתין')}
+              </span>
+            </div>
+            <p class="text-xs text-slate-600 font-medium">סיבה: "${r.reason || 'אין פירוט'}"</p>
+            ${isPending ? `
+              <div class="flex items-center gap-2 pt-2 border-t border-amber-200">
+                <button onclick="approveRequest('${r.id}', '${r.student_id}', '${r.student_name}', '${r.slot_title}')" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-sm">
+                  אשר והוסף נקודה ✓
+                </button>
+                <button onclick="rejectRequest('${r.id}')" class="px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition border border-rose-200">
+                  דחה בקשה
+                </button>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function approveRequest(id, studentId, studentName, slotTitle) {
+      await Db.updateRequestStatus(id, 'approved', studentId, studentName, slotTitle, 1);
+      await reloadAdminData(true);
+      showToast('הבקשה אושרה והנקודה נוספה לתלמיד!', '✓');
     }
 
     async function rejectRequest(id) {
       await Db.updateRequestStatus(id, 'rejected');
-      const r = adminState.requests.find(x => x.id === id);
-      if (r) r.status = 'rejected';
-      renderAdminRequests();
+      await reloadAdminData(true);
       showToast('הבקשה נדחתה', 'ℹ️');
     }
 
-    // --- Projector Modal ---
+    // =========================================================
+    // 6. QR PROJECTOR MODAL
+    // =========================================================
     function openProjectorModal() {
       const modal = document.getElementById('projectorModal');
       const canvas = document.getElementById('projectorQrCanvas');
-      const codeTxt = document.getElementById('projectorSecretCodeText');
+      const codeDisplay = document.getElementById('projectorCodeDisplay');
       if (modal) modal.classList.remove('hidden');
 
-      const code = String(adminState.config?.qrSecret || 'BK-892').trim().toUpperCase();
-      if (codeTxt) codeTxt.textContent = code;
+      const secret = (adminState.config?.qrSecret || 'BK-892').trim().toUpperCase();
+      if (codeDisplay) codeDisplay.textContent = secret;
 
       if (canvas && window.QRCode) {
-        canvas.innerHTML = '';
-        new QRCode(canvas, {
-          text: `https://bakshu-vibe.vercel.app/?qr=${code}`,
-          width: 200,
-          height: 200,
-          colorDark: "#0A1138",
-          colorLight: "#ffffff",
-          correctLevel: QRCode.CorrectLevel.H
+        const checkInUrl = `${window.location.origin}/?qr=${encodeURIComponent(secret)}`;
+        QRCode.toCanvas(canvas, checkInUrl, {
+          width: 280,
+          margin: 2,
+          color: { dark: '#0A1138', light: '#FFFFFF' }
         });
       }
     }
@@ -1198,18 +1728,20 @@
     }
 
     async function promptChangeQrSecret() {
-      const curr = String(adminState.config?.qrSecret || 'BK-892').trim().toUpperCase();
-      const n = prompt('הזן קוד ברקוד סודי חדש לבית המדרש:', curr);
-      if (!n || !n.trim()) return;
-
-      const clean = n.trim().toUpperCase();
-      if (adminState.config) adminState.config.qrSecret = clean;
-      await Db.saveConfig(adminState.config);
-      openProjectorModal();
-      showToast(`קוד בית המדרש עודכן ל-${clean}`, '✓');
+      const cur = (adminState.config?.qrSecret || 'BK-892').trim().toUpperCase();
+      const n = prompt('הזן קוד QR סודי חדש לבית המדרש:', cur);
+      if (n && n.trim()) {
+        const clean = n.trim().toUpperCase();
+        adminState.config.qrSecret = clean;
+        await Db.saveConfig(adminState.config);
+        openProjectorModal();
+        showToast('קוד ה-QR הוחלף בהצלחה!', '🔄');
+      }
     }
 
-    // --- Bonus Modal ---
+    // =========================================================
+    // 7. BONUS MODAL
+    // =========================================================
     function openGrantBonusModal() {
       document.getElementById('grantBonusModal')?.classList.remove('hidden');
     }
@@ -1217,41 +1749,47 @@
       document.getElementById('grantBonusModal')?.classList.add('hidden');
     }
 
+    function openBonusForStudent(studentId) {
+      const sel = document.getElementById('bonusStudentSelect');
+      if (sel) sel.value = studentId;
+      openGrantBonusModal();
+    }
+
     function populateBonusStudentSelect() {
       const sel = document.getElementById('bonusStudentSelect');
       if (!sel) return;
-      sel.innerHTML = adminState.students.map(s => `<option value="${s.id}">${s.full_name}</option>`).join('');
+      sel.innerHTML = '<option value="">-- כל הבחורים (הענקה קולקטיבית) --</option>' +
+        adminState.students.map(s => `<option value="${s.id}">${s.full_name || s.name}</option>`).join('');
     }
 
-    function setBonusPts(pts) {
+    function setBonusPts(n) {
       const inp = document.getElementById('bonusPointsInput');
-      if (inp) inp.value = pts;
-    }
-
-    function openBonusForStudent(stId) {
-      openGrantBonusModal();
-      const sel = document.getElementById('bonusStudentSelect');
-      if (sel) sel.value = stId;
+      if (inp) inp.value = n;
     }
 
     async function handleConfirmGrantBonus() {
       const stId = document.getElementById('bonusStudentSelect')?.value;
-      const pts = Number(document.getElementById('bonusPointsInput')?.value) || 5;
-      const reason = document.getElementById('bonusReasonInput')?.value.trim();
+      const pts = Number(document.getElementById('bonusPointsInput')?.value) || 1;
+      const reason = (document.getElementById('bonusReasonInput')?.value || '').trim() || 'בונוס מיוחד מראש הישיבה ⭐';
 
-      const st = adminState.students.find(s => s.id === stId);
-      if (!st) return;
-
-      const ok = await Db.grantSpecialBonus(stId, st.full_name, pts, reason);
-      if (ok) {
-        st.score = (Number(st.score) || 0) + pts;
-        renderAdminStudentsTable();
-        closeGrantBonusModal();
-        showToast(`בונוס של +${pts} נקודות הוענק ל${st.full_name}! ⭐`, '🎉');
+      if (stId) {
+        const st = adminState.students.find(s => String(s.id) === String(stId));
+        await Db.grantSpecialBonus(stId, st?.full_name || st?.name, pts, reason);
+      } else {
+        // All students collective bonus
+        for (const st of adminState.students) {
+          await Db.grantSpecialBonus(st.id, st.full_name || st.name, pts, reason);
+        }
       }
+
+      closeGrantBonusModal();
+      await reloadAdminData(true);
+      showToast(`בונוס של +${pts} נקודות הוענק בהצלחה!`, '⭐');
     }
 
-    // --- Add Student Modal ---
+    // =========================================================
+    // 8. ADD STUDENT & SHARE
+    // =========================================================
     function openAddStudentModal() {
       document.getElementById('addStudentModal')?.classList.remove('hidden');
     }
@@ -1260,95 +1798,73 @@
     }
 
     async function handleSaveNewStudent() {
-      const name = document.getElementById('newStudentNameInput')?.value.trim();
-      const phone = document.getElementById('newStudentPhoneInput')?.value.trim();
+      const name = (document.getElementById('newStudentFullName')?.value || '').trim();
+      const phone = (document.getElementById('newStudentPhone')?.value || '').trim();
+
       if (!name) {
-        showToast('אנא הזן שם מלא', '⚠️');
+        showToast('נא להזין שם מלא', '⚠️');
         return;
       }
 
-      const res = await Db.addStudent(name, phone);
-      if (res) {
-        adminState.students.push(res);
-        renderAdminStudentsTable();
-        closeAddStudentModal();
-        showToast(`הבחור ${name} נוסף בהצלחה!`, '✓');
-      }
+      await Db.addStudent(name, phone);
+      closeAddStudentModal();
+      await reloadAdminData(true);
+      showToast(`הבחור ${name} נוסף בהצלחה!`, '✓');
     }
 
-    // --- Universal Share Modal ---
     function openShareModal() {
       document.getElementById('shareModal')?.classList.remove('hidden');
-      buildShareText();
     }
     function closeShareModal() {
       document.getElementById('shareModal')?.classList.add('hidden');
     }
 
     function populateShareSelect() {
-      const sel = document.getElementById('shareRecipientSelect');
+      const sel = document.getElementById('shareStudentSelect');
       if (!sel) return;
-      sel.innerHTML = '<option value="ALL">כל הבחורים בישיבה (הודעה כללית)</option>' +
-        adminState.students.map(s => `<option value="${s.id}">${s.full_name} (${s.phone || 'ללא נייד'})</option>`).join('');
+      sel.innerHTML = '<option value="">-- כל הבחורים (הודעה כללית) --</option>' +
+        adminState.students.map(s => `<option value="${s.id}">${s.full_name || s.name} (${s.phone || 'אין טלפון'})</option>`).join('');
     }
 
-    function buildShareText() {
-      const sel = document.getElementById('shareRecipientSelect');
-      const box = document.getElementById('shareMessageBox');
-      if (!box) return;
+    function sendShare(channel) {
+      const stId = document.getElementById('shareStudentSelect')?.value;
+      const st = adminState.students.find(s => String(s.id) === String(stId));
 
-      const sid = sel?.value;
-      const st = sid !== 'ALL' ? adminState.students.find(s => s.id === sid) : null;
-      const baseUrl = 'https://bakshu-vibe.vercel.app/';
-      const link = st && st.phone ? `${baseUrl}?phone=${encodeURIComponent(st.phone)}` : baseUrl;
+      const baseUrl = window.location.origin;
+      let text = '';
+      let phone = '';
 
-      const greet = st ? `שלום ${st.full_name} היקר! 🌟\n` : `שלום לכל בחורי ישיבת "בקשו" היקרים! 🏔️🔥\n`;
-      const t = adminState.config?.targets || { min: { name: 'יעד 1', points: 70 }, mid: { name: 'יעד 2', points: 100 }, max: { name: 'הפסגה', points: 130 } };
-
-      box.value = greet +
-        `🎁 *מבצע חורף תשפ״ז – "עד הפסגה" בישיבת בקשו ירושלים!*\n` +
-        `🥉 ${t.min.name}: ${t.min.points} נק׳\n` +
-        `🥈 ${t.mid.name}: ${t.mid.points} נק׳\n` +
-        `🥇 ${t.max.name}: ${t.max.points} נק׳\n\n` +
-        `לכניסה למערכת וסימון נוכחות:\n${link}`;
-    }
-
-    function sendShare(method) {
-      const sel = document.getElementById('shareRecipientSelect');
-      const msg = document.getElementById('shareMessageBox')?.value || '';
-      const sid = sel?.value;
-      const st = sid !== 'ALL' ? adminState.students.find(s => s.id === sid) : null;
-      const phone = st?.phone ? st.phone.replace(/[^0-9]/g, '').replace(/^0/, '972') : '';
-
-      if (method === 'whatsapp') {
-        window.open(phone ? `https://wa.me/${phone}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+      if (st) {
+        const link = `${baseUrl}/?phone=${encodeURIComponent(st.phone || '')}`;
+        text = encodeURIComponent(`שלום ${st.full_name || st.name}! 🚀\nברוך הבא למבצע 'עד הפסגה' בישיבת בקשו!\n\nהנה קישור הכניסה האישי שלך (ללא צורך בהקשת סיסמה):\n${link}\n\nסיסמתך האישית: ${st.password || '1234'}\nעולים ביחד לפסגה!`);
+        phone = (st.phone || '').replace(/[^0-9]/g, '');
       } else {
-        navigator.clipboard.writeText(msg);
-        showToast('ההודעה והקישור הועתקו ללוח! 📋', '✓');
+        text = encodeURIComponent(`שלום לכל בחורי ישיבת בקשו! 🏔️✨\nמבצע חורף תשפ״ז 'עד הפסגה' יוצא לדרך!\n\nהיכנסו למערכת עם מספר הטלפון שלכם:\n${baseUrl}\n(סיסמת ברירת מחדל: 1234)\n\nמחכים לכם בסדרים!`);
+      }
+
+      if (channel === 'whatsapp') {
+        const pStr = phone ? `972${phone.startsWith('0') ? phone.slice(1) : phone}` : '';
+        window.open(`https://wa.me/${pStr}?text=${text}`, '_blank');
+      } else {
+        window.open(`sms:${phone}?body=${text}`, '_blank');
       }
     }
 
-    function openChangeAdminPasswordModal() {
-      const n = prompt('הזן סיסמת ראש ישיבה חדשה:');
-      if (!n || !n.trim()) return;
-      if (adminState.config) adminState.config.adminPassword = n.trim();
-      Db.saveConfig(adminState.config);
-      showToast('סיסמת ראש הישיבה עודכנה בהצלחה! 🔑', '✓');
-    }
-
-    // --- Toast Helper ---
-    function showToast(msg, icon) {
+    // --- Toast Notifications ---
+    function showToast(message, icon = 'ℹ️') {
       const container = document.getElementById('toastContainer');
       if (!container) return;
-      const t = document.createElement('div');
-      t.className = 'p-3 px-4 rounded-2xl bg-slate-900 text-white text-xs font-black shadow-2xl flex items-center gap-2 border border-slate-700 animate-bounce';
-      t.innerHTML = `<span>${icon || '✨'}</span><span>${msg}</span>`;
-      container.appendChild(t);
+
+      const toast = document.createElement('div');
+      toast.className = 'p-3 rounded-2xl bg-slate-900/95 text-white text-xs font-bold shadow-2xl border border-white/20 flex items-center gap-2 transition-all transform duration-300 pointer-events-auto';
+      toast.innerHTML = `<span class="text-base">${icon}</span><span>${message}</span>`;
+      container.appendChild(toast);
+
       setTimeout(() => {
-        t.style.opacity = '0';
-        t.style.transition = 'opacity 0.4s';
-        setTimeout(() => t.remove(), 400);
-      }, 3000);
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
     }
   </script>
 </body>

@@ -510,6 +510,206 @@
     },
 
     // ==========================================
+    // 8. קישור סדר-לנוכחות ובחור-לנוכחות
+    // ==========================================
+    async getSlotAttendanceMap() {
+      if (!client) return { byDateSlot: {}, phoneFree: {} };
+      try {
+        const snap = await this.loadSnapshot();
+        const byDateSlot = snap?.attendanceByDateSlot || {};
+        const phoneFree = snap?.phoneFreeByDateSlot || {};
+
+        // קריאת רשומות נוכחות מ-attendance_logs לשילוב חי
+        const { data: logs } = await client.from('attendance_logs').select('*');
+        if (logs) {
+          logs.forEach(l => {
+            if (!l.slot_date || !l.user_id) return;
+            const d = l.slot_date;
+            if (!byDateSlot[d]) byDateSlot[d] = {};
+            const key = l.slot_id || l.slot_title || 'general';
+            if (!byDateSlot[d][key]) byDateSlot[d][key] = [];
+            const sid = String(l.user_id);
+            if (l.status === 'present' && !byDateSlot[d][key].includes(sid)) {
+              byDateSlot[d][key].push(sid);
+            }
+            if (l.no_phone) {
+              if (!phoneFree[d]) phoneFree[d] = {};
+              if (!phoneFree[d][key]) phoneFree[d][key] = [];
+              if (!phoneFree[d][key].includes(sid)) phoneFree[d][key].push(sid);
+            }
+          });
+        }
+        return { byDateSlot, phoneFree };
+      } catch (e) {
+        return { byDateSlot: {}, phoneFree: {} };
+      }
+    },
+
+    async toggleSlotStudentAttendance(dateStr, slotId, studentId, isPresent, noPhone, points, studentName, slotTitle) {
+      if (!client || !studentId) return false;
+      try {
+        const snap = await this.loadSnapshot() || {};
+        if (!snap.attendanceByDateSlot) snap.attendanceByDateSlot = {};
+        if (!snap.attendanceByDateSlot[dateStr]) snap.attendanceByDateSlot[dateStr] = {};
+        if (!snap.attendanceByDateSlot[dateStr][slotId]) snap.attendanceByDateSlot[dateStr][slotId] = [];
+
+        if (!snap.phoneFreeByDateSlot) snap.phoneFreeByDateSlot = {};
+        if (!snap.phoneFreeByDateSlot[dateStr]) snap.phoneFreeByDateSlot[dateStr] = {};
+        if (!snap.phoneFreeByDateSlot[dateStr][slotId]) snap.phoneFreeByDateSlot[dateStr][slotId] = [];
+
+        const list = snap.attendanceByDateSlot[dateStr][slotId];
+        const pfList = snap.phoneFreeByDateSlot[dateStr][slotId];
+        const sid = String(studentId);
+
+        const curPresent = list.includes(sid);
+        const curPf = pfList.includes(sid);
+
+        let delta = 0;
+        const basePts = Number(points) || 1;
+
+        if (isPresent !== undefined) {
+          if (isPresent && !curPresent) {
+            list.push(sid);
+            delta += basePts;
+          } else if (!isPresent && curPresent) {
+            const idx = list.indexOf(sid);
+            if (idx !== -1) list.splice(idx, 1);
+            delta -= basePts;
+          }
+        }
+
+        if (noPhone !== undefined) {
+          if (noPhone && !curPf) {
+            pfList.push(sid);
+            delta += 1;
+          } else if (!noPhone && curPf) {
+            const idx = pfList.indexOf(sid);
+            if (idx !== -1) pfList.splice(idx, 1);
+            delta -= 1;
+          }
+        }
+
+        await this.saveSnapshot({
+          attendanceByDateSlot: snap.attendanceByDateSlot,
+          phoneFreeByDateSlot: snap.phoneFreeByDateSlot
+        });
+
+        if (delta !== 0) {
+          await this.updateStudentScore(studentId, delta);
+        }
+
+        // רישום ב-attendance_logs
+        try {
+          await client.from('attendance_logs').insert([{
+            user_id: /^[0-9a-f-]{36}$/i.test(studentId) ? studentId : null,
+            student_name: studentName || '',
+            slot_title: slotTitle || slotId,
+            slot_date: dateStr,
+            points_earned: delta > 0 ? delta : 0,
+            no_phone: !!noPhone,
+            status: isPresent ? 'present' : 'absent',
+            marked_at: new Date().toISOString()
+          }]);
+        } catch(e) {}
+
+        return true;
+      } catch (e) {
+        console.error('Db.toggleSlotStudentAttendance error:', e);
+        return false;
+      }
+    },
+
+    async getStudentAttendanceLogs(studentId) {
+      if (!client || !studentId) return [];
+      try {
+        const { data } = await client
+          .from('attendance_logs')
+          .select('*')
+          .eq('user_id', studentId)
+          .order('marked_at', { ascending: false });
+        return data || [];
+      } catch (e) {
+        return [];
+      }
+    },
+
+    async deleteBonusLog(logId, studentId, points) {
+      if (!client || !logId) return false;
+      try {
+        await client.from('manager_bonus_logs').delete().eq('id', logId);
+        if (studentId && points) {
+          await this.updateStudentScore(studentId, -Number(points));
+        }
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+
+    async saveDutiesRoster(rosterMap) {
+      if (!client || !rosterMap) return false;
+      try {
+        const rows = Object.keys(rosterMap).map(iso => ({
+          iso_date: iso,
+          day_name: rosterMap[iso].dayName || '',
+          hebrew_date: rosterMap[iso].hebrewDate || '',
+          wakeup_student_id: rosterMap[iso].wakeupStudentId || null,
+          kitchen_student_id: rosterMap[iso].kitchenStudentId || null,
+          wakeup_done: !!rosterMap[iso].wakeupDone,
+          kitchen_done: !!rosterMap[iso].kitchenDone,
+          updated_at: new Date().toISOString()
+        }));
+
+        await client.from('campaign_calendar').upsert(rows, { onConflict: 'iso_date' });
+        await this.saveSnapshot({ dutiesRoster: rosterMap });
+        return true;
+      } catch (e) {
+        console.error('Db.saveDutiesRoster error:', e);
+        return false;
+      }
+    },
+
+    async deleteDutyDate(isoDate) {
+      if (!client || !isoDate) return false;
+      try {
+        await client.from('campaign_calendar').delete().eq('iso_date', isoDate);
+        const snap = await this.loadSnapshot();
+        if (snap?.dutiesRoster?.[isoDate]) {
+          delete snap.dutiesRoster[isoDate];
+          await this.saveSnapshot({ dutiesRoster: snap.dutiesRoster });
+        }
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+
+    // יצירת קישור Google Calendar חכם
+    getGoogleCalendarUrl({ title, details, startIso, endIso, isAllDay }) {
+      const cleanTitle = encodeURIComponent(title || 'מבצע בקשו VIBE');
+      const cleanDetails = encodeURIComponent(details || 'ישיבת בקשו ירושלים');
+      
+      let datesParam = '';
+      if (isAllDay) {
+        const dStr = (startIso || '2026-11-19').replace(/-/g, '').slice(0, 8);
+        const [y, m, d] = (startIso || '2026-11-19').split('-').map(Number);
+        const nextDt = new Date(y, m - 1, d + 1);
+        const nextDStr = `${nextDt.getFullYear()}${String(nextDt.getMonth() + 1).padStart(2, '0')}${String(nextDt.getDate()).padStart(2, '0')}`;
+        datesParam = `${dStr}/${nextDStr}`;
+      } else {
+        const pad = (n) => String(n).padStart(2, '0');
+        const formatDt = (iso, timeStr) => {
+          const [h, mi] = (timeStr || '09:00').split(':');
+          return `${iso.replace(/-/g, '')}T${pad(h)}${pad(mi)}00`;
+        };
+        const sTime = startIso.includes('T') ? startIso.replace(/[-:]/g, '').slice(0, 15) : formatDt(startIso, '07:00');
+        const eTime = endIso.includes('T') ? endIso.replace(/[-:]/g, '').slice(0, 15) : formatDt(endIso || startIso, '08:00');
+        datesParam = `${sTime}/${eTime}`;
+      }
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${cleanTitle}&dates=${datesParam}&details=${cleanDetails}`;
+    },
+
+    // ==========================================
     // 8. סנאפשוט גיבוי חסין RLS (manager_bonus_logs -999)
     // ==========================================
     async saveSnapshot(payload) {

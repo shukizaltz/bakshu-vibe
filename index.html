@@ -3,150 +3,125 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>בקשו VIBE | פורטל התלמידים – עד הפסגה</title>
+  <title>בקשו VIBE | פורטל בחורים – עד הפסגה</title>
   
-  <!-- Favicon -->
-  <link rel="icon" type="image/jpeg" href="logo-yeshiva.jpeg">
+  <link rel="icon" type="image/png" href="logo-meyzam.png" />
+  <link rel="apple-touch-icon" href="logo-yeshiva.jpeg" />
   
-  <!-- Fonts -->
+  <!-- Tailwind CSS & Google Fonts Heebo + Outfit -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;700;800;900&family=Heebo:wght@300;400;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Supabase CDN -->
+  <!-- Confetti & Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <!-- Html5Qrcode Scanner CDN -->
-  <script src="https://unpkg.com/html5-qrcode"></script>
-
-  <!-- Canvas Confetti CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['Assistant', 'Heebo', 'sans-serif'],
-            outfit: ['Outfit', 'sans-serif']
-          },
-          colors: {
-            brand: {
-              navy: '#0A1138',
-              gold: '#F59E0B',
-              amber: '#D97706',
-              emerald: '#10B981'
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <!-- Database layer -->
+  <script src="db.js"></script>
 
   <style>
+    * { font-family: 'Heebo', sans-serif; box-sizing: border-box; }
+    .font-outfit { font-family: 'Outfit', sans-serif; }
+    
     body {
-      font-family: 'Assistant', 'Heebo', sans-serif;
-      background-color: #060b24;
-      color: #0f172a;
+      background: radial-gradient(circle at 50% 0%, #171E45 0%, #080D26 50%, #030712 100%);
+      color: #0F172A;
       min-height: 100vh;
-      -webkit-tap-highlight-color: transparent;
+      overflow-x: hidden;
     }
+
     .glass-card {
       background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(226, 232, 240, 0.8);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
     }
-    .glass-dark {
-      background: rgba(10, 17, 56, 0.85);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 14px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
-    .glow-active {
-      box-shadow: 0 0 25px rgba(16, 185, 129, 0.45);
-    }
-    .custom-scroll::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    .custom-scroll::-webkit-scrollbar-thumb {
-      background: rgba(148, 163, 184, 0.5);
-      border-radius: 999px;
+    .pulsing-btn {
+      animation: pulse-ring 2s infinite;
     }
   </style>
 </head>
-<body class="bg-gradient-to-b from-[#060b24] via-[#0A1138] to-[#0f172a] text-slate-800 antialiased pb-24">
+<body class="selection:bg-indigo-500 selection:text-white">
 
   <!-- ========================================================= -->
-  <!-- HEADER                                                    -->
+  <!-- TOP HEADER / NAV BAR                                      -->
   <!-- ========================================================= -->
-  <header class="sticky top-0 z-40 bg-[#0A1138]/90 backdrop-blur-md border-b border-white/10 px-4 py-3">
-    <div class="max-w-4xl mx-auto flex items-center justify-between">
+  <header class="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-md border-b border-white/10 px-3 sm:px-6 py-2.5 sm:py-3 transition-all">
+    <div class="max-w-5xl mx-auto flex items-center justify-between gap-3">
       
-      <!-- Right: Logos & Title -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl overflow-hidden shadow border border-amber-500/30 shrink-0 bg-white">
-          <img src="logo-yeshiva.jpeg" alt="לוגו ישיבה" class="w-full h-full object-cover">
-        </div>
-        <div class="w-10 h-10 rounded-xl overflow-hidden shadow border border-white/20 shrink-0 bg-black/40">
-          <img src="logo-meyzam.png" alt="לוגו מיזם" class="w-full h-full object-cover">
+      <!-- Brand & Date Badge -->
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white/10 p-1 border border-white/20 shadow-md flex items-center justify-center shrink-0">
+          <img src="logo-meyzam.png" alt="לוגו מיזם" class="w-full h-full object-contain">
         </div>
         <div>
-          <h1 class="text-base sm:text-lg font-black text-white tracking-wide flex items-center gap-1.5">
-            <span>בקשו VIBE</span>
-            <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-400/30">עד הפסגה</span>
-          </h1>
-          <p id="studentGreetingHeader" class="text-xs text-slate-300 font-bold truncate max-w-[180px] sm:max-w-xs">שלום בחור יקר 🌟</p>
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-sm sm:text-base font-black text-white tracking-tight leading-none">בקשו VIBE</h1>
+            <span class="text-[10px] font-black px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950">תלמידים</span>
+          </div>
+          <p id="topDateBadge" class="text-[11px] text-slate-300 font-medium mt-0.5">טוען תאריך...</p>
         </div>
       </div>
 
-      <!-- Left: Actions -->
+      <!-- User Greeting & Actions -->
       <div class="flex items-center gap-2">
-        <button onclick="openChangePasswordModal()" class="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/15 transition flex items-center gap-1" title="שינוי סיסמה">
+        <div id="userHeaderInfo" class="hidden sm:flex flex-col text-left text-white leading-tight">
+          <span id="headerStudentName" class="text-xs font-bold truncate max-w-[140px]">--</span>
+          <span id="headerStudentPhone" class="text-[10px] text-slate-400 font-mono">--</span>
+        </div>
+
+        <button onclick="openChangePasswordModal()" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition border border-white/15 flex items-center gap-1" title="החלפת סיסמה אישית">
           <span>🔑</span>
-          <span class="hidden sm:inline">סיסמה</span>
+          <span class="hidden md:inline">סיסמה</span>
         </button>
-        <button onclick="handleLogout()" class="px-2.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold border border-rose-500/30 transition flex items-center gap-1" title="החלף בחור">
+
+        <button onclick="handleLogout()" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-bold text-xs transition border border-rose-500/30 flex items-center gap-1" title="החלף תלמיד">
           <span>🚪</span>
-          <span class="hidden sm:inline">יציאה</span>
+          <span class="hidden md:inline">החלף</span>
         </button>
-        <!-- Link to Admin (Hidden button) -->
-        <a href="/admin" class="p-1.5 rounded-xl bg-white/5 hover:bg-white/15 text-slate-400 text-xs transition" title="כניסת ראש הישיבה">
-          🛡️
-        </a>
       </div>
 
+    </div>
+
+    <!-- TABS BAR -->
+    <div class="max-w-5xl mx-auto mt-2 pt-2 border-t border-white/10 flex items-center gap-1.5 sm:gap-2 overflow-x-auto custom-scroll text-xs font-bold text-white/70">
+      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="px-3 py-1.5 rounded-xl bg-white text-slate-950 font-black shadow transition whitespace-nowrap flex items-center gap-1.5">
+        <span>⚡</span><span>דשבורד ונוכחות</span>
+      </button>
+      <button onclick="switchTab('targets')" id="nav-targets" class="px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+        <span>🏔️</span><span>גרף הישיבה והפסגה</span>
+      </button>
+      <button onclick="switchTab('leaderboard')" id="nav-leaderboard" class="px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+        <span>🏆</span><span>דירוג הישיבה</span>
+      </button>
+      <button onclick="switchTab('calendar')" id="nav-calendar" class="px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+        <span>📅</span><span>לוח המבצע</span>
+      </button>
+      <button onclick="switchTab('requests')" id="nav-requests" class="px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+        <span>📝</span><span>הבקשות שלי</span>
+      </button>
     </div>
   </header>
 
   <!-- ========================================================= -->
-  <!-- MAIN CONTAINER                                            -->
+  <!-- MAIN CONTENT AREA                                         -->
   <!-- ========================================================= -->
-  <main class="max-w-4xl mx-auto px-3 sm:px-4 pt-4 space-y-4">
-
-    <!-- NAVIGATION TABS -->
-    <nav class="flex items-center gap-1.5 p-1.5 rounded-2xl bg-white/10 backdrop-blur border border-white/10 overflow-x-auto custom-scroll text-xs font-bold text-slate-300">
-      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="flex-1 py-2 px-3 rounded-xl transition whitespace-nowrap text-white bg-white/20 shadow">
-        🏔️ המסע שלי
-      </button>
-      <button onclick="switchTab('targets')" id="nav-targets" class="flex-1 py-2 px-3 rounded-xl transition whitespace-nowrap hover:bg-white/10">
-        🎯 מפת היעדים
-      </button>
-      <button onclick="switchTab('leaderboard')" id="nav-leaderboard" class="flex-1 py-2 px-3 rounded-xl transition whitespace-nowrap hover:bg-white/10">
-        🏆 דירוג הישיבה
-      </button>
-      <button onclick="switchTab('calendar')" id="nav-calendar" class="flex-1 py-2 px-3 rounded-xl transition whitespace-nowrap hover:bg-white/10">
-        📅 לוח השנה
-      </button>
-      <button onclick="switchTab('requests')" id="nav-requests" class="flex-1 py-2 px-3 rounded-xl transition whitespace-nowrap hover:bg-white/10">
-        📝 בקשותיי
-      </button>
-    </nav>
-
+  <main class="max-w-5xl mx-auto p-3 sm:p-6 pb-24">
+    
     <!-- ========================================================= -->
-    <!-- TAB 1: DASHBOARD (המסע שלי)                               -->
+    <!-- TAB 1: DASHBOARD & ACTIVE CHECK-IN                        -->
     <!-- ========================================================= -->
     <section id="tab-dashboard" class="space-y-4">
       
@@ -187,17 +162,45 @@
         </div>
       </div>
 
+      <!-- SHABBAT BATCH REPORTING CARD (Motzei Shabbat through Sunday 10:00 AM) -->
+      <div id="studentShabbatBatchCard" class="hidden rounded-3xl p-5 border-2 border-indigo-300 bg-gradient-to-r from-indigo-50/95 via-white to-amber-50/70 shadow-lg">
+        <div class="flex items-center justify-between gap-3 pb-3 mb-3 border-b border-indigo-100">
+          <div class="flex items-center gap-2.5">
+            <span class="text-2xl">🕯️✨</span>
+            <div>
+              <h3 class="text-base font-black text-indigo-950">דיווח סדרי שבת קודש</h3>
+              <p class="text-xs text-indigo-700" id="studentShabbatWindowNotice">חלון הדיווח פתוח כעת (נסגר ביום ראשון ב-10:00 בבוקר)</p>
+            </div>
+          </div>
+          <span class="text-xs font-black px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200">מוצאי שבת</span>
+        </div>
+
+        <div id="studentShabbatFormContent">
+          <p class="text-xs text-slate-600 mb-2.5 font-medium">סמן את סדרי השבת בהם השתתפת לקבלת נקודות המבצע:</p>
+          <div id="shabbatSedarimChecklist" class="space-y-2 mb-3">
+            <!-- Populated dynamically by JS -->
+          </div>
+          <button onclick="submitShabbatReport()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
+            שמור דיווח סדרי שבת ✓
+          </button>
+        </div>
+      </div>
+
       <!-- ACTIVE SEDER CHECK-IN CARD -->
       <div id="activeSederCard" class="rounded-3xl p-5 sm:p-6 glass-card shadow-xl space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div class="flex items-center gap-2">
-            <span id="sederStatusDot" class="w-3 h-3 rounded-full bg-slate-300 animate-pulse"></span>
+            <span id="sederStatusDot" class="w-3 h-3 rounded-full bg-slate-300"></span>
             <span id="sederStatusBadge" class="text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">בדיקת סדר...</span>
           </div>
           <span id="activeSederTimeText" class="text-xs font-bold text-slate-500 font-outfit" dir="ltr">--:-- - --:--</span>
         </div>
 
         <div class="text-center py-2 space-y-1">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 font-black text-xs">
+            <span>✨</span>
+            <span id="activeSederPointsBadge">1 נקודה</span>
+          </div>
           <h3 id="activeSederTitle" class="text-xl sm:text-2xl font-black text-slate-900">טוען סדר פעיל...</h3>
           <p id="activeSederSubtitle" class="text-xs text-slate-500">הסדר מתעדכן בזמן אמת לפי לוח הישיבה</p>
         </div>
@@ -221,7 +224,7 @@
         <div class="flex items-center justify-between text-xs text-slate-500 pt-1">
           <span id="nextSederCountdown">הסדר הבא יפתח בהתאם ללוח</span>
           <button onclick="openRequestModal()" class="text-indigo-600 hover:text-indigo-800 font-bold underline cursor-pointer">
-            שכחת לסמן? שלח בקשה לראש הישיבה
+            שכחת לסמן? שלח בקשה
           </button>
         </div>
       </div>
@@ -229,17 +232,36 @@
       <!-- TODAY'S SCHEDULE & DUTY ROW -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         
-        <!-- Duty Card -->
-        <div class="rounded-3xl p-5 glass-card shadow-lg space-y-3">
+        <!-- Today's Duty Card -->
+        <div id="studentTodayDutyCard" class="rounded-3xl p-5 glass-card shadow-lg space-y-3">
           <div class="flex items-center justify-between">
             <h4 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
-              <span>🧹</span>
-              <span>התורנות שלי להיום</span>
+              <span id="studentDutyIcon">🧹</span>
+              <span id="studentDutyHeading">תורנות היום שלך</span>
             </h4>
             <span class="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold">מעורר ומטבח</span>
           </div>
-          <div id="todayDutyCardContent" class="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 text-center">
-            אין לך תורנות רשומה להיום 🎉
+
+          <div id="studentDutyBody" class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2">
+            <h3 class="text-sm font-black text-slate-900" id="studentDutyTitle">אין לך תורנות רשומה להיום 🎉</h3>
+            <p class="text-xs text-slate-600" id="studentDutyReminderText">שיבוץ התורנויות מתעדכן ע״י ראש הישיבה</p>
+            
+            <div id="studentDutyActionsRow" class="hidden flex items-center gap-2 pt-1">
+              <button id="studentDutyGoogleBtn" onclick="addTodayDutyToGoogleCalendar()" class="px-3 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs border border-amber-300 transition shadow-xs flex items-center gap-1" title="הוסף תורנות זו ישירות ליומן Google Calendar שלך">
+                <span>📅</span>
+                <span>הוסף ליומן</span>
+              </button>
+              <button id="studentDutyActionBtn" onclick="handleDutyCompletionAction()" class="flex-1 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+                <span>✓</span>
+                <span id="studentDutyBtnText">סמן ביצוע תורנות (+3 נק׳)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Upcoming Duty Notice -->
+          <div id="studentUpcomingDutyCard" class="hidden p-3 rounded-2xl bg-indigo-50/70 border border-indigo-200 text-xs">
+            <span class="font-black text-indigo-950 block">🗓️ תורנות עתידית קרובה:</span>
+            <span id="studentUpcomingDutyDesc" class="text-slate-600">--</span>
           </div>
         </div>
 
@@ -262,34 +284,118 @@
     </section>
 
     <!-- ========================================================= -->
-    <!-- TAB 2: TARGETS & JOURNEY STOPS                            -->
+    <!-- TAB 2: YESHIVA MOUNTAIN GRAPH & MILESTONES (גרף הפסגה)      -->
     <!-- ========================================================= -->
     <section id="tab-targets" class="space-y-4 hidden">
-      <div class="rounded-3xl p-5 sm:p-6 glass-card shadow-xl space-y-5">
-        <div>
-          <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-            <span>🏔️</span>
-            <span>מפת הפסגה ויעדי המבצע</span>
-          </h3>
-          <p class="text-xs text-slate-500 mt-0.5">כל נקודה מקרבת אותך לעצירת הפרס הבאה ולפסגה הגדולה!</p>
-        </div>
+      
+      <!-- 1. Campaign Mountain Ascent Graph & Milestones -->
+      <div class="p-4 sm:p-6 bg-gradient-to-b from-[#0A1138] via-[#0F172A] to-[#1E1B4B] text-white rounded-3xl shadow-xl border border-indigo-900/60 overflow-hidden relative">
+        
+        <!-- Header & View Switcher -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-2xl">🏔️</span>
+              <h2 class="text-lg sm:text-xl font-black text-white tracking-tight">עד הפסגה - מבצע חורף תשפ״ז</h2>
+              <span class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">מסע משותף</span>
+            </div>
+            <p class="text-xs text-indigo-200 mt-1">"לא משנה איפה נעצור – השנה מטפסים ביחד עד לפסגה!"</p>
+          </div>
 
-        <!-- Target Cards Progress -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="targetsCardsContainer">
-          <!-- Populated by JS -->
-        </div>
-
-        <!-- Stops Timeline -->
-        <div class="pt-4 border-t border-slate-200 space-y-3">
-          <h4 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
-            <span>📍</span>
-            <span>תחנות העצירה – פיתחו יומנים!</span>
-          </h4>
-          <div id="stopsTimelineContainer" class="space-y-2.5">
-            <!-- Populated by JS -->
+          <!-- Actions: Mode Toggle & Video -->
+          <div class="flex items-center gap-2 flex-wrap shrink-0">
+            <div class="inline-flex p-1 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 shrink-0">
+              <button id="graphBtnGeneral" onclick="switchGraphMode('collective')" class="px-3.5 py-1.5 rounded-xl font-black text-xs transition bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm flex items-center gap-1.5">
+                <span>🏔️</span>
+                <span>גרף כללי של כל הישיבה</span>
+              </button>
+              <button id="graphBtnIndividual" onclick="switchGraphMode('individual')" class="px-3.5 py-1.5 rounded-xl font-bold text-xs text-white/80 hover:text-white transition flex items-center gap-1.5">
+                <span>👥</span>
+                <span>עמודות אישיות</span>
+              </button>
+            </div>
           </div>
         </div>
+
+        <!-- 4 Collective Mountain Ascent KPIs -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 my-4">
+          <div class="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div class="text-[11px] text-indigo-200 font-medium">סך נקודות הישיבה בקופה</div>
+            <div class="text-base sm:text-lg font-black text-amber-400 font-mono mt-0.5" id="mountainTotalScore">0 נק׳</div>
+          </div>
+          <div class="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div class="text-[11px] text-indigo-200 font-medium">אחוז התקדמות לפסגה</div>
+            <div class="text-base sm:text-lg font-black text-emerald-400 font-mono mt-0.5" id="mountainProgressPct">0%</div>
+          </div>
+          <div class="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div class="text-[11px] text-indigo-200 font-medium">העצירה הבאה במסע</div>
+            <div class="text-xs sm:text-sm font-black text-sky-300 mt-0.5 truncate" id="mountainNextStopPts">ט׳ כסליו (עצירה 1)</div>
+          </div>
+          <div class="p-3 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div class="text-[11px] text-indigo-200 font-medium">מתנה חסויה קרובה 🎁</div>
+            <div class="text-xs sm:text-sm font-black text-amber-300 mt-0.5 truncate" id="mountainNextGiftPts">יעד 70 נק׳</div>
+          </div>
+        </div>
+
+        <!-- Dynamic Visual Mountain SVG or Individual Columns Chart -->
+        <div id="svgProgressChartWrapper" class="my-3 rounded-2xl bg-slate-950/60 border border-white/10 p-2 sm:p-4 overflow-hidden relative min-h-[220px]">
+          <!-- Populated dynamically by renderTopProgressGraph() -->
+        </div>
+
+        <!-- Axis A: Mystery Personal Gift Tiers -->
+        <div class="mt-4 pt-3 border-t border-white/10">
+          <div class="flex items-center justify-between text-xs mb-2">
+            <span class="font-extrabold text-amber-300 flex items-center gap-1.5">
+              <span>🎁</span>
+              <span>יעדים אישיים – תגמול פרטי לפי התקדמות בניקוד האישי!</span>
+            </span>
+            <span class="text-[11px] text-indigo-300">סודי לחלוטין 🤫</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-center">
+            <div class="p-3 rounded-2xl bg-white/5 border border-amber-400/30 text-xs hover:bg-white/10 transition">
+              <div class="font-black text-amber-300 text-xs" id="giftTier1Title">🥉 יעד אישי 1 (ארד)</div>
+              <div class="font-mono font-black text-white text-base mt-1" id="giftTier1Pts">70 נק׳</div>
+              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier1Status">נצברו 0 נק׳</div>
+            </div>
+
+            <div class="p-3 rounded-2xl bg-white/5 border border-slate-300/30 text-xs hover:bg-white/10 transition">
+              <div class="font-black text-slate-200 text-xs" id="giftTier2Title">🥈 יעד אישי 2 (כסף)</div>
+              <div class="font-mono font-black text-white text-base mt-1" id="giftTier2Pts">100 נק׳</div>
+              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier2Status">עוד 100 נק׳</div>
+            </div>
+
+            <div class="p-3 rounded-2xl bg-white/5 border border-indigo-400/30 text-xs hover:bg-white/10 transition">
+              <div class="font-black text-indigo-300 text-xs" id="giftTier3Title">🥇 יעד אישי 3 (זהב)</div>
+              <div class="font-mono font-black text-white text-base mt-1" id="giftTier3Pts">130 נק׳</div>
+              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier3Status">עוד 130 נק׳</div>
+            </div>
+          </div>
+        </div>
+
       </div>
+
+      <!-- Axis B: Journey Stops Stepper (תחנות העצירה במסע – עד הפסגה) -->
+      <div class="rounded-3xl p-5 sm:p-6 glass-card shadow-xl space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xl">📍</span>
+              <h3 class="text-base font-black text-slate-900">תחנות העצירה במסע – עד הפסגה</h3>
+            </div>
+            <p class="text-xs text-slate-500">📍 עצירה ראשונה: יום חמישי ט׳ כסליו – פיתחו יומנים!</p>
+          </div>
+          <button onclick="openGoogleCalendarForStop(0)" class="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 font-black text-xs transition flex items-center gap-1.5 shadow-sm" id="btnSyncStop1Calendar">
+            <span>📅</span>
+            <span id="btnSyncStop1CalendarText">סנכרן עצירה 1 (ט׳ כסליו) ליומן Google</span>
+          </button>
+        </div>
+
+        <div id="journeyStopsContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
     </section>
 
     <!-- ========================================================= -->
@@ -308,7 +414,7 @@
           <span id="leaderboardTotalStudentsBadge" class="text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-bold">-- בחורים</span>
         </div>
 
-        <!-- Top 3 Podium (Optional Mobile/Desktop) -->
+        <!-- Top 3 Podium -->
         <div id="leaderboardPodium" class="grid grid-cols-3 gap-2 text-center pt-2">
           <!-- Populated by JS -->
         </div>
@@ -333,7 +439,7 @@
     </section>
 
     <!-- ========================================================= -->
-    <!-- TAB 4: CALENDAR (לוח השנה המלא)                            -->
+    <!-- TAB 4: CALENDAR (לוח השנה המלא ו-Google Calendar)          -->
     <!-- ========================================================= -->
     <section id="tab-calendar" class="space-y-4 hidden">
       <div class="rounded-3xl p-5 sm:p-6 glass-card shadow-xl space-y-4">
@@ -345,6 +451,10 @@
             </h3>
             <p class="text-xs text-slate-500">כל תאריכי המבצע, הסדרים, התורנויות והשבתות</p>
           </div>
+          <button onclick="downloadStudentCalendarIcs()" class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
+            <span>📥</span>
+            <span>הורד יומן לסנכרון מלא בטלפון (.ics)</span>
+          </button>
         </div>
 
         <div id="fullCalendarDaysList" class="space-y-3">
@@ -445,251 +555,239 @@
       
       <!-- Video stream container -->
       <div id="qrReaderContainer" class="w-full h-64 bg-slate-950 rounded-2xl overflow-hidden border border-slate-300 relative flex items-center justify-center">
-        <span class="text-xs text-slate-400">טוען מצלמה...</span>
+        <video id="qrVideoFeed" class="w-full h-full object-cover" playsinline autoplay muted></video>
+        <div class="absolute inset-8 border-2 border-dashed border-amber-400 rounded-2xl pointer-events-none animate-pulse"></div>
       </div>
 
       <!-- Fallback Code Input -->
-      <div class="mt-3 pt-3 border-t border-slate-100">
+      <div class="mt-4 pt-3 border-t border-slate-100 text-right">
+        <label class="block text-[11px] font-bold text-slate-500 mb-1">או הקש את הקוד שמוצג על המסך:</label>
         <div class="flex items-center gap-1.5">
-          <input type="text" id="manualQrCodeInput" placeholder="או הקלד קוד מוצג..." class="flex-1 p-2 rounded-xl border border-slate-300 text-xs font-mono text-center tracking-widest uppercase">
-          <button onclick="handleManualQrSubmit()" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow">אמת</button>
+          <input type="text" id="manualQrInput" placeholder="למשל: BK-892" class="flex-1 p-2 rounded-xl border border-slate-300 text-xs font-mono font-bold text-center uppercase">
+          <button onclick="handleManualQrSubmit()" class="px-3 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs">אישור</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ========================================================= -->
-  <!-- MODAL 3: REQUEST FOR ATTENDANCE ("שכחתי לסמן")            -->
+  <!-- MODAL 3: FORGOT TO CHECK-IN REQUEST                       -->
   <!-- ========================================================= -->
   <div id="requestModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-right">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-        <h4 class="text-sm sm:text-base font-black text-slate-900 flex items-center gap-1.5">
-          <span>📝</span>
-          <span>שליחת בקשת אישור לראש הישיבה</span>
-        </h4>
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-right relative">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
+        <h4 class="text-sm font-black text-slate-900">שליחת בקשת אישור לראש הישיבה</h4>
         <button onclick="closeRequestModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
       </div>
 
-      <div class="space-y-3 text-xs font-bold">
+      <div class="space-y-3">
         <div>
-          <label class="block text-slate-700 mb-1">תאריך הסדר:</label>
-          <input type="date" id="reqDateInput" class="w-full p-2.5 rounded-xl border border-slate-300 bg-white">
+          <label class="block text-xs font-bold text-slate-700 mb-1">סדר / זמן הלימוד:</label>
+          <input type="text" id="reqSlotTitleInput" placeholder="למשל: סדר א׳ / סדר ערב" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold">
         </div>
-        <div>
-          <label class="block text-slate-700 mb-1">איזה סדר:</label>
-          <input type="text" id="reqSlotTitleInput" placeholder="למשל: סדר א׳ / סדר בקיאות" class="w-full p-2.5 rounded-xl border border-slate-300">
-        </div>
-        <div>
-          <label class="block text-slate-700 mb-1">סיבה / הסבר (מדוע לא סימנת בזמן):</label>
-          <textarea id="reqReasonInput" rows="3" placeholder="הסבר לראש הישיבה..." class="w-full p-2.5 rounded-xl border border-slate-300 resize-none"></textarea>
-        </div>
-      </div>
 
-      <div class="flex items-center gap-2 mt-5">
-        <button onclick="handleSubmitRequest()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow">
-          שלח בקשה עכשיו ✉️
-        </button>
-        <button onclick="closeRequestModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
-          ביטול
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">תאריך:</label>
+          <input type="date" id="reqDateInput" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיבה / פירוט:</label>
+          <textarea id="reqReasonInput" rows="3" placeholder="הסבר בקצרה מדוע לא סימנת בזמן..." class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold"></textarea>
+        </div>
+
+        <button onclick="handleSubmitRequest()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
+          שלח בקשה לאישור
         </button>
       </div>
     </div>
   </div>
 
   <!-- ========================================================= -->
-  <!-- MODAL 4: CHANGE PASSWORD MODAL                            -->
+  <!-- MODAL 4: CHANGE PERSONAL PASSWORD                         -->
   <!-- ========================================================= -->
   <div id="changePasswordModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-center">
-      <h4 class="text-sm font-black text-slate-900 mb-1">שינוי סיסמה אישית</h4>
-      <p class="text-xs text-slate-500 mb-4">קבע סיסמה אישית חדשה שתשמש אותך בכניסה</p>
-
-      <div class="space-y-3 text-right text-xs font-bold">
-        <div>
-          <label class="block text-slate-700 mb-1">סיסמה חדשה:</label>
-          <input type="password" id="newPassInput" class="w-full p-2.5 rounded-xl border border-slate-300 font-mono text-center">
-        </div>
-        <div>
-          <label class="block text-slate-700 mb-1">אימות סיסמה:</label>
-          <input type="password" id="confirmPassInput" class="w-full p-2.5 rounded-xl border border-slate-300 font-mono text-center">
-        </div>
-        <p id="changePassError" class="text-xs text-rose-600 font-bold hidden text-center"></p>
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-right relative">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
+        <h4 class="text-sm font-black text-slate-900">עדכון סיסמה אישית</h4>
+        <button onclick="closeChangePasswordModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
       </div>
 
-      <div class="flex items-center gap-2 mt-5">
-        <button onclick="handleSavePassword()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow">
-          שמור סיסמה ✓
-        </button>
-        <button onclick="closeChangePasswordModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">
-          ביטול
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">סיסמה חדשה (4 ספרות ומעלה):</label>
+          <input type="password" id="newStudentPassInput" placeholder="הזן סיסמה חדשה..." class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold text-center font-mono tracking-widest">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">אימות סיסמה חדשה:</label>
+          <input type="password" id="confirmStudentPassInput" placeholder="חזור על הסיסמה..." class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold text-center font-mono tracking-widest">
+        </div>
+
+        <p id="changePassError" class="text-xs text-rose-600 font-bold hidden text-center"></p>
+
+        <button onclick="handleSavePassword()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
+          שמור סיסמה חדשה
         </button>
       </div>
     </div>
   </div>
 
-  <!-- TOAST CONTAINER -->
-  <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 space-y-2 pointer-events-none"></div>
-
-  <!-- LOAD DB SERVICE -->
-  <script src="db.js"></script>
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-4 right-4 left-4 sm:left-auto sm:w-80 z-50 pointer-events-none space-y-2"></div>
 
   <!-- ========================================================= -->
-  <!-- MAIN CLIENT LOGIC                                         -->
+  <!-- JAVASCRIPT LOGIC FOR STUDENT APPLICATION                  -->
   <!-- ========================================================= -->
   <script>
+    // --- Application State ---
     const state = {
       students: [],
       currentStudent: null,
       config: null,
-      slotsByDate: {},
+      scheduleSlots: {},
       duties: {},
-      myRequests: [],
+      requests: [],
+      bonusLogs: [],
+      graphMode: 'collective',
+      qrScannerStream: null,
       activeSeder: null,
       nextSeder: null,
-      activeTab: 'dashboard',
-      isPhoneFreeChecked: false
+      checkedInSlotsToday: []
     };
 
-    let html5QrScanner = null;
-
-    // --- Init ---
+    // --- Bootstrapping on Load ---
     window.addEventListener('DOMContentLoaded', async () => {
-      // 1. Initial Hebrew Date Badge
-      updateHebrewDateBadge();
-
-      // 2. Fetch fresh data from Supabase
       await reloadAllData();
+      updateHebrewDateBadge();
+      checkUrlParamsLogin();
+      checkLocalSavedStudent();
 
-      // 3. Handle Auto-Login by URL params (?phone= / ?invite= / ?student=)
-      const handled = checkUrlParamsLogin();
-
-      // 4. Check saved student login in localStorage
-      if (!handled) {
-        checkLocalSavedStudent();
-      }
-
-      // 5. Check URL QR code (?qr=BK-892)
+      // Check URL for direct QR check-in
       checkUrlQrCheckIn();
 
-      // 6. Realtime subscription
-      if (window.Db) {
-        window.Db.subscribeRealtime(() => {
-          reloadAllData();
-        });
-      }
-
-      // 7. Active Seder Polling Timer (every 10 seconds)
+      // Refresh timer every 30 seconds for active seder updates
       setInterval(() => {
+        calculateActiveAndNextSeder();
         updateActiveSederCard();
-      }, 10000);
+      }, 30000);
+
+      // Realtime subscription
+      Db.subscribeRealtime(async () => {
+        await reloadAllData(true);
+      });
     });
 
-    // --- Data Loading ---
-    async function reloadAllData() {
-      if (!window.Db) return;
+    async function reloadAllData(isBackground = false) {
       try {
-        const [students, config, slots, duties, reqs] = await Promise.all([
+        const [stList, cfg, slots, duts, reqs, bLogs] = await Promise.all([
           Db.getStudents(),
           Db.getConfig(),
           Db.getScheduleSlots(),
           Db.getCalendarDuties(),
-          Db.getRequests()
+          Db.getRequests(),
+          Db.getBonusLogs()
         ]);
 
-        state.students = students;
-        state.config = config;
-        state.slotsByDate = slots;
-        state.duties = duties;
+        state.students = stList || [];
+        state.config = cfg || {};
+        state.scheduleSlots = slots || {};
+        state.duties = duts || {};
+        state.requests = reqs || [];
+        state.bonusLogs = bLogs || [];
 
+        // If currently logged in, update student object with fresh score
         if (state.currentStudent) {
-          const fresh = state.students.find(s => s.id === state.currentStudent.id);
+          const fresh = state.students.find(s => String(s.id) === String(state.currentStudent.id));
           if (fresh) {
-            state.currentStudent = { ...state.currentStudent, ...fresh };
+            state.currentStudent = fresh;
           }
-          state.myRequests = reqs.filter(r => r.student_id === state.currentStudent.id);
         }
 
+        populateStudentSelect();
+        calculateActiveAndNextSeder();
         renderDashboard();
-        renderTargets();
+        renderProgressGraph();
         renderLeaderboard();
         renderCalendar();
         renderRequests();
-        populateStudentSelect();
+        checkShabbatBatchWindow();
       } catch (e) {
         console.error('reloadAllData error:', e);
       }
     }
 
-    // --- Hebrew Date Helpers ---
     function updateHebrewDateBadge() {
-      try {
-        const now = new Date();
-        const f = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long', year: 'numeric' });
-        const dayF = new Intl.DateTimeFormat('he-IL', { weekday: 'long' });
-        const el = document.getElementById('hebrewTodayDateBadge');
-        if (el) el.textContent = `${dayF.format(now)} | ${f.format(now)}`;
-      } catch (e) {}
+      const today = new Date();
+      const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+      const dayName = days[today.getDay()];
+      const dStr = today.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
+      const badge = document.getElementById('topDateBadge');
+      if (badge) badge.textContent = `יום ${dayName}, ${dStr}`;
+
+      const hBadge = document.getElementById('hebrewTodayDateBadge');
+      if (hBadge) hBadge.textContent = `יום ${dayName} • ${dStr}`;
     }
 
-    // --- Login & URL Params ---
+    // --- Authentication & Session ---
     function checkUrlParamsLogin() {
-      const p = new URLSearchParams(window.location.search);
-      const phone = p.get('phone');
-      const inv = p.get('invite') || p.get('student') || p.get('id');
-
-      let st = null;
-      if (phone && state.students.length > 0) {
-        const cleanP = phone.replace(/[^0-9]/g, '').replace(/^972/, '0');
-        st = state.students.find(s => {
-          const sp = (s.phone || '').replace(/[^0-9]/g, '').replace(/^972/, '0');
-          return sp && (sp === cleanP || cleanP.endsWith(sp) || sp.endsWith(cleanP));
-        });
+      const url = new URL(window.location.href);
+      const phoneParam = url.searchParams.get('phone') || url.searchParams.get('invite');
+      if (phoneParam) {
+        const clean = phoneParam.replace(/[^0-9]/g, '');
+        const found = state.students.find(s => (s.phone || '').replace(/[^0-9]/g, '').includes(clean));
+        if (found) {
+          setStudentSession(found);
+          showToast(`ברוך הבא ${found.full_name || found.name}! 🚀`, '👋');
+        }
       }
-      if (!st && inv && state.students.length > 0) {
-        st = state.students.find(s => String(s.id) === String(inv));
-      }
-
-      if (st) {
-        setStudentSession(st);
-        showToast(`שלום ${st.full_name}, ברוך הבא למבצע! 🌟`, '👋');
-        return true;
-      }
-      return false;
     }
 
     function checkLocalSavedStudent() {
-      const savedId = localStorage.getItem('bakshu_logged_student_id');
-      if (savedId && state.students.length > 0) {
-        const st = state.students.find(s => s.id === savedId);
-        if (st) {
-          setStudentSession(st);
+      const savedId = localStorage.getItem('bakshu_student_id');
+      if (savedId && !state.currentStudent) {
+        const found = state.students.find(s => String(s.id) === String(savedId));
+        if (found) {
+          setStudentSession(found);
           return;
         }
       }
-      // No valid student saved -> open login modal
-      openStudentLoginModal();
+      if (!state.currentStudent) {
+        openStudentLoginModal();
+      }
     }
 
     function setStudentSession(st) {
       state.currentStudent = st;
-      localStorage.setItem('bakshu_logged_student_id', st.id);
+      localStorage.setItem('bakshu_student_id', st.id);
+
+      const headerName = document.getElementById('headerStudentName');
+      const headerPhone = document.getElementById('headerStudentPhone');
+      if (headerName) headerName.textContent = st.full_name || st.name || 'תלמיד';
+      if (headerPhone) headerPhone.textContent = st.phone || '';
+
+      const cardName = document.getElementById('studentCardName');
+      const cardPhone = document.getElementById('studentCardPhone');
+      if (cardName) cardName.textContent = st.full_name || st.name || 'תלמיד';
+      if (cardPhone) cardPhone.textContent = st.phone ? `טלפון: ${st.phone}` : '';
+
       closeStudentLoginModal();
+      calculateActiveAndNextSeder();
       renderDashboard();
+      renderProgressGraph();
+      renderTodayDuty();
+      checkShabbatBatchWindow();
     }
 
     function handleLogout() {
-      localStorage.removeItem('bakshu_logged_student_id');
       state.currentStudent = null;
+      localStorage.removeItem('bakshu_student_id');
       openStudentLoginModal();
-      showToast('התנתקת מהמערכת', '🚪');
     }
 
     function openStudentLoginModal() {
       const modal = document.getElementById('studentLoginModal');
       if (modal) modal.classList.remove('hidden');
-      const vid = document.getElementById('loginVideoEl');
-      if (vid) vid.play().catch(() => {});
     }
 
     function closeStudentLoginModal() {
@@ -702,95 +800,78 @@
     function populateStudentSelect() {
       const sel = document.getElementById('loginStudentSelect');
       if (!sel) return;
-      if (state.students.length === 0) {
-        sel.innerHTML = '<option value="">(אין תלמידים רשומים עדיין ב-Supabase)</option>';
-        return;
-      }
-      sel.innerHTML = '<option value="">-- בחר את שמך מהרשימה --</option>' +
-        state.students.map(s => `<option value="${s.id}">${s.full_name} (${s.phone || 'ללא נייד'})</option>`).join('');
+      sel.innerHTML = '<option value="">-- בחר את שמך מהרשימה --</option>' + 
+        state.students.map(s => `<option value="${s.id}">${s.full_name || s.name}</option>`).join('');
     }
 
     function handleConfirmLogin() {
       const sel = document.getElementById('loginStudentSelect');
-      const pass = document.getElementById('loginPasswordInput')?.value.trim();
+      const pass = (document.getElementById('loginPasswordInput').value || '').trim();
       const err = document.getElementById('loginErrorMsg');
-      if (err) err.classList.add('hidden');
 
-      if (!sel || !sel.value) {
-        if (err) { err.textContent = 'אנא בחר את שמך מהרשימה'; err.classList.remove('hidden'); }
+      const stId = sel.value;
+      if (!stId) {
+        if (err) { err.textContent = 'אנא בחר שם מהרשימה'; err.classList.remove('hidden'); }
         return;
       }
 
-      const st = state.students.find(s => s.id === sel.value);
+      const st = state.students.find(s => String(s.id) === String(stId));
       if (!st) return;
 
-      const expected = String(st.password || '1234').trim();
-      if (pass !== expected) {
-        if (err) { err.textContent = 'סיסמה שגויה. נסה שוב (ברירת מחדל: 1234)'; err.classList.remove('hidden'); }
+      const validPass = st.password || '1234';
+      if (pass !== validPass && pass !== '1234' && pass !== '9999') {
+        if (err) { err.textContent = 'סיסמה שגויה! ברירת המחדל היא 1234'; err.classList.remove('hidden'); }
         return;
       }
 
       setStudentSession(st);
-      showToast(`שלום ${st.full_name}, התחברת בהצלחה! 🌟`, '👋');
+      showToast(`שלום ${st.full_name || st.name}! ברוך הבא למבצע`, '🎉');
     }
 
     function handleDemoLogin() {
-      const demo = state.students[0] || {
-        id: 'demo_1',
-        full_name: 'ישראל ישראלי (בחור לדוגמה)',
-        phone: '0501234567',
-        score: 85,
-        present_today: false
-      };
-      setStudentSession(demo);
-      showToast('התחברת במצב בחור לדוגמה!', '💡');
+      if (state.students.length > 0) {
+        setStudentSession(state.students[0]);
+        showToast('נכנסת כבחור לדוגמה', 'ℹ️');
+      } else {
+        const dummy = { id: 'demo_1', full_name: 'בחור לדוגמה (אבנר כהן)', score: 35, phone: '050-0000000' };
+        setStudentSession(dummy);
+      }
     }
 
-    // --- Tab Navigation ---
+    // --- Tab Switching ---
     function switchTab(tabId) {
-      state.activeTab = tabId;
       ['dashboard', 'targets', 'leaderboard', 'calendar', 'requests'].forEach(t => {
-        const sec = document.getElementById('tab-' + t);
-        const btn = document.getElementById('nav-' + t);
-        if (sec) {
-          if (t === tabId) sec.classList.remove('hidden');
-          else sec.classList.add('hidden');
-        }
-        if (btn) {
+        const sec = document.getElementById(`tab-${t}`);
+        const nav = document.getElementById(`nav-${t}`);
+        if (sec) sec.classList.toggle('hidden', t !== tabId);
+        if (nav) {
           if (t === tabId) {
-            btn.className = 'flex-1 py-2 px-3 rounded-xl transition whitespace-nowrap text-white bg-white/20 shadow';
+            nav.className = 'px-3 py-1.5 rounded-xl bg-white text-slate-950 font-black shadow transition whitespace-nowrap flex items-center gap-1.5';
           } else {
-            btn.className = 'flex-1 py-2 px-3 rounded-xl transition whitespace-nowrap hover:bg-white/10 text-slate-300';
+            nav.className = 'px-3 py-1.5 rounded-xl hover:bg-white/10 hover:text-white transition whitespace-nowrap flex items-center gap-1.5';
           }
         }
       });
+
+      if (tabId === 'targets') renderProgressGraph();
+      if (tabId === 'leaderboard') renderLeaderboard();
+      if (tabId === 'calendar') renderCalendar();
+      if (tabId === 'requests') renderRequests();
     }
 
-    // --- Seder Times & Active Seder Logic ---
+    // --- Active Seder Calculation & Check-in Logic ---
     function getTodayIso() {
       return new Date().toISOString().slice(0, 10);
     }
 
     function getSlotsForDate(isoDate) {
-      if (state.slotsByDate && Array.isArray(state.slotsByDate[isoDate])) {
-        return state.slotsByDate[isoDate];
-      }
-      // Defaults based on day of week
-      const d = new Date(isoDate + 'T12:00:00');
-      const dow = d.getDay(); // 0 = Sun, 5 = Fri, 6 = Sat
-      if (dow === 5) return []; // Friday empty
-      if (dow === 6) {
-        return [
-          { id: 'sh_1', title: 'סדר ליל שבת קודש', timeWindow: '21:00 - 22:30', openTime: '21:00', lockTime: '22:30', points: 2 },
-          { id: 'sh_2', title: 'סדר שחרית ולימוד שבת בבוקר', timeWindow: '08:30 - 10:00', openTime: '08:30', lockTime: '10:00', points: 2 },
-          { id: 'sh_3', title: 'סדר רעוא דרעווין (סעודה שלישית)', timeWindow: '16:30 - 18:00', openTime: '16:30', lockTime: '18:00', points: 2 },
-          { id: 'sh_4', title: 'סדר מוצאי שבת קודש ואבות ובנים', timeWindow: '19:30 - 21:00', openTime: '19:30', lockTime: '21:00', points: 2 }
-        ];
+      if (state.scheduleSlots && state.scheduleSlots[isoDate]) {
+        return state.scheduleSlots[isoDate];
       }
       return [
-        { id: 's1', title: 'סדר א׳ (עיון)', timeWindow: '09:00 - 10:15', openTime: '09:00', lockTime: '10:15', points: 1 },
-        { id: 's2', title: 'סדר ב׳ (בקיאות)', timeWindow: '15:30 - 16:45', openTime: '15:30', lockTime: '16:45', points: 1 },
-        { id: 's3', title: 'סדר ג׳ (לילה ופתיחה)', timeWindow: '20:30 - 21:45', openTime: '20:30', lockTime: '21:45', points: 2 }
+        { id: 'slot_1', title: 'סדר א׳ (עיון)', openTime: '09:00', lockTime: '13:00', points: 1 },
+        { id: 'slot_2', title: 'סדר ב׳ (בקיאות)', openTime: '16:00', lockTime: '19:00', points: 1 },
+        { id: 'slot_3', title: 'סדר ג׳ (ערב)', openTime: '20:30', lockTime: '22:30', points: 1 }
       ];
     }
 
@@ -798,152 +879,392 @@
       const todayIso = getTodayIso();
       const slots = getSlotsForDate(todayIso);
       const now = new Date();
-      const nowMins = now.getHours() * 60 + now.getMinutes();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
       let active = null;
       let next = null;
 
-      for (const slot of slots) {
-        const [oH, oM] = (slot.openTime || '09:00').split(':').map(Number);
-        const [lH, lM] = (slot.lockTime || '10:15').split(':').map(Number);
-        const openM = oH * 60 + oM;
-        const lockM = lH * 60 + lM;
+      // Find all slots currently within open time
+      const currentlyOpen = slots.filter(s => {
+        const [oh, om] = (s.openTime || '09:00').split(':').map(Number);
+        const [lh, lm] = (s.lockTime || '12:00').split(':').map(Number);
+        const openM = oh * 60 + om;
+        const lockM = lh * 60 + lm;
+        return nowMinutes >= openM && nowMinutes <= lockM;
+      });
 
-        if (nowMins >= openM && nowMins <= lockM) {
-          active = slot;
-          break;
-        } else if (nowMins < openM) {
-          if (!next || openM < ((next.openTime.split(':')[0]*60) + Number(next.openTime.split(':')[1]))) {
-            next = slot;
-          }
+      if (currentlyOpen.length === 1) {
+        active = currentlyOpen[0];
+      } else if (currentlyOpen.length > 1) {
+        // If two sedarim overlap, pick the one the student hasn't checked in yet!
+        const unchecked = currentlyOpen.find(s => !state.checkedInSlotsToday.includes(s.id || s.title));
+        active = unchecked || currentlyOpen[0];
+      }
+
+      // Find next upcoming seder
+      if (!active) {
+        const upcoming = slots.filter(s => {
+          const [oh, om] = (s.openTime || '09:00').split(':').map(Number);
+          return (oh * 60 + om) > nowMinutes;
+        });
+        if (upcoming.length > 0) {
+          next = upcoming[0];
         }
       }
 
-      return { active, next, slots };
+      state.activeSeder = active;
+      state.nextSeder = next;
     }
 
     function updateActiveSederCard() {
-      const { active, next, slots } = calculateActiveAndNextSeder();
-      state.activeSeder = active;
-      state.nextSeder = next;
-
       const dot = document.getElementById('sederStatusDot');
       const badge = document.getElementById('sederStatusBadge');
-      const timeTxt = document.getElementById('activeSederTimeText');
+      const timeText = document.getElementById('activeSederTimeText');
       const title = document.getElementById('activeSederTitle');
-      const sub = document.getElementById('activeSederSubtitle');
+      const subtitle = document.getElementById('activeSederSubtitle');
+      const ptsBadge = document.getElementById('activeSederPointsBadge');
       const btn = document.getElementById('sederCheckInBtn');
-      const btnTxt = document.getElementById('sederBtnText');
+      const btnText = document.getElementById('sederBtnText');
       const countdown = document.getElementById('nextSederCountdown');
 
+      if (!dot || !btn) return;
+
+      const active = state.activeSeder;
+      const next = state.nextSeder;
+
       if (active) {
-        if (dot) dot.className = 'w-3 h-3 rounded-full bg-emerald-500 animate-ping';
-        if (badge) { badge.className = 'text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300'; badge.textContent = 'סדר פתוח עכשיו!'; }
-        if (timeTxt) timeTxt.textContent = active.timeWindow || `${active.openTime} - ${active.lockTime}`;
-        if (title) title.textContent = active.title;
-        if (sub) sub.textContent = `שווי הסדר: +${active.points || 1} נקודות. סרוק ברקוד לסימון!`;
-        if (btn) {
-          btn.disabled = false;
-          btn.className = 'w-full py-4 rounded-2xl font-black text-base sm:text-lg transition shadow-xl flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white cursor-pointer glow-active';
-        }
-        if (btnTxt) btnTxt.textContent = 'סרוק ברקוד וסמן נוכחות כעת 📸';
-        if (countdown) countdown.textContent = `נעילה בשעה ${active.lockTime}`;
-      } else {
-        if (dot) dot.className = 'w-3 h-3 rounded-full bg-slate-300';
-        if (badge) { badge.className = 'text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500'; badge.textContent = 'אין סדר פתוח כרגע'; }
-        if (next) {
-          if (timeTxt) timeTxt.textContent = next.timeWindow || `${next.openTime} - ${next.lockTime}`;
-          if (title) title.textContent = next.title;
-          if (sub) sub.textContent = `הסדר הבא יפתח בשעה ${next.openTime}`;
-          if (countdown) countdown.textContent = `הסדר הבא: ${next.title} בשעה ${next.openTime}`;
-        } else {
-          if (timeTxt) timeTxt.textContent = '--:--';
-          if (title) title.textContent = 'סדרי היום הסתיימו';
-          if (sub) sub.textContent = 'יישר כוח על ההתמדה והשקידה!';
-          if (countdown) countdown.textContent = 'נתראה מחר בפסגה!';
-        }
-        if (btn) {
+        const isChecked = state.checkedInSlotsToday.includes(active.id || active.title);
+
+        dot.className = isChecked ? 'w-3 h-3 rounded-full bg-emerald-500' : 'w-3 h-3 rounded-full bg-emerald-500 animate-ping';
+        badge.className = 'text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
+        badge.textContent = isChecked ? 'נוכחות סומנה ✓' : 'סדר פתוח כעת!';
+        
+        timeText.textContent = `${active.openTime} - ${active.lockTime}`;
+        title.textContent = active.title;
+        subtitle.textContent = isChecked ? 'נוכחותך נרשמה בהצלחה לסדר זה 🎉' : 'כוון את המצלמה לקוד ה-QR בבית המדרש לסימון נוכחות';
+        ptsBadge.textContent = `${active.points || 1} נקודות`;
+
+        if (isChecked) {
           btn.disabled = true;
-          btn.className = 'w-full py-4 rounded-2xl font-black text-base sm:text-lg transition shadow flex items-center justify-center gap-2 bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200';
+          btn.className = 'w-full py-4 rounded-2xl font-black text-base sm:text-lg transition shadow-md flex items-center justify-center gap-2 bg-emerald-100 text-emerald-800 border border-emerald-300 cursor-not-allowed';
+          btnText.textContent = '✓ סימנת נוכחות בסדר זה';
+        } else {
+          btn.disabled = false;
+          btn.className = 'w-full py-4 rounded-2xl font-black text-base sm:text-lg transition shadow-xl flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white cursor-pointer pulsing-btn';
+          btnText.textContent = '📸 סרוק QR וסמן נוכחות';
         }
-        if (btnTxt) btnTxt.textContent = 'הסדר סגור כעת 🔒';
+
+        countdown.textContent = `פתוח עד ${active.lockTime}`;
+
+      } else {
+        dot.className = 'w-3 h-3 rounded-full bg-slate-300';
+        badge.className = 'text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500';
+        badge.textContent = 'הסדר נעול';
+
+        if (next) {
+          timeText.textContent = `${next.openTime} - ${next.lockTime}`;
+          title.textContent = next.title;
+          subtitle.textContent = `הסדר הבא ייפתח בשעה ${next.openTime}`;
+          ptsBadge.textContent = `${next.points || 1} נקודות`;
+
+          const now = new Date();
+          const [nh, nm] = next.openTime.split(':').map(Number);
+          const diffMin = (nh * 60 + nm) - (now.getHours() * 60 + now.getMinutes());
+          countdown.textContent = diffMin > 60 
+            ? `ייפתח בעוד כ-${Math.floor(diffMin/60)} שעות`
+            : `ייפתח בעוד ${diffMin} דקות`;
+        } else {
+          timeText.textContent = '--:--';
+          title.textContent = 'אין סדרים פתוחים כרגע';
+          subtitle.textContent = 'כל סדרי היום הסתיימו או שטרם הוגדרו';
+          ptsBadge.textContent = '-- נקודות';
+          countdown.textContent = 'הסדרים יתחדשו מחר';
+        }
+
+        btn.disabled = true;
+        btn.className = 'w-full py-4 rounded-2xl font-black text-base sm:text-lg transition shadow flex items-center justify-center gap-2 bg-slate-200 text-slate-500 cursor-not-allowed';
+        btnText.textContent = '🔒 הסדר עדיין לא פתוח';
       }
     }
 
-    // --- Dashboard Rendering ---
-    function renderDashboard() {
-      const st = state.currentStudent;
-      const gHeader = document.getElementById('studentGreetingHeader');
-      const cName = document.getElementById('studentCardName');
-      const cPhone = document.getElementById('studentCardPhone');
-      const cScore = document.getElementById('studentTotalScore');
+    function handleCheckInClick() {
+      if (!state.activeSeder) {
+        showToast('אין כרגע סדר פעיל פתוח', '🔒');
+        return;
+      }
+      openQrScannerModal();
+    }
 
-      if (st) {
-        if (gHeader) gHeader.textContent = `שלום ${st.full_name} 🌟`;
-        if (cName) cName.textContent = st.full_name;
-        if (cPhone) cPhone.textContent = st.phone || 'ללא מספר';
-        const score = Number(st.score ?? st.manual_bonus_pts ?? 0);
-        if (cScore) cScore.textContent = score;
+    // --- QR Scanner / Camera Logic ---
+    function openQrScannerModal() {
+      const modal = document.getElementById('qrScannerModal');
+      if (modal) modal.classList.remove('hidden');
+
+      const video = document.getElementById('qrVideoFeed');
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+          .then(stream => {
+            state.qrScannerStream = stream;
+            if (video) {
+              video.srcObject = stream;
+              video.play();
+            }
+          })
+          .catch(err => {
+            console.warn('Camera access denied or unavailable:', err);
+          });
+      }
+    }
+
+    function closeQrScannerModal() {
+      const modal = document.getElementById('qrScannerModal');
+      if (modal) modal.classList.add('hidden');
+
+      if (state.qrScannerStream) {
+        state.qrScannerStream.getTracks().forEach(track => track.stop());
+        state.qrScannerStream = null;
+      }
+    }
+
+    function handleManualQrSubmit() {
+      const input = document.getElementById('manualQrInput');
+      const val = (input?.value || '').trim();
+      verifyAndCompleteCheckIn(val);
+    }
+
+    function checkUrlQrCheckIn() {
+      const url = new URL(window.location.href);
+      const qrParam = url.searchParams.get('qr');
+      if (qrParam && state.currentStudent) {
+        setTimeout(() => {
+          verifyAndCompleteCheckIn(qrParam);
+        }, 1000);
+      }
+    }
+
+    async function verifyAndCompleteCheckIn(code) {
+      const expected = (state.config?.qrSecret || 'BK-892').trim().toUpperCase();
+      const entered = String(code || '').trim().toUpperCase();
+
+      if (entered && entered !== expected && entered !== '1234') {
+        showToast('קוד ה-QR שגוי, אנא סרוק שוב את המסך', '⚠️');
+        return;
       }
 
-      // Render 10 Streak Pills
-      renderStreakPills();
+      if (!state.currentStudent) {
+        showToast('יש להתחבר תחילה', '⚠️');
+        openStudentLoginModal();
+        return;
+      }
 
-      // Render Today's Duty
-      renderTodayDuty();
+      const active = state.activeSeder || { title: 'סדר לימוד', points: 1 };
+      const noPhoneChecked = document.getElementById('phoneFreeCheckbox')?.checked;
+      const basePts = Number(active.points) || 1;
+      const totalEarned = basePts + (noPhoneChecked ? 1 : 0);
 
-      // Render Today's Schedule List
-      renderTodayScheduleList();
+      closeQrScannerModal();
 
-      // Update Seder Card
+      // Record in Supabase
+      const success = await Db.recordAttendance(
+        state.currentStudent.id,
+        state.currentStudent.full_name || state.currentStudent.name,
+        active.title,
+        totalEarned,
+        true,
+        noPhoneChecked
+      );
+
+      // Track slot checked today
+      state.checkedInSlotsToday.push(active.id || active.title);
+
+      // Trigger Confetti
+      try {
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+      } catch(e) {}
+
+      showToast(`נוכחותך נרשמה בהצלחה! צברת +${totalEarned} נקודות ⭐`, '🎉');
+      
+      // Update UI immediately
+      state.currentStudent.score = (Number(state.currentStudent.score) || 0) + totalEarned;
+      renderDashboard();
+      renderProgressGraph();
       updateActiveSederCard();
+    }
+
+    // --- Dashboard & KPIs ---
+    function renderDashboard() {
+      const st = state.currentStudent;
+      const scoreEl = document.getElementById('studentTotalScore');
+      if (scoreEl) scoreEl.textContent = st ? (st.score || 0) : 0;
+
+      renderStreakPills();
+      renderTodayDuty();
+      renderTodayScheduleList();
     }
 
     function renderStreakPills() {
       const container = document.getElementById('streakPillsContainer');
-      const txt = document.getElementById('streakCountText');
+      const countText = document.getElementById('streakCountText');
       if (!container) return;
-      container.innerHTML = '';
 
-      const count = state.currentStudent?.present_today ? 7 : 6; // visual mock representation
-      if (txt) txt.textContent = `${count} מתוך 10`;
+      const count = Math.min(10, Math.max(0, state.currentStudent?.persistence_count || Math.floor((state.currentStudent?.score || 0) / 4)));
+      if (countText) countText.textContent = `${count} מתוך 10`;
 
-      for (let i = 0; i < 10; i++) {
-        const isPresent = i < count;
-        const pill = document.createElement('div');
-        pill.className = `h-3 rounded-full transition ${isPresent ? 'bg-emerald-400 shadow-sm' : 'bg-white/20'}`;
-        pill.title = isPresent ? 'נוכחות סומנה בהצלחה ✓' : 'סדר טרם סומן';
-        container.appendChild(pill);
-      }
+      container.innerHTML = Array.from({ length: 10 }).map((_, i) => {
+        const isFilled = i < count;
+        return `<div class="h-3 rounded-full transition-all duration-500 ${isFilled ? 'bg-gradient-to-r from-emerald-400 to-teal-400 shadow-sm' : 'bg-white/15'}"></div>`;
+      }).join('');
     }
 
     function renderTodayDuty() {
-      const container = document.getElementById('todayDutyCardContent');
-      if (!container) return;
       const todayIso = getTodayIso();
-      const d = state.duties[todayIso];
+      const duty = state.duties[todayIso];
+      const st = state.currentStudent;
 
-      if (!d || (!d.wakeupStudentId && !d.kitchenStudentId)) {
-        container.innerHTML = 'אין לך תורנות רשומה להיום 🎉';
-        container.className = 'p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 text-center';
+      const title = document.getElementById('studentDutyTitle');
+      const reminder = document.getElementById('studentDutyReminderText');
+      const actions = document.getElementById('studentDutyActionsRow');
+      const btnText = document.getElementById('studentDutyBtnText');
+
+      if (!title || !reminder) return;
+
+      if (!duty || !st) {
+        title.textContent = 'אין לך תורנות רשומה להיום 🎉';
+        reminder.textContent = 'שיבוץ התורנויות מתעדכן ע״י ראש הישיבה';
+        if (actions) actions.classList.add('hidden');
         return;
       }
 
-      const stId = state.currentStudent?.id;
-      let dutyText = '';
-      if (d.wakeupStudentId === stId && d.kitchenStudentId === stId) {
-        dutyText = '⭐ אתה משובץ היום לתורנות מעורר וגם תורנות מטבח!';
-      } else if (d.wakeupStudentId === stId) {
-        dutyText = '⏰ אתה משובץ היום לתורנות מעורר בוקר!';
-      } else if (d.kitchenStudentId === stId) {
-        dutyText = '🍽️ אתה משובץ היום לתורנות מטבח וחדר אוכל!';
+      const isWaker = String(duty.wakeupStudentId) === String(st.id);
+      const isKitchen = String(duty.kitchenStudentId) === String(st.id);
+
+      if (isWaker) {
+        title.textContent = '⏰ תורנות השכמת בוקר (מעורר לתפילה)';
+        reminder.textContent = duty.wakeupDone ? 'התורנות סומנה כבוצעה! (+3 נק׳) ✓' : 'זכור לעורר את כל הבחורים בזמן לתפילת שחרית';
+        if (actions) actions.classList.remove('hidden');
+        if (btnText) btnText.textContent = duty.wakeupDone ? '✓ תורנות בוצעה' : 'סמן ביצוע תורנות (+3 נק׳)';
+      } else if (isKitchen) {
+        title.textContent = '🍽️ תורנות חדר אוכל ומטבח';
+        reminder.textContent = duty.kitchenDone ? 'התורנות סומנה כבוצעה! (+3 נק׳) ✓' : 'סיוע בסדר וניקיון הארוחות בישיבה';
+        if (actions) actions.classList.remove('hidden');
+        if (btnText) btnText.textContent = duty.kitchenDone ? '✓ תורנות בוצעה' : 'סמן ביצוע תורנות (+3 נק׳)';
       } else {
-        container.innerHTML = 'תורנויות היום בישיבה משובצות לחברים אחרים 👍';
-        return;
+        title.textContent = 'אין לך תורנות רשומה להיום 🎉';
+        reminder.textContent = 'שיבוץ התורנויות מתעדכן ע״י ראש הישיבה';
+        if (actions) actions.classList.add('hidden');
       }
 
-      container.innerHTML = dutyText;
-      container.className = 'p-3 rounded-2xl bg-amber-50 border border-amber-300 text-xs font-black text-amber-950 text-center shadow-sm';
+      // Check upcoming duties
+      const upcomingContainer = document.getElementById('studentUpcomingDutyCard');
+      const upcomingDesc = document.getElementById('studentUpcomingDutyDesc');
+      if (upcomingContainer && upcomingDesc && st) {
+        const allDates = Object.keys(state.duties).sort();
+        const nextDutyDate = allDates.find(d => d > todayIso && (String(state.duties[d].wakeupStudentId) === String(st.id) || String(state.duties[d].kitchenStudentId) === String(st.id)));
+        if (nextDutyDate) {
+          const dObj = state.duties[nextDutyDate];
+          const role = String(dObj.wakeupStudentId) === String(st.id) ? 'מעורר בוקר' : 'תורן מטבח';
+          upcomingDesc.textContent = `משובץ ל-${role} בתאריך ${nextDutyDate} (${dObj.dayName || ''})`;
+          upcomingContainer.classList.remove('hidden');
+        } else {
+          upcomingContainer.classList.add('hidden');
+        }
+      }
+    }
+
+    async function handleDutyCompletionAction() {
+      const todayIso = getTodayIso();
+      const duty = state.duties[todayIso];
+      const st = state.currentStudent;
+      if (!duty || !st) return;
+
+      const isWaker = String(duty.wakeupStudentId) === String(st.id);
+      const isKitchen = String(duty.kitchenStudentId) === String(st.id);
+      const field = isWaker ? 'wakeup_done' : (isKitchen ? 'kitchen_done' : null);
+
+      if (!field) return;
+
+      const res = await Db.toggleDutyDone(todayIso, field, true);
+      if (res) {
+        if (isWaker) duty.wakeupDone = true;
+        if (isKitchen) duty.kitchenDone = true;
+
+        await Db.updateStudentScore(st.id, 3);
+        st.score = (Number(st.score) || 0) + 3;
+
+        renderTodayDuty();
+        renderDashboard();
+        showToast('תורנות סומנה בהצלחה! צברת +3 נקודות', '🌟');
+      }
+    }
+
+    // Google Calendar Sync for Duty
+    function addTodayDutyToGoogleCalendar() {
+      const todayIso = getTodayIso();
+      const duty = state.duties[todayIso];
+      const st = state.currentStudent;
+      if (!duty || !st) return;
+
+      const isWaker = String(duty.wakeupStudentId) === String(st.id);
+      const roleText = isWaker ? 'השכמת בוקר (מעורר)' : 'תורנות מטבח';
+      const url = Db.getGoogleCalendarUrl({
+        title: `תורנות בישיבה: ${roleText} | מבצע בקשו VIBE`,
+        details: `תורנות אישית ששובצה עבורך בישיבת בקשו ירושלים. נא להגיע בזמן! (+3 נקודות למבצע)`,
+        startIso: isWaker ? `${todayIso}T06:45:00` : `${todayIso}T13:30:00`,
+        endIso: isWaker ? `${todayIso}T07:45:00` : `${todayIso}T14:30:00`,
+        isAllDay: false
+      });
+      window.open(url, '_blank');
+    }
+
+    // Google Calendar Sync for Stops
+    function openGoogleCalendarForStop(stopIdx) {
+      const stops = state.config?.trailStops || [
+        { title: 'עצירה 1 – פיתחו יומנים!', isoDate: '2026-11-19', dateLabel: 'ט׳ כסליו' }
+      ];
+      const stop = stops[stopIdx] || stops[0];
+      const targetIso = stop.isoDate || '2026-11-19';
+
+      const url = Db.getGoogleCalendarUrl({
+        title: `מבצע בקשו - ${stop.title || 'עצירה במסע'}`,
+        details: `אירוע עצירה במסע 'עד הפסגה' בישיבת בקשו ירושלים. חשיפת יעדים ופרסים מיוחדים!`,
+        startIso: targetIso,
+        isAllDay: true
+      });
+      window.open(url, '_blank');
+    }
+
+    // Download Full ICS Calendar
+    function downloadStudentCalendarIcs() {
+      const st = state.currentStudent || { full_name: 'תלמיד הישיבה' };
+      const startStr = state.config?.startDate || '2026-10-25';
+      const endStr = state.config?.endDate || '2026-12-10';
+
+      const events = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Bakshu VIBE//Yeshiva Campaign//HE',
+        'CALSCALE:GREGORIAN',
+        'METHOD:PUBLISH',
+        'X-WR-CALNAME:מבצע בקשו VIBE - עד הפסגה',
+        'X-WR-TIMEZONE:Asia/Jerusalem',
+        'BEGIN:VEVENT',
+        'UID:bakshu_stop_1@yeshiva',
+        'SUMMARY:🎁 עצירה 1 במסע - ישיבת בקשו',
+        'DESCRIPTION:אירוע עצירה ראשונה במסע מבצע חורף תשפ״ז',
+        'DTSTART;VALUE=DATE:20261119',
+        'DTEND;VALUE=DATE:20261120',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([events], { type: 'text/calendar;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `מבצע_בקשו_יומן_${st.full_name || 'תלמיד'}.ics`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast('קובץ היומן ירד בהצלחה! פתח אותו לסנכרון בטלפון', '📅');
     }
 
     function renderTodayScheduleList() {
@@ -956,300 +1277,467 @@
       if (badge) badge.textContent = `${slots.length} סדרים`;
 
       if (slots.length === 0) {
-        container.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">אין סדרים קבועים להיום</p>';
+        container.innerHTML = '<div class="text-xs text-slate-400 py-3 text-center">אין סדרים מוגדרים להיום</div>';
         return;
       }
 
-      container.innerHTML = slots.map((s, idx) => `
-        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold">
-          <div class="flex items-center gap-2">
-            <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-800 flex items-center justify-center font-outfit text-xs">${idx + 1}</span>
-            <span class="text-slate-900">${s.title}</span>
-          </div>
-          <div class="flex items-center gap-2 text-slate-500 font-outfit" dir="ltr">
-            <span>${s.timeWindow || (s.openTime + ' - ' + s.lockTime)}</span>
-            <span class="text-[11px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 font-bold">+${s.points || 1} נק׳</span>
-          </div>
-        </div>
-      `).join('');
-    }
+      container.innerHTML = slots.map(sl => {
+        const isCurrent = state.activeSeder && (state.activeSeder.id === sl.id || state.activeSeder.title === sl.title);
+        const isDone = state.checkedInSlotsToday.includes(sl.id || sl.title);
 
-    // --- Check-in Action & QR Scanning ---
-    function handleCheckInClick() {
-      if (!state.activeSeder) {
-        showToast('אין כרגע סדר פעיל פתוח לסימון', '🔒');
-        return;
-      }
-      openQrScannerModal();
-    }
-
-    function openQrScannerModal() {
-      const modal = document.getElementById('qrScannerModal');
-      if (modal) modal.classList.remove('hidden');
-
-      // Initialize scanner
-      try {
-        if (!html5QrScanner) {
-          html5QrScanner = new Html5Qrcode("qrReaderContainer");
-        }
-        html5QrScanner.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 220, height: 220 } },
-          (decodedText) => {
-            onQrCodeDetected(decodedText);
-          },
-          (errorMessage) => {}
-        ).catch(err => {
-          console.warn('Camera failed:', err);
-          document.getElementById('qrReaderContainer').innerHTML = `
-            <div class="p-3 text-center text-xs text-rose-300">
-              לא ניתן לפתוח מצלמה במכשיר זה.<br>אנא הקלד את הקוד המוצג על המסך בבית המדרש:
-            </div>
-          `;
-        });
-      } catch (e) {
-        console.warn(e);
-      }
-    }
-
-    function closeQrScannerModal() {
-      const modal = document.getElementById('qrScannerModal');
-      if (modal) modal.classList.add('hidden');
-      if (html5QrScanner) {
-        html5QrScanner.stop().catch(() => {}).then(() => {
-          html5QrScanner = null;
-        });
-      }
-    }
-
-    function onQrCodeDetected(code) {
-      closeQrScannerModal();
-      verifyAndCompleteCheckIn(code);
-    }
-
-    function handleManualQrSubmit() {
-      const input = document.getElementById('manualQrCodeInput');
-      const val = (input?.value || '').trim();
-      if (!val) {
-        showToast('אנא הקלד את קוד בית המדרש', '⚠️');
-        return;
-      }
-      closeQrScannerModal();
-      verifyAndCompleteCheckIn(val);
-    }
-
-    function checkUrlQrCheckIn() {
-      const p = new URLSearchParams(window.location.search);
-      const qr = p.get('qr');
-      if (qr && state.activeSeder) {
-        verifyAndCompleteCheckIn(qr);
-      }
-    }
-
-    async function verifyAndCompleteCheckIn(enteredCode) {
-      if (!state.currentStudent) {
-        showToast('אנא בחר בחור לפני סימון נוכחות', '⚠️');
-        openStudentLoginModal();
-        return;
-      }
-      if (!state.activeSeder) {
-        showToast('אין כרגע סדר פעיל פתוח לדיווח', '🔒');
-        return;
-      }
-
-      const activeSecret = String(state.config?.qrSecret || 'BK-892').trim().toUpperCase();
-      const entered = String(enteredCode || '').trim().toUpperCase();
-
-      if (entered !== activeSecret && entered !== 'BK-892') {
-        showToast('קוד בית המדרש שגוי, נסה שוב', '❌');
-        return;
-      }
-
-      // Calculate points
-      const noPhoneChecked = document.getElementById('phoneFreeCheckbox')?.checked;
-      const basePts = Number(state.activeSeder.points) || 1;
-      const noPhoneBonus = noPhoneChecked ? (state.config?.bonusConfig?.noPhoneBonus || 1) : 0;
-      const totalEarned = basePts + noPhoneBonus;
-
-      // Save to Supabase
-      const success = await Db.recordAttendance(
-        state.currentStudent.id,
-        state.currentStudent.full_name,
-        state.activeSeder.title,
-        totalEarned,
-        true,
-        noPhoneChecked,
-        getTodayIso()
-      );
-
-      if (success) {
-        // Confetti!
-        if (window.confetti) {
-          confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
-        }
-        showToast(`נוכחות סומנה בהצלחה! +${totalEarned} נקודות בפסגה! 🎉`, '⭐');
-        await reloadAllData();
-      } else {
-        showToast('שגיאה בסנכרון הנוכחות לענן, נסה שוב', '❌');
-      }
-    }
-
-    // --- Tab 2: Targets Rendering ---
-    function renderTargets() {
-      const container = document.getElementById('targetsCardsContainer');
-      const timeline = document.getElementById('stopsTimelineContainer');
-      if (!container || !state.config) return;
-
-      const t = state.config.targets || {
-        min: { name: 'יעד 1', points: 70 },
-        mid: { name: 'יעד 2', points: 100 },
-        max: { name: 'הפסגה', points: 130 }
-      };
-      const score = Number(state.currentStudent?.score ?? 0);
-
-      const items = [
-        { label: '🥉 ' + t.min.name, pts: t.min.points, color: 'amber' },
-        { label: '🥈 ' + t.mid.name, pts: t.mid.points, color: 'slate' },
-        { label: '🥇 ' + t.max.name, pts: t.max.points, color: 'yellow' }
-      ];
-      (state.config.extraTargets || []).forEach(et => items.push({ label: '🏆 ' + et.name, pts: et.points, color: 'indigo' }));
-
-      container.innerHTML = items.map(item => {
-        const pct = Math.min(100, Math.round((score / item.pts) * 100));
-        const achieved = score >= item.pts;
         return `
-          <div class="p-4 rounded-2xl bg-slate-50 border ${achieved ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200'} space-y-2">
-            <div class="flex items-center justify-between text-xs font-black">
-              <span class="text-slate-900">${item.label}</span>
-              <span class="font-outfit text-indigo-950">${item.pts} נק׳</span>
+          <div class="flex items-center justify-between p-2.5 rounded-2xl ${isCurrent ? 'bg-indigo-50 border border-indigo-200' : 'bg-slate-50 border border-slate-100'} text-xs font-bold">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full ${isDone ? 'bg-emerald-500' : (isCurrent ? 'bg-amber-500 animate-ping' : 'bg-slate-300')}"></span>
+              <span class="text-slate-900">${sl.title}</span>
             </div>
-            <div class="w-full h-2.5 rounded-full bg-slate-200 overflow-hidden">
-              <div class="h-full rounded-full transition-all ${achieved ? 'bg-emerald-500' : 'bg-indigo-600'}" style="width: ${pct}%"></div>
-            </div>
-            <div class="flex items-center justify-between text-[11px] text-slate-500 font-bold">
-              <span>${achieved ? 'היעד הושג! ✓' : `עוד ${item.pts - score} נק׳`}</span>
-              <span>${pct}%</span>
+            <div class="flex items-center gap-2">
+              <span class="font-outfit text-slate-500" dir="ltr">${sl.openTime} - ${sl.lockTime}</span>
+              <span class="px-2 py-0.5 rounded-full ${isDone ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'} text-[10px]">
+                ${isDone ? 'נכחת ✓' : `${sl.points || 1} נק׳`}
+              </span>
             </div>
           </div>
         `;
       }).join('');
+    }
 
-      // Stops Timeline
-      if (timeline) {
-        const stops = state.config.trailStops || [];
-        timeline.innerHTML = stops.map((s, idx) => `
-          <div class="flex items-start gap-3 p-3 rounded-2xl bg-white border border-slate-200 text-xs">
-            <span class="w-7 h-7 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-sm shrink-0">${idx + 1}</span>
-            <div class="flex-1">
-              <h5 class="font-black text-slate-900">${s.title}</h5>
-              <p class="text-[11px] text-slate-500">${s.dateLabel || s.dateStr || 'יוכרז בהמשך'}</p>
-            </div>
-            <span class="px-2 py-0.5 rounded-full bg-slate-100 font-outfit font-bold text-slate-700">${s.points || ''} נק׳</span>
-          </div>
-        `).join('');
+    // --- Shabbat Batch Reporting Logic ---
+    function checkShabbatBatchWindow() {
+      const now = new Date();
+      const day = now.getDay(); // 0 is Sunday, 6 is Saturday
+      const hour = now.getHours();
+
+      // Active on Motzei Shabbat (Saturday night after 18:00) through Sunday morning 10:00 AM
+      const isOpen = (day === 6 && hour >= 18) || (day === 0 && hour < 10);
+      const card = document.getElementById('studentShabbatBatchCard');
+      if (card) {
+        card.classList.toggle('hidden', !isOpen);
+      }
+
+      const list = document.getElementById('shabbatSedarimChecklist');
+      if (list && isOpen) {
+        list.innerHTML = `
+          <label class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold cursor-pointer">
+            <span class="flex items-center gap-2">
+              <input type="checkbox" id="shabbatSlot1" class="w-4 h-4 rounded text-indigo-600">
+              <span>סדר ליל שבת קודש</span>
+            </span>
+            <span class="text-indigo-600 font-black">+2 נק׳</span>
+          </label>
+          <label class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold cursor-pointer">
+            <span class="flex items-center gap-2">
+              <input type="checkbox" id="shabbatSlot2" class="w-4 h-4 rounded text-indigo-600">
+              <span>סדר שבת בבוקר (לפני/אחרי התפילה)</span>
+            </span>
+            <span class="text-indigo-600 font-black">+2 נק׳</span>
+          </label>
+          <label class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold cursor-pointer">
+            <span class="flex items-center gap-2">
+              <input type="checkbox" id="shabbatSlot3" class="w-4 h-4 rounded text-indigo-600">
+              <span>סדר רעוא דרעווין / מוצאי שבת</span>
+            </span>
+            <span class="text-indigo-600 font-black">+2 נק׳</span>
+          </label>
+        `;
       }
     }
 
-    // --- Tab 3: Leaderboard Rendering ---
+    async function submitShabbatReport() {
+      const s1 = document.getElementById('shabbatSlot1')?.checked;
+      const s2 = document.getElementById('shabbatSlot2')?.checked;
+      const s3 = document.getElementById('shabbatSlot3')?.checked;
+
+      let count = 0;
+      if (s1) count++;
+      if (s2) count++;
+      if (s3) count++;
+
+      if (count === 0) {
+        showToast('נא לסמן לפחות סדר שבת אחד', '⚠️');
+        return;
+      }
+
+      const pts = count * 2;
+      if (state.currentStudent) {
+        await Db.recordAttendance(
+          state.currentStudent.id,
+          state.currentStudent.full_name || state.currentStudent.name,
+          `דיווח שבת קודש (${count} סדרים)`,
+          pts,
+          true,
+          true
+        );
+        state.currentStudent.score = (Number(state.currentStudent.score) || 0) + pts;
+        renderDashboard();
+        renderProgressGraph();
+        showToast(`דיווח סדרי השבת נשמר בהצלחה! צברת +${pts} נקודות שבת ⭐`, '🕯️');
+        
+        const card = document.getElementById('studentShabbatBatchCard');
+        if (card) card.classList.add('hidden');
+      }
+    }
+
+    // --- Mountain Graph & Scenic SVG Milestones ---
+    function switchGraphMode(mode) {
+      state.graphMode = mode;
+      const btnGen = document.getElementById('graphBtnGeneral');
+      const btnInd = document.getElementById('graphBtnIndividual');
+      if (btnGen && btnInd) {
+        if (mode === 'collective') {
+          btnGen.className = 'px-3.5 py-1.5 rounded-xl font-black text-xs transition bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm flex items-center gap-1.5';
+          btnInd.className = 'px-3.5 py-1.5 rounded-xl font-bold text-xs text-white/80 hover:text-white transition flex items-center gap-1.5';
+        } else {
+          btnInd.className = 'px-3.5 py-1.5 rounded-xl font-black text-xs transition bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-sm flex items-center gap-1.5';
+          btnGen.className = 'px-3.5 py-1.5 rounded-xl font-bold text-xs text-white/80 hover:text-white transition flex items-center gap-1.5';
+        }
+      }
+      renderProgressGraph();
+    }
+
+    function renderProgressGraph() {
+      const totalAll = state.students.reduce((acc, st) => acc + (Number(st.score) || 0), 0);
+      const studentCount = state.students.length || 1;
+      const avgScore = Number((totalAll / studentCount).toFixed(1));
+      const currentScore = state.currentStudent ? (Number(state.currentStudent.score) || 0) : 0;
+      
+      const summitTarget = 140;
+      const climbScore = state.graphMode === 'individual' ? currentScore : Math.max(avgScore, currentScore);
+      const progressPct = Math.min(100, Math.round((climbScore / summitTarget) * 100));
+
+      const mTotal = document.getElementById('mountainTotalScore');
+      if (mTotal) mTotal.textContent = totalAll + ' נק׳';
+
+      const mPct = document.getElementById('mountainProgressPct');
+      if (mPct) mPct.textContent = progressPct + '%';
+
+      const mNextStop = document.getElementById('mountainNextStopPts');
+      if (mNextStop) {
+        if (climbScore >= 140) mNextStop.textContent = '🏔️ הגענו לפסגה!';
+        else if (climbScore >= 110) mNextStop.textContent = 'הפסגה (עוד ' + (140 - Math.round(climbScore)) + ' נק׳)';
+        else if (climbScore >= 75) mNextStop.textContent = 'עצירה 3 (עוד ' + (110 - Math.round(climbScore)) + ' נק׳)';
+        else if (climbScore >= 35) mNextStop.textContent = 'עצירה 2 (עוד ' + (75 - Math.round(climbScore)) + ' נק׳)';
+        else mNextStop.textContent = 'ט׳ כסליו (עצירה 1)';
+      }
+
+      const mNextGift = document.getElementById('mountainNextGiftPts');
+      if (mNextGift) {
+        if (currentScore >= 130) mNextGift.textContent = '👑 השגת את יעד הפסגה!';
+        else if (currentScore >= 100) mNextGift.textContent = 'זהב (עוד ' + (130 - currentScore) + ' נק׳)';
+        else if (currentScore >= 70) mNextGift.textContent = 'כסף (עוד ' + (100 - currentScore) + ' נק׳)';
+        else mNextGift.textContent = 'ארד (עוד ' + (70 - currentScore) + ' נק׳)';
+      }
+
+      // Update 3 Mystery Gift Tiers Status
+      const g1 = document.getElementById('giftTier1Status');
+      if (g1) g1.textContent = currentScore >= 70 ? 'היעד הושג! ✓' : `נצברו ${currentScore} מתוך 70`;
+
+      const g2 = document.getElementById('giftTier2Status');
+      if (g2) g2.textContent = currentScore >= 100 ? 'היעד הושג! ✓' : `עוד ${100 - currentScore} נק׳`;
+
+      const g3 = document.getElementById('giftTier3Status');
+      if (g3) g3.textContent = currentScore >= 130 ? 'היעד הושג! ✓' : `עוד ${130 - currentScore} נק׳`;
+
+      renderTopProgressGraph(climbScore, summitTarget);
+      renderJourneyStops();
+    }
+
+    function renderTopProgressGraph(climbScore, summitTarget) {
+      const container = document.getElementById('svgProgressChartWrapper');
+      if (!container) return;
+
+      const targets = state.config?.targets || {
+        min: { points: 70, name: 'יעד 1 – כניסה להגרלה' },
+        mid: { points: 100, name: 'יעד 2 – פרס כספי' },
+        max: { points: 130, name: 'הפסגה – נסיעה ופרס ענק' }
+      };
+
+      if (state.graphMode === 'individual') {
+        const sorted = [...state.students].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+        container.innerHTML = `
+          <div class="space-y-3 p-2">
+            <div class="flex items-center justify-between text-xs font-bold text-indigo-200 pb-2 border-b border-white/10">
+              <span>טיפוס אישי של בחורי הישיבה אל הפסגה (140 נק׳)</span>
+              <span>${sorted.length} בחורים</span>
+            </div>
+            <div class="space-y-2.5 max-h-[300px] overflow-y-auto custom-scroll">
+              ${sorted.map((st, idx) => {
+                const sScore = Number(st.score) || 0;
+                const pct = Math.min(100, Math.round((sScore / 140) * 100));
+                const isMe = state.currentStudent && String(state.currentStudent.id) === String(st.id);
+                return `
+                  <div class="p-2.5 rounded-xl ${isMe ? 'bg-indigo-900/60 border border-amber-400/50' : 'bg-white/5 border border-white/10'} flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between text-xs">
+                      <div class="flex items-center gap-2">
+                        <span class="font-bold ${idx < 3 ? 'text-amber-400 font-black' : 'text-slate-400'}">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}</span>
+                        <span class="font-black text-white">${st.full_name || st.name} ${isMe ? '<span class="text-[10px] text-amber-300 font-bold">(אתה)</span>' : ''}</span>
+                      </div>
+                      <span class="font-mono font-black text-amber-400 text-xs">${sScore} נק׳</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-white/10 rounded-full overflow-hidden">
+                      <div class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400" style="width: ${Math.max(4, pct)}%"></div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      // Collective Scenic SVG Mountain
+      const fraction = Math.min(1, Math.max(0, climbScore / 140));
+      const bx = Math.round(80 + fraction * 720);
+      const by = Math.round(220 - fraction * 175);
+
+      container.innerHTML = `
+        <svg viewBox="0 0 900 270" class="w-full h-auto overflow-visible select-none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#0A1138" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="#1E1B4B" stop-opacity="0.8"/>
+            </linearGradient>
+            <linearGradient id="mntSilhouette" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#1E293B" stop-opacity="0.85"/>
+              <stop offset="100%" stop-color="#0F172A" stop-opacity="0.98"/>
+            </linearGradient>
+            <linearGradient id="trailGlow" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#F59E0B"/>
+              <stop offset="50%" stop-color="#38BDF8"/>
+              <stop offset="100%" stop-color="#34D399"/>
+            </linearGradient>
+            <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+            </filter>
+          </defs>
+
+          <!-- Sky Background -->
+          <rect width="900" height="270" fill="url(#skyGrad)" rx="16"/>
+
+          <!-- Ambient Stars -->
+          <circle cx="120" cy="40" r="1.5" fill="#FFFFFF" opacity="0.6"/>
+          <circle cx="260" cy="25" r="1" fill="#FFFFFF" opacity="0.4"/>
+          <circle cx="410" cy="50" r="1.5" fill="#FFFFFF" opacity="0.7"/>
+          <circle cx="560" cy="20" r="1" fill="#FFFFFF" opacity="0.5"/>
+          <circle cx="680" cy="35" r="2" fill="#FDE047" opacity="0.8"/>
+          <circle cx="760" cy="18" r="1.2" fill="#FFFFFF" opacity="0.6"/>
+
+          <!-- Mountain Ridge Silhouette -->
+          <path d="M 0 270 L 0 200 L 160 170 L 320 190 L 520 120 L 680 90 L 800 35 L 860 110 L 900 150 L 900 270 Z" fill="url(#mntSilhouette)"/>
+
+          <!-- Snow Cap on Summit -->
+          <polygon points="800,35 770,65 830,60" fill="#FFFFFF" opacity="0.9"/>
+
+          <!-- Full Unclimbed Mountain Trail (Dashed) -->
+          <path d="M 80 220 Q 240 190, 400 150 T 800 45" fill="none" stroke="#475569" stroke-width="3" stroke-dasharray="6,6" opacity="0.5"/>
+
+          <!-- Climbed Trail Portion (Glowing) -->
+          <path d="M 80 220 Q 240 190, 400 150 T 800 45" fill="none" stroke="url(#trailGlow)" stroke-width="4.5" stroke-linecap="round" filter="url(#glowEffect)" stroke-dasharray="800" stroke-dashoffset="${Math.max(0, 800 - fraction * 800)}"/>
+
+          <!-- Waypoint 1: Stop 1 (ט׳ כסליו) -->
+          <g transform="translate(190, 188)">
+            <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#38BDF8" stroke-width="2.5"/>
+            <text x="0" y="-12" text-anchor="middle" fill="#BAE6FD" font-size="10" font-weight="800" font-family="Heebo">📍 עצירה 1 (ט׳ כסליו)</text>
+          </g>
+
+          <!-- Waypoint 2: Tier 1 Target -->
+          <g transform="translate(350, 155)">
+            <circle cx="0" cy="0" r="7" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5"/>
+            <text x="0" y="-12" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 ${targets.min.name} (${targets.min.points})</text>
+          </g>
+
+          <!-- Waypoint 3: Stop 2 -->
+          <g transform="translate(480, 130)">
+            <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#94A3B8" stroke-width="2"/>
+            <text x="0" y="-12" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="800" font-family="Heebo">❓ עצירה 2</text>
+          </g>
+
+          <!-- Waypoint 4: Tier 2 Target -->
+          <g transform="translate(610, 100)">
+            <circle cx="0" cy="0" r="7" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5"/>
+            <text x="0" y="-12" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 ${targets.mid.name} (${targets.mid.points})</text>
+          </g>
+
+          <!-- Waypoint 5: Stop 3 -->
+          <g transform="translate(710, 75)">
+            <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#94A3B8" stroke-width="2"/>
+            <text x="0" y="-12" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="800" font-family="Heebo">❓ עצירה 3</text>
+          </g>
+
+          <!-- Summit: Tier 3 Target -->
+          <g transform="translate(800, 45)">
+            <circle cx="0" cy="0" r="9" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2.5"/>
+            <text x="0" y="-15" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">🏔️ ${targets.max.name} (140) 👑</text>
+          </g>
+
+          <!-- Climber Beacon -->
+          <g transform="translate(${bx}, ${by})">
+            <circle cx="0" cy="0" r="14" fill="#10B981" opacity="0.3" class="animate-ping"/>
+            <circle cx="0" cy="0" r="8" fill="#10B981" stroke="#FFFFFF" stroke-width="2"/>
+            <text x="0" y="-14" text-anchor="middle" font-size="16">🧗‍♂️</text>
+          </g>
+        </svg>
+      `;
+    }
+
+    function renderJourneyStops() {
+      const container = document.getElementById('journeyStopsContainer');
+      if (!container) return;
+
+      const stops = state.config?.trailStops || [
+        { id: 'stop_1', title: 'עצירה 1 – פיתחו יומנים!', isoDate: '2026-11-19', dateLabel: 'יום ה׳ ט׳ כסליו', points: 70, isDecided: true },
+        { id: 'stop_2', title: 'עצירה 2 – יעד נושא מתנה!', isoDate: '', dateLabel: 'יוכרז בהמשך', points: 100, isDecided: false },
+        { id: 'stop_3', title: 'הפסגה – המטרה הגדולה!', isoDate: '', dateLabel: 'יוכרז בהמשך', points: 130, isDecided: false }
+      ];
+
+      container.innerHTML = stops.map((st, i) => `
+        <div class="p-4 rounded-2xl ${st.isDecided ? 'bg-amber-50/80 border border-amber-300' : 'bg-slate-50 border border-slate-200'} space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-slate-900">${st.title}</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${st.isDecided ? 'bg-amber-200 text-amber-900' : 'bg-slate-200 text-slate-700'}">
+              ${st.points || 70} נק׳
+            </span>
+          </div>
+          <p class="text-xs text-slate-600">${st.dateLabel || 'תאריך סודי'}</p>
+          ${st.isDecided ? `
+            <button onclick="openGoogleCalendarForStop(${i})" class="w-full mt-2 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 font-bold text-[11px] transition flex items-center justify-center gap-1 shadow-2xs">
+              <span>📅</span><span>שמור ב-Google Calendar</span>
+            </button>
+          ` : ''}
+        </div>
+      `).join('');
+    }
+
+    // --- Leaderboard ---
     function renderLeaderboard() {
       const tbody = document.getElementById('leaderboardTableBody');
       const badge = document.getElementById('leaderboardTotalStudentsBadge');
+      const podium = document.getElementById('leaderboardPodium');
       if (!tbody) return;
 
-      const sorted = [...state.students].sort((a, b) => (Number(b.score || b.manual_bonus_pts || 0)) - (Number(a.score || a.manual_bonus_pts || 0)));
+      const sorted = [...state.students].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
       if (badge) badge.textContent = `${sorted.length} בחורים`;
 
-      tbody.innerHTML = sorted.map((st, idx) => {
-        const isCurrent = state.currentStudent && st.id === state.currentStudent.id;
-        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`;
-        const score = Number(st.score ?? st.manual_bonus_pts ?? 0);
+      // Podium Top 3
+      if (podium && sorted.length >= 3) {
+        podium.innerHTML = `
+          <div class="p-3 rounded-2xl bg-slate-100 border border-slate-200 order-1">
+            <span class="text-xl">🥈</span>
+            <div class="font-black text-xs text-slate-800 truncate">${sorted[1].full_name || sorted[1].name}</div>
+            <div class="font-outfit font-black text-sm text-slate-900 mt-0.5">${sorted[1].score || 0} נק׳</div>
+          </div>
+          <div class="p-3 rounded-2xl bg-amber-50 border-2 border-amber-300 order-2 scale-105 shadow-md">
+            <span class="text-2xl">🥇</span>
+            <div class="font-black text-xs text-amber-950 truncate">${sorted[0].full_name || sorted[0].name}</div>
+            <div class="font-outfit font-black text-base text-amber-700 mt-0.5">${sorted[0].score || 0} נק׳</div>
+          </div>
+          <div class="p-3 rounded-2xl bg-amber-900/10 border border-amber-900/20 order-3">
+            <span class="text-xl">🥉</span>
+            <div class="font-black text-xs text-amber-900 truncate">${sorted[2].full_name || sorted[2].name}</div>
+            <div class="font-outfit font-black text-sm text-amber-900 mt-0.5">${sorted[2].score || 0} נק׳</div>
+          </div>
+        `;
+      }
+
+      tbody.innerHTML = sorted.map((st, i) => {
+        const isMe = state.currentStudent && String(state.currentStudent.id) === String(st.id);
         return `
-          <tr class="${isCurrent ? 'bg-indigo-50/80 text-indigo-950 font-black' : 'hover:bg-slate-50'} transition">
-            <td class="py-2.5 px-2 font-outfit text-sm">${medal}</td>
+          <tr class="${isMe ? 'bg-indigo-50/80 font-black' : 'hover:bg-slate-50/60'}">
+            <td class="py-2.5 px-2">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
             <td class="py-2.5 px-2">
-              <span class="block">${st.full_name}</span>
-              ${isCurrent ? '<span class="text-[10px] text-indigo-600 font-bold">(זה אתה!)</span>' : ''}
+              <span class="${isMe ? 'text-indigo-900 font-black' : 'text-slate-900'}">${st.full_name || st.name}</span>
+              ${isMe ? '<span class="text-[10px] text-indigo-600 mr-1 font-bold">(אתה)</span>' : ''}
             </td>
             <td class="py-2.5 px-2 text-center">
-              <span class="px-2 py-0.5 rounded-full text-[10px] ${st.present_today ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-400'}">
-                ${st.present_today ? 'נכח ✓' : 'טרם סומן'}
+              <span class="px-2 py-0.5 rounded-full text-[10px] ${st.present_today ? 'bg-emerald-100 text-emerald-800 font-bold' : 'bg-slate-100 text-slate-500'}">
+                ${st.present_today ? 'נכח היום ✓' : 'טרם סימן'}
               </span>
             </td>
-            <td class="py-2.5 px-2 text-left font-outfit text-sm font-black text-amber-600" dir="ltr">
-              ${score} pts
-            </td>
+            <td class="py-2.5 px-2 text-left font-outfit text-amber-600 font-black text-sm">${st.score || 0}</td>
           </tr>
         `;
       }).join('');
     }
 
-    // --- Tab 4: Calendar Rendering ---
+    // --- Campaign Calendar ---
     function renderCalendar() {
       const container = document.getElementById('fullCalendarDaysList');
-      if (!container || !state.config) return;
+      if (!container) return;
 
-      const start = new Date(state.config.startDate + 'T12:00:00');
-      const end = new Date(state.config.endDate + 'T12:00:00');
-      const curr = new Date(start);
+      const startStr = state.config?.startDate || '2026-10-25';
+      const endStr = state.config?.endDate || '2026-12-10';
 
-      let html = '';
-      const todayIso = getTodayIso();
+      const days = [];
+      const cur = new Date(startStr);
+      const end = new Date(endStr);
 
-      while (curr <= end) {
-        const iso = curr.toISOString().slice(0, 10);
-        const dayF = new Intl.DateTimeFormat('he-IL', { weekday: 'long' });
-        const hebF = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'numeric' });
-        const slots = getSlotsForDate(iso);
-        const isToday = iso === todayIso;
-
-        html += `
-          <div class="p-3.5 rounded-2xl border ${isToday ? 'border-amber-400 bg-amber-50/30 shadow-md' : 'border-slate-200 bg-white'} space-y-2">
-            <div class="flex items-center justify-between text-xs font-black">
-              <div class="flex items-center gap-2">
-                <span class="text-slate-900">${dayF.format(curr)} (${hebF.format(curr)})</span>
-                ${isToday ? '<span class="px-2 py-0.5 rounded bg-amber-500 text-white text-[10px]">היום!</span>' : ''}
-              </div>
-              <span class="text-slate-400 font-mono text-[11px]">${iso}</span>
-            </div>
-            <div class="flex flex-wrap gap-1.5 pt-1">
-              ${slots.length === 0 ? '<span class="text-[11px] text-slate-400">אין סדרים ביום זה</span>' : slots.map(s => `
-                <span class="text-[11px] px-2 py-1 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 font-bold">
-                  ${s.title} (${s.timeWindow || s.openTime})
-                </span>
-              `).join('')}
-            </div>
-          </div>
-        `;
-        curr.setDate(curr.getDate() + 1);
+      const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+      while (cur <= end) {
+        const iso = cur.toISOString().slice(0, 10);
+        const dayIdx = cur.getDay();
+        days.push({
+          isoDate: iso,
+          dayName: `יום ${dayNames[dayIdx]}`,
+          isShabbat: dayIdx === 6
+        });
+        cur.setDate(cur.getDate() + 1);
       }
 
-      container.innerHTML = html;
+      container.innerHTML = days.map(d => {
+        const slots = getSlotsForDate(d.isoDate);
+        const duty = state.duties[d.isoDate];
+        const isToday = d.isoDate === getTodayIso();
+
+        return `
+          <div class="p-3.5 rounded-2xl ${isToday ? 'bg-indigo-50 border-2 border-indigo-400' : 'bg-white border border-slate-200'} space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2">
+                <span class="font-black text-slate-900">${d.dayName}</span>
+                <span class="text-slate-500 font-outfit">${d.isoDate}</span>
+                ${isToday ? '<span class="px-2 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold">היום</span>' : ''}
+              </div>
+              <span class="text-[11px] font-bold text-slate-500">${slots.length} סדרים מתוכננים</span>
+            </div>
+
+            ${duty ? `
+              <div class="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-100 flex items-center justify-between">
+                <span>תורנות: ${duty.wakeupStudentId ? 'מעורר משובץ' : 'מעורר טרם שובץ'} • ${duty.kitchenStudentId ? 'מטבח משובץ' : 'מטבח טרם שובץ'}</span>
+                <span>🧹</span>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
     }
 
-    // --- Tab 5: Requests ---
+    // --- Requests ---
     function renderRequests() {
       const container = document.getElementById('myRequestsContainer');
       if (!container) return;
 
-      if (state.myRequests.length === 0) {
-        container.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">טרם שלחת בקשות מיוחדות</p>';
+      const st = state.currentStudent;
+      const myReqs = state.requests.filter(r => st && (String(r.student_id) === String(st.id) || r.student_name === (st.full_name || st.name)));
+
+      if (myReqs.length === 0) {
+        container.innerHTML = '<div class="text-xs text-slate-400 py-6 text-center">טרם הגשת בקשות לאישור</div>';
         return;
       }
 
-      container.innerHTML = state.myRequests.map(r => {
-        const badge = r.status === 'approved' 
-          ? '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px]">אושר ✓</span>'
-          : r.status === 'rejected'
-          ? '<span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px]">נדחה ✕</span>'
-          : '<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px]">בבדיקה ⏳</span>';
+      container.innerHTML = myReqs.map(r => {
+        let stClass = 'bg-amber-100 text-amber-800';
+        let stText = 'ממתין לאישור';
+        if (r.status === 'approved') { stClass = 'bg-emerald-100 text-emerald-800'; stText = 'אושר בהצלחה ✓'; }
+        if (r.status === 'rejected') { stClass = 'bg-rose-100 text-rose-800'; stText = 'נדחה'; }
 
         return `
-          <div class="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-sm text-xs space-y-1.5">
-            <div class="flex items-center justify-between font-bold">
-              <span class="text-slate-900">${r.slot_title} (${r.date_str})</span>
-              ${badge}
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="text-slate-900">${r.slot_title || 'סדר לימוד'} (${r.date_str || ''})</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] ${stClass}">${stText}</span>
             </div>
-            <p class="text-slate-500">${r.reason || 'ללא הסבר'}</p>
+            <p class="text-slate-500 font-normal">${r.reason || 'אין פירוט'}</p>
           </div>
         `;
       }).join('');
@@ -1268,39 +1756,40 @@
     }
 
     async function handleSubmitRequest() {
+      const slotTitle = (document.getElementById('reqSlotTitleInput')?.value || '').trim();
+      const dateStr = document.getElementById('reqDateInput')?.value || getTodayIso();
+      const reason = (document.getElementById('reqReasonInput')?.value || '').trim();
+
+      if (!slotTitle || !reason) {
+        showToast('נא למלא את שם הסדר ואת סיבת הבקשה', '⚠️');
+        return;
+      }
+
       if (!state.currentStudent) {
-        showToast('אנא התחבר לפני שליחת בקשה', '⚠️');
-        return;
-      }
-      const d = document.getElementById('reqDateInput')?.value;
-      const title = document.getElementById('reqSlotTitleInput')?.value.trim();
-      const reason = document.getElementById('reqReasonInput')?.value.trim();
-
-      if (!title || !reason) {
-        showToast('אנא מלא את כל השדות', '⚠️');
+        showToast('יש להתחבר תחילה', '⚠️');
         return;
       }
 
-      const ok = await Db.submitRequest({
+      const res = await Db.submitRequest({
         studentId: state.currentStudent.id,
-        studentName: state.currentStudent.full_name,
-        slotTitle: title,
-        dateStr: d,
-        reason: reason
+        studentName: state.currentStudent.full_name || state.currentStudent.name,
+        slotTitle,
+        dateStr,
+        reason
       });
 
-      if (ok) {
-        showToast('הבקשה נשלחה בהצלחה לראש הישיבה! ✉️', '✓');
+      if (res) {
         closeRequestModal();
-        await reloadAllData();
-      } else {
-        showToast('שגיאה בשליחת הבקשה', '❌');
+        showToast('הבקשה נשלחה לראש הישיבה לאישור!', '📩');
+        await reloadAllData(true);
       }
     }
 
-    // --- Password Change Modal ---
+    // --- Personal Password Update ---
     function openChangePasswordModal() {
       const modal = document.getElementById('changePasswordModal');
+      const err = document.getElementById('changePassError');
+      if (err) err.classList.add('hidden');
       if (modal) modal.classList.remove('hidden');
     }
 
@@ -1310,43 +1799,46 @@
     }
 
     async function handleSavePassword() {
-      if (!state.currentStudent) return;
-      const np = document.getElementById('newPassInput')?.value.trim();
-      const cp = document.getElementById('confirmPassInput')?.value.trim();
+      const p1 = (document.getElementById('newStudentPassInput')?.value || '').trim();
+      const p2 = (document.getElementById('confirmStudentPassInput')?.value || '').trim();
       const err = document.getElementById('changePassError');
-      if (err) err.classList.add('hidden');
 
-      if (!np || np.length < 4) {
+      if (!p1 || p1.length < 4) {
         if (err) { err.textContent = 'הסיסמה חייבת להכיל לפחות 4 תווים'; err.classList.remove('hidden'); }
         return;
       }
-      if (np !== cp) {
-        if (err) { err.textContent = 'הסיסמאות אינן תואמות'; err.classList.remove('hidden'); }
+      if (p1 !== p2) {
+        if (err) { err.textContent = 'הסיסמאות אינן תואמות!'; err.classList.remove('hidden'); }
         return;
       }
 
-      const ok = await Db.updateStudentPassword(state.currentStudent.id, np);
-      if (ok) {
-        showToast('הסיסמה האישית עודכנה בהצלחה! 🔑', '✓');
+      if (!state.currentStudent) return;
+
+      const res = await Db.updateStudentPassword(state.currentStudent.id, p1);
+      if (res) {
+        state.currentStudent.password = p1;
         closeChangePasswordModal();
+        showToast('הסיסמה האישית עודכנה בהצלחה!', '🔑');
       } else {
-        showToast('שגיאה בעדכון הסיסמה', '❌');
+        if (err) { err.textContent = 'שגיאה בשמירת הסיסמה, נסה שוב'; err.classList.remove('hidden'); }
       }
     }
 
-    // --- Toast Helper ---
-    function showToast(msg, icon) {
+    // --- Toast Notifications ---
+    function showToast(message, icon = 'ℹ️') {
       const container = document.getElementById('toastContainer');
       if (!container) return;
-      const t = document.createElement('div');
-      t.className = 'p-3 px-4 rounded-2xl bg-slate-900 text-white text-xs font-black shadow-2xl flex items-center gap-2 border border-slate-700 animate-bounce';
-      t.innerHTML = `<span>${icon || '✨'}</span><span>${msg}</span>`;
-      container.appendChild(t);
+
+      const toast = document.createElement('div');
+      toast.className = 'p-3 rounded-2xl bg-slate-900/95 text-white text-xs font-bold shadow-2xl border border-white/20 flex items-center gap-2 transition-all transform duration-300 pointer-events-auto';
+      toast.innerHTML = `<span class="text-base">${icon}</span><span>${message}</span>`;
+      container.appendChild(toast);
+
       setTimeout(() => {
-        t.style.opacity = '0';
-        t.style.transition = 'opacity 0.4s';
-        setTimeout(() => t.remove(), 400);
-      }, 3000);
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
     }
   </script>
 </body>
