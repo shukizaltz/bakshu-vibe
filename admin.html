@@ -1052,7 +1052,7 @@
           </div>
 
           <div class="mt-5 flex justify-end">
-            <button onclick="saveAdminRules()" id="saveAdminRulesBtn" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md flex items-center gap-1.5 cursor-pointer">
+            <button onclick="window.saveAllMasterConfig(true)" id="saveAdminRulesBtn" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md flex items-center gap-1.5 cursor-pointer">
               <span>💾</span>
               <span>שמור יעדים ותאריכים בענן (Save Rules)</span>
             </button>
@@ -2787,7 +2787,7 @@
         }
 
         // Mark cloud as hydrated only after data is loaded and merged into state
-        isCloudHydrated = true;
+        isCloudHydrated = true; if (window.loadMasterConfigFromCloud) setTimeout(window.loadMasterConfigFromCloud, 50);
 
         if (state.trailStops || state.journeyStops) {
           state.trailStops = mergeTrailStopsDatesOnly(state.trailStops || state.journeyStops);
@@ -2798,7 +2798,7 @@
         renderAllViews();
         } catch (err) {
         console.warn('Supabase fetch error in index.html:', err);
-        isCloudHydrated = true;
+        isCloudHydrated = true; if (window.loadMasterConfigFromCloud) setTimeout(window.loadMasterConfigFromCloud, 50);
       } finally {
         _isLoadingStateFromSupabase = false;
       }
@@ -4597,7 +4597,7 @@
         }
       });
 
-      if (subViewId === 'campaign') {
+      if (subViewId === 'campaign') { setTimeout(() => { if (window.loadMasterConfigFromCloud) window.loadMasterConfigFromCloud(); }, 30);
         populateCampaignConfigInputs();
       }
       if (subViewId === 'schedule') {
@@ -7793,7 +7793,7 @@
       }
     }
 
-    async function saveCampaignConfigToSupabase() {
+    async function saveCampaignConfigToSupabase() { if (window.saveAllMasterConfig) return window.saveAllMasterConfig(true);
       const start = document.getElementById('campaignStartDateInput')?.value || state.config.startDate;
       const end = document.getElementById('campaignEndDateInput')?.value || state.config.endDate;
       const thresh = Math.max(1, parseInt(document.getElementById('campaignThresholdInput')?.value || '1', 10));
@@ -7921,9 +7921,42 @@
       showToast('כל 3 היעדים, תאריכי העצירות וההגדרות נשמרו בהצלחה ב-Supabase!', '💾');
       renderAllViews();
     }
-    const saveAdminRules = saveCampaignConfigToSupabase;
+    window.saveAdminRules = function() { return window.saveAllMasterConfig(true); };
 
-    async function saveDailyScheduleToSupabase() {
+    
+  const _origLoadCampaignConfig = typeof loadCampaignConfig === 'function' ? loadCampaignConfig : null;
+  window.loadCampaignConfig = function() {
+    const base = _origLoadCampaignConfig ? _origLoadCampaignConfig() : {};
+    try {
+      const raw = localStorage.getItem('bakshu_master_config_v5');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.config) {
+          return Object.assign({}, base, parsed.config);
+        }
+      }
+    } catch(e) {}
+    return base;
+  };
+  loadCampaignConfig = window.loadCampaignConfig;
+
+  const _origLoadJourneyStops = typeof loadJourneyStops === 'function' ? loadJourneyStops : null;
+  window.loadJourneyStops = function() {
+    const base = _origLoadJourneyStops ? _origLoadJourneyStops() : [];
+    try {
+      const raw = localStorage.getItem('bakshu_master_config_v5');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.trailStops) && parsed.trailStops.length >= 3) {
+          return parsed.trailStops;
+        }
+      }
+    } catch(e) {}
+    return base;
+  };
+  loadJourneyStops = window.loadJourneyStops;
+
+      async function saveDailyScheduleToSupabase() {
       saveScheduleSlots(state.slotsByDate);
       if (supabaseClient) {
         try {
@@ -9365,7 +9398,7 @@ END:VCALENDAR`;
     const gLbl = document.getElementById('goldTargetLabel'); if (gLbl) gLbl.textContent = t.max.name + ' (' + t.max.points + ' נק׳)';
   }
 
-  async function loadMasterConfigFromCloud() {
+  window.loadMasterConfigFromCloud = async function() {
     let loaded = null;
     try {
       const localRaw = localStorage.getItem(MASTER_CFG_KEY);
