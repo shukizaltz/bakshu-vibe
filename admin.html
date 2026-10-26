@@ -17,6 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="db_service.js"></script>
 
   <style>
     body {
@@ -6386,6 +6387,7 @@
                   <span>📽️</span>
                   <span>הצג QR לסדר זה</span>
                 </button>
+                <button type="button" onclick="removeSlotSeries('${slot.title}')" class="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs flex items-center gap-1 transition cursor-pointer" title="מחק סדר זה מכל הימים במבצע (מחיקה גורפת מ-Supabase)"><span>🗑️</span><span>מחק סדרה</span></button>
                 <button onclick="removeSlotItem('${selectedDate}', ${idx})" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs font-bold" title="מחק סדר זה">
                   ✕
                 </button>
@@ -6437,6 +6439,100 @@
       updateCampaignTotalPointsLive();
     }
     const updateEventPoints = updateSlotPoints;
+
+    
+    // מחיקת סדרה גורפת מכל הימים ב-Supabase (כלל 2)
+    window.removeSlotSeries = async function(sederTitle) {
+      if (!sederTitle) return;
+      if (!confirm('האם אתה בטוח שברצונך למחוק את הסדר "' + sederTitle + '" מכל הימים והתאריכים במבצע? פעולה זו תימחק מכל לוח השנה ב-Supabase.')) return;
+      
+      const cleanTitle = String(sederTitle).trim();
+      if (window.DbService && typeof window.DbService.deleteSederSeries === 'function') {
+        await window.DbService.deleteSederSeries(cleanTitle, state.slotsByDate);
+      }
+      
+      ['weekday_template', 'shabbat_template'].forEach(tpl => {
+        if (Array.isArray(state.slotsByDate[tpl])) {
+          state.slotsByDate[tpl] = state.slotsByDate[tpl].filter(s => String(s.title || '').trim() !== cleanTitle);
+        }
+      });
+      Object.keys(state.slotsByDate).forEach(d => {
+        if (Array.isArray(state.slotsByDate[d])) {
+          state.slotsByDate[d] = state.slotsByDate[d].filter(s => String(s.title || '').trim() !== cleanTitle);
+        }
+      });
+      
+      saveScheduleSlots(state.slotsByDate);
+      renderAdminDayScheduleEditor();
+      recalculateScheduleAndPointsBars();
+      updateCampaignTotalPointsLive();
+      renderAllViews();
+      if (typeof syncActiveSederButtonAndHeader === 'function') syncActiveSederButtonAndHeader();
+      showToast('הסדר "' + cleanTitle + '" נמחק בהצלחה מכל ימי המבצע!', '🗑️');
+    };
+
+    // פתיחה ואימות כניסת ראש הישיבה עם שמירת סשן ב-localStorage (כלל 4)
+    window.unlockAdminPortal = function() {
+      const input = document.getElementById('adminPasswordInput');
+      const errEl = document.getElementById('adminPasswordError');
+      const entered = (input ? input.value : '').trim();
+      const currentPass = (state.config && state.config.adminPassword) || 'bakshu2026';
+
+      if (entered !== currentPass) {
+        if (errEl) {
+          errEl.textContent = 'סיסמת ראש הישיבה שגויה, נסה שוב';
+          errEl.classList.remove('hidden');
+        }
+        if (input) input.focus();
+        return;
+      }
+
+      if (errEl) errEl.classList.add('hidden');
+      localStorage.setItem('bakshu_admin_logged_in', 'true');
+      state.isAdminUnlocked = true;
+      state.adminUnlocked = true;
+      state.activeTab = 'admin';
+      document.getElementById('adminPasswordModal')?.classList.add('hidden');
+      if (input) input.value = '';
+      if (typeof switchTab === 'function') switchTab('admin');
+      if (typeof enforceAdminIsolation === 'function') enforceAdminIsolation();
+      showToast('שלום כבוד ראש הישיבה, התחברת בהצלחה!', '👑');
+    };
+
+    window.openAdminPasswordModal = function() {
+      const isSavedAdmin = localStorage.getItem('bakshu_admin_logged_in') === 'true';
+      if (isSavedAdmin) {
+        state.isAdminUnlocked = true;
+        state.adminUnlocked = true;
+        state.activeTab = 'admin';
+        if (typeof switchTab === 'function') switchTab('admin');
+        if (typeof enforceAdminIsolation === 'function') enforceAdminIsolation();
+        return;
+      }
+      document.getElementById('adminPasswordModal')?.classList.remove('hidden');
+      const inp = document.getElementById('adminPasswordInput');
+      if (inp) { inp.value = ''; setTimeout(() => inp.focus(), 150); }
+    };
+
+    window.closeAdminPasswordModal = function() {
+      document.getElementById('adminPasswordModal')?.classList.add('hidden');
+    };
+
+    window.logoutAdminPortal = function() {
+      localStorage.removeItem('bakshu_admin_logged_in');
+      const isSavedAdmin = localStorage.getItem('bakshu_admin_logged_in') === 'true';
+      const isAdminUrl = window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin';
+      if (isSavedAdmin || isAdminUrl) {
+        state.isAdminUnlocked = true;
+        state.adminUnlocked = true;
+        state.activeTab = 'admin';
+      } else {
+        state.isAdminUnlocked = false;
+        state.adminUnlocked = false;
+      }
+      if (typeof switchTab === 'function') switchTab('student');
+      location.reload();
+    };
 
     function removeSlotItem(date, idx) {
       if (!state.slotsByDate[date]) state.slotsByDate[date] = JSON.parse(JSON.stringify(getSlotsForDate(date)));
@@ -8855,9 +8951,16 @@ END:VCALENDAR`;
     }
 
     window.onload = async function () {
-        try { checkUrlForAdminParam(); } catch(e) { console.error(e); }
-      state.isAdminUnlocked = false;
-      state.adminUnlocked = false;
+      const isSavedAdmin = localStorage.getItem('bakshu_admin_logged_in') === 'true';
+      const isAdminUrl = window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin';
+      if (isSavedAdmin || isAdminUrl) {
+        state.isAdminUnlocked = true;
+        state.adminUnlocked = true;
+        state.activeTab = 'admin';
+      } else {
+        state.isAdminUnlocked = false;
+        state.adminUnlocked = false;
+      }
       checkUrlForStudentParam();
       initAdminScheduleDayPicker();
       checkSavedStudentLogin();
@@ -8886,6 +8989,7 @@ END:VCALENDAR`;
             }, 1000);
           };
 
+          if (window.DbService && typeof window.DbService.subscribeRealtime === 'function') window.DbService.subscribeRealtime(handleRealtimeUpdate);
           supabaseClient.channel('student_live_sync')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'app_state' }, handleRealtimeUpdate)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, handleRealtimeUpdate)
