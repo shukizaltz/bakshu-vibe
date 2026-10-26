@@ -1940,13 +1940,13 @@
       const startStr = (typeof state !== 'undefined' && state.config?.startDate) ? state.config.startDate : '2026-10-25';
       const isOpeningDay = (meta.isEveningStart) || (cleanIso === startStr) || (cleanIso === '2026-10-25');
 
-      // התאמות אישיות שנקבעו ע״י המנהל לתאריך ספציפי זה ב-slotsByDate (גובר גם על יום הפתיחה)
-      if (typeof state !== 'undefined' && state.slotsByDate && Array.isArray(state.slotsByDate[cleanIso]) && state.slotsByDate[cleanIso].length > 0) {
+      // 1. התאמות אישיות שנקבעו ע״י המנהל לתאריך ספציפי זה ב-slotsByDate (גם אם היום רוקן במכוון: [])
+      if (typeof state !== 'undefined' && state.slotsByDate && Array.isArray(state.slotsByDate[cleanIso])) {
         return [...state.slotsByDate[cleanIso]].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
       }
 
-      // א. ביום הראשון של המבצע (מתחיל בערב): 2 סדרי ערב ופתיחה כברירת מחדל אם לא הוגדר אחרת
-      if (isOpeningDay) {
+      // 2. יום פתיחה חגיגי (מתחיל בערב) אם לא הוגדר לו לוח ייעודי
+      if (isOpeningDay && meta.isEveningStart) {
         return [
           {
             id: 'ev_maariv',
@@ -1973,73 +1973,31 @@
         ];
       }
 
-      // סינון לפי eventsList
-      const events = (typeof state !== 'undefined' && state.eventsList && state.eventsList.length > 0)
-        ? state.eventsList
-        : DEFAULT_EVENTS_LIST;
-
       const dow = meta.dayOfWeek; // 0 = Sun, 5 = Fri, 6 = Shabbat
 
-      // ב. בדיקת אירועים מיוחדים לפי תאריך עברי או לועזי באמצעות resolveToIsoDate
-      const matchedEvents = events.filter(ev => {
-        if (ev.id === 'ev_maariv') return false; // Maariv opening is opening day only
-
-        const sched = (ev.schedule || '') + ' ' + (ev.title || '');
-
-        if (sched.includes(meta.isoDate) || sched.includes(meta.gregShort) || sched.includes(meta.gregFull)) {
-          return true;
+      // 3. ימי שישי: לפי friday_template (ברירת מחדל ריק - 0 נקודות)
+      if (dow === 5) {
+        if (typeof state !== 'undefined' && state.slotsByDate && Array.isArray(state.slotsByDate['friday_template'])) {
+          return [...state.slotsByDate['friday_template']].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
         }
+        return [];
+      }
 
-        if (ev.schedule) {
-          const resolvedSchedIso = resolveToIsoDate(ev.schedule, state?.campaignDays);
-          if (resolvedSchedIso && resolvedSchedIso === meta.isoDate) {
-            return true;
-          }
+      // 4. שבת קודש: לפי shabbat_template (4 סדרי שבת מיוחדים)
+      if (dow === 6) {
+        if (typeof state !== 'undefined' && state.slotsByDate && Array.isArray(state.slotsByDate['shabbat_template']) && state.slotsByDate['shabbat_template'].length > 0) {
+          return [...state.slotsByDate['shabbat_template']].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
         }
-        if (sched.includes(meta.hebrewDate)) {
-          return true;
-        }
+        return (typeof DEFAULT_SLOTS !== 'undefined' && DEFAULT_SLOTS['shabbat_template']) ? DEFAULT_SLOTS['shabbat_template'] : [];
+      }
 
-        // ימי שישי ריקים כברירת מחדל (0 נקודות)
-        if (dow === 5) {
-          return sched.includes('יום ו׳') || sched.includes('שישי') || sched.includes('יום שישי');
-        }
+      // 5. ימי חול (א׳ - ה׳): לפי weekday_template של המנהל
+      if (typeof state !== 'undefined' && state.slotsByDate && Array.isArray(state.slotsByDate['weekday_template']) && state.slotsByDate['weekday_template'].length > 0) {
+        return [...state.slotsByDate['weekday_template']].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+      }
 
-        // שבת קודש: סדרי שבת בלבד (8 נקודות)
-        if (dow === 6) {
-          return ev.type === 'שבת' || sched.includes('שבת');
-        }
-
-        // ימי חול: א׳ עד ה׳
-        if (ev.type === 'שבת') return false;
-
-        // משמר ליל שישי ביום חמישי בלבד
-        if (sched.includes('משמר') || sched.includes('ליל שישי')) {
-          return dow === 4;
-        }
-
-        if (sched.includes('א׳–ה׳') || sched.includes('א׳–ו׳') || ev.type === 'קבוע') {
-          return true;
-        }
-
-        return false;
-      });
-
-      return matchedEvents.map((ev, idx) => {
-        const timeWin = ev.timeWindow || `${ev.openTime || '09:00'} - ${ev.lockTime || '10:15'}`;
-        const [openTime, lockTime] = timeWin.split('-').map(s => s.trim());
-        return {
-          id: ev.id || `slot_${cleanIso}_${idx}`,
-          title: ev.title,
-          timeWindow: timeWin,
-          openTime: ev.openTime || openTime || '09:00',
-          lockTime: ev.lockTime || lockTime || '10:15',
-          points: Number(ev.points) || 1,
-          type: ev.type || 'קבוע',
-          schedule: ev.schedule || '',
-          isLocked: false
-        };
-      }).sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+      // ברירת מחדל לימי חול
+      return (typeof DEFAULT_SLOTS !== 'undefined' && DEFAULT_SLOTS['weekday_template']) ? DEFAULT_SLOTS['weekday_template'] : [];
     }
 
     function getApplicableEventsForDate(dateObj, dayIdx) {
@@ -2755,21 +2713,28 @@
           try {
             const { data: dbSlots } = await supabaseClient.from('schedule_slots').select('*');
             if (dbSlots && dbSlots.length > 0) {
+              const grouped = {};
               dbSlots.forEach(sl => {
                 const d = sl.slot_date;
-                if (d) {
-                  if (!state.slotsByDate[d]) state.slotsByDate[d] = [];
-                  if (!state.slotsByDate[d].some(x => x.title === sl.title)) {
-                    state.slotsByDate[d].push({
-                      id: sl.id,
-                      title: sl.title,
-                      openTime: sl.time_window ? sl.time_window.split('-')[0].trim() : '09:00',
-                      lockTime: sl.time_window ? sl.time_window.split('-')[1].trim() : '10:15',
-                      points: Number(sl.base_points) || 1,
-                      isLocked: false
-                    });
-                  }
+                if (!d) return;
+                if (!grouped[d]) grouped[d] = [];
+                const openT = sl.open_time ? sl.open_time.slice(11, 16) : (sl.time_window ? sl.time_window.split('-')[0].trim() : '09:00');
+                const lockT = sl.lock_time ? sl.lock_time.slice(11, 16) : (sl.time_window ? sl.time_window.split('-')[1].trim() : '10:15');
+                if (!grouped[d].some(x => x.title === sl.title && x.openTime === openT)) {
+                  grouped[d].push({
+                    id: sl.id,
+                    title: sl.title,
+                    openTime: openT,
+                    lockTime: lockT,
+                    timeWindow: sl.time_window || `${openT} - ${lockT}`,
+                    points: Number(sl.base_points) || 1,
+                    isLocked: false
+                  });
                 }
+              });
+              Object.keys(grouped).forEach(d => {
+                grouped[d].sort((a, b) => (a.openTime || '').localeCompare(b.openTime || ''));
+                state.slotsByDate[d] = grouped[d];
               });
               saveScheduleSlots(state.slotsByDate);
             }
@@ -3016,11 +2981,25 @@
       return JSON.parse(JSON.stringify(DEFAULT_SLOTS));
     }
 
-    function saveScheduleSlots(slots) {
+    let _saveSlotsDebounceTimer = null;
+    async function saveScheduleSlots(slots, immediateCloud = false) {
       try {
         localStorage.setItem(SLOTS_STORAGE_KEY, JSON.stringify(slots));
       } catch (e) {
         console.warn('Failed to save slots:', e);
+      }
+
+      clearTimeout(_saveSlotsDebounceTimer);
+      const doCloudSync = async () => {
+        if (window.DbService && typeof window.DbService.saveSlotsByDate === 'function') {
+          await window.DbService.saveSlotsByDate(slots);
+        }
+      };
+
+      if (immediateCloud) {
+        await doCloudSync();
+      } else {
+        _saveSlotsDebounceTimer = setTimeout(doCloudSync, 500);
       }
     }
 
@@ -6462,7 +6441,7 @@
         }
       });
       
-      saveScheduleSlots(state.slotsByDate);
+      await saveScheduleSlots(state.slotsByDate, true);
       renderAdminDayScheduleEditor();
       recalculateScheduleAndPointsBars();
       updateCampaignTotalPointsLive();
@@ -6537,7 +6516,7 @@
     function removeSlotItem(date, idx) {
       if (!state.slotsByDate[date]) state.slotsByDate[date] = JSON.parse(JSON.stringify(getSlotsForDate(date)));
       state.slotsByDate[date].splice(idx, 1);
-      saveScheduleSlots(state.slotsByDate);
+      saveScheduleSlots(state.slotsByDate, true);
       renderAdminDayScheduleEditor();
       recalculateScheduleAndPointsBars();
       updateCampaignTotalPointsLive();
@@ -6551,8 +6530,15 @@
       const selectedDate = picker.value;
       const currentSlots = getSlotsForDate(selectedDate);
       state.slotsByDate['weekday_template'] = JSON.parse(JSON.stringify(currentSlots));
-      saveScheduleSlots(state.slotsByDate);
-      showToast('סדרי יום זה הוחלו כברירת מחדל לכל ימי החול (א׳ - ה׳)', '🔄');
+      if (Array.isArray(state.campaignDays)) {
+        state.campaignDays.forEach(day => {
+          if (day.dayOfWeek >= 0 && day.dayOfWeek <= 4) {
+            state.slotsByDate[day.isoDate] = JSON.parse(JSON.stringify(currentSlots));
+          }
+        });
+      }
+      saveScheduleSlots(state.slotsByDate, true);
+      showToast('סדרי יום זה הוחלו כברירת מחדל לכל ימי החול (א׳ - ה׳) וסונכרנו בענן', '🔄');
       updateCampaignTotalPointsLive();
       renderAllViews();
     }
@@ -6563,8 +6549,15 @@
       const selectedDate = picker.value;
       const currentSlots = getSlotsForDate(selectedDate);
       state.slotsByDate['shabbat_template'] = JSON.parse(JSON.stringify(currentSlots));
-      saveScheduleSlots(state.slotsByDate);
-      showToast('סדרי יום זה הוחלו כברירת מחדל לכל השבתות', '🕯️');
+      if (Array.isArray(state.campaignDays)) {
+        state.campaignDays.forEach(day => {
+          if (day.dayOfWeek === 6) {
+            state.slotsByDate[day.isoDate] = JSON.parse(JSON.stringify(currentSlots));
+          }
+        });
+      }
+      saveScheduleSlots(state.slotsByDate, true);
+      showToast('סדרי יום זה הוחלו כברירת מחדל לכל השבתות וסונכרנו בענן', '🕯️');
       updateCampaignTotalPointsLive();
       renderAllViews();
     }
@@ -6574,8 +6567,8 @@
       if (!picker) return;
       const selectedDate = picker.value;
       state.slotsByDate[selectedDate] = [];
-      saveScheduleSlots(state.slotsByDate);
-      showToast('יום זה אופס ללא סדרים (יום ריק)', '🗑️');
+      saveScheduleSlots(state.slotsByDate, true);
+      showToast('יום זה אופס ללא סדרים (יום ריק) וסונכרן בענן', '🗑️');
       renderAdminDayScheduleEditor();
       updateCampaignTotalPointsLive();
       renderAllViews();
@@ -6584,8 +6577,8 @@
     function resetDefaultSchedules() {
       if (!confirm('האם לשחזר את כל לוחות הזמנים לברירת המחדל (ימי שישי ריקים, שבתות 4 סדרים מיוחדים, ימי חול 3 סדרים)?')) return;
       state.slotsByDate = JSON.parse(JSON.stringify(DEFAULT_SLOTS));
-      saveScheduleSlots(state.slotsByDate);
-      showToast('ברירות מחדל שוחזרו: שישי ריק, שבת מיוחדת, חול 3 סדרים', '⚡');
+      saveScheduleSlots(state.slotsByDate, true);
+      showToast('ברירות מחדל שוחזרו וסונכרנו בענן', '⚡');
       renderAdminDayScheduleEditor();
       updateCampaignTotalPointsLive();
       renderAllViews();
@@ -6672,7 +6665,7 @@
         showToast('סדר "' + title + '" נוסף לכל ' + count + ' ימי המבצע', '🌐');
       }
 
-      saveScheduleSlots(state.slotsByDate);
+      saveScheduleSlots(state.slotsByDate, true);
       closeAddSlotModal();
       renderAdminDayScheduleEditor();
       recalculateScheduleAndPointsBars();
@@ -8151,15 +8144,11 @@
   };
   loadJourneyStops = window.loadJourneyStops;
 
-      async function saveDailyScheduleToSupabase() {
-      saveScheduleSlots(state.slotsByDate);
-      if (supabaseClient) {
-        try {
-          await supabaseClient.from('app_state').upsert([
-            { key: 'slots_by_date', data: state.slotsByDate, updated_at: new Date().toISOString() }
-          ], { onConflict: 'key' });
-        } catch(e) {}
+    async function saveDailyScheduleToSupabase() {
+      if (window.DbService && typeof window.DbService.saveSlotsByDate === 'function') {
+        await window.DbService.saveSlotsByDate(state.slotsByDate);
       }
+      await saveScheduleSlots(state.slotsByDate, true);
       showToast('סדרי היום נשמרו בהצלחה במסד הנתונים Supabase', '💾');
       renderAllViews();
     }
@@ -9509,13 +9498,12 @@ END:VCALENDAR`;
     };
     try { localStorage.setItem(MASTER_CFG_KEY, JSON.stringify(masterPayload)); } catch(e) {}
 
-    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+    if (window.DbService && typeof window.DbService.saveMasterConfig === 'function') {
       try {
-        await supabaseClient.from('app_state').upsert([
-          { key: MASTER_CFG_KEY, data: masterPayload, updated_at: new Date().toISOString() },
-          { key: 'trail_stops', data: state.trailStops, updated_at: new Date().toISOString() }
-        ], { onConflict: 'key' });
-
+        await window.DbService.saveMasterConfig(masterPayload, state.config);
+      } catch(e) { console.warn('DbService.saveMasterConfig warning:', e); }
+    } else if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+      try {
         await supabaseClient.from('campaign_config').upsert({
           id: 1,
           start_date: state.config.startDate,
