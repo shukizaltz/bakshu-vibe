@@ -4890,13 +4890,6 @@
       }
     }
 
-    function checkUrlForAdminParam() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const path = (window.location.pathname || '').toLowerCase();
-      if (urlParams.has('admin') || urlParams.get('admin') === '1' || window.location.hash === '#admin' || path.endsWith('/admin') || path.endsWith('/admin/')) {
-        openAdminPasswordModal();
-      }
-    }
 
     // ====================================================
     // 6. STUDENT CHECK-IN, DUTIES & SCORE CALCULATIONS
@@ -8892,34 +8885,50 @@ END:VCALENDAR`;
     function checkUrlForAdminParam() {
       const urlParams = new URLSearchParams(window.location.search);
       const hash = window.location.hash;
-      if (urlParams.get('admin') === '1' || hash === '#admin' || window.location.pathname.includes('admin')) {
+      const path = (window.location.pathname || '').toLowerCase();
+      const explicitAdmin = urlParams.get('admin') === '1' || hash === '#admin' || path.endsWith('/admin') || path.endsWith('/admin.html');
+      if (explicitAdmin && !state.isAdminUnlocked) {
         openAdminPasswordModal();
       }
     }
 
     function checkUrlForStudentParam() {
       const urlParams = new URLSearchParams(window.location.search);
-      const inviteId = urlParams.get('invite') || urlParams.get('student');
-      if (inviteId) {
-        const student = state.students.find(s => s.id === inviteId || s.inviteCode === inviteId);
-        if (student) {
-          state.activeStudentId = student.id;
-          localStorage.setItem('bakshu_locked_student_id', student.id);
-          localStorage.setItem('bakshu_logged_student_id', student.id);
-          // If first time or default password:
-          if (!student.password || student.password === '1234') {
-            const nPass = prompt('שלום ' + student.name + '!\nברוך הבא למבצע בקשו VIBE.\nקבע כעת סיסמה אישית שתשמש אותך בכניסה למערכת:', '');
-            if (nPass && nPass.trim()) {
-              student.password = nPass.trim();
-              saveLocalStudents();
-            }
-          }
-          setStudentActiveSession(student);
-          // Clean URL without reloading
-          window.history.replaceState({}, document.title, window.location.pathname);
-          showToast('ברוך הבא ' + student.name + ', החשבון הופעל וננעל במכשירך!', '🎉');
-        }
+      const phoneParam = urlParams.get('phone');
+      const inviteId = urlParams.get('invite') || urlParams.get('student') || urlParams.get('id');
+
+      let student = null;
+      if (phoneParam && Array.isArray(state.students) && state.students.length > 0) {
+        const cleanP = phoneParam.replace(/[^0-9]/g, '').replace(/^972/, '0');
+        student = state.students.find(s => {
+          const sp = (s.phone || '').replace(/[^0-9]/g, '').replace(/^972/, '0');
+          return sp && (sp === cleanP || cleanP.endsWith(sp) || sp.endsWith(cleanP));
+        });
       }
+      if (!student && inviteId && Array.isArray(state.students) && state.students.length > 0) {
+        student = state.students.find(s => String(s.id) === String(inviteId) || String(s.inviteCode) === String(inviteId));
+      }
+
+      if (student) {
+        state.activeStudentId = student.id;
+        state.currentStudent = {
+          id: student.id,
+          name: student.name,
+          phone: student.phone,
+          password: student.password || '1234',
+          presentCurrent: student.presentToday || false,
+          baseScore: student.score || 0,
+          last10: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        };
+        localStorage.setItem('bakshu_locked_student_id', student.id);
+        localStorage.setItem('bakshu_logged_student_id', student.id);
+        if (typeof setStudentActiveSession === 'function') setStudentActiveSession(student);
+        const nameGreeting = document.getElementById('greetingStudentName');
+        if (nameGreeting) nameGreeting.textContent = student.name;
+        showToast('שלום ' + student.name + ', ברוך הבא למבצע!', '🌟');
+        return true;
+      }
+      return false;
     }
 
     function renderCurrentScreen() {
@@ -8940,32 +8949,49 @@ END:VCALENDAR`;
     }
 
     window.onload = async function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hash = window.location.hash;
+      const path = (window.location.pathname || '').toLowerCase();
+      const explicitAdmin = urlParams.get('admin') === '1' || hash === '#admin' || path.endsWith('/admin') || path.endsWith('/admin.html');
       const isSavedAdmin = localStorage.getItem('bakshu_admin_logged_in') === 'true';
-      const isAdminUrl = window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin';
-      if (isSavedAdmin || isAdminUrl) {
-        state.isAdminUnlocked = true;
-        state.adminUnlocked = true;
-        state.activeTab = 'admin';
+
+      if (explicitAdmin) {
+        if (isSavedAdmin) {
+          state.isAdminUnlocked = true;
+          state.adminUnlocked = true;
+          state.activeTab = 'admin';
+        } else {
+          state.isAdminUnlocked = false;
+          state.adminUnlocked = false;
+          state.activeTab = 'admin';
+          openAdminPasswordModal();
+        }
       } else {
-        state.isAdminUnlocked = false;
-        state.adminUnlocked = false;
+        // ALWAYS start on student screen for main URL / student link
+        state.activeTab = 'student';
+        state.isAdminUnlocked = isSavedAdmin;
+        state.adminUnlocked = isSavedAdmin;
       }
-      checkUrlForStudentParam();
+
       initAdminScheduleDayPicker();
-      checkSavedStudentLogin();
       populateCampaignConfigInputs();
-      renderStudentScreen();
-      renderDynamicCalendar();
-      renderLeaderboard();
-      renderAdminRequestsAndStudents();
-      checkUrlForAdminParam();
 
       // Live Supabase Sync
       await loadStateFromSupabase();
 
-      if (window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin') {
-        checkUrlForAdminParam();
+      // Verify student login after Supabase data is loaded
+      if (!explicitAdmin) {
+        const loggedByParam = checkUrlForStudentParam();
+        if (!loggedByParam) {
+          checkSavedStudentLogin();
+        }
       }
+
+      renderStudentScreen();
+      renderDynamicCalendar();
+      renderLeaderboard();
+      renderAdminRequestsAndStudents();
+      if (typeof switchTab === 'function') switchTab(state.activeTab);
 
       // Realtime Live Subscription with debounce
       if (supabaseClient) {
@@ -9216,28 +9242,11 @@ END:VCALENDAR`;
   // 1. בידוד מוחלט של ראש הישיבה מהסרגל העליון (לעולם לא עובר למסך בחור ספציפי)
   // =========================================================================
   function enforceAdminIsolation() {
-    const isAdminUrl = window.location.pathname.includes('admin') || window.location.search.includes('admin=1');
-    const isAdminMode = (typeof state !== 'undefined' && state.adminUnlocked) || isAdminUrl;
-    ['dtab-student', 'mtab-student', 'adminStudentInspectionHeader'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        if (isAdminMode) el.style.setProperty('display', 'none', 'important');
-        else el.style.removeProperty('display');
-      }
-    });
-  }
-
-  const origSwitchTab = window.switchTab;
-  if (typeof origSwitchTab === 'function') {
-    window.switchTab = function(tabId) {
-      const isAdminUrl = window.location.pathname.includes('admin') || window.location.search.includes('admin=1');
-      if (tabId === 'student' && ((typeof state !== 'undefined' && state.adminUnlocked) || isAdminUrl)) {
-        tabId = 'admin';
-      }
-      const res = origSwitchTab.apply(this, [tabId]);
-      enforceAdminIsolation();
-      return res;
-    };
+    const isAdminUrl = window.location.pathname.includes('admin') || window.location.search.includes('admin=1') || window.location.hash === '#admin';
+    if (isAdminUrl && typeof state !== 'undefined' && state.activeTab === 'admin') {
+      const headerEl = document.getElementById('adminStudentInspectionHeader');
+      if (headerEl) headerEl.style.display = 'none';
+    }
   }
 
   window.resetDayScheduleToDefault = function() {
@@ -9559,6 +9568,25 @@ END:VCALENDAR`;
 
     if (typeof supabaseClient !== 'undefined' && supabaseClient) {
       try {
+        const { data: snaps } = await supabaseClient.from('manager_bonus_logs')
+          .select('reason')
+          .eq('points', -999)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (snaps && snaps.length > 0 && snaps[0].reason && snaps[0].reason.startsWith('APP_STATE_SNAPSHOT:')) {
+          const snap = JSON.parse(snaps[0].reason.slice('APP_STATE_SNAPSHOT:'.length));
+          if (snap) {
+            loaded = {
+              config: snap.config || loaded?.config,
+              trailStops: snap.trailStops || snap.journeyStops || loaded?.trailStops,
+              updatedAt: snap.updatedAt || Date.now()
+            };
+            try { localStorage.setItem(MASTER_CFG_KEY, JSON.stringify(loaded)); } catch(e) {}
+          }
+        }
+      } catch(e) {}
+
+      try {
         const { data } = await supabaseClient.from('app_state').select('data').eq('key', MASTER_CFG_KEY).maybeSingle();
         if (data && data.data && (!loaded || (data.data.updatedAt || 0) >= (loaded.updatedAt || 0))) {
           loaded = data.data;
@@ -9577,7 +9605,7 @@ END:VCALENDAR`;
       renderExtraTargetsList();
       renderExtraStopsList();
     }
-  }
+  };
 
   // =========================================================================
   // 3. סנכרון חי של הסדר הפעיל והכפתור הירוק אצל הבחור (ללא כפתור אפור נעול כשפתוח!)
