@@ -18,8 +18,9 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <!-- Database layer -->
+  <!-- Database layer & Shared App helpers -->
   <script src="db.js"></script>
+  <script src="app.js"></script>
 
   <style>
     * { font-family: 'Heebo', sans-serif; box-sizing: border-box; }
@@ -67,12 +68,12 @@
           <span>מקרן לבית המדרש</span>
         </button>
 
-        <button onclick="openShareModal()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm">
+        <button onclick="openShareModal()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm">
           <span>💬</span>
-          <span class="hidden md:inline">שיתוף ב-WhatsApp</span>
+          <span>הזמנות ותזכורות WhatsApp</span>
         </button>
 
-        <button onclick="openGrantBonusModal()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm">
+        <button onclick="openGrantBonusModal()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm">
           <span>⭐</span>
           <span class="hidden sm:inline">בונוס מיוחד</span>
         </button>
@@ -339,10 +340,14 @@
         <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200">
           <div>
             <h3 class="text-base font-black text-slate-900">ניהול תורנויות מעורר ומטבח</h3>
-            <p class="text-xs text-slate-500">שיבוץ יומי, שליחת תזכורות Google Calendar, ומעקב "מי כבר היה"</p>
+            <p class="text-xs text-slate-500">שיבוץ יומי, תורנות קבועה שבועית, שליחת תזכורות Google Calendar, ומעקב "מי כבר היה"</p>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
+            <button onclick="openPermanentDutyModal()" class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-xs transition flex items-center gap-1.5">
+              <span>⚙️</span>
+              <span>תורנות שבועית קבועה</span>
+            </button>
             <button onclick="addNewDutyPrompt()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition border border-slate-200 flex items-center gap-1">
               <span>➕</span>
               <span>הוסף תאריך</span>
@@ -500,6 +505,49 @@
   </div>
 
   <!-- ========================================================= -->
+  <!-- MODAL: PERMANENT RECURRING WEEKLY DUTIES MODAL            -->
+  <!-- ========================================================= -->
+  <div id="permanentDutyModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 hidden">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-right relative max-h-[90vh] overflow-y-auto custom-scroll">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+        <div>
+          <h4 class="text-base font-black text-slate-900 flex items-center gap-2">
+            <span>⚙️</span>
+            <span>הגדרת תורנות שבועית קבועה (לפי יום בשבוע)</span>
+          </h4>
+          <p class="text-xs text-slate-500">קביעת תורנים קבועים לכל יום (א׳-שבת) שישובצו אוטומטית בכל תאריכי המבצע</p>
+        </div>
+        <button onclick="closePermanentDutyModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-right text-xs">
+          <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+            <tr>
+              <th class="py-2.5 px-3">יום בשבוע</th>
+              <th class="py-2.5 px-3">תורן מעורר קבוע (בוקר)</th>
+              <th class="py-2.5 px-3">תורן מטבח קבוע (ערב)</th>
+            </tr>
+          </thead>
+          <tbody id="permanentDutyTableBody" class="divide-y divide-slate-100 font-bold">
+            <!-- Populated dynamically by renderPermanentDutyTable() -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex items-center gap-2 mt-5 pt-3 border-t border-slate-200">
+        <button onclick="saveAndApplyPermanentDuties()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5">
+          <span>⚡</span>
+          <span>החל תורנות קבועה על כל ימי המבצע בשרת</span>
+        </button>
+        <button onclick="savePermanentDutiesOnly()" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition border border-slate-200">
+          שמור הגדרות בלבד
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
   <!-- MODAL: GRANT SPECIAL BONUS                                -->
   <!-- ========================================================= -->
   <div id="grantBonusModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
@@ -609,38 +657,37 @@
   </div>
 
   <!-- ========================================================= -->
-  <!-- MODAL: UNIVERSAL WHATSAPP & SMS SHARE                     -->
+  <!-- MODAL: ADVANCED INVITES & REMINDERS SHARE MODAL           -->
   <!-- ========================================================= -->
-  <div id="shareModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-right relative">
+  <div id="shareModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-200 text-right relative max-h-[92vh] overflow-y-auto custom-scroll">
       <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
-        <h4 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
+        <h4 class="text-base font-black text-slate-900 flex items-center gap-1.5">
           <span>💬</span>
-          <span>שיתוף קישורי כניסה ב-WhatsApp</span>
+          <span>שליחת הזמנות ותזכורות ב-WhatsApp / SMS</span>
         </h4>
         <button onclick="closeShareModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
       </div>
 
-      <div class="space-y-3">
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">בחר תלמיד לשליחה ישירה:</label>
-          <select id="shareStudentSelect" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white">
-            <option value="">טוען בחורים...</option>
-          </select>
-        </div>
+      <!-- 4 Share Modes Tabs -->
+      <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-100 mb-4 text-xs font-bold">
+        <button onclick="switchShareTab('invite_personal')" id="stab-invite_personal" class="py-2 rounded-xl bg-white text-slate-950 shadow-xs">
+          ✉️ הזמנה אישית
+        </button>
+        <button onclick="switchShareTab('duty_reminder')" id="stab-duty_reminder" class="py-2 rounded-xl text-slate-600 hover:text-slate-900">
+          ⏰ תזכורת תורנות
+        </button>
+        <button onclick="switchShareTab('seder_reminder')" id="stab-seder_reminder" class="py-2 rounded-xl text-slate-600 hover:text-slate-900">
+          🔔 תזכורת סדר
+        </button>
+        <button onclick="switchShareTab('invite_all')" id="stab-invite_all" class="py-2 rounded-xl text-slate-600 hover:text-slate-900">
+          📢 הזמנה קבוצתית
+        </button>
+      </div>
 
-        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600">
-          ההודעה תכלול קישור ישיר שמחבר את הבחור למבצע באופן אוטומטי, כולל מספר הטלפון והסיסמה שלו.
-        </div>
-
-        <div class="flex items-center gap-2 pt-2">
-          <button onclick="sendShare('whatsapp')" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1">
-            <span>💬</span><span>שלח ב-WhatsApp</span>
-          </button>
-          <button onclick="sendShare('sms')" class="px-3.5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition">
-            SMS
-          </button>
-        </div>
+      <!-- Content Area -->
+      <div id="shareContentArea" class="space-y-3">
+        <!-- Dynamically rendered by switchShareTab() -->
       </div>
     </div>
   </div>
@@ -662,7 +709,8 @@
       bonusLogs: [],
       slotAttendanceMap: {},
       selectedDate: new Date().toISOString().slice(0, 10),
-      inspectedStudentId: null
+      inspectedStudentId: null,
+      shareTab: 'invite_personal'
     };
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -693,7 +741,7 @@
 
       sessionStorage.setItem('bakshu_admin_logged', 'true');
       unlockAdminView();
-      showToast('ברוך הבא לפורטל הניהול של ראש הישיבה', '👑');
+      App.showToast('ברוך הבא לפורטל הניהול של ראש הישיבה', '👑');
     }
 
     function unlockAdminView() {
@@ -714,7 +762,7 @@
       if (p && p.trim().length >= 4) {
         adminState.config.adminPassword = p.trim();
         Db.saveConfig(adminState.config);
-        showToast('סיסמת ראש הישיבה עודכנה בהצלחה!', '🔑');
+        App.showToast('סיסמת ראש הישיבה עודכנה בהצלחה!', '🔑');
       }
     }
 
@@ -750,7 +798,6 @@
         updateDutyRotationTrackerCards();
         renderAdminRequests();
         populateBonusStudentSelect();
-        populateShareSelect();
 
         if (adminState.inspectedStudentId) {
           inspectStudentFromAdmin(adminState.inspectedStudentId);
@@ -836,7 +883,7 @@
         st.score = (Number(st.score) || 0) + (isPresent ? 1 : -1);
       }
       renderAdminStudentsTable();
-      showToast('סטטוס נוכחות עודכן', '✓');
+      App.showToast('סטטוס נוכחות עודכן', '✓');
     }
 
     // Detailed Student Modal Inspector
@@ -875,9 +922,9 @@
             </h4>
             
             <div class="space-y-1.5">
-              ${todaySlots.map((slot, sIdx) => {
-                const list = adminState.slotAttendanceMap?.byDateSlot?.[todayIso]?.[slot.id || slot.title] || [];
-                const pfList = adminState.slotAttendanceMap?.phoneFree?.[todayIso]?.[slot.id || slot.title] || [];
+              ${todaySlots.map((slot) => {
+                const list = adminState.slotAttendanceMap?.byDateSlot?.[todayIso]?.[slot.title || slot.id] || [];
+                const pfList = adminState.slotAttendanceMap?.phoneFree?.[todayIso]?.[slot.title || slot.id] || [];
                 const isPresent = list.includes(String(st.id));
                 const isPf = pfList.includes(String(st.id));
 
@@ -888,10 +935,10 @@
                       <span class="text-[10px] text-slate-500 font-outfit mr-1">${slot.openTime} - ${slot.lockTime} • ${slot.points || 1} נק׳</span>
                     </div>
                     <div class="flex items-center gap-1.5">
-                      <button onclick="adminToggleStudentSlotAttendance('${todayIso}', '${slot.id || slot.title}', '${st.id}', ${!isPresent}, ${isPf}, ${slot.points || 1})" class="px-3 py-1 rounded-lg font-black text-xs transition border ${isPresent ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">
+                      <button onclick="adminToggleStudentSlotAttendance('${todayIso}', '${slot.title}', '${st.id}', ${!isPresent}, ${isPf}, ${slot.points || 1})" class="px-3 py-1 rounded-lg font-black text-xs transition border ${isPresent ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">
                         ${isPresent ? '✓ נכח' : 'סמן נוכחות'}
                       </button>
-                      <button onclick="adminToggleStudentSlotAttendance('${todayIso}', '${slot.id || slot.title}', '${st.id}', ${isPresent}, ${!isPf}, ${slot.points || 1})" class="px-2 py-1 rounded-lg font-black text-xs transition border ${isPf ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}" title="בונוס ללא טלפון">
+                      <button onclick="adminToggleStudentSlotAttendance('${todayIso}', '${slot.title}', '${st.id}', ${isPresent}, ${!isPf}, ${slot.points || 1})" class="px-2 py-1 rounded-lg font-black text-xs transition border ${isPf ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}" title="בונוס ללא טלפון">
                         📵 ${isPf ? 'ללא טלפון (+1)' : 'ללא טלפון'}
                       </button>
                     </div>
@@ -903,7 +950,7 @@
 
           <!-- Bonus Logs -->
           <div class="space-y-2 pt-2 border-t border-slate-200">
-            <h4 class="text-xs font-black text-slate-900">בונוסים שקיבל ראש הישיבה:</h4>
+            <h4 class="text-xs font-black text-slate-900">בונוסים מיוחדים מראש הישיבה:</h4>
             ${stBonuses.length === 0 ? '<p class="text-xs text-slate-400 py-1">טרם הוענקו בונוסים אישיים</p>' : `
               <div class="space-y-1.5 max-h-32 overflow-y-auto custom-scroll">
                 ${stBonuses.map(b => `
@@ -943,17 +990,18 @@
       adminState.inspectedStudentId = null;
     }
 
-    async function adminToggleStudentSlotAttendance(dateStr, slotId, studentId, isPresent, noPhone, points) {
-      await Db.toggleSlotStudentAttendance(dateStr, slotId, studentId, isPresent, noPhone, points);
+    async function adminToggleStudentSlotAttendance(dateStr, slotTitle, studentId, isPresent, noPhone, points) {
+      const st = adminState.students.find(s => String(s.id) === String(studentId));
+      await Db.toggleSlotStudentAttendance(dateStr, slotTitle, studentId, isPresent, noPhone, points, st?.full_name || st?.name);
       await reloadAdminData(true);
-      showToast('נוכחות עודכנה בהצלחה', '✓');
+      App.showToast('נוכחות עודכנה בהצלחה בשרת!', '✓');
     }
 
     async function deleteBonusLog(logId, studentId, points) {
       if (!confirm('האם לבטל בונוס זה ולנכות את הנקודות?')) return;
       await Db.deleteBonusLog(logId, studentId, points);
       await reloadAdminData(true);
-      showToast('הבונוס בוטל בהצלחה', '🗑️');
+      App.showToast('הבונוס בוטל בהצלחה', '🗑️');
     }
 
     function changeStudentPasswordPrompt(studentId) {
@@ -964,7 +1012,7 @@
         Db.updateStudentPassword(studentId, p.trim());
         st.password = p.trim();
         inspectStudentFromAdmin(studentId);
-        showToast('הסיסמה עודכנה בהצלחה', '🔑');
+        App.showToast('הסיסמה עודכנה בהצלחה', '🔑');
       }
     }
 
@@ -1010,7 +1058,6 @@
       grid.innerHTML = days.map(d => {
         const isSelected = d.iso === adminState.selectedDate;
         const slots = adminState.scheduleSlots[d.iso] || [];
-        const duty = adminState.duties[d.iso];
 
         return `
           <button onclick="onAdminDateSelected('${d.iso}')" class="p-2 rounded-xl text-center transition border ${isSelected ? 'bg-indigo-600 text-white border-indigo-700 shadow-md scale-105' : (d.isShabbat ? 'bg-amber-50 border-amber-200 text-amber-950' : 'bg-slate-50 border-slate-200 text-slate-800 hover:bg-slate-100')}">
@@ -1032,7 +1079,6 @@
     function renderAdminSchedule() {
       const container = document.getElementById('adminSlotsListContainer');
       const title = document.getElementById('adminSelectedDateTitle');
-      const hBadge = document.getElementById('adminSelectedDateHebrew');
       if (!container) return;
 
       const dateStr = adminState.selectedDate;
@@ -1046,7 +1092,7 @@
       }
 
       container.innerHTML = slots.map((sl, idx) => {
-        const list = adminState.slotAttendanceMap?.byDateSlot?.[dateStr]?.[sl.id || sl.title] || [];
+        const list = adminState.slotAttendanceMap?.byDateSlot?.[dateStr]?.[sl.title || sl.id] || [];
         const count = list.length;
 
         return `
@@ -1095,7 +1141,7 @@
                   const isPresent = list.includes(String(st.id));
                   return `
                     <label class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer border ${isPresent ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-100'}">
-                      <input type="checkbox" ${isPresent ? 'checked' : ''} onchange="adminToggleStudentSlotAttendance('${dateStr}', '${sl.id || sl.title}', '${st.id}', this.checked, false, ${sl.points || 1})" class="w-3.5 h-3.5 rounded text-emerald-600">
+                      <input type="checkbox" ${isPresent ? 'checked' : ''} onchange="adminToggleStudentSlotAttendance('${dateStr}', '${sl.title}', '${st.id}', this.checked, false, ${sl.points || 1})" class="w-3.5 h-3.5 rounded text-emerald-600">
                       <span class="truncate font-bold ${isPresent ? 'text-emerald-950 font-black' : 'text-slate-700'}">${st.full_name || st.name}</span>
                     </label>
                   `;
@@ -1118,6 +1164,7 @@
       if (adminState.scheduleSlots[d]?.[idx]) {
         adminState.scheduleSlots[d][idx].title = val;
         await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+        App.showToast('כותרת הסדר עודכנה בשרת', '✓');
       }
     }
 
@@ -1126,6 +1173,7 @@
       if (adminState.scheduleSlots[d]?.[idx]) {
         adminState.scheduleSlots[d][idx][field] = val;
         await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+        App.showToast('שעות הסדר עודכנו בשרת', '⏰');
       }
     }
 
@@ -1134,6 +1182,7 @@
       if (adminState.scheduleSlots[d]?.[idx]) {
         adminState.scheduleSlots[d][idx].points = Number(val) || 1;
         await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+        App.showToast('ניקוד הסדר עודכן בשרת', '⭐');
       }
     }
 
@@ -1143,14 +1192,14 @@
       adminState.scheduleSlots[d].splice(idx, 1);
       await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
       renderAdminSchedule();
-      showToast('הסדר נמחק מיום זה', '🗑️');
+      App.showToast('הסדר נמחק מיום זה', '🗑️');
     }
 
     async function removeSlotSeries(seriesTitle) {
-      if (!confirm(`האם למחוק את כל סדרת "${seriesTitle}" מכל ימי המבצע?`)) return;
+      if (!confirm(`האם למחוק את כל סדרת "${seriesTitle}" מכל ימי המבצע בשרת?`)) return;
       await Db.deleteSlotSeries(seriesTitle);
       await reloadAdminData(true);
-      showToast(`סדרת "${seriesTitle}" נמחקה בהצלחה מכל הימים`, '🗑️');
+      App.showToast(`סדרת "${seriesTitle}" נמחקה בהצלחה מכל הימים בשרת!`, '🗑️');
     }
 
     async function applyCurrentDayToWeekdays() {
@@ -1170,7 +1219,7 @@
         }
         cur.setDate(cur.getDate() + 1);
       }
-      showToast('הסדרים הוחלו על כל ימי החול!', '🔄');
+      App.showToast('הסדרים הוחלו על כל ימי החול בשרת!', '🔄');
     }
 
     async function applyCurrentDayToShabbats() {
@@ -1190,7 +1239,7 @@
         }
         cur.setDate(cur.getDate() + 1);
       }
-      showToast('הסדרים הוחלו על כל השבתות!', '🕯️');
+      App.showToast('הסדרים הוחלו על כל השבתות בשרת!', '🕯️');
     }
 
     async function clearCurrentDaySlots() {
@@ -1199,7 +1248,7 @@
       adminState.scheduleSlots[d] = [];
       await Db.syncDateSlots(d, []);
       renderAdminSchedule();
-      showToast('יום רוקן מסדרים', '🗑️');
+      App.showToast('יום רוקן מסדרים', '🗑️');
     }
 
     function openAddSlotModal() {
@@ -1216,7 +1265,7 @@
       const points = Number(document.getElementById('newSlotPoints')?.value) || 1;
 
       if (!title) {
-        showToast('נא להזין שם לסדר', '⚠️');
+        App.showToast('נא להזין שם לסדר', '⚠️');
         return;
       }
 
@@ -1233,7 +1282,7 @@
       await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
       closeAddSlotModal();
       renderAdminSchedule();
-      showToast('סדר חדש נוסף בהצלחה', '➕');
+      App.showToast('סדר חדש נוסף ונשמר בשרת', '➕');
     }
 
     // =========================================================
@@ -1305,7 +1354,7 @@
       if (name && pts) {
         if (!adminState.config.extraTargets) adminState.config.extraTargets = [];
         adminState.config.extraTargets.push({ name, points: Number(pts) || 50 });
-        showToast('יעד נוסף נוסף, זכור ללחוץ שמירה', '➕');
+        App.showToast('יעד נוסף נוסף, זכור ללחוץ שמירה', '➕');
       }
     }
 
@@ -1322,7 +1371,7 @@
           isDecided: false
         });
         renderJourneyStopsEditor();
-        showToast('עצירה חדשה נוספה, זכור ללחוץ שמירה', '➕');
+        App.showToast('עצירה חדשה נוספה, זכור ללחוץ שמירה', '➕');
       }
     }
 
@@ -1354,37 +1403,23 @@
       };
 
       await Db.saveConfig(adminState.config);
-      showToast('כל ההגדרות נשמרו בהצלחה בענן Supabase!', '💾');
+      App.showToast('כל ההגדרות נשמרו בהצלחה בענן Supabase!', '💾');
     }
 
     function exportGoogleCalendarIcs() {
-      const events = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//Bakshu VIBE//Campaign Roster//HE',
-        'CALSCALE:GREGORIAN',
-        'X-WR-CALNAME:מבצע בקשו VIBE - עד הפסגה',
-        'BEGIN:VEVENT',
-        'UID:stop1@bakshu',
-        'SUMMARY:🎁 עצירה 1 במסע - ישיבת בקשו',
-        'DTSTART;VALUE=DATE:20261119',
-        'DTEND;VALUE=DATE:20261120',
-        'END:VEVENT',
-        'END:VCALENDAR'
-      ].join('\r\n');
-
-      const blob = new Blob([events], { type: 'text/calendar;charset=utf-8' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `לוח_מבצע_בקשו.ics`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast('קובץ היומן ירד בהצלחה', '📅');
+      App.downloadIcs('לוח_מבצע_בקשו.ics', `
+BEGIN:VEVENT
+UID:stop1@bakshu
+SUMMARY:🎁 עצירה 1 במסע - ישיבת בקשו
+DTSTART;VALUE=DATE:20261119
+DTEND;VALUE=DATE:20261120
+END:VEVENT
+      `);
+      App.showToast('קובץ היומן ירד בהצלחה', '📅');
     }
 
     // =========================================================
-    // 4. DUTIES ROSTER & GOOGLE CALENDAR REMINDERS
+    // 4. DUTIES ROSTER & RECURRING DUTIES
     // =========================================================
     function renderAdminDutiesTable() {
       const tbody = document.getElementById('adminDutiesTableBody');
@@ -1392,7 +1427,7 @@
 
       const dates = Object.keys(adminState.duties).sort();
       if (dates.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-slate-400">אין תורנויות רשומות. לחץ "➕ הוסף תאריך" או הפעל הגרלה אוטומטית.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-slate-400">אין תורנויות רשומות. לחץ "➕ הוסף תאריך" או הגדר תורנות שבועית קבועה.</td></tr>';
         return;
       }
 
@@ -1501,39 +1536,47 @@
     }
 
     async function onDutyStudentChanged(isoDate, field, studentId) {
-      await Db.updateDuty(isoDate, field, studentId);
+      const cur = adminState.duties[isoDate] || {};
+      const wId = field === 'wakeup_student_id' ? studentId : cur.wakeupStudentId;
+      const kId = field === 'kitchen_student_id' ? studentId : cur.kitchenStudentId;
+      await Db.saveDuty(isoDate, wId, kId, cur.wakeupDone, cur.kitchenDone);
+
       if (adminState.duties[isoDate]) {
         if (field === 'wakeup_student_id') adminState.duties[isoDate].wakeupStudentId = studentId;
         if (field === 'kitchen_student_id') adminState.duties[isoDate].kitchenStudentId = studentId;
       }
       updateDutyRotationTrackerCards();
-      showToast('תורן שובץ בהצלחה', '✓');
+      App.showToast('תורן שובץ ונשמר בשרת', '✓');
     }
 
     async function onDutyToggleDone(isoDate, doneField, isDone) {
-      await Db.toggleDutyDone(isoDate, doneField, isDone);
+      const cur = adminState.duties[isoDate] || {};
+      const wDone = doneField === 'wakeup_done' ? isDone : cur.wakeupDone;
+      const kDone = doneField === 'kitchen_done' ? isDone : cur.kitchenDone;
+      await Db.saveDuty(isoDate, cur.wakeupStudentId, cur.kitchenStudentId, wDone, kDone);
+
       if (adminState.duties[isoDate]) {
         if (doneField === 'wakeup_done') adminState.duties[isoDate].wakeupDone = isDone;
         if (doneField === 'kitchen_done') adminState.duties[isoDate].kitchenDone = isDone;
       }
-      showToast('סטטוס ביצוע עודכן', '✓');
+      App.showToast('סטטוס ביצוע עודכן בשרת', '✓');
     }
 
     function addNewDutyPrompt() {
       const d = prompt('הזן תאריך לתורנות חדשה (פורמט: YYYY-MM-DD):', new Date().toISOString().slice(0, 10));
       if (d && /^\d{4}-\d{2}-\d{2}$/.test(d.trim())) {
         const clean = d.trim();
+        Db.saveDuty(clean, null, null, false, false);
         adminState.duties[clean] = {
           isoDate: clean,
-          dayName: `יום ${clean.slice(5)}`,
+          dayName: App.getHebrewDayName(clean),
           wakeupStudentId: null,
           kitchenStudentId: null,
           wakeupDone: false,
           kitchenDone: false
         };
-        Db.saveDutiesRoster(adminState.duties);
         renderAdminDutiesTable();
-        showToast('תאריך תורנות נוסף', '➕');
+        App.showToast('תאריך תורנות נוסף ונשמר בשרת', '➕');
       }
     }
 
@@ -1543,7 +1586,7 @@
       await Db.deleteDutyDate(isoDate);
       renderAdminDutiesTable();
       updateDutyRotationTrackerCards();
-      showToast('תאריך התורנות נמחק', '🗑️');
+      App.showToast('תאריך התורנות נמחק מהשרת', '🗑️');
     }
 
     async function runFairDutiesLottery() {
@@ -1551,7 +1594,7 @@
       const dutyDates = Object.keys(adminState.duties);
 
       if (allStudents.length === 0 || dutyDates.length === 0) {
-        showToast('חסרים תלמידים או תאריכי תורנות להגרלה', '⚠️');
+        App.showToast('חסרים תלמידים או תאריכי תורנות להגרלה', '⚠️');
         return;
       }
 
@@ -1567,8 +1610,9 @@
       });
 
       let countAssigned = 0;
-      dutyDates.forEach(d => {
+      for (const d of dutyDates) {
         const item = adminState.duties[d];
+        let changed = false;
         
         // Wakeup
         if (!item.wakeupStudentId) {
@@ -1578,6 +1622,7 @@
           item.wakeupStudentId = pickedW.id;
           dutyCounts[pickedW.id]++;
           countAssigned++;
+          changed = true;
         }
 
         // Kitchen
@@ -1589,13 +1634,17 @@
           item.kitchenStudentId = pickedK.id;
           dutyCounts[pickedK.id]++;
           countAssigned++;
+          changed = true;
         }
-      });
 
-      await Db.saveDutiesRoster(adminState.duties);
+        if (changed) {
+          await Db.saveDuty(d, item.wakeupStudentId, item.kitchenStudentId, item.wakeupDone, item.kitchenDone);
+        }
+      }
+
       renderAdminDutiesTable();
       updateDutyRotationTrackerCards();
-      showToast(`הוגרלו בהצלחה ${countAssigned} תורנויות שוויוניות!`, '🎉');
+      App.showToast(`הוגרלו בהצלחה ${countAssigned} תורנויות שוויוניות ונשמרו בשרת!`, '🎉');
     }
 
     // Send Duty Reminder WhatsApp with direct Google Calendar link
@@ -1610,35 +1659,116 @@
 
       let st = null;
       let roleText = '';
-      let isWaker = true;
 
       if (target === '1') {
         st = wStudent;
-        roleText = 'השכמת בוקר (מעורר לתפילה)';
-        isWaker = true;
+        roleText = 'מעורר לתפילה';
       } else if (target === '2') {
         st = kStudent;
-        roleText = 'תורנות מטבח וחדר אוכל';
-        isWaker = false;
+        roleText = 'תורנות מטבח';
       }
 
       if (!st) {
-        showToast('לא נבחר תורן משובץ', '⚠️');
+        App.showToast('לא נבחר תורן משובץ', '⚠️');
         return;
       }
 
-      const gcalUrl = Db.getGoogleCalendarUrl({
-        title: `תורנות בישיבה: ${roleText} | מבצע בקשו VIBE`,
-        details: `שלום ${st.full_name || st.name}! תזכורת לתורנות שלך בישיבת בקשו ירושלים. נא להגיע בזמן! (+3 נקודות למבצע)`,
-        startIso: isWaker ? `${isoDate}T06:45:00` : `${isoDate}T13:30:00`,
-        endIso: isWaker ? `${isoDate}T07:45:00` : `${isoDate}T14:30:00`,
-        isAllDay: false
-      });
-
-      const text = encodeURIComponent(`שלום ${st.full_name || st.name}! 🌟\nתזכורת לתורנות שלך בישיבת בקשו ירושלים בתאריך ${isoDate}:\nתפקיד: ${roleText}\n\nלחץ על הקישור להוספת התורנות ישירות ליומן Google שלך:\n${gcalUrl}\n\nבהצלחה ויישר כוח!`);
+      const msg = App.buildDutyReminderText(st, isoDate, roleText, window.location.origin);
       const phoneClean = (st.phone || '').replace(/[^0-9]/g, '');
+      const pStr = phoneClean.startsWith('0') ? phoneClean.slice(1) : phoneClean;
+      window.open(`https://wa.me/972${pStr}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
 
-      window.open(`https://wa.me/972${phoneClean.startsWith('0') ? phoneClean.slice(1) : phoneClean}?text=${text}`, '_blank');
+    // --- Permanent Recurring Duties Modal ---
+    function openPermanentDutyModal() {
+      renderPermanentDutyTable();
+      document.getElementById('permanentDutyModal')?.classList.remove('hidden');
+    }
+
+    function closePermanentDutyModal() {
+      document.getElementById('permanentDutyModal')?.classList.add('hidden');
+    }
+
+    function renderPermanentDutyTable() {
+      const tbody = document.getElementById('permanentDutyTableBody');
+      if (!tbody) return;
+
+      const days = ['יום ראשון', 'יום שני', 'יום שלישי', 'יום רביעי', 'יום חמישי', 'יום שישי', 'שבת קודש'];
+      const rec = adminState.config?.recurringDuties || {};
+
+      tbody.innerHTML = days.map((dayName, idx) => {
+        const item = rec[idx] || {};
+        const wId = item.wakeupStudentId || '';
+        const kId = item.kitchenStudentId || '';
+
+        return `
+          <tr>
+            <td class="py-2.5 px-3 font-black text-slate-800">${dayName}</td>
+            <td class="py-2.5 px-3">
+              <select id="perm_waker_${idx}" class="p-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-white w-44">
+                <option value="">-- ללא תורן קבוע --</option>
+                ${adminState.students.map(s => `<option value="${s.id}" ${String(s.id) === String(wId) ? 'selected' : ''}>${s.full_name || s.name}</option>`).join('')}
+              </select>
+            </td>
+            <td class="py-2.5 px-3">
+              <select id="perm_kitchen_${idx}" class="p-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-white w-44">
+                <option value="">-- ללא תורן קבוע --</option>
+                ${adminState.students.map(s => `<option value="${s.id}" ${String(s.id) === String(kId) ? 'selected' : ''}>${s.full_name || s.name}</option>`).join('')}
+              </select>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function savePermanentDutiesOnly() {
+      const rec = {};
+      for (let i = 0; i < 7; i++) {
+        const wVal = document.getElementById(`perm_waker_${i}`)?.value || null;
+        const kVal = document.getElementById(`perm_kitchen_${i}`)?.value || null;
+        rec[i] = { wakeupStudentId: wVal, kitchenStudentId: kVal };
+      }
+      adminState.config.recurringDuties = rec;
+      await Db.saveRecurringDuties(rec);
+      closePermanentDutyModal();
+      App.showToast('הגדרות תורנות קבועה נשמרו בהצלחה', '⚙️');
+    }
+
+    async function saveAndApplyPermanentDuties() {
+      const rec = {};
+      for (let i = 0; i < 7; i++) {
+        const wVal = document.getElementById(`perm_waker_${i}`)?.value || null;
+        const kVal = document.getElementById(`perm_kitchen_${i}`)?.value || null;
+        rec[i] = { wakeupStudentId: wVal, kitchenStudentId: kVal };
+      }
+      adminState.config.recurringDuties = rec;
+      await Db.saveRecurringDuties(rec);
+
+      // Apply to all dates of the campaign in campaign_calendar
+      const start = new Date(adminState.config?.startDate || '2026-10-25');
+      const end = new Date(adminState.config?.endDate || '2026-12-10');
+      const cur = new Date(start);
+
+      let appliedCount = 0;
+      while (cur <= end) {
+        const iso = cur.toISOString().slice(0, 10);
+        const dayIdx = cur.getDay();
+        const rule = rec[dayIdx];
+
+        if (rule && (rule.wakeupStudentId || rule.kitchenStudentId)) {
+          const existing = adminState.duties[iso] || {};
+          const wId = rule.wakeupStudentId || existing.wakeupStudentId;
+          const kId = rule.kitchenStudentId || existing.kitchenStudentId;
+
+          await Db.saveDuty(iso, wId, kId, existing.wakeupDone, existing.kitchenDone);
+          appliedCount++;
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      await reloadAdminData(true);
+      closePermanentDutyModal();
+      App.showToast(`תורנות קבועה הוחלה בהצלחה על ${appliedCount} ימים במבצע!`, '⚡');
     }
 
     // =========================================================
@@ -1692,13 +1822,13 @@
     async function approveRequest(id, studentId, studentName, slotTitle) {
       await Db.updateRequestStatus(id, 'approved', studentId, studentName, slotTitle, 1);
       await reloadAdminData(true);
-      showToast('הבקשה אושרה והנקודה נוספה לתלמיד!', '✓');
+      App.showToast('הבקשה אושרה והנקודה נוספה לתלמיד!', '✓');
     }
 
     async function rejectRequest(id) {
       await Db.updateRequestStatus(id, 'rejected');
       await reloadAdminData(true);
-      showToast('הבקשה נדחתה', 'ℹ️');
+      App.showToast('הבקשה נדחתה', 'ℹ️');
     }
 
     // =========================================================
@@ -1714,7 +1844,7 @@
       if (codeDisplay) codeDisplay.textContent = secret;
 
       if (canvas && window.QRCode) {
-        const checkInUrl = `${window.location.origin}/?qr=${encodeURIComponent(secret)}`;
+        const checkInUrl = `https://bakshu-vibe.vercel.app/?qr=${encodeURIComponent(secret)}`;
         QRCode.toCanvas(canvas, checkInUrl, {
           width: 280,
           margin: 2,
@@ -1735,7 +1865,7 @@
         adminState.config.qrSecret = clean;
         await Db.saveConfig(adminState.config);
         openProjectorModal();
-        showToast('קוד ה-QR הוחלף בהצלחה!', '🔄');
+        App.showToast('קוד ה-QR הוחלף בהצלחה ונשמר בשרת!', '🔄');
       }
     }
 
@@ -1784,11 +1914,11 @@
 
       closeGrantBonusModal();
       await reloadAdminData(true);
-      showToast(`בונוס של +${pts} נקודות הוענק בהצלחה!`, '⭐');
+      App.showToast(`בונוס של +${pts} נקודות הוענק בהצלחה!`, '⭐');
     }
 
     // =========================================================
-    // 8. ADD STUDENT & SHARE
+    // 8. ADD STUDENT
     // =========================================================
     function openAddStudentModal() {
       document.getElementById('addStudentModal')?.classList.remove('hidden');
@@ -1802,69 +1932,160 @@
       const phone = (document.getElementById('newStudentPhone')?.value || '').trim();
 
       if (!name) {
-        showToast('נא להזין שם מלא', '⚠️');
+        App.showToast('נא להזין שם מלא', '⚠️');
         return;
       }
 
       await Db.addStudent(name, phone);
       closeAddStudentModal();
       await reloadAdminData(true);
-      showToast(`הבחור ${name} נוסף בהצלחה!`, '✓');
+      App.showToast(`הבחור ${name} נוסף בהצלחה!`, '✓');
     }
 
+    // =========================================================
+    // 9. ADVANCED WHATSAPP & SMS INVITES AND REMINDERS
+    // =========================================================
     function openShareModal() {
+      switchShareTab(adminState.shareTab || 'invite_personal');
       document.getElementById('shareModal')?.classList.remove('hidden');
     }
+
     function closeShareModal() {
       document.getElementById('shareModal')?.classList.add('hidden');
     }
 
-    function populateShareSelect() {
-      const sel = document.getElementById('shareStudentSelect');
-      if (!sel) return;
-      sel.innerHTML = '<option value="">-- כל הבחורים (הודעה כללית) --</option>' +
-        adminState.students.map(s => `<option value="${s.id}">${s.full_name || s.name} (${s.phone || 'אין טלפון'})</option>`).join('');
+    function switchShareTab(tab) {
+      adminState.shareTab = tab;
+      ['invite_personal', 'duty_reminder', 'seder_reminder', 'invite_all'].forEach(t => {
+        const btn = document.getElementById(`stab-${t}`);
+        if (btn) {
+          if (t === tab) {
+            btn.className = 'py-2 rounded-xl bg-white text-slate-950 shadow-xs font-black';
+          } else {
+            btn.className = 'py-2 rounded-xl text-slate-600 hover:text-slate-900 font-bold';
+          }
+        }
+      });
+
+      const container = document.getElementById('shareContentArea');
+      if (!container) return;
+
+      if (tab === 'invite_personal') {
+        container.innerHTML = `
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">בחר תלמיד לשליחת הזמנה אישית:</label>
+            <select id="sharePersonalStudent" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white">
+              ${adminState.students.map(s => `<option value="${s.id}">${s.full_name || s.name} (${s.phone || 'אין טלפון'})</option>`).join('')}
+            </select>
+          </div>
+          <div class="p-3 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs text-indigo-900">
+            ההודעה תשלח עם קישור כניסה מותאם אישית ישירות לנייד של הבחור, כולל הסיסמה האישית שלו.
+          </div>
+          <div class="flex items-center gap-2 pt-2">
+            <button onclick="sendShare('whatsapp')" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5">
+              <span>💬</span><span>שלח הזמנה ב-WhatsApp</span>
+            </button>
+            <button onclick="sendShare('sms')" class="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition">
+              SMS
+            </button>
+          </div>
+        `;
+      } else if (tab === 'duty_reminder') {
+        const todayIso = adminState.selectedDate || new Date().toISOString().slice(0, 10);
+        container.innerHTML = `
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">תאריך תורנות:</label>
+            <input type="date" id="shareDutyDate" value="${todayIso}" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white mb-2">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">תפקיד תורנות:</label>
+            <select id="shareDutyRole" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white">
+              <option value="wakeup">השכמת בוקר (מעורר לתפילה ב-06:45)</option>
+              <option value="kitchen">ניקיון מטבח וחדר אוכל ערב (19:30)</option>
+            </select>
+          </div>
+          <div class="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+            ההודעה תכלול קישור מוכן להוספת התורנות ישירות ל-Google Calendar של הבחור.
+          </div>
+          <div class="flex items-center gap-2 pt-2">
+            <button onclick="sendShare('whatsapp')" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5">
+              <span>💬</span><span>שלח תזכורת תורנות</span>
+            </button>
+          </div>
+        `;
+      } else if (tab === 'seder_reminder') {
+        container.innerHTML = `
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">סדר לימוד לתזכורת:</label>
+            <select id="shareSederTitle" class="w-full text-xs font-bold p-2.5 rounded-xl border border-slate-300 bg-white">
+              <option value="סדר א׳ (עיון)">סדר א׳ (עיון)</option>
+              <option value="סדר ב׳ (בקיאות)">סדר ב׳ (בקיאות)</option>
+              <option value="סדר ג׳ (ערב)">סדר ג׳ (ערב)</option>
+              <option value="סדר מוסר">סדר מוסר</option>
+            </select>
+          </div>
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600">
+            תזכורת לקראת תחילת הסדר עם קישור ישיר לסריקת ה-QR וסימון נוכחות.
+          </div>
+          <div class="flex items-center gap-2 pt-2">
+            <button onclick="sendShare('whatsapp')" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5">
+              <span>💬</span><span>שלח תזכורת סדר ב-WhatsApp</span>
+            </button>
+          </div>
+        `;
+      } else if (tab === 'invite_all') {
+        container.innerHTML = `
+          <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 leading-relaxed">
+            שלום לכל בחורי ישיבת בקשו! 🏔️✨<br>
+            מבצע חורף תשפ״ז 'עד הפסגה' יוצא לדרך!<br>
+            היכנסו למערכת וסמנו נוכחות בסדרים:<br>
+            <span class="font-mono text-indigo-600 font-bold" dir="ltr">https://bakshu-vibe.vercel.app</span>
+          </div>
+          <div class="flex items-center gap-2 pt-2">
+            <button onclick="sendShare('whatsapp')" class="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-md flex items-center justify-center gap-1.5">
+              <span>💬</span><span>שלח לקבוצת הישיבה ב-WhatsApp</span>
+            </button>
+          </div>
+        `;
+      }
     }
 
     function sendShare(channel) {
-      const stId = document.getElementById('shareStudentSelect')?.value;
-      const st = adminState.students.find(s => String(s.id) === String(stId));
-
+      const tab = adminState.shareTab || 'invite_personal';
       const baseUrl = window.location.origin;
+
       let text = '';
       let phone = '';
 
-      if (st) {
-        const link = `${baseUrl}/?phone=${encodeURIComponent(st.phone || '')}`;
-        text = encodeURIComponent(`שלום ${st.full_name || st.name}! 🚀\nברוך הבא למבצע 'עד הפסגה' בישיבת בקשו!\n\nהנה קישור הכניסה האישי שלך (ללא צורך בהקשת סיסמה):\n${link}\n\nסיסמתך האישית: ${st.password || '1234'}\nעולים ביחד לפסגה!`);
+      if (tab === 'invite_personal') {
+        const stId = document.getElementById('sharePersonalStudent')?.value;
+        const st = adminState.students.find(s => String(s.id) === String(stId));
+        if (!st) { App.showToast('בחר תלמיד', '⚠️'); return; }
+        text = App.buildStudentInviteText(st, baseUrl);
         phone = (st.phone || '').replace(/[^0-9]/g, '');
-      } else {
-        text = encodeURIComponent(`שלום לכל בחורי ישיבת בקשו! 🏔️✨\nמבצע חורף תשפ״ז 'עד הפסגה' יוצא לדרך!\n\nהיכנסו למערכת עם מספר הטלפון שלכם:\n${baseUrl}\n(סיסמת ברירת מחדל: 1234)\n\nמחכים לכם בסדרים!`);
+      } else if (tab === 'duty_reminder') {
+        const dDate = document.getElementById('shareDutyDate')?.value;
+        const role = document.getElementById('shareDutyRole')?.value;
+        const duty = adminState.duties[dDate] || {};
+        const stId = role === 'wakeup' ? duty.wakeupStudentId : duty.kitchenStudentId;
+        const st = adminState.students.find(s => String(s.id) === String(stId));
+        if (!st) { App.showToast('אין תורן משובץ בתאריך ובתפקיד זה', '⚠️'); return; }
+        text = App.buildDutyReminderText(st, dDate, role === 'wakeup' ? 'השכמת בוקר' : 'תורנות מטבח', baseUrl);
+        phone = (st.phone || '').replace(/[^0-9]/g, '');
+      } else if (tab === 'seder_reminder') {
+        const sTitle = document.getElementById('shareSederTitle')?.value || 'סדר לימוד';
+        text = `תזכורת בישיבת בקשו! ⏰\n${sTitle} מתחיל בעוד 10 דקות בבית המדרש!\n\nהיכנסו לסריקת ה-QR וסימון נוכחות:\n${baseUrl}\n(אל תשכחו להפקיד טלפון לבונוס נוסף 📵)`;
+      } else if (tab === 'invite_all') {
+        text = `שלום לכל בחורי ישיבת בקשו! 🏔️✨\nמבצע חורף תשפ״ז 'עד הפסגה' פתוח כעת!\n\nהיכנסו למערכת עם מספר הטלפון שלכם:\n${baseUrl}\n(סיסמת ברירת מחדל: 1234)\n\nמטפסים ביחד לפסגה! 🚀`;
       }
 
+      const encoded = encodeURIComponent(text);
       if (channel === 'whatsapp') {
         const pStr = phone ? `972${phone.startsWith('0') ? phone.slice(1) : phone}` : '';
-        window.open(`https://wa.me/${pStr}?text=${text}`, '_blank');
+        window.open(`https://wa.me/${pStr}?text=${encoded}`, '_blank');
       } else {
-        window.open(`sms:${phone}?body=${text}`, '_blank');
+        window.open(`sms:${phone}?body=${encoded}`, '_blank');
       }
-    }
-
-    // --- Toast Notifications ---
-    function showToast(message, icon = 'ℹ️') {
-      const container = document.getElementById('toastContainer');
-      if (!container) return;
-
-      const toast = document.createElement('div');
-      toast.className = 'p-3 rounded-2xl bg-slate-900/95 text-white text-xs font-bold shadow-2xl border border-white/20 flex items-center gap-2 transition-all transform duration-300 pointer-events-auto';
-      toast.innerHTML = `<span class="text-base">${icon}</span><span>${message}</span>`;
-      container.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
-        setTimeout(() => toast.remove(), 300);
-      }, 3500);
     }
   </script>
 </body>
