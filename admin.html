@@ -916,6 +916,7 @@
   <script>
     const adminState = {
       isLoggedIn: false,
+      currentTab: 'students',
       students: [],
       config: null,
       scheduleSlots: {},
@@ -995,20 +996,16 @@
         ]);
 
         adminState.students = stList || [];
-        adminState.config = cfg || {};
-        adminState.scheduleSlots = slots || {};
         adminState.duties = duts || {};
         adminState.requests = reqs || [];
         adminState.bonusLogs = bLogs || [];
         adminState.slotAttendanceMap = slotAtt || { byDateSlot: {}, phoneFree: {} };
 
-        // Ensure default date has slots
-        ensureCurrentDaySlots(adminState.selectedDate);
+        // Check if an input or textarea currently has focus (user is typing!)
+        const activeTag = document.activeElement?.tagName;
+        const isUserTyping = (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT');
 
-        renderAdminStudentsTable();
-        renderAdminInteractiveCalendarGrid();
-        renderAdminSchedule();
-        populateAdminConfig();
+        // Always update background tables that don't disrupt user
         renderAdminDutiesTable();
         updateDutyRotationTrackerCards();
         renderAdminRequests();
@@ -1017,6 +1014,27 @@
         if (adminState.inspectedStudentId) {
           inspectStudentFromAdmin(adminState.inspectedStudentId);
         }
+
+        // Only update students table if user is not actively searching
+        if (!isUserTyping || adminState.currentTab !== 'students') {
+          renderAdminStudentsTable();
+        }
+
+        // Only update calendar and schedule if not currently editing slots
+        if (!isUserTyping || adminState.currentTab !== 'schedule') {
+          adminState.scheduleSlots = slots || {};
+          ensureCurrentDaySlots(adminState.selectedDate);
+          renderAdminInteractiveCalendarGrid();
+          if (!isUserTyping) {
+            renderAdminSchedule();
+          }
+        }
+
+        // CRITICAL: NEVER overwrite targets/stops config on background reload
+        if (!isBackground) {
+          adminState.config = cfg || {};
+          populateAdminConfig();
+        }
       } catch (e) {
         console.error('reloadAdminData error:', e);
       }
@@ -1024,6 +1042,7 @@
 
     // --- Tabs Switching ---
     function switchAdminTab(tabName) {
+      adminState.currentTab = tabName;
       ['students', 'schedule', 'targets', 'duties', 'requests'].forEach(t => {
         const sec = document.getElementById(`asec-${t}`);
         const tabBtn = document.getElementById(`atab-${t}`);
@@ -1704,9 +1723,80 @@
     // =========================================================
     // 3. TARGETS (POINTS) & JOURNEY STOPS (DATES)
     // =========================================================
-    function populateAdminConfig() {
+    // Helpers for safe HTML and SVG attribute/content escaping
+    function escapeAttr(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function escapeXml(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+    }
+
+    // Keep memory in sync with DOM inputs before any re-render
+    function syncJourneyStopsFromDOM() {
+      const stopRows = document.querySelectorAll('.journey-stop-row');
+      if (stopRows.length === 0) return;
+      adminState.config.trailStops = Array.from(stopRows).map((row, i) => {
+        const iso = row.querySelector('.stop-iso-date')?.value || '';
+        const heb = row.querySelector('.stop-heb-date')?.value || '';
+        const isAnnounced = row.querySelector('.stop-is-announced')?.checked ?? true;
+        return {
+          id: adminState.config.trailStops?.[i]?.id || `stop_${Date.now()}_${i}`,
+          title: row.querySelector('.stop-title')?.value || `עצירה ${i + 1}`,
+          isoDate: iso,
+          dateLabel: heb || (iso ? App.formatHebrewDateBadge(iso) : 'תאריך יוכרז בהמשך'),
+          description: row.querySelector('.stop-desc')?.value || '',
+          isDecided: isAnnounced
+        };
+      });
+    }
+
+    function syncExtraTargetsFromDOM() {
+      const extraRows = document.querySelectorAll('#extraTargetsListContainer > div');
+      if (extraRows.length === 0) return;
+      adminState.config.extraTargets = Array.from(extraRows).map((row, i) => ({
+        name: row.querySelector('.extra-target-name')?.value || `יעד ${i + 4}`,
+        points: Number(row.querySelector('.extra-target-points')?.value) || 150,
+        reward: row.querySelector('.extra-target-reward')?.value || ''
+      }));
+    }
+
+    // =========================================================
+    // 3. TARGETS (POINTS) & JOURNEY STOPS (DATES)
+    // =========================================================
+    function populateAdminConfig(force = false) {
       const cfg = adminState.config;
       if (!cfg) return;
+
+      // Never overwrite user inputs if user is currently editing on targets tab
+      const activeEl = document.activeElement;
+      const isEditingTargets = activeEl && (
+        activeEl.id?.startsWith('target') ||
+        activeEl.id?.startsWith('cfg') ||
+        activeEl.classList?.contains('stop-title') ||
+        activeEl.classList?.contains('stop-iso-date') ||
+        activeEl.classList?.contains('stop-heb-date') ||
+        activeEl.classList?.contains('stop-desc') ||
+        activeEl.classList?.contains('extra-target-name') ||
+        activeEl.classList?.contains('extra-target-points') ||
+        activeEl.classList?.contains('extra-target-reward')
+      );
+
+      if (!force && (isEditingTargets || adminState.currentTab === 'targets')) {
+        return;
+      }
 
       const sInp = document.getElementById('cfgStartDateInput');
       const eInp = document.getElementById('cfgEndDateInput');
@@ -1768,17 +1858,17 @@
         <div class="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div class="flex items-center gap-2">
             <span class="font-black text-indigo-900">יעד נוסף #${i + 4}</span>
-            <input type="text" value="${ex.name || ''}" placeholder="שם היעד" class="extra-target-name p-1.5 rounded-xl border border-indigo-300 font-bold bg-white w-40 sm:w-48">
+            <input type="text" value="${escapeAttr(ex.name || '')}" placeholder="שם היעד" class="extra-target-name p-1.5 rounded-xl border border-indigo-300 font-bold bg-white w-40 sm:w-48">
           </div>
 
           <div class="flex items-center gap-2">
             <span class="font-bold text-slate-500">סף:</span>
-            <input type="number" value="${ex.points || 150}" class="extra-target-points w-20 p-1.5 rounded-xl border border-indigo-300 text-center font-black bg-white">
+            <input type="number" value="${Number(ex.points) || 150}" class="extra-target-points w-20 p-1.5 rounded-xl border border-indigo-300 text-center font-black bg-white">
             <span class="font-bold text-slate-500">נק׳</span>
           </div>
 
           <div class="flex-1 min-w-[180px]">
-            <input type="text" value="${ex.reward || ''}" placeholder="תיאור הפרס הממתין ביעד זה" class="extra-target-reward w-full p-1.5 rounded-xl border border-indigo-200 font-bold bg-white text-[11px]">
+            <input type="text" value="${escapeAttr(ex.reward || '')}" placeholder="תיאור הפרס הממתין ביעד זה" class="extra-target-reward w-full p-1.5 rounded-xl border border-indigo-200 font-bold bg-white text-[11px]">
           </div>
 
           <button type="button" onclick="removeExtraTargetRow(${i})" class="p-1.5 text-rose-600 hover:text-rose-800 text-xs font-bold cursor-pointer" title="מחק יעד זה">
@@ -1789,6 +1879,7 @@
     }
 
     function addNewExtraTargetRow() {
+      syncExtraTargetsFromDOM();
       if (!adminState.config.extraTargets) adminState.config.extraTargets = [];
       const num = adminState.config.extraTargets.length + 4;
       adminState.config.extraTargets.push({
@@ -1801,6 +1892,7 @@
     }
 
     function removeExtraTargetRow(idx) {
+      syncExtraTargetsFromDOM();
       if (adminState.config?.extraTargets) {
         adminState.config.extraTargets.splice(idx, 1);
         renderExtraTargetsEditor();
@@ -1871,37 +1963,37 @@
           <!-- Stop 1 -->
           <g transform="translate(190, 168)">
             <circle cx="0" cy="0" r="5" fill="#0A1138" stroke="#38BDF8" stroke-width="2"/>
-            <text x="0" y="-10" text-anchor="middle" fill="#BAE6FD" font-size="10" font-weight="bold" font-family="Heebo">📍 ${s1Label}</text>
+            <text x="0" y="-10" text-anchor="middle" fill="#BAE6FD" font-size="10" font-weight="bold" font-family="Heebo">📍 ${escapeXml(s1Label)}</text>
           </g>
 
           <!-- Target 1 (Min) -->
           <g transform="translate(340, 140)">
             <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5"/>
-            <text x="0" y="-11" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 ${t1Name} (${t1Pts} נק׳)</text>
+            <text x="0" y="-11" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 ${escapeXml(t1Name)} (${t1Pts} נק׳)</text>
           </g>
 
           <!-- Stop 2 -->
           <g transform="translate(480, 118)">
             <circle cx="0" cy="0" r="5" fill="#0A1138" stroke="#94A3B8" stroke-width="2"/>
-            <text x="0" y="-10" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="bold" font-family="Heebo">🚩 ${s2Label}</text>
+            <text x="0" y="-10" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="bold" font-family="Heebo">🚩 ${escapeXml(s2Label)}</text>
           </g>
 
           <!-- Target 2 (Mid) -->
           <g transform="translate(610, 90)">
             <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5"/>
-            <text x="0" y="-11" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 ${t2Name} (${t2Pts} נק׳)</text>
+            <text x="0" y="-11" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 ${escapeXml(t2Name)} (${t2Pts} נק׳)</text>
           </g>
 
           <!-- Stop 3 -->
           <g transform="translate(710, 68)">
             <circle cx="0" cy="0" r="5" fill="#0A1138" stroke="#94A3B8" stroke-width="2"/>
-            <text x="0" y="-10" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="bold" font-family="Heebo">🚩 ${s3Label}</text>
+            <text x="0" y="-10" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="bold" font-family="Heebo">🚩 ${escapeXml(s3Label)}</text>
           </g>
 
           <!-- Summit (Max) -->
           <g transform="translate(800, 40)">
             <circle cx="0" cy="0" r="8" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2.5"/>
-            <text x="0" y="-14" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">👑 ${t3Name} (${t3Pts} נק׳)</text>
+            <text x="0" y="-14" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">👑 ${escapeXml(t3Name)} (${t3Pts} נק׳)</text>
           </g>
         </svg>
       `;
@@ -1930,18 +2022,18 @@
             <div class="flex flex-wrap items-center justify-between gap-2.5">
               <div class="flex items-center gap-2">
                 <span class="font-black text-indigo-950 text-sm">עצירה #${i + 1}</span>
-                <input type="text" value="${st.title || ''}" oninput="onAdminTargetOrStopChanged()" placeholder="כותרת העצירה (למשל: פיתחו יומנים!)" class="stop-title p-2 rounded-xl border border-slate-300 font-bold bg-white w-48 sm:w-64 text-xs">
+                <input type="text" value="${escapeAttr(st.title || '')}" oninput="onAdminTargetOrStopChanged()" placeholder="כותרת העצירה (למשל: פיתחו יומנים!)" class="stop-title p-2 rounded-xl border border-slate-300 font-bold bg-white w-48 sm:w-64 text-xs">
               </div>
 
               <div class="flex flex-wrap items-center gap-2">
                 <div class="flex items-center gap-1.5">
                   <span class="text-slate-500 font-bold">תאריך לועזי:</span>
-                  <input type="date" value="${st.isoDate || ''}" onchange="onStopDateChanged(${i}, this.value)" class="stop-iso-date p-1.5 rounded-xl border border-slate-300 font-bold bg-white text-xs">
+                  <input type="date" value="${escapeAttr(st.isoDate || '')}" onchange="onStopDateChanged(${i}, this.value)" class="stop-iso-date p-1.5 rounded-xl border border-slate-300 font-bold bg-white text-xs">
                 </div>
 
                 <div class="flex items-center gap-1.5">
                   <span class="text-slate-500 font-bold">תאריך עברי:</span>
-                  <input type="text" id="stopHebDate_${i}" value="${hebDate}" oninput="onAdminTargetOrStopChanged()" placeholder="למשל: ט׳ כסליו" class="stop-heb-date p-1.5 rounded-xl border border-slate-300 font-bold bg-white text-xs w-36">
+                  <input type="text" id="stopHebDate_${i}" value="${escapeAttr(hebDate)}" oninput="onAdminTargetOrStopChanged()" placeholder="למשל: ט׳ כסליו" class="stop-heb-date p-1.5 rounded-xl border border-slate-300 font-bold bg-white text-xs w-36">
                 </div>
 
                 <label class="flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1.5 rounded-xl border border-slate-200">
@@ -1957,7 +2049,7 @@
 
             <div class="pt-1">
               <label class="block text-[10px] font-bold text-slate-500 mb-0.5">מה קורה בעצירה זו (אירוע / חלוקת שי ביניים):</label>
-              <input type="text" value="${st.description || ''}" oninput="onAdminTargetOrStopChanged()" placeholder="למשל: כנס אמצע מיוחד, הדלקת נרות חנוכה וחלוקת שי אישי..." class="stop-desc w-full p-2 rounded-xl border border-slate-200 font-bold bg-white text-xs text-slate-800">
+              <input type="text" value="${escapeAttr(st.description || '')}" oninput="onAdminTargetOrStopChanged()" placeholder="למשל: כנס אמצע מיוחד, הדלקת נרות חנוכה וחלוקת שי אישי..." class="stop-desc w-full p-2 rounded-xl border border-slate-200 font-bold bg-white text-xs text-slate-800">
             </div>
           </div>
         `;
@@ -1977,6 +2069,7 @@
     }
 
     function addNewJourneyStopRow() {
+      syncJourneyStopsFromDOM();
       if (!adminState.config.trailStops) adminState.config.trailStops = [];
       const num = adminState.config.trailStops.length + 1;
       adminState.config.trailStops.push({
@@ -1992,6 +2085,7 @@
     }
 
     function removeJourneyStopRow(idx) {
+      syncJourneyStopsFromDOM();
       if (adminState.config?.trailStops) {
         adminState.config.trailStops.splice(idx, 1);
         renderJourneyStopsEditor();

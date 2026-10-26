@@ -600,10 +600,10 @@
     subscribeRealtime(onUpdate) {
       if (typeof onUpdate !== 'function') return;
 
-      // 1. הפעלת מנגנון Polling עדין כל 5 שניות לוודא סנכרון 100% בין מסכים
+      // 1. הפעלת מנגנון Polling מרווח כל 30 שניות כגיבוי לרשת
       setInterval(() => {
         onUpdate();
-      }, 5000);
+      }, 30000);
 
       // 2. ערוץ Realtime
       if (client && client.channel) {
