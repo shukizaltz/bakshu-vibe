@@ -556,12 +556,9 @@
         <p id="loginErrorMsg" class="text-xs text-rose-600 font-bold hidden text-center"></p>
       </div>
 
-      <div class="flex items-center gap-2 mt-5">
-        <button onclick="handleConfirmLogin()" class="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
+      <div class="mt-5">
+        <button onclick="handleConfirmLogin()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
           כניסה למערכת 🚀
-        </button>
-        <button onclick="handleDemoLogin()" class="px-3 py-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition" title="בדיקה מיידית ללא בחירה">
-          בחור לדוגמה
         </button>
       </div>
     </div>
@@ -918,16 +915,6 @@
 
       setStudentSession(st);
       showToast(`שלום ${st.full_name || st.name}! ברוך הבא למבצע`, '🎉');
-    }
-
-    function handleDemoLogin() {
-      if (state.students.length > 0) {
-        setStudentSession(state.students[0]);
-        showToast('נכנסת כבחור לדוגמה', 'ℹ️');
-      } else {
-        const dummy = { id: 'demo_1', full_name: 'בחור לדוגמה (אבנר כהן)', score: 35, phone: '050-0000000' };
-        setStudentSession(dummy);
-      }
     }
 
     // --- Tab Switching ---
