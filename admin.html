@@ -260,12 +260,29 @@
           <div class="flex items-center gap-3">
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-0.5">תאריך פתיחה:</label>
-              <input type="date" id="cfgStartDateInput" class="p-2 rounded-xl border border-slate-300 font-bold text-xs">
+              <input type="date" id="cfgStartDateInput" onchange="onAdminTargetOrStopChanged()" class="p-2 rounded-xl border border-slate-300 font-bold text-xs">
             </div>
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-0.5">תאריך סיום:</label>
-              <input type="date" id="cfgEndDateInput" class="p-2 rounded-xl border border-slate-300 font-bold text-xs">
+              <input type="date" id="cfgEndDateInput" onchange="onAdminTargetOrStopChanged()" class="p-2 rounded-xl border border-slate-300 font-bold text-xs">
             </div>
+          </div>
+        </div>
+
+        <!-- Live Mountain Ascent Preview in Admin -->
+        <div class="p-4 sm:p-5 rounded-3xl bg-slate-950 border border-indigo-900/60 shadow-xl space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-black text-amber-300 flex items-center gap-1.5">
+              <span>🏔️</span>
+              <span>תצוגה מקדימה חיה של מסלול ההר (משתקפת מיידית עם כל שינוי של יעד או עצירה למטה)</span>
+            </span>
+            <span class="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>סנכרון חי</span>
+            </span>
+          </div>
+          <div id="adminMountainPreviewContainer" class="rounded-2xl overflow-hidden bg-slate-900/80 p-2 border border-white/10 min-h-[170px] flex items-center justify-center">
+            <!-- Rendered by renderAdminMountainPreview() -->
           </div>
         </div>
 
@@ -290,15 +307,15 @@
               <span class="text-xs font-black text-amber-900 block">🥉 יעד 1 (רף כניסה)</span>
               <div>
                 <label class="block text-[10px] font-bold text-slate-500 mb-0.5">שם היעד:</label>
-                <input type="text" id="targetMinNameInput" class="w-full p-2 rounded-xl border border-amber-300 text-xs font-bold bg-white" placeholder="שם היעד">
+                <input type="text" id="targetMinNameInput" oninput="onAdminTargetOrStopChanged()" class="w-full p-2 rounded-xl border border-amber-300 text-xs font-bold bg-white" placeholder="שם היעד">
               </div>
               <div class="flex items-center gap-1.5">
-                <input type="number" id="targetMinPointsInput" class="w-24 p-2 rounded-xl border border-amber-300 text-xs font-black text-center font-outfit bg-white">
+                <input type="number" id="targetMinPointsInput" oninput="onAdminTargetOrStopChanged()" class="w-24 p-2 rounded-xl border border-amber-300 text-xs font-black text-center font-outfit bg-white">
                 <span class="text-xs font-bold text-amber-900">נקודות</span>
               </div>
               <div>
                 <label class="block text-[10px] font-bold text-slate-500 mb-0.5">תיאור הפרס ביעד זה:</label>
-                <input type="text" id="targetMinRewardInput" class="w-full p-2 rounded-xl border border-amber-200 text-xs font-bold bg-white" placeholder="למשל: כניסה להגרלת ספרים ושוברים">
+                <input type="text" id="targetMinRewardInput" oninput="onAdminTargetOrStopChanged()" class="w-full p-2 rounded-xl border border-amber-200 text-xs font-bold bg-white" placeholder="למשל: כניסה להגרלת ספרים ושוברים">
               </div>
             </div>
 
@@ -307,15 +324,15 @@
               <span class="text-xs font-black text-slate-800 block">🥈 יעד 2 (פרס כספי / ביניים)</span>
               <div>
                 <label class="block text-[10px] font-bold text-slate-500 mb-0.5">שם היעד:</label>
-                <input type="text" id="targetMidNameInput" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold bg-white" placeholder="שם היעד">
+                <input type="text" id="targetMidNameInput" oninput="onAdminTargetOrStopChanged()" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold bg-white" placeholder="שם היעד">
               </div>
               <div class="flex items-center gap-1.5">
-                <input type="number" id="targetMidPointsInput" class="w-24 p-2 rounded-xl border border-slate-300 text-xs font-black text-center font-outfit bg-white">
+                <input type="number" id="targetMidPointsInput" oninput="onAdminTargetOrStopChanged()" class="w-24 p-2 rounded-xl border border-slate-300 text-xs font-black text-center font-outfit bg-white">
                 <span class="text-xs font-bold text-slate-800">נקודות</span>
               </div>
               <div>
                 <label class="block text-[10px] font-bold text-slate-500 mb-0.5">תיאור הפרס ביעד זה:</label>
-                <input type="text" id="targetMidRewardInput" class="w-full p-2 rounded-xl border border-slate-200 text-xs font-bold bg-white" placeholder="למשל: 300 ₪ במזומן מובטח לכל אחד">
+                <input type="text" id="targetMidRewardInput" oninput="onAdminTargetOrStopChanged()" class="w-full p-2 rounded-xl border border-slate-200 text-xs font-bold bg-white" placeholder="למשל: 300 ₪ במזומן מובטח לכל אחד">
               </div>
             </div>
 
@@ -324,21 +341,29 @@
               <span class="text-xs font-black text-yellow-900 block">🥇 יעד הפסגה (פרס ענק)</span>
               <div>
                 <label class="block text-[10px] font-bold text-slate-500 mb-0.5">שם היעד:</label>
-                <input type="text" id="targetMaxNameInput" class="w-full p-2 rounded-xl border border-yellow-400 text-xs font-bold bg-white" placeholder="שם היעד">
+                <input type="text" id="targetMaxNameInput" oninput="onAdminTargetOrStopChanged()" class="w-full p-2 rounded-xl border border-yellow-400 text-xs font-bold bg-white" placeholder="שם היעד">
               </div>
               <div class="flex items-center gap-1.5">
-                <input type="number" id="targetMaxPointsInput" class="w-24 p-2 rounded-xl border border-yellow-400 text-xs font-black text-center font-outfit bg-white">
+                <input type="number" id="targetMaxPointsInput" oninput="onAdminTargetOrStopChanged()" class="w-24 p-2 rounded-xl border border-yellow-400 text-xs font-black text-center font-outfit bg-white">
                 <span class="text-xs font-bold text-yellow-900">נקודות</span>
               </div>
               <div>
                 <label class="block text-[10px] font-bold text-slate-500 mb-0.5">תיאור הפרס ביעד זה:</label>
-                <input type="text" id="targetMaxRewardInput" class="w-full p-2 rounded-xl border border-yellow-300 text-xs font-bold bg-white" placeholder="למשל: מסע הפסגה ונסיעה VIP לצפון">
+                <input type="text" id="targetMaxRewardInput" oninput="onAdminTargetOrStopChanged()" class="w-full p-2 rounded-xl border border-yellow-300 text-xs font-bold bg-white" placeholder="למשל: מסע הפסגה ונסיעה VIP לצפון">
               </div>
             </div>
           </div>
 
           <!-- Dynamic Extra Targets Container -->
           <div id="extraTargetsListContainer" class="space-y-2"></div>
+
+          <!-- Inline Save Targets Button -->
+          <div class="flex items-center justify-end pt-1">
+            <button type="button" id="btnSaveTargetsOnly" onclick="saveAdminTargetsOnly()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer">
+              <span>💾</span>
+              <span id="btnSaveTargetsOnlyText">שמור יעדי ניקוד כעת ב-Supabase</span>
+            </button>
+          </div>
         </div>
 
         <!-- 2. Journey Stops by Date -->
@@ -358,6 +383,14 @@
 
           <div id="adminJourneyStopsContainer" class="space-y-3">
             <!-- Populated dynamically by renderJourneyStopsEditor() -->
+          </div>
+
+          <!-- Inline Save Stops Button -->
+          <div class="flex items-center justify-end pt-1">
+            <button type="button" id="btnSaveStopsOnly" onclick="saveAdminStopsOnly()" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer">
+              <span>💾</span>
+              <span id="btnSaveStopsOnlyText">שמור תחנות עצירה כעת ב-Supabase</span>
+            </button>
           </div>
         </div>
 
@@ -1003,6 +1036,9 @@
           }
         }
       });
+      if (tabName === 'targets' && typeof renderAdminMountainPreview === 'function') {
+        renderAdminMountainPreview();
+      }
     }
 
     // =========================================================
@@ -1771,6 +1807,110 @@
       }
     }
 
+    // --- Live Mountain Preview in Admin ---
+    function renderAdminMountainPreview() {
+      const container = document.getElementById('adminMountainPreviewContainer');
+      if (!container) return;
+
+      const t1Name = document.getElementById('targetMinNameInput')?.value || adminState.config?.targets?.min?.name || 'יעד 1';
+      const t1Pts = Number(document.getElementById('targetMinPointsInput')?.value) || adminState.config?.targets?.min?.points || 70;
+      const t2Name = document.getElementById('targetMidNameInput')?.value || adminState.config?.targets?.mid?.name || 'יעד 2';
+      const t2Pts = Number(document.getElementById('targetMidPointsInput')?.value) || adminState.config?.targets?.mid?.points || 100;
+      const t3Name = document.getElementById('targetMaxNameInput')?.value || adminState.config?.targets?.max?.name || 'הפסגה';
+      const t3Pts = Number(document.getElementById('targetMaxPointsInput')?.value) || adminState.config?.targets?.max?.points || 130;
+
+      // Extract stops from DOM if available, otherwise from config
+      const stopRows = document.querySelectorAll('.journey-stop-row');
+      let stops = [];
+      if (stopRows.length > 0) {
+        stops = Array.from(stopRows).map((row, i) => {
+          const title = row.querySelector('.stop-title')?.value || `עצירה ${i + 1}`;
+          const heb = row.querySelector('.stop-heb-date')?.value || '';
+          const iso = row.querySelector('.stop-iso-date')?.value || '';
+          return { title, dateLabel: heb || (iso ? App.formatHebrewDateBadge(iso) : 'תאריך יוכרז') };
+        });
+      } else {
+        stops = adminState.config?.trailStops || [];
+      }
+
+      const s1 = stops[0] || { title: 'עצירה 1', dateLabel: 'ט׳ כסליו' };
+      const s2 = stops[1] || { title: 'עצירה 2', dateLabel: 'יוכרז בהמשך' };
+      const s3 = stops[2] || { title: 'הפסגה', dateLabel: 'יוכרז בהמשך' };
+
+      const s1Label = s1.title + (s1.dateLabel ? ` (${s1.dateLabel})` : '');
+      const s2Label = s2.title + (s2.dateLabel ? ` (${s2.dateLabel})` : '');
+      const s3Label = s3.title + (s3.dateLabel ? ` (${s3.dateLabel})` : '');
+
+      container.innerHTML = `
+        <svg viewBox="0 0 900 240" class="w-full h-auto select-none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="skyGradAdm" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#0A1138"/>
+              <stop offset="100%" stop-color="#1E1B4B"/>
+            </linearGradient>
+            <linearGradient id="mntSilAdm" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#1E293B"/>
+              <stop offset="100%" stop-color="#0F172A"/>
+            </linearGradient>
+            <linearGradient id="trailAdm" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#F59E0B"/>
+              <stop offset="50%" stop-color="#38BDF8"/>
+              <stop offset="100%" stop-color="#34D399"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Sky & Ridge -->
+          <rect width="900" height="240" fill="url(#skyGradAdm)" rx="14"/>
+          <path d="M 0 240 L 0 180 L 160 150 L 320 170 L 520 110 L 680 80 L 800 30 L 860 100 L 900 140 L 900 240 Z" fill="url(#mntSilAdm)"/>
+          <polygon points="800,30 770,58 830,52" fill="#FFFFFF" opacity="0.9"/>
+
+          <!-- Trail Paths -->
+          <path d="M 80 195 Q 240 168, 400 135 T 800 40" fill="none" stroke="#475569" stroke-width="3" stroke-dasharray="6,6" opacity="0.6"/>
+          <path d="M 80 195 Q 240 168, 400 135 T 800 40" fill="none" stroke="url(#trailAdm)" stroke-width="4" stroke-linecap="round" stroke-dasharray="800" stroke-dashoffset="300"/>
+
+          <!-- Stop 1 -->
+          <g transform="translate(190, 168)">
+            <circle cx="0" cy="0" r="5" fill="#0A1138" stroke="#38BDF8" stroke-width="2"/>
+            <text x="0" y="-10" text-anchor="middle" fill="#BAE6FD" font-size="10" font-weight="bold" font-family="Heebo">📍 ${s1Label}</text>
+          </g>
+
+          <!-- Target 1 (Min) -->
+          <g transform="translate(340, 140)">
+            <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5"/>
+            <text x="0" y="-11" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 ${t1Name} (${t1Pts} נק׳)</text>
+          </g>
+
+          <!-- Stop 2 -->
+          <g transform="translate(480, 118)">
+            <circle cx="0" cy="0" r="5" fill="#0A1138" stroke="#94A3B8" stroke-width="2"/>
+            <text x="0" y="-10" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="bold" font-family="Heebo">🚩 ${s2Label}</text>
+          </g>
+
+          <!-- Target 2 (Mid) -->
+          <g transform="translate(610, 90)">
+            <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5"/>
+            <text x="0" y="-11" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 ${t2Name} (${t2Pts} נק׳)</text>
+          </g>
+
+          <!-- Stop 3 -->
+          <g transform="translate(710, 68)">
+            <circle cx="0" cy="0" r="5" fill="#0A1138" stroke="#94A3B8" stroke-width="2"/>
+            <text x="0" y="-10" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="bold" font-family="Heebo">🚩 ${s3Label}</text>
+          </g>
+
+          <!-- Summit (Max) -->
+          <g transform="translate(800, 40)">
+            <circle cx="0" cy="0" r="8" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2.5"/>
+            <text x="0" y="-14" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">👑 ${t3Name} (${t3Pts} נק׳)</text>
+          </g>
+        </svg>
+      `;
+    }
+
+    function onAdminTargetOrStopChanged() {
+      renderAdminMountainPreview();
+    }
+
     // --- Journey Stops Editor (Dates) ---
     function renderJourneyStopsEditor() {
       const container = document.getElementById('adminJourneyStopsContainer');
@@ -1779,6 +1919,7 @@
       const stops = adminState.config?.trailStops || [];
       if (stops.length === 0) {
         container.innerHTML = '<div class="text-xs text-slate-400 py-4 text-center">טרם הוגדרו תחנות עצירה במסע. לחץ "+ הוסף עצירת מסע חדשה".</div>';
+        renderAdminMountainPreview();
         return;
       }
 
@@ -1789,7 +1930,7 @@
             <div class="flex flex-wrap items-center justify-between gap-2.5">
               <div class="flex items-center gap-2">
                 <span class="font-black text-indigo-950 text-sm">עצירה #${i + 1}</span>
-                <input type="text" value="${st.title || ''}" placeholder="כותרת העצירה (למשל: פיתחו יומנים!)" class="stop-title p-2 rounded-xl border border-slate-300 font-bold bg-white w-48 sm:w-64 text-xs">
+                <input type="text" value="${st.title || ''}" oninput="onAdminTargetOrStopChanged()" placeholder="כותרת העצירה (למשל: פיתחו יומנים!)" class="stop-title p-2 rounded-xl border border-slate-300 font-bold bg-white w-48 sm:w-64 text-xs">
               </div>
 
               <div class="flex flex-wrap items-center gap-2">
@@ -1800,11 +1941,11 @@
 
                 <div class="flex items-center gap-1.5">
                   <span class="text-slate-500 font-bold">תאריך עברי:</span>
-                  <input type="text" id="stopHebDate_${i}" value="${hebDate}" placeholder="למשל: ט׳ כסליו" class="stop-heb-date p-1.5 rounded-xl border border-slate-300 font-bold bg-white text-xs w-36">
+                  <input type="text" id="stopHebDate_${i}" value="${hebDate}" oninput="onAdminTargetOrStopChanged()" placeholder="למשל: ט׳ כסליו" class="stop-heb-date p-1.5 rounded-xl border border-slate-300 font-bold bg-white text-xs w-36">
                 </div>
 
                 <label class="flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1.5 rounded-xl border border-slate-200">
-                  <input type="checkbox" ${st.isDecided !== false ? 'checked' : ''} class="stop-is-announced w-3.5 h-3.5 rounded text-indigo-600">
+                  <input type="checkbox" ${st.isDecided !== false ? 'checked' : ''} onchange="onAdminTargetOrStopChanged()" class="stop-is-announced w-3.5 h-3.5 rounded text-indigo-600">
                   <span class="font-bold text-slate-700 text-[11px]">הוכרז רשמית</span>
                 </label>
 
@@ -1816,11 +1957,13 @@
 
             <div class="pt-1">
               <label class="block text-[10px] font-bold text-slate-500 mb-0.5">מה קורה בעצירה זו (אירוע / חלוקת שי ביניים):</label>
-              <input type="text" value="${st.description || ''}" placeholder="למשל: כנס אמצע מיוחד, הדלקת נרות חנוכה וחלוקת שי אישי..." class="stop-desc w-full p-2 rounded-xl border border-slate-200 font-bold bg-white text-xs text-slate-800">
+              <input type="text" value="${st.description || ''}" oninput="onAdminTargetOrStopChanged()" placeholder="למשל: כנס אמצע מיוחד, הדלקת נרות חנוכה וחלוקת שי אישי..." class="stop-desc w-full p-2 rounded-xl border border-slate-200 font-bold bg-white text-xs text-slate-800">
             </div>
           </div>
         `;
       }).join('');
+
+      renderAdminMountainPreview();
     }
 
     function onStopDateChanged(idx, isoDate) {
@@ -1830,6 +1973,7 @@
         const heb = App.getHebrewDateDetails(isoDate);
         hebElem.value = `${heb.dayName}, ${heb.shortHebrew}`;
       }
+      renderAdminMountainPreview();
     }
 
     function addNewJourneyStopRow() {
@@ -1851,6 +1995,90 @@
       if (adminState.config?.trailStops) {
         adminState.config.trailStops.splice(idx, 1);
         renderJourneyStopsEditor();
+      }
+    }
+
+    // --- Save Only Targets (Points) to Supabase ---
+    async function saveAdminTargetsOnly() {
+      const btn = document.getElementById('btnSaveTargetsOnly');
+      const txt = document.getElementById('btnSaveTargetsOnlyText');
+      if (txt) txt.textContent = 'שומר יעדים ב-Supabase...';
+
+      adminState.config.targets = {
+        min: {
+          name: document.getElementById('targetMinNameInput')?.value || 'יעד 1',
+          points: Number(document.getElementById('targetMinPointsInput')?.value) || 70,
+          reward: document.getElementById('targetMinRewardInput')?.value || ''
+        },
+        mid: {
+          name: document.getElementById('targetMidNameInput')?.value || 'יעד 2',
+          points: Number(document.getElementById('targetMidPointsInput')?.value) || 100,
+          reward: document.getElementById('targetMidRewardInput')?.value || ''
+        },
+        max: {
+          name: document.getElementById('targetMaxNameInput')?.value || 'הפסגה',
+          points: Number(document.getElementById('targetMaxPointsInput')?.value) || 130,
+          reward: document.getElementById('targetMaxRewardInput')?.value || ''
+        }
+      };
+
+      const extraRows = document.querySelectorAll('#extraTargetsListContainer > div');
+      adminState.config.extraTargets = Array.from(extraRows).map((row, i) => ({
+        name: row.querySelector('.extra-target-name')?.value || `יעד ${i + 4}`,
+        points: Number(row.querySelector('.extra-target-points')?.value) || 150,
+        reward: row.querySelector('.extra-target-reward')?.value || ''
+      }));
+
+      const ok = await Db.saveConfig(adminState.config);
+      if (ok) {
+        if (txt) txt.textContent = '✓ יעדי הניקוד נשמרו בהצלחה!';
+        if (btn) btn.classList.replace('bg-indigo-600', 'bg-emerald-600');
+        App.showToast('יעדי הניקוד נשמרו בהצלחה ב-Supabase! 🎯', '✓');
+        renderAdminMountainPreview();
+        setTimeout(() => {
+          if (txt) txt.textContent = 'שמור יעדי ניקוד כעת ב-Supabase';
+          if (btn) btn.classList.replace('bg-emerald-600', 'bg-indigo-600');
+        }, 2500);
+      } else {
+        if (txt) txt.textContent = 'שגיאה בשמירה!';
+        App.showToast('שגיאה בשמירת יעדים לשרת', '⚠️');
+      }
+    }
+
+    // --- Save Only Journey Stops (Dates) to Supabase ---
+    async function saveAdminStopsOnly() {
+      const btn = document.getElementById('btnSaveStopsOnly');
+      const txt = document.getElementById('btnSaveStopsOnlyText');
+      if (txt) txt.textContent = 'שומר עצירות ב-Supabase...';
+
+      const stopRows = document.querySelectorAll('.journey-stop-row');
+      adminState.config.trailStops = Array.from(stopRows).map((row, i) => {
+        const iso = row.querySelector('.stop-iso-date')?.value || '';
+        const heb = row.querySelector('.stop-heb-date')?.value || '';
+        const isAnnounced = row.querySelector('.stop-is-announced')?.checked ?? true;
+        return {
+          id: adminState.config.trailStops?.[i]?.id || `stop_${Date.now()}_${i}`,
+          title: row.querySelector('.stop-title')?.value || `עצירה ${i + 1}`,
+          isoDate: iso,
+          dateLabel: heb || (iso ? App.formatHebrewDateBadge(iso) : 'תאריך יוכרז בהמשך'),
+          description: row.querySelector('.stop-desc')?.value || '',
+          isDecided: isAnnounced
+        };
+      });
+
+      const ok = await Db.saveConfig(adminState.config);
+      if (ok) {
+        if (txt) txt.textContent = '✓ תחנות העצירה נשמרו בהצלחה!';
+        if (btn) btn.classList.replace('bg-indigo-600', 'bg-emerald-600');
+        App.showToast('תחנות העצירה נשמרו בהצלחה ב-Supabase! 📅', '✓');
+        renderAdminMountainPreview();
+        setTimeout(() => {
+          if (txt) txt.textContent = 'שמור תחנות עצירה כעת ב-Supabase';
+          if (btn) btn.classList.replace('bg-emerald-600', 'bg-indigo-600');
+        }, 2500);
+      } else {
+        if (txt) txt.textContent = 'שגיאה בשמירה!';
+        App.showToast('שגיאה בשמירת תחנות עצירה לשרת', '⚠️');
       }
     }
 
@@ -1919,6 +2147,7 @@
       if (ok) {
         App.showToast('כל היעדים והעצירות נשמרו בהצלחה בענן Supabase! 💾', '✓');
         renderAdminInteractiveCalendarGrid();
+        renderAdminMountainPreview();
       } else {
         App.showToast('שגיאה בשמירה ל-Supabase, אנא נסה שוב', '⚠️');
       }

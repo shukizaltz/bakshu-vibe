@@ -318,16 +318,20 @@
             <p class="text-xs text-indigo-200 mt-1">"לא משנה איפה נעצור – השנה מטפסים ביחד עד לפסגה!"</p>
           </div>
 
-          <!-- Actions: Mode Toggle & Video -->
+          <!-- Actions: 3-Mode Mountain Switcher -->
           <div class="flex items-center gap-2 flex-wrap shrink-0">
             <div class="inline-flex p-1 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 shrink-0">
-              <button id="graphBtnGeneral" onclick="switchGraphMode('collective')" class="px-3.5 py-1.5 rounded-xl font-black text-xs transition bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm flex items-center gap-1.5">
-                <span>🏔️</span>
-                <span>גרף כללי של כל הישיבה</span>
+              <button id="graphBtnPersonal" onclick="switchGraphMode('personal')" class="px-3 py-1.5 rounded-xl font-black text-xs transition bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm flex items-center gap-1">
+                <span>🧗‍♂️</span>
+                <span>המסע שלי</span>
               </button>
-              <button id="graphBtnIndividual" onclick="switchGraphMode('individual')" class="px-3.5 py-1.5 rounded-xl font-bold text-xs text-white/80 hover:text-white transition flex items-center gap-1.5">
+              <button id="graphBtnCollective" onclick="switchGraphMode('collective')" class="px-3 py-1.5 rounded-xl font-bold text-xs text-white/80 hover:text-white transition flex items-center gap-1">
                 <span>👥</span>
-                <span>עמודות אישיות</span>
+                <span>כל הבחורים על ההר</span>
+              </button>
+              <button id="graphBtnIndividual" onclick="switchGraphMode('individual')" class="px-3 py-1.5 rounded-xl font-bold text-xs text-white/80 hover:text-white transition flex items-center gap-1">
+                <span>📊</span>
+                <span>טבלת דירוג</span>
               </button>
             </div>
           </div>
@@ -358,6 +362,15 @@
           <!-- Populated dynamically by renderTopProgressGraph() -->
         </div>
 
+        <!-- Interactive Waypoint Hint -->
+        <div class="flex items-center justify-between text-[11px] text-indigo-200/80 px-3 py-1.5 bg-white/5 rounded-xl border border-white/5 my-2">
+          <span class="flex items-center gap-1.5 font-bold">
+            <span>💡</span>
+            <span>לחץ על כל דגל עצירה (📍) או יעד (🎁) על גבי ההר לצפייה בפרטי התחנה ובמי שכבר כבש אותה!</span>
+          </span>
+          <span class="text-amber-300 font-black shrink-0">👆 אינטראקטיבי</span>
+        </div>
+
         <!-- Axis A: Mystery Personal Gift Tiers -->
         <div class="mt-4 pt-3 border-t border-white/10">
           <div class="flex items-center justify-between text-xs mb-2">
@@ -369,19 +382,19 @@
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-center">
-            <div class="p-3 rounded-2xl bg-white/5 border border-amber-400/30 text-xs hover:bg-white/10 transition">
+            <div class="p-3 rounded-2xl bg-white/5 border border-amber-400/30 text-xs hover:bg-white/10 transition cursor-pointer hover:scale-[1.02] transition-transform" onclick="openMilestoneDetailsModal('target', 'min')">
               <div class="font-black text-amber-300 text-xs" id="giftTier1Title">🥉 יעד אישי 1 (ארד)</div>
               <div class="font-mono font-black text-white text-base mt-1" id="giftTier1Pts">70 נק׳</div>
               <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier1Status">נצברו 0 נק׳</div>
             </div>
 
-            <div class="p-3 rounded-2xl bg-white/5 border border-slate-300/30 text-xs hover:bg-white/10 transition">
+            <div class="p-3 rounded-2xl bg-white/5 border border-slate-300/30 text-xs hover:bg-white/10 transition cursor-pointer hover:scale-[1.02] transition-transform" onclick="openMilestoneDetailsModal('target', 'mid')">
               <div class="font-black text-slate-200 text-xs" id="giftTier2Title">🥈 יעד אישי 2 (כסף)</div>
               <div class="font-mono font-black text-white text-base mt-1" id="giftTier2Pts">100 נק׳</div>
               <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier2Status">עוד 100 נק׳</div>
             </div>
 
-            <div class="p-3 rounded-2xl bg-white/5 border border-indigo-400/30 text-xs hover:bg-white/10 transition">
+            <div class="p-3 rounded-2xl bg-white/5 border border-indigo-400/30 text-xs hover:bg-white/10 transition cursor-pointer hover:scale-[1.02] transition-transform" onclick="openMilestoneDetailsModal('target', 'max')">
               <div class="font-black text-indigo-300 text-xs" id="giftTier3Title">🥇 יעד אישי 3 (זהב)</div>
               <div class="font-mono font-black text-white text-base mt-1" id="giftTier3Pts">130 נק׳</div>
               <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier3Status">עוד 130 נק׳</div>
@@ -644,6 +657,65 @@
 
         <button onclick="handleSavePassword()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
           שמור סיסמה חדשה
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL 5: MILESTONE & STOP DETAILS (חלון תחנת עצירה / יעד)    -->
+  <!-- ========================================================= -->
+  <div id="milestoneDetailsModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="bg-[#0D153A] border border-indigo-500/40 rounded-3xl max-w-md w-full p-6 text-white space-y-4 shadow-2xl relative text-right">
+      <button onclick="closeMilestoneDetailsModal()" class="absolute top-4 left-4 text-slate-400 hover:text-white text-xl">✕</button>
+      
+      <!-- Icon & Category Badge -->
+      <div class="flex items-center gap-3">
+        <div id="msModalIconBox" class="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-2xl shadow-inner shrink-0">
+          🎯
+        </div>
+        <div>
+          <span id="msModalBadge" class="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 uppercase tracking-wider">יעד ניקוד</span>
+          <h3 id="msModalTitle" class="text-base sm:text-lg font-black text-white mt-1">שם היעד</h3>
+        </div>
+      </div>
+
+      <!-- Info & Date/Points Banner -->
+      <div id="msModalDatePointsBanner" class="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-xs flex items-center justify-between font-bold">
+        <!-- Injected via JS -->
+      </div>
+
+      <!-- Description / Prize -->
+      <div class="space-y-1.5">
+        <label class="block text-[11px] font-bold text-indigo-300">מה מחכה בתחנה זו:</label>
+        <div id="msModalDesc" class="p-3 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-200 leading-relaxed font-semibold">
+          --
+        </div>
+      </div>
+
+      <!-- Current Student Progress -->
+      <div id="msModalProgressSection" class="p-4 rounded-2xl bg-gradient-to-br from-indigo-950/70 to-slate-900 border border-indigo-500/30 space-y-2 text-xs">
+        <!-- Injected via JS -->
+      </div>
+
+      <!-- Who Already Reached This Milestone -->
+      <div id="msModalAchieversSection" class="space-y-2 pt-1 border-t border-white/10">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold text-indigo-200 flex items-center gap-1.5">
+            <span>👥</span>
+            <span>בחורים שכבר כבשו יעד זה:</span>
+          </span>
+          <span id="msModalAchieversCount" class="text-[11px] font-mono font-bold text-amber-300">0 בחורים</span>
+        </div>
+        <div id="msModalAchieversList" class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto custom-scroll p-1">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- Action Button (Calendar sync or Close) -->
+      <div id="msModalActionContainer" class="pt-2 flex items-center justify-end gap-2">
+        <button onclick="closeMilestoneDetailsModal()" class="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-bold text-xs transition">
+          סגור
         </button>
       </div>
     </div>
@@ -1434,17 +1506,17 @@
     // --- Mountain Graph & Scenic SVG Milestones ---
     function switchGraphMode(mode) {
       state.graphMode = mode;
-      const btnGen = document.getElementById('graphBtnGeneral');
+      const btnPer = document.getElementById('graphBtnPersonal');
+      const btnCol = document.getElementById('graphBtnCollective');
       const btnInd = document.getElementById('graphBtnIndividual');
-      if (btnGen && btnInd) {
-        if (mode === 'collective') {
-          btnGen.className = 'px-3.5 py-1.5 rounded-xl font-black text-xs transition bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm flex items-center gap-1.5';
-          btnInd.className = 'px-3.5 py-1.5 rounded-xl font-bold text-xs text-white/80 hover:text-white transition flex items-center gap-1.5';
-        } else {
-          btnInd.className = 'px-3.5 py-1.5 rounded-xl font-black text-xs transition bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-sm flex items-center gap-1.5';
-          btnGen.className = 'px-3.5 py-1.5 rounded-xl font-bold text-xs text-white/80 hover:text-white transition flex items-center gap-1.5';
-        }
-      }
+      
+      const activeClass = 'px-3 py-1.5 rounded-xl font-black text-xs transition bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-sm flex items-center gap-1';
+      const inactiveClass = 'px-3 py-1.5 rounded-xl font-bold text-xs text-white/80 hover:text-white transition flex items-center gap-1';
+
+      if (btnPer) btnPer.className = (mode === 'personal') ? activeClass : inactiveClass;
+      if (btnCol) btnCol.className = (mode === 'collective') ? activeClass : inactiveClass;
+      if (btnInd) btnInd.className = (mode === 'individual') ? activeClass : inactiveClass;
+
       renderProgressGraph();
     }
 
@@ -1454,8 +1526,14 @@
       const avgScore = Number((totalAll / studentCount).toFixed(1));
       const currentScore = state.currentStudent ? (Number(state.currentStudent.score) || 0) : 0;
       
-      const summitTarget = 140;
-      const climbScore = state.graphMode === 'individual' ? currentScore : Math.max(avgScore, currentScore);
+      const targets = state.config?.targets || {
+        min: { points: 70, name: 'יעד 1 – כניסה להגרלה', reward: 'כניסה להגרלת ספרים ושוברים' },
+        mid: { points: 100, name: 'יעד 2 – פרס כספי', reward: '300 ₪ במזומן מובטח' },
+        max: { points: 130, name: 'הפסגה – נסיעה ופרס ענק', reward: 'מסע הפסגה ונסיעה VIP' }
+      };
+
+      const summitTarget = Number(targets.max?.points) || 130;
+      const climbScore = (state.graphMode === 'personal' || state.graphMode === 'individual') ? currentScore : Math.max(avgScore, currentScore);
       const progressPct = Math.min(100, Math.round((climbScore / summitTarget) * 100));
 
       const mTotal = document.getElementById('mountainTotalScore');
@@ -1466,26 +1544,29 @@
 
       const mNextStop = document.getElementById('mountainNextStopPts');
       if (mNextStop) {
-        if (climbScore >= 140) mNextStop.textContent = '🏔️ הגענו לפסגה!';
-        else if (climbScore >= 110) mNextStop.textContent = 'הפסגה (עוד ' + (140 - Math.round(climbScore)) + ' נק׳)';
-        else if (climbScore >= 75) mNextStop.textContent = 'עצירה 3 (עוד ' + (110 - Math.round(climbScore)) + ' נק׳)';
-        else if (climbScore >= 35) mNextStop.textContent = 'עצירה 2 (עוד ' + (75 - Math.round(climbScore)) + ' נק׳)';
-        else mNextStop.textContent = 'ט׳ כסליו (עצירה 1)';
+        const stops = state.config?.trailStops || [];
+        const nextSt = stops.find(st => st.isoDate && new Date(st.isoDate) >= new Date(new Date().toDateString()));
+        if (nextSt) {
+          mNextStop.textContent = `${nextSt.title} (${nextSt.dateLabel || ''})`;
+        } else if (stops.length > 0) {
+          mNextStop.textContent = `${stops[0].title} (${stops[0].dateLabel || ''})`;
+        } else {
+          mNextStop.textContent = 'יוכרז בהמשך';
+        }
       }
 
       const mNextGift = document.getElementById('mountainNextGiftPts');
       if (mNextGift) {
-        if (currentScore >= 130) mNextGift.textContent = '👑 השגת את יעד הפסגה!';
-        else if (currentScore >= 100) mNextGift.textContent = 'זהב (עוד ' + (130 - currentScore) + ' נק׳)';
-        else if (currentScore >= 70) mNextGift.textContent = 'כסף (עוד ' + (100 - currentScore) + ' נק׳)';
-        else mNextGift.textContent = 'ארד (עוד ' + (70 - currentScore) + ' נק׳)';
+        if (currentScore >= (targets.max?.points || 130)) {
+          mNextGift.textContent = '👑 השגת את יעד הפסגה!';
+        } else if (currentScore >= (targets.mid?.points || 100)) {
+          mNextGift.textContent = `${targets.max?.name || 'הפסגה'} (עוד ${(targets.max?.points || 130) - currentScore} נק׳)`;
+        } else if (currentScore >= (targets.min?.points || 70)) {
+          mNextGift.textContent = `${targets.mid?.name || 'יעד 2'} (עוד ${(targets.mid?.points || 100) - currentScore} נק׳)`;
+        } else {
+          mNextGift.textContent = `${targets.min?.name || 'יעד 1'} (עוד ${(targets.min?.points || 70) - currentScore} נק׳)`;
+        }
       }
-
-      const targets = state.config?.targets || {
-        min: { points: 70, name: 'יעד 1 – כניסה להגרלה', reward: 'כניסה להגרלת ספרים ושוברים' },
-        mid: { points: 100, name: 'יעד 2 – פרס כספי', reward: '300 ₪ במזומן מובטח' },
-        max: { points: 130, name: 'הפסגה – נסיעה ופרס ענק', reward: 'מסע הפסגה ונסיעה VIP' }
-      };
 
       // Update 3 Mystery Gift Tiers Status (by Points)
       const g1T = document.getElementById('giftTier1Title');
@@ -1527,23 +1608,26 @@
       if (!container) return;
 
       const targets = state.config?.targets || {
-        min: { points: 70, name: 'יעד 1 – כניסה להגרלה' },
-        mid: { points: 100, name: 'יעד 2 – פרס כספי' },
-        max: { points: 130, name: 'הפסגה – נסיעה ופרס ענק' }
+        min: { points: 70, name: 'יעד 1 – כניסה להגרלה', reward: 'כניסה להגרלת ספרים ושוברים' },
+        mid: { points: 100, name: 'יעד 2 – פרס כספי', reward: '300 ₪ במזומן מובטח' },
+        max: { points: 130, name: 'הפסגה – נסיעה ופרס ענק', reward: 'מסע הפסגה ונסיעה VIP' }
       };
 
+      const summit = Number(targets.max?.points) || 130;
+
+      // MODE 1: INDIVIDUAL BARS (דירוג עמודות אישיות)
       if (state.graphMode === 'individual') {
         const sorted = [...state.students].sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
         container.innerHTML = `
           <div class="space-y-3 p-2">
             <div class="flex items-center justify-between text-xs font-bold text-indigo-200 pb-2 border-b border-white/10">
-              <span>טיפוס אישי של בחורי הישיבה אל הפסגה (140 נק׳)</span>
+              <span>טיפוס אישי של בחורי הישיבה אל הפסגה (${summit} נק׳)</span>
               <span>${sorted.length} בחורים</span>
             </div>
             <div class="space-y-2.5 max-h-[300px] overflow-y-auto custom-scroll">
               ${sorted.map((st, idx) => {
                 const sScore = Number(st.score) || 0;
-                const pct = Math.min(100, Math.round((sScore / 140) * 100));
+                const pct = Math.min(100, Math.round((sScore / summit) * 100));
                 const isMe = state.currentStudent && String(state.currentStudent.id) === String(st.id);
                 return `
                   <div class="p-2.5 rounded-xl ${isMe ? 'bg-indigo-900/60 border border-amber-400/50' : 'bg-white/5 border border-white/10'} flex flex-col gap-1.5">
@@ -1566,8 +1650,7 @@
         return;
       }
 
-      // Dynamic Summit Target & Stops from Database Config
-      const summit = Number(targets.max?.points) || 130;
+      // MODES 2 & 3: SCENIC MOUNTAIN TRAIL (אישי 🧗‍♂️ או הר הישיבה 👥)
       const fraction = Math.min(1, Math.max(0, climbScore / summit));
       const bx = Math.round(80 + fraction * 720);
       const by = Math.round(220 - fraction * 175);
@@ -1580,6 +1663,28 @@
       const s1Label = s1.title + (s1.dateLabel ? ` (${s1.dateLabel})` : '');
       const s2Label = s2.title + (s2.dateLabel ? ` (${s2.dateLabel})` : '');
       const s3Label = s3.title + (s3.dateLabel ? ` (${s3.dateLabel})` : '');
+
+      // Render collective student pins if in 'collective' mode
+      let collectivePins = '';
+      if (state.graphMode === 'collective') {
+        collectivePins = state.students.map((st, idx) => {
+          const sScore = Number(st.score) || 0;
+          const sFrac = Math.min(1, Math.max(0, sScore / summit));
+          const sx = Math.round(80 + sFrac * 720);
+          const sy = Math.round(220 - sFrac * 175);
+          const isMe = state.currentStudent && String(state.currentStudent.id) === String(st.id);
+          const jitterY = ((idx % 3) - 1) * 12;
+          const fName = (st.full_name || st.name || '').split(' ')[0] || `בחור ${idx+1}`;
+
+          return `
+            <g transform="translate(${sx}, ${sy + jitterY})" class="cursor-pointer group" onclick="openStudentClimbPopover('${st.id}')">
+              <circle cx="0" cy="0" r="10" fill="${isMe ? '#F59E0B' : '#0284C7'}" stroke="#FFFFFF" stroke-width="2" class="group-hover:scale-125 transition-transform"/>
+              <text x="0" y="3.5" text-anchor="middle" font-size="8" fill="#FFFFFF" font-weight="900" font-family="Outfit">${sScore}</text>
+              <text x="0" y="-14" text-anchor="middle" font-size="9" fill="${isMe ? '#FEF08A' : '#E0F2FE'}" font-weight="bold" font-family="Heebo">${fName}${isMe ? ' ⭐' : ''}</text>
+            </g>
+          `;
+        }).join('');
+      }
 
       container.innerHTML = `
         <svg viewBox="0 0 900 270" class="w-full h-auto overflow-visible select-none" xmlns="http://www.w3.org/2000/svg">
@@ -1626,50 +1731,204 @@
           <!-- Climbed Trail Portion (Glowing) -->
           <path d="M 80 220 Q 240 190, 400 150 T 800 45" fill="none" stroke="url(#trailGlow)" stroke-width="4.5" stroke-linecap="round" filter="url(#glowEffect)" stroke-dasharray="800" stroke-dashoffset="${Math.max(0, 800 - fraction * 800)}"/>
 
-          <!-- Waypoint 1: Stop 1 -->
-          <g transform="translate(190, 188)">
-            <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#38BDF8" stroke-width="2.5"/>
+          <!-- Waypoint 1: Stop 1 (Clickable) -->
+          <g transform="translate(190, 188)" class="cursor-pointer group" onclick="openMilestoneDetailsModal('stop', 0)">
+            <circle cx="0" cy="0" r="12" fill="#38BDF8" opacity="0.2" class="animate-ping"/>
+            <circle cx="0" cy="0" r="7" fill="#0A1138" stroke="#38BDF8" stroke-width="2.5" class="group-hover:scale-125 transition-transform"/>
             <text x="0" y="-12" text-anchor="middle" fill="#BAE6FD" font-size="10" font-weight="800" font-family="Heebo">📍 ${s1Label}</text>
           </g>
 
-          <!-- Waypoint 2: Tier 1 Target -->
-          <g transform="translate(350, 155)">
-            <circle cx="0" cy="0" r="7" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5"/>
+          <!-- Waypoint 2: Tier 1 Target (Clickable) -->
+          <g transform="translate(350, 155)" class="cursor-pointer group" onclick="openMilestoneDetailsModal('target', 'min')">
+            <circle cx="0" cy="0" r="13" fill="#F59E0B" opacity="0.2" class="animate-ping"/>
+            <circle cx="0" cy="0" r="8" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5" class="group-hover:scale-125 transition-transform"/>
             <text x="0" y="-12" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 ${targets.min.name} (${targets.min.points})</text>
           </g>
 
-          <!-- Waypoint 3: Stop 2 -->
-          <g transform="translate(480, 130)">
-            <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#94A3B8" stroke-width="2"/>
+          <!-- Waypoint 3: Stop 2 (Clickable) -->
+          <g transform="translate(480, 130)" class="cursor-pointer group" onclick="openMilestoneDetailsModal('stop', 1)">
+            <circle cx="0" cy="0" r="7" fill="#0A1138" stroke="#94A3B8" stroke-width="2" class="group-hover:scale-125 transition-transform"/>
             <text x="0" y="-12" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="800" font-family="Heebo">🚩 ${s2Label}</text>
           </g>
 
-          <!-- Waypoint 4: Tier 2 Target -->
-          <g transform="translate(610, 100)">
-            <circle cx="0" cy="0" r="7" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5"/>
+          <!-- Waypoint 4: Tier 2 Target (Clickable) -->
+          <g transform="translate(610, 100)" class="cursor-pointer group" onclick="openMilestoneDetailsModal('target', 'mid')">
+            <circle cx="0" cy="0" r="13" fill="#F59E0B" opacity="0.2" class="animate-ping"/>
+            <circle cx="0" cy="0" r="8" fill="#0A1138" stroke="#F59E0B" stroke-width="2.5" class="group-hover:scale-125 transition-transform"/>
             <text x="0" y="-12" text-anchor="middle" fill="#FDE68A" font-size="10" font-weight="900" font-family="Heebo">🎁 ${targets.mid.name} (${targets.mid.points})</text>
           </g>
 
-          <!-- Waypoint 5: Stop 3 -->
-          <g transform="translate(710, 75)">
-            <circle cx="0" cy="0" r="6" fill="#0A1138" stroke="#94A3B8" stroke-width="2"/>
+          <!-- Waypoint 5: Stop 3 (Clickable) -->
+          <g transform="translate(710, 75)" class="cursor-pointer group" onclick="openMilestoneDetailsModal('stop', 2)">
+            <circle cx="0" cy="0" r="7" fill="#0A1138" stroke="#94A3B8" stroke-width="2" class="group-hover:scale-125 transition-transform"/>
             <text x="0" y="-12" text-anchor="middle" fill="#CBD5E1" font-size="10" font-weight="800" font-family="Heebo">🚩 ${s3Label}</text>
           </g>
 
-          <!-- Summit: Tier 3 Target -->
-          <g transform="translate(800, 45)">
-            <circle cx="0" cy="0" r="9" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2.5"/>
-            <text x="0" y="-15" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">🏔️ ${targets.max.name} (${summit}) 👑</text>
+          <!-- Summit: Tier 3 Target (Clickable) -->
+          <g transform="translate(800, 45)" class="cursor-pointer group" onclick="openMilestoneDetailsModal('target', 'max')">
+            <circle cx="0" cy="0" r="16" fill="#F59E0B" opacity="0.3" class="animate-ping"/>
+            <circle cx="0" cy="0" r="10" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2.5" class="group-hover:scale-125 transition-transform"/>
+            <text x="0" y="-16" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">🏔️ ${targets.max.name} (${summit}) 👑</text>
           </g>
 
-          <!-- Climber Beacon -->
-          <g transform="translate(${bx}, ${by})">
-            <circle cx="0" cy="0" r="14" fill="#10B981" opacity="0.3" class="animate-ping"/>
-            <circle cx="0" cy="0" r="8" fill="#10B981" stroke="#FFFFFF" stroke-width="2"/>
-            <text x="0" y="-14" text-anchor="middle" font-size="16">🧗‍♂️</text>
-          </g>
+          <!-- Collective Climbers (in collective mode) -->
+          ${collectivePins}
+
+          <!-- Personal Climber Beacon (in personal mode) -->
+          ${state.graphMode !== 'collective' ? `
+            <g transform="translate(${bx}, ${by})">
+              <circle cx="0" cy="0" r="16" fill="#10B981" opacity="0.3" class="animate-ping"/>
+              <circle cx="0" cy="0" r="9" fill="#10B981" stroke="#FFFFFF" stroke-width="2.5"/>
+              <text x="0" y="-15" text-anchor="middle" font-size="18">🧗‍♂️</text>
+            </g>
+          ` : ''}
         </svg>
       `;
+    }
+
+    // --- Interactive Milestone & Stop Details Modal Handlers ---
+    function openMilestoneDetailsModal(type, keyOrIdx) {
+      const modal = document.getElementById('milestoneDetailsModal');
+      if (!modal) return;
+
+      const iconBox = document.getElementById('msModalIconBox');
+      const badge = document.getElementById('msModalBadge');
+      const title = document.getElementById('msModalTitle');
+      const banner = document.getElementById('msModalDatePointsBanner');
+      const desc = document.getElementById('msModalDesc');
+      const prog = document.getElementById('msModalProgressSection');
+      const achSection = document.getElementById('msModalAchieversSection');
+      const achCount = document.getElementById('msModalAchieversCount');
+      const achList = document.getElementById('msModalAchieversList');
+      const actContainer = document.getElementById('msModalActionContainer');
+
+      const currentScore = state.currentStudent ? (Number(state.currentStudent.score) || 0) : 0;
+      const targets = state.config?.targets || {};
+      const stops = state.config?.trailStops || [];
+
+      if (type === 'target') {
+        const tg = targets[keyOrIdx] || (keyOrIdx === 'min' ? { points: 70, name: 'יעד 1', reward: 'כניסה להגרלה' } : keyOrIdx === 'mid' ? { points: 100, name: 'יעד 2', reward: 'מלגת 300 ₪' } : { points: 130, name: 'יעד הפסגה', reward: 'מסע הפסגה ונסיעה VIP' });
+        const reqPts = Number(tg.points) || 100;
+        const isAchieved = currentScore >= reqPts;
+
+        if (iconBox) iconBox.innerHTML = keyOrIdx === 'max' ? '👑' : keyOrIdx === 'mid' ? '🥈' : '🥉';
+        if (badge) {
+          badge.textContent = 'יעד ניקוד אישי';
+          badge.className = 'text-[10px] font-black px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 uppercase tracking-wider';
+        }
+        if (title) title.textContent = tg.name || 'יעד ניקוד';
+        
+        if (banner) {
+          banner.innerHTML = `
+            <span class="text-amber-300">רף נדרש להשגה:</span>
+            <span class="font-mono text-base font-black text-white">${reqPts} נקודות</span>
+          `;
+        }
+
+        if (desc) {
+          desc.textContent = tg.reward || 'פרס אישי מיוחד למי שיעמוד ביעד זה!';
+        }
+
+        if (prog) {
+          const pct = Math.min(100, Math.round((currentScore / reqPts) * 100));
+          prog.innerHTML = `
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-300">הסטטוס האישי שלך:</span>
+              <span class="font-black ${isAchieved ? 'text-emerald-400' : 'text-amber-300'}">${isAchieved ? 'היעד נכבש! 🏆' : `צברת ${currentScore}/${reqPts} נק׳`}</span>
+            </div>
+            <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-500 ${isAchieved ? 'bg-emerald-400' : 'bg-gradient-to-r from-amber-400 to-amber-500'}" style="width: ${Math.max(4, pct)}%"></div>
+            </div>
+            <p class="text-[11px] ${isAchieved ? 'text-emerald-300 font-bold' : 'text-slate-400'}">
+              ${isAchieved ? '🎉 ברכותינו! הגעת ליעד זה והבטחת את מקומך בפרס!' : `עוד ${Math.max(0, reqPts - currentScore)} נקודות ואתה כובש את היעד!`}
+            </p>
+          `;
+        }
+
+        // List of achievers
+        const achievers = state.students.filter(s => (Number(s.score) || 0) >= reqPts);
+        if (achCount) achCount.textContent = `${achievers.length} בחורים`;
+        if (achList) {
+          if (achievers.length === 0) {
+            achList.innerHTML = '<span class="text-slate-500 text-[11px]">אף בחור עדיין לא הגיע ליעד זה. תהיה הראשון!</span>';
+          } else {
+            achList.innerHTML = achievers.map(st => `
+              <span class="px-2.5 py-1 rounded-xl bg-white/10 border border-white/10 text-[11px] font-bold text-slate-200">
+                ${st.full_name || st.name} (${st.score} נק׳)
+              </span>
+            `).join('');
+          }
+        }
+
+        if (actContainer) {
+          actContainer.innerHTML = `
+            <button onclick="closeMilestoneDetailsModal()" class="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-bold text-xs transition">
+              סגור
+            </button>
+          `;
+        }
+      } else {
+        // STOP
+        const st = stops[keyOrIdx] || { title: `עצירה ${Number(keyOrIdx) + 1}`, dateLabel: 'יוכרז בהמשך', description: '' };
+        
+        if (iconBox) iconBox.innerHTML = '📅';
+        if (badge) {
+          badge.textContent = 'תחנת עצירה ביומן';
+          badge.className = 'text-[10px] font-black px-2.5 py-0.5 rounded-full bg-sky-400 text-slate-950 uppercase tracking-wider';
+        }
+        if (title) title.textContent = st.title || 'עצירת מסע';
+
+        if (banner) {
+          banner.innerHTML = `
+            <span class="text-sky-300">מועד העצירה:</span>
+            <span class="font-bold text-sm text-white">${st.dateLabel || (st.isoDate ? App.formatHebrewDateBadge(st.isoDate) : 'תאריך יוכרז בהמשך')}</span>
+          `;
+        }
+
+        if (desc) {
+          desc.textContent = st.description || 'אירוע תחנה מיוחד של הישיבה וחלוקת שי ביניים!';
+        }
+
+        if (prog) {
+          prog.innerHTML = `
+            <div class="flex items-center gap-2 text-slate-300">
+              <span class="text-base">📍</span>
+              <span>תחנה זו מתקיימת בתאריך המצוין. סמן ביומן כדי לא לפספס!</span>
+            </div>
+          `;
+        }
+
+        if (achSection) achSection.classList.add('hidden');
+
+        if (actContainer) {
+          actContainer.innerHTML = `
+            ${st.isoDate ? `
+              <button onclick="openGoogleCalendarForStop(${keyOrIdx})" class="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 font-black text-xs transition flex items-center gap-1.5 shadow-sm">
+                <span>📅</span><span>שמור ב-Google Calendar</span>
+              </button>
+            ` : ''}
+            <button onclick="closeMilestoneDetailsModal()" class="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 font-bold text-xs transition">
+              סגור
+            </button>
+          `;
+        }
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeMilestoneDetailsModal() {
+      const modal = document.getElementById('milestoneDetailsModal');
+      if (modal) modal.classList.add('hidden');
+      const achSection = document.getElementById('msModalAchieversSection');
+      if (achSection) achSection.classList.remove('hidden');
+    }
+
+    function openStudentClimbPopover(studentId) {
+      const st = state.students.find(s => String(s.id) === String(studentId));
+      if (!st) return;
+      const sScore = Number(st.score) || 0;
+      showToast(`${st.full_name || st.name} נמצא כעת ב-${sScore} נקודות במעלה ההר! 🧗‍♂️`, '⛰️');
     }
 
     function renderJourneyStops() {
@@ -1683,7 +1942,7 @@
       ];
 
       container.innerHTML = stops.map((st, i) => `
-        <div class="p-4 rounded-2xl ${st.isDecided ? 'bg-amber-50/80 border border-amber-300 shadow-xs' : 'bg-slate-50 border border-slate-200'} space-y-2">
+        <div onclick="openMilestoneDetailsModal('stop', ${i})" class="p-4 rounded-2xl ${st.isDecided ? 'bg-amber-50/80 border border-amber-300 shadow-xs' : 'bg-slate-50 border border-slate-200'} space-y-2 cursor-pointer hover:border-indigo-400 hover:shadow-md transition-all">
           <div class="flex items-center justify-between gap-2">
             <span class="text-xs font-black text-slate-900 flex items-center gap-1.5">
               <span>${st.isDecided ? '🚩' : '⏳'}</span>
@@ -1697,12 +1956,15 @@
             <span>📅</span>
             <span>${st.dateLabel || (st.isoDate && window.App?.formatHebrewDateBadge ? App.formatHebrewDateBadge(st.isoDate) : (st.isoDate || 'תאריך יוכרז בהמשך'))}</span>
           </div>
-          ${st.description ? `<p class="text-[11px] text-slate-600 leading-relaxed bg-white/80 p-2 rounded-lg border border-slate-200/60">${st.description}</p>` : ''}
-          ${st.isDecided && st.isoDate ? `
-            <button onclick="openGoogleCalendarForStop(${i})" class="w-full mt-2 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 font-bold text-[11px] transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer">
-              <span>📅</span><span>שמור ב-Google Calendar</span>
-            </button>
-          ` : ''}
+          ${st.description ? `<p class="text-[11px] text-slate-600 leading-relaxed bg-white/80 p-2 rounded-lg border border-slate-200/60 line-clamp-2">${st.description}</p>` : ''}
+          <div class="pt-1 flex items-center justify-between text-[11px] text-indigo-600 font-bold">
+            <span>לחץ לצפייה בפרטים 👈</span>
+            ${st.isDecided && st.isoDate ? `
+              <span onclick="event.stopPropagation(); openGoogleCalendarForStop(${i})" class="px-2 py-0.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-[10px]">
+                📅 יומן Google
+              </span>
+            ` : ''}
+          </div>
         </div>
       `).join('');
     }
