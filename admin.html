@@ -258,61 +258,99 @@
           </div>
         </div>
 
-        <!-- 3 Main Targets -->
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="text-sm font-black text-slate-900">3 יעדי הפרסים המרכזיים</h4>
-            <button onclick="addNewCustomTargetPrompt()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold underline cursor-pointer">+ הוסף יעד נוסף</button>
+        <!-- 1. Targets by Points -->
+        <div class="space-y-4 pt-2">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+            <div>
+              <h4 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                <span>🎯</span>
+                <span>יעדי ניקוד ופרסים (לפי צבירת נקודות בלבד)</span>
+              </h4>
+              <p class="text-[11px] text-slate-500">היעדים נקבעים לפי סך הנקודות שכל בחור צובר במבצע (ללא תלות בתאריך בודד)</p>
+            </div>
+            <button type="button" onclick="addNewExtraTargetRow()" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200 cursor-pointer">
+              + הוסף יעד ניקוד נוסף
+            </button>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <!-- Bronze -->
-            <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-2">
-              <span class="text-xs font-black text-amber-900 block">🥉 יעד 1 (כניסה להגרלה)</span>
-              <input type="text" id="targetMinNameInput" class="w-full p-2 rounded-xl border border-amber-300 text-xs font-bold bg-white" placeholder="שם היעד">
+            <!-- Bronze Target -->
+            <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-2.5">
+              <span class="text-xs font-black text-amber-900 block">🥉 יעד 1 (רף כניסה)</span>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">שם היעד:</label>
+                <input type="text" id="targetMinNameInput" class="w-full p-2 rounded-xl border border-amber-300 text-xs font-bold bg-white" placeholder="שם היעד">
+              </div>
               <div class="flex items-center gap-1.5">
                 <input type="number" id="targetMinPointsInput" class="w-24 p-2 rounded-xl border border-amber-300 text-xs font-black text-center font-outfit bg-white">
                 <span class="text-xs font-bold text-amber-900">נקודות</span>
               </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">תיאור הפרס ביעד זה:</label>
+                <input type="text" id="targetMinRewardInput" class="w-full p-2 rounded-xl border border-amber-200 text-xs font-bold bg-white" placeholder="למשל: כניסה להגרלת ספרים ושוברים">
+              </div>
             </div>
 
-            <!-- Silver -->
-            <div class="p-4 rounded-2xl bg-slate-100 border border-slate-300 space-y-2">
-              <span class="text-xs font-black text-slate-800 block">🥈 יעד 2 (פרס כספי)</span>
-              <input type="text" id="targetMidNameInput" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold bg-white" placeholder="שם היעד">
+            <!-- Silver Target -->
+            <div class="p-4 rounded-2xl bg-slate-100 border border-slate-300 space-y-2.5">
+              <span class="text-xs font-black text-slate-800 block">🥈 יעד 2 (פרס כספי / ביניים)</span>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">שם היעד:</label>
+                <input type="text" id="targetMidNameInput" class="w-full p-2 rounded-xl border border-slate-300 text-xs font-bold bg-white" placeholder="שם היעד">
+              </div>
               <div class="flex items-center gap-1.5">
                 <input type="number" id="targetMidPointsInput" class="w-24 p-2 rounded-xl border border-slate-300 text-xs font-black text-center font-outfit bg-white">
                 <span class="text-xs font-bold text-slate-800">נקודות</span>
               </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">תיאור הפרס ביעד זה:</label>
+                <input type="text" id="targetMidRewardInput" class="w-full p-2 rounded-xl border border-slate-200 text-xs font-bold bg-white" placeholder="למשל: 300 ₪ במזומן מובטח לכל אחד">
+              </div>
             </div>
 
-            <!-- Gold -->
-            <div class="p-4 rounded-2xl bg-yellow-50 border border-yellow-300 space-y-2">
+            <!-- Gold Target -->
+            <div class="p-4 rounded-2xl bg-yellow-50 border border-yellow-300 space-y-2.5">
               <span class="text-xs font-black text-yellow-900 block">🥇 יעד הפסגה (פרס ענק)</span>
-              <input type="text" id="targetMaxNameInput" class="w-full p-2 rounded-xl border border-yellow-400 text-xs font-bold bg-white" placeholder="שם היעד">
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">שם היעד:</label>
+                <input type="text" id="targetMaxNameInput" class="w-full p-2 rounded-xl border border-yellow-400 text-xs font-bold bg-white" placeholder="שם היעד">
+              </div>
               <div class="flex items-center gap-1.5">
                 <input type="number" id="targetMaxPointsInput" class="w-24 p-2 rounded-xl border border-yellow-400 text-xs font-black text-center font-outfit bg-white">
                 <span class="text-xs font-bold text-yellow-900">נקודות</span>
               </div>
+              <div>
+                <label class="block text-[10px] font-bold text-slate-500 mb-0.5">תיאור הפרס ביעד זה:</label>
+                <input type="text" id="targetMaxRewardInput" class="w-full p-2 rounded-xl border border-yellow-300 text-xs font-bold bg-white" placeholder="למשל: מסע הפסגה ונסיעה VIP לצפון">
+              </div>
             </div>
           </div>
 
+          <!-- Dynamic Extra Targets Container -->
           <div id="extraTargetsListContainer" class="space-y-2"></div>
         </div>
 
-        <!-- Journey Stops -->
-        <div class="space-y-3 pt-3 border-t border-slate-200">
-          <div class="flex items-center justify-between">
-            <h4 class="text-sm font-black text-slate-900">תחנות העצירה במסע "עד הפסגה"</h4>
-            <button onclick="addNewJourneyStopPrompt()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold underline cursor-pointer">+ הוסף עצירה נוספת</button>
+        <!-- 2. Journey Stops by Date -->
+        <div class="space-y-4 pt-4 border-t border-slate-200">
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+            <div>
+              <h4 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                <span>📅</span>
+                <span>תחנות העצירה במסע "עד הפסגה" (לפי תאריכים ביומן בלבד)</span>
+              </h4>
+              <p class="text-[11px] text-slate-500">עצירות במסע נקבעות לפי תאריכים בלוח השנה — תאריכי מפגש, חלוקת שי ביניים ואירועים</p>
+            </div>
+            <button type="button" onclick="addNewJourneyStopRow()" class="px-3.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200 cursor-pointer">
+              + הוסף עצירת מסע חדשה
+            </button>
           </div>
 
-          <div id="adminJourneyStopsContainer" class="space-y-2.5">
-            <!-- Populated by JS -->
+          <div id="adminJourneyStopsContainer" class="space-y-3">
+            <!-- Populated dynamically by renderJourneyStopsEditor() -->
           </div>
         </div>
 
-        <!-- Bonus Rules Config -->
+        <!-- 3. Bonus Rules Config -->
         <div class="space-y-3 pt-3 border-t border-slate-200">
           <h4 class="text-sm font-black text-slate-900">הגדרות חוקי בונוס</h4>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -331,14 +369,15 @@
           </div>
         </div>
 
-        <!-- Save Config Button -->
-        <div class="pt-4 border-t border-slate-200 flex items-center justify-between">
-          <button onclick="exportGoogleCalendarIcs()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5">
+        <!-- 4. Save Config Button -->
+        <div class="pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <button type="button" onclick="exportGoogleCalendarIcs()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 cursor-pointer">
             <span>📅</span>
             <span>ייצא יומן Google Calendar (.ics)</span>
           </button>
-          <button onclick="saveAllAdminConfig()" class="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-lg transition">
-            💾 שמור את כל ההגדרות בענן Supabase
+          <button type="button" onclick="saveAllAdminConfig()" class="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-lg transition flex items-center gap-2 cursor-pointer">
+            <span>💾</span>
+            <span>שמור את כל היעדים והעצירות בענן Supabase</span>
           </button>
         </div>
 
@@ -1444,7 +1483,7 @@
     }
 
     // =========================================================
-    // 3. TARGETS, STOPS & BONUSES
+    // 3. TARGETS (POINTS) & JOURNEY STOPS (DATES)
     // =========================================================
     function populateAdminConfig() {
       const cfg = adminState.config;
@@ -1453,115 +1492,247 @@
       const sInp = document.getElementById('cfgStartDateInput');
       const eInp = document.getElementById('cfgEndDateInput');
       if (sInp) sInp.value = cfg.startDate || '2026-10-25';
-      if (eInp) eInp.value = cfg.endDate || '2026-12-10';
+      if (eInp) eInp.value = cfg.endDate || '2027-02-08';
 
+      // 3 Main Targets (by Points)
       const t1N = document.getElementById('targetMinNameInput');
       const t1P = document.getElementById('targetMinPointsInput');
+      const t1R = document.getElementById('targetMinRewardInput');
       const t2N = document.getElementById('targetMidNameInput');
       const t2P = document.getElementById('targetMidPointsInput');
+      const t2R = document.getElementById('targetMidRewardInput');
       const t3N = document.getElementById('targetMaxNameInput');
       const t3P = document.getElementById('targetMaxPointsInput');
+      const t3R = document.getElementById('targetMaxRewardInput');
 
       if (t1N) t1N.value = cfg.targets?.min?.name || 'יעד 1 – כניסה להגרלה';
       if (t1P) t1P.value = cfg.targets?.min?.points || 70;
+      if (t1R) t1R.value = cfg.targets?.min?.reward || 'כניסה להגרלת ספרים ושוברים';
+
       if (t2N) t2N.value = cfg.targets?.mid?.name || 'יעד 2 – פרס כספי';
       if (t2P) t2P.value = cfg.targets?.mid?.points || 100;
+      if (t2R) t2R.value = cfg.targets?.mid?.reward || 'מלגת 300 ₪ במזומן מובטחת';
+
       if (t3N) t3N.value = cfg.targets?.max?.name || 'הפסגה – נסיעה ופרס ענק';
       if (t3P) t3P.value = cfg.targets?.max?.points || 130;
+      if (t3R) t3R.value = cfg.targets?.max?.reward || 'מסע הפסגה ונסיעה VIP לצפון';
 
+      // Render Dynamic Extra Targets & Journey Stops
+      renderExtraTargetsEditor();
+      renderJourneyStopsEditor();
+
+      // Bonus rules
       const npInp = document.getElementById('cfgNoPhoneBonusInput');
       const wkInp = document.getElementById('cfgWakeupBonusInput');
       const ktInp = document.getElementById('cfgKitchenBonusInput');
       if (npInp) npInp.value = cfg.bonusConfig?.noPhoneBonus || 1;
       if (wkInp) wkInp.value = cfg.bonusConfig?.wakeupBonus || 3;
       if (ktInp) ktInp.value = cfg.bonusConfig?.kitchenBonus || 3;
-
-      renderJourneyStopsEditor();
     }
 
+    // --- Extra Targets Editor (Points) ---
+    function renderExtraTargetsEditor() {
+      const container = document.getElementById('extraTargetsListContainer');
+      if (!container) return;
+
+      const extras = adminState.config?.extraTargets || [];
+      if (extras.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+
+      container.innerHTML = extras.map((ex, i) => `
+        <div class="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="font-black text-indigo-900">יעד נוסף #${i + 4}</span>
+            <input type="text" value="${ex.name || ''}" placeholder="שם היעד" class="extra-target-name p-1.5 rounded-xl border border-indigo-300 font-bold bg-white w-40 sm:w-48">
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-slate-500">סף:</span>
+            <input type="number" value="${ex.points || 150}" class="extra-target-points w-20 p-1.5 rounded-xl border border-indigo-300 text-center font-black bg-white">
+            <span class="font-bold text-slate-500">נק׳</span>
+          </div>
+
+          <div class="flex-1 min-w-[180px]">
+            <input type="text" value="${ex.reward || ''}" placeholder="תיאור הפרס הממתין ביעד זה" class="extra-target-reward w-full p-1.5 rounded-xl border border-indigo-200 font-bold bg-white text-[11px]">
+          </div>
+
+          <button type="button" onclick="removeExtraTargetRow(${i})" class="p-1.5 text-rose-600 hover:text-rose-800 text-xs font-bold cursor-pointer" title="מחק יעד זה">
+            🗑️
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function addNewExtraTargetRow() {
+      if (!adminState.config.extraTargets) adminState.config.extraTargets = [];
+      const num = adminState.config.extraTargets.length + 4;
+      adminState.config.extraTargets.push({
+        name: `יעד ${num}`,
+        points: 130 + num * 10,
+        reward: ''
+      });
+      renderExtraTargetsEditor();
+      App.showToast('יעד ניקוד נוסף נוסף לרשימה', '🎯');
+    }
+
+    function removeExtraTargetRow(idx) {
+      if (adminState.config?.extraTargets) {
+        adminState.config.extraTargets.splice(idx, 1);
+        renderExtraTargetsEditor();
+      }
+    }
+
+    // --- Journey Stops Editor (Dates) ---
     function renderJourneyStopsEditor() {
       const container = document.getElementById('adminJourneyStopsContainer');
       if (!container) return;
 
       const stops = adminState.config?.trailStops || [];
-      container.innerHTML = stops.map((st, i) => `
-        <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
-          <div class="flex items-center gap-2">
-            <span class="font-black text-slate-800">#${i + 1}</span>
-            <input type="text" value="${st.title}" onchange="updateStopField(${i}, 'title', this.value)" class="p-1.5 rounded-lg border border-slate-300 font-bold bg-white w-48">
-            <input type="text" value="${st.dateLabel || ''}" onchange="updateStopField(${i}, 'dateLabel', this.value)" placeholder="תווית תאריך (ט׳ כסליו)" class="p-1.5 rounded-lg border border-slate-300 font-bold bg-white w-32">
-            <input type="date" value="${st.isoDate || ''}" onchange="updateStopField(${i}, 'isoDate', this.value)" class="p-1.5 rounded-lg border border-slate-300 font-bold bg-white">
+      if (stops.length === 0) {
+        container.innerHTML = '<div class="text-xs text-slate-400 py-4 text-center">טרם הוגדרו תחנות עצירה במסע. לחץ "+ הוסף עצירת מסע חדשה".</div>';
+        return;
+      }
+
+      container.innerHTML = stops.map((st, i) => {
+        const hebDate = st.dateLabel || (st.isoDate ? App.getHebrewDateDetails(st.isoDate).shortHebrew : 'תאריך יוכרז בהמשך');
+        return `
+          <div class="journey-stop-row p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5 transition hover:border-indigo-300 text-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2.5">
+              <div class="flex items-center gap-2">
+                <span class="font-black text-indigo-950 text-sm">עצירה #${i + 1}</span>
+                <input type="text" value="${st.title || ''}" placeholder="כותרת העצירה (למשל: פיתחו יומנים!)" class="stop-title p-2 rounded-xl border border-slate-300 font-bold bg-white w-48 sm:w-64 text-xs">
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-slate-500 font-bold">תאריך לועזי:</span>
+                  <input type="date" value="${st.isoDate || ''}" onchange="onStopDateChanged(${i}, this.value)" class="stop-iso-date p-1.5 rounded-xl border border-slate-300 font-bold bg-white text-xs">
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                  <span class="text-slate-500 font-bold">תאריך עברי:</span>
+                  <input type="text" id="stopHebDate_${i}" value="${hebDate}" placeholder="למשל: ט׳ כסליו" class="stop-heb-date p-1.5 rounded-xl border border-slate-300 font-bold bg-white text-xs w-36">
+                </div>
+
+                <label class="flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1.5 rounded-xl border border-slate-200">
+                  <input type="checkbox" ${st.isDecided !== false ? 'checked' : ''} class="stop-is-announced w-3.5 h-3.5 rounded text-indigo-600">
+                  <span class="font-bold text-slate-700 text-[11px]">הוכרז רשמית</span>
+                </label>
+
+                <button type="button" onclick="removeJourneyStopRow(${i})" class="p-1.5 text-rose-600 hover:text-rose-800 text-xs font-bold cursor-pointer" title="מחק עצירה זו">
+                  🗑️
+                </button>
+              </div>
+            </div>
+
+            <div class="pt-1">
+              <label class="block text-[10px] font-bold text-slate-500 mb-0.5">מה קורה בעצירה זו (אירוע / חלוקת שי ביניים):</label>
+              <input type="text" value="${st.description || ''}" placeholder="למשל: כנס אמצע מיוחד, הדלקת נרות חנוכה וחלוקת שי אישי..." class="stop-desc w-full p-2 rounded-xl border border-slate-200 font-bold bg-white text-xs text-slate-800">
+            </div>
           </div>
-          <div class="flex items-center gap-1.5">
-            <input type="number" value="${st.points || 70}" onchange="updateStopField(${i}, 'points', this.value)" class="w-16 p-1.5 rounded-lg border border-slate-300 text-center font-black bg-white">
-            <span class="font-bold text-slate-500">נק׳</span>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
-    function updateStopField(idx, field, val) {
-      if (adminState.config?.trailStops?.[idx]) {
-        adminState.config.trailStops[idx][field] = val;
+    function onStopDateChanged(idx, isoDate) {
+      if (!isoDate) return;
+      const hebElem = document.getElementById(`stopHebDate_${idx}`);
+      if (hebElem) {
+        const heb = App.getHebrewDateDetails(isoDate);
+        hebElem.value = `${heb.dayName}, ${heb.shortHebrew}`;
       }
     }
 
-    function addNewCustomTargetPrompt() {
-      const name = prompt('הזן שם ליעד הנוסף:');
-      const pts = prompt('הזן כמות נקודות ליעד זה:');
-      if (name && pts) {
-        if (!adminState.config.extraTargets) adminState.config.extraTargets = [];
-        adminState.config.extraTargets.push({ name, points: Number(pts) || 50 });
-        App.showToast('יעד נוסף נוסף, זכור ללחוץ שמירה', '➕');
-      }
+    function addNewJourneyStopRow() {
+      if (!adminState.config.trailStops) adminState.config.trailStops = [];
+      const num = adminState.config.trailStops.length + 1;
+      adminState.config.trailStops.push({
+        id: 'stop_' + Date.now(),
+        title: `עצירה ${num} – יעד חדש במסע!`,
+        isoDate: '',
+        dateLabel: 'תאריך יוכרז בהמשך',
+        description: 'אירוע תחנה מיוחד וחלוקת שי ביניים',
+        isDecided: true
+      });
+      renderJourneyStopsEditor();
+      App.showToast('עצירת מסע חדשה נוספה לרשימה', '📅');
     }
 
-    function addNewJourneyStopPrompt() {
-      const title = prompt('הזן כותרת לעצירה החדשה:');
-      if (title) {
-        if (!adminState.config.trailStops) adminState.config.trailStops = [];
-        adminState.config.trailStops.push({
-          id: 'stop_' + Date.now(),
-          title,
-          dateLabel: 'תאריך יוכרז בהמשך',
-          isoDate: '',
-          points: 85,
-          isDecided: false
-        });
+    function removeJourneyStopRow(idx) {
+      if (adminState.config?.trailStops) {
+        adminState.config.trailStops.splice(idx, 1);
         renderJourneyStopsEditor();
-        App.showToast('עצירה חדשה נוספה, זכור ללחוץ שמירה', '➕');
       }
     }
 
+    // --- Save All Targets, Stops & Bonus Rules to Supabase ---
     async function saveAllAdminConfig() {
+      // 1. Dates
       const sInp = document.getElementById('cfgStartDateInput')?.value;
       const eInp = document.getElementById('cfgEndDateInput')?.value;
       if (sInp) adminState.config.startDate = sInp;
       if (eInp) adminState.config.endDate = eInp;
 
+      // 2. Targets (strictly by Points)
       adminState.config.targets = {
         min: {
           name: document.getElementById('targetMinNameInput')?.value || 'יעד 1 – כניסה להגרלה',
-          points: Number(document.getElementById('targetMinPointsInput')?.value) || 70
+          points: Number(document.getElementById('targetMinPointsInput')?.value) || 70,
+          reward: document.getElementById('targetMinRewardInput')?.value || 'כניסה להגרלת ספרים ושוברים'
         },
         mid: {
           name: document.getElementById('targetMidNameInput')?.value || 'יעד 2 – פרס כספי',
-          points: Number(document.getElementById('targetMidPointsInput')?.value) || 100
+          points: Number(document.getElementById('targetMidPointsInput')?.value) || 100,
+          reward: document.getElementById('targetMidRewardInput')?.value || 'מלגת 300 ₪ במזומן מובטחת'
         },
         max: {
           name: document.getElementById('targetMaxNameInput')?.value || 'הפסגה – נסיעה ופרס ענק',
-          points: Number(document.getElementById('targetMaxPointsInput')?.value) || 130
+          points: Number(document.getElementById('targetMaxPointsInput')?.value) || 130,
+          reward: document.getElementById('targetMaxRewardInput')?.value || 'מסע הפסגה ונסיעה VIP לצפון'
         }
       };
 
+      // Gather Extra Targets from DOM
+      const extraRows = document.querySelectorAll('#extraTargetsListContainer > div');
+      adminState.config.extraTargets = Array.from(extraRows).map((row, i) => ({
+        name: row.querySelector('.extra-target-name')?.value || `יעד ${i + 4}`,
+        points: Number(row.querySelector('.extra-target-points')?.value) || 150,
+        reward: row.querySelector('.extra-target-reward')?.value || ''
+      }));
+
+      // 3. Journey Stops (strictly by Date)
+      const stopRows = document.querySelectorAll('.journey-stop-row');
+      adminState.config.trailStops = Array.from(stopRows).map((row, i) => {
+        const iso = row.querySelector('.stop-iso-date')?.value || '';
+        const heb = row.querySelector('.stop-heb-date')?.value || '';
+        const isAnnounced = row.querySelector('.stop-is-announced')?.checked ?? true;
+        return {
+          id: adminState.config.trailStops?.[i]?.id || `stop_${Date.now()}_${i}`,
+          title: row.querySelector('.stop-title')?.value || `עצירה ${i + 1}`,
+          isoDate: iso,
+          dateLabel: heb || (iso ? App.formatHebrewDateBadge(iso) : 'תאריך יוכרז בהמשך'),
+          description: row.querySelector('.stop-desc')?.value || '',
+          isDecided: isAnnounced
+        };
+      });
+
+      // 4. Bonus Rules
       adminState.config.bonusConfig = {
         noPhoneBonus: Number(document.getElementById('cfgNoPhoneBonusInput')?.value) || 1,
         wakeupBonus: Number(document.getElementById('cfgWakeupBonusInput')?.value) || 3,
         kitchenBonus: Number(document.getElementById('cfgKitchenBonusInput')?.value) || 3
       };
 
-      await Db.saveConfig(adminState.config);
-      App.showToast('כל ההגדרות נשמרו בהצלחה בענן Supabase!', '💾');
+      // 5. Send to live Supabase server
+      const ok = await Db.saveConfig(adminState.config);
+      if (ok) {
+        App.showToast('כל היעדים והעצירות נשמרו בהצלחה בענן Supabase! 💾', '✓');
+        renderAdminInteractiveCalendarGrid();
+      } else {
+        App.showToast('שגיאה בשמירה ל-Supabase, אנא נסה שוב', '⚠️');
+      }
     }
 
     function exportGoogleCalendarIcs() {

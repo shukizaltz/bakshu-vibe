@@ -244,7 +244,7 @@
     },
 
     // ==========================================
-    // 3. הגדרות מבצע ויעדים (campaign_config)
+    // 3. הגדרות מבצע, יעדי ניקוד ועצירות מסע (campaign_config)
     // ==========================================
     async getConfig() {
       if (!client) return null;
@@ -253,24 +253,28 @@
         const snap = await this.loadAppState();
 
         const base = cfgRow || {};
+        const targetsRaw = base.targets_json || snap?.targets || {};
+        const extraTargets = targetsRaw.extra || snap?.extraTargets || [];
+        const trailStops = base.journey_stops || snap?.trailStops || [
+          { id: 'stop_1', title: 'עצירה 1 – פיתחו יומנים!', isoDate: '2026-11-19', dateLabel: 'יום ה׳ ט׳ כסליו', description: 'חשיפת סדרי המשך ופרסי ביניים', isDecided: true },
+          { id: 'stop_2', title: 'עצירה 2 – חלוקת שי חנוכה ומלגות', isoDate: '2026-12-08', dateLabel: 'נר חמישי של חנוכה', description: 'הדלקת נרות מרכזית וחלוקת מלגות', isDecided: true },
+          { id: 'stop_3', title: 'הפסגה – מעמד הסיום הגדול!', isoDate: '2027-02-08', dateLabel: 'ר״ח אדר א׳', description: 'הכרזת הזוכים במסע ובפרס הענק', isDecided: false }
+        ];
+
         return {
           campaignName: base.campaign_name || snap?.campaignName || 'מבצע חורף תשפ״ז - עד הפסגה',
           startDate: base.start_date || snap?.startDate || '2026-10-25',
-          endDate: base.end_date || snap?.endDate || '2026-12-10',
+          endDate: base.end_date || snap?.endDate || '2027-02-08',
           minTarget: base.min_target_score || 100,
-          adminPassword: base.admin_password || snap?.adminPassword || '1234',
+          adminPassword: base.admin_password || snap?.adminPassword || '2032',
           qrSecret: (base.qr_secret || snap?.qrSecret || 'BK-892').trim().toUpperCase(),
-          targets: base.targets_json || snap?.targets || {
-            min: { name: 'יעד 1 – כניסה להגרלה', points: 70 },
-            mid: { name: 'יעד 2 – פרס כספי', points: 100 },
-            max: { name: 'הפסגה – נסיעה ופרס ענק', points: 130 }
+          targets: {
+            min: targetsRaw.min || { name: 'יעד 1 – כניסה להגרלה', points: 70, reward: 'כניסה להגרלה הגדולה' },
+            mid: targetsRaw.mid || { name: 'יעד 2 – פרס כספי', points: 100, reward: 'מלגת 300 ₪ במזומן' },
+            max: targetsRaw.max || { name: 'הפסגה – נסיעה ופרס ענק', points: 130, reward: 'מסע הפסגה ונסיעה VIP' }
           },
-          extraTargets: snap?.extraTargets || [],
-          trailStops: base.journey_stops || snap?.trailStops || [
-            { id: 'stop_1', title: 'עצירה 1 – פיתחו יומנים!', isoDate: '2026-11-19', dateLabel: 'יום ה׳ ט׳ כסליו', points: 70, isDecided: true },
-            { id: 'stop_2', title: 'עצירה 2 – יעד נושא מתנה!', isoDate: '', dateLabel: 'יוכרז בהמשך', points: 100, isDecided: false },
-            { id: 'stop_3', title: 'הפסגה – המטרה הגדולה!', isoDate: '', dateLabel: 'יוכרז בהמשך', points: 130, isDecided: false }
-          ],
+          extraTargets: extraTargets,
+          trailStops: trailStops,
           bonusConfig: base.bonus_config || snap?.bonusConfig || {
             noPhoneBonus: 1,
             wakeupBonus: 3,
@@ -287,20 +291,30 @@
     async saveConfig(cfg) {
       if (!client || !cfg) return false;
       try {
+        const targetsData = {
+          min: cfg.targets?.min || { name: 'יעד 1 – כניסה להגרלה', points: 70, reward: 'כניסה להגרלה הגדולה' },
+          mid: cfg.targets?.mid || { name: 'יעד 2 – פרס כספי', points: 100, reward: 'מלגת 300 ₪ במזומן' },
+          max: cfg.targets?.max || { name: 'הפסגה – נסיעה ופרס ענק', points: 130, reward: 'מסע הפסגה ונסיעה VIP' },
+          extra: cfg.extraTargets || []
+        };
+
         const payload = {
           id: 1,
           campaign_name: cfg.campaignName || 'מבצע חורף תשפ״ז - עד הפסגה',
           start_date: cfg.startDate || '2026-10-25',
-          end_date: cfg.endDate || '2026-12-10',
-          min_target_score: cfg.targets?.mid?.points || 100,
-          admin_password: String(cfg.adminPassword || '1234').trim(),
+          end_date: cfg.endDate || '2027-02-08',
+          min_target_score: targetsData.mid?.points || 100,
+          admin_password: String(cfg.adminPassword || '2032').trim(),
           qr_secret: String(cfg.qrSecret || 'BK-892').trim().toUpperCase(),
-          targets_json: cfg.targets || null,
-          journey_stops: cfg.trailStops || null,
+          targets_json: targetsData,
+          journey_stops: cfg.trailStops || [],
           bonus_config: cfg.bonusConfig || null
         };
 
-        await client.from('campaign_config').upsert(payload, { onConflict: 'id' });
+        const { error } = await client.from('campaign_config').upsert(payload, { onConflict: 'id' });
+        if (error) {
+          console.error('Db.saveConfig Supabase error:', error);
+        }
         
         // גיבוי מלא ב-app_state
         await this.saveAppState({
@@ -309,14 +323,14 @@
           endDate: cfg.endDate,
           adminPassword: cfg.adminPassword,
           qrSecret: cfg.qrSecret,
-          targets: cfg.targets,
-          extraTargets: cfg.extraTargets,
-          trailStops: cfg.trailStops,
+          targets: targetsData,
+          extraTargets: cfg.extraTargets || [],
+          trailStops: cfg.trailStops || [],
           bonusConfig: cfg.bonusConfig,
           recurringDuties: cfg.recurringDuties || {}
         });
 
-        return true;
+        return !error;
       } catch (e) {
         console.error('Db.saveConfig error:', e);
         return false;
@@ -672,6 +686,13 @@
             .subscribe();
         } catch (e) {}
       }
+    },
+
+    getGoogleCalendarUrl(opts) {
+      if (typeof window !== 'undefined' && window.App && typeof window.App.getGoogleCalendarUrl === 'function') {
+        return window.App.getGoogleCalendarUrl(opts);
+      }
+      return '';
     }
   };
 

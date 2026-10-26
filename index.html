@@ -1223,15 +1223,15 @@
 
     // Google Calendar Sync for Stops
     function openGoogleCalendarForStop(stopIdx) {
-      const stops = state.config?.trailStops || [
-        { title: 'עצירה 1 – פיתחו יומנים!', isoDate: '2026-11-19', dateLabel: 'ט׳ כסליו' }
+      const stops = state.config?.trailStops || state.config?.journeyStops || [
+        { title: 'עצירה 1 – פיתחו יומנים!', isoDate: '2026-11-19', dateLabel: 'ט׳ כסליו', description: '' }
       ];
       const stop = stops[stopIdx] || stops[0];
       const targetIso = stop.isoDate || '2026-11-19';
 
-      const url = Db.getGoogleCalendarUrl({
+      const url = App.getGoogleCalendarUrl({
         title: `מבצע בקשו - ${stop.title || 'עצירה במסע'}`,
-        details: `אירוע עצירה במסע 'עד הפסגה' בישיבת בקשו ירושלים. חשיפת יעדים ופרסים מיוחדים!`,
+        details: stop.description || `אירוע עצירה במסע 'עד הפסגה' בישיבת בקשו ירושלים. חשיפת יעדים ופרסים מיוחדים!`,
         startIso: targetIso,
         isAllDay: true
       });
@@ -1433,15 +1433,42 @@
         else mNextGift.textContent = 'ארד (עוד ' + (70 - currentScore) + ' נק׳)';
       }
 
-      // Update 3 Mystery Gift Tiers Status
-      const g1 = document.getElementById('giftTier1Status');
-      if (g1) g1.textContent = currentScore >= 70 ? 'היעד הושג! ✓' : `נצברו ${currentScore} מתוך 70`;
+      const targets = state.config?.targets || {
+        min: { points: 70, name: 'יעד 1 – כניסה להגרלה', reward: 'כניסה להגרלת ספרים ושוברים' },
+        mid: { points: 100, name: 'יעד 2 – פרס כספי', reward: '300 ₪ במזומן מובטח' },
+        max: { points: 130, name: 'הפסגה – נסיעה ופרס ענק', reward: 'מסע הפסגה ונסיעה VIP' }
+      };
 
-      const g2 = document.getElementById('giftTier2Status');
-      if (g2) g2.textContent = currentScore >= 100 ? 'היעד הושג! ✓' : `עוד ${100 - currentScore} נק׳`;
+      // Update 3 Mystery Gift Tiers Status (by Points)
+      const g1T = document.getElementById('giftTier1Title');
+      const g1P = document.getElementById('giftTier1Pts');
+      const g1S = document.getElementById('giftTier1Status');
+      if (g1T) g1T.textContent = targets.min?.name || '🥉 יעד 1 (ארד)';
+      if (g1P) g1P.textContent = `${targets.min?.points || 70} נק׳`;
+      if (g1S) {
+        const p = targets.min?.points || 70;
+        g1S.textContent = currentScore >= p ? 'היעד הושג! ✓ 🎉' : `נצברו ${currentScore}/${p} (${targets.min?.reward || ''})`;
+      }
 
-      const g3 = document.getElementById('giftTier3Status');
-      if (g3) g3.textContent = currentScore >= 130 ? 'היעד הושג! ✓' : `עוד ${130 - currentScore} נק׳`;
+      const g2T = document.getElementById('giftTier2Title');
+      const g2P = document.getElementById('giftTier2Pts');
+      const g2S = document.getElementById('giftTier2Status');
+      if (g2T) g2T.textContent = targets.mid?.name || '🥈 יעד 2 (כסף)';
+      if (g2P) g2P.textContent = `${targets.mid?.points || 100} נק׳`;
+      if (g2S) {
+        const p = targets.mid?.points || 100;
+        g2S.textContent = currentScore >= p ? 'היעד הושג! ✓ 🎉' : `עוד ${Math.max(0, p - currentScore)} נק׳ (${targets.mid?.reward || ''})`;
+      }
+
+      const g3T = document.getElementById('giftTier3Title');
+      const g3P = document.getElementById('giftTier3Pts');
+      const g3S = document.getElementById('giftTier3Status');
+      if (g3T) g3T.textContent = targets.max?.name || '🥇 יעד הפסגה';
+      if (g3P) g3P.textContent = `${targets.max?.points || 130} נק׳`;
+      if (g3S) {
+        const p = targets.max?.points || 130;
+        g3S.textContent = currentScore >= p ? 'הפסגה נכבשה! 👑' : `עוד ${Math.max(0, p - currentScore)} נק׳ (${targets.max?.reward || ''})`;
+      }
 
       renderTopProgressGraph(climbScore, summitTarget);
       renderJourneyStops();
@@ -1574,7 +1601,7 @@
           <!-- Summit: Tier 3 Target -->
           <g transform="translate(800, 45)">
             <circle cx="0" cy="0" r="9" fill="#F59E0B" stroke="#FFFFFF" stroke-width="2.5"/>
-            <text x="0" y="-15" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">🏔️ ${targets.max.name} (140) 👑</text>
+            <text x="0" y="-15" text-anchor="middle" fill="#FEF08A" font-size="11" font-weight="900" font-family="Heebo">🏔️ ${targets.max.name} (${targets.max.points}) 👑</text>
           </g>
 
           <!-- Climber Beacon -->
@@ -1591,23 +1618,30 @@
       const container = document.getElementById('journeyStopsContainer');
       if (!container) return;
 
-      const stops = state.config?.trailStops || [
-        { id: 'stop_1', title: 'עצירה 1 – פיתחו יומנים!', isoDate: '2026-11-19', dateLabel: 'יום ה׳ ט׳ כסליו', points: 70, isDecided: true },
-        { id: 'stop_2', title: 'עצירה 2 – יעד נושא מתנה!', isoDate: '', dateLabel: 'יוכרז בהמשך', points: 100, isDecided: false },
-        { id: 'stop_3', title: 'הפסגה – המטרה הגדולה!', isoDate: '', dateLabel: 'יוכרז בהמשך', points: 130, isDecided: false }
+      const stops = state.config?.trailStops || state.config?.journeyStops || [
+        { id: 'stop_1', title: 'עצירה 1 – פיתחו יומנים!', isoDate: '2026-11-19', dateLabel: 'יום ה׳ ט׳ כסליו', description: 'אירוע ראשון ומיוחד במסע!', isDecided: true },
+        { id: 'stop_2', title: 'עצירה 2 – חלוקת הפתעות', isoDate: '', dateLabel: 'יוכרז בהמשך', description: '', isDecided: false },
+        { id: 'stop_3', title: 'הפסגה – מעמד הסיום הגדול', isoDate: '', dateLabel: 'יוכרז בהמשך', description: '', isDecided: false }
       ];
 
       container.innerHTML = stops.map((st, i) => `
-        <div class="p-4 rounded-2xl ${st.isDecided ? 'bg-amber-50/80 border border-amber-300' : 'bg-slate-50 border border-slate-200'} space-y-1.5">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-black text-slate-900">${st.title}</span>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${st.isDecided ? 'bg-amber-200 text-amber-900' : 'bg-slate-200 text-slate-700'}">
-              ${st.points || 70} נק׳
+        <div class="p-4 rounded-2xl ${st.isDecided ? 'bg-amber-50/80 border border-amber-300 shadow-xs' : 'bg-slate-50 border border-slate-200'} space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-black text-slate-900 flex items-center gap-1.5">
+              <span>${st.isDecided ? '🚩' : '⏳'}</span>
+              <span>${st.title}</span>
+            </span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${st.isDecided ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-200 text-slate-600'}">
+              ${st.isDecided ? 'תאריך נקבע' : 'טרם הוכרז'}
             </span>
           </div>
-          <p class="text-xs text-slate-600">${st.dateLabel || 'תאריך סודי'}</p>
-          ${st.isDecided ? `
-            <button onclick="openGoogleCalendarForStop(${i})" class="w-full mt-2 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 font-bold text-[11px] transition flex items-center justify-center gap-1 shadow-2xs">
+          <div class="text-xs font-semibold text-slate-700 flex items-center gap-1">
+            <span>📅</span>
+            <span>${st.dateLabel || (st.isoDate && window.App?.formatHebrewDateBadge ? App.formatHebrewDateBadge(st.isoDate) : (st.isoDate || 'תאריך יוכרז בהמשך'))}</span>
+          </div>
+          ${st.description ? `<p class="text-[11px] text-slate-600 leading-relaxed bg-white/80 p-2 rounded-lg border border-slate-200/60">${st.description}</p>` : ''}
+          ${st.isDecided && st.isoDate ? `
+            <button onclick="openGoogleCalendarForStop(${i})" class="w-full mt-2 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 font-bold text-[11px] transition flex items-center justify-center gap-1 shadow-2xs cursor-pointer">
               <span>📅</span><span>שמור ב-Google Calendar</span>
             </button>
           ` : ''}
