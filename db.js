@@ -302,19 +302,19 @@
           adminPassword: base.admin_password || '2032',
           qrSecret: (base.qr_secret || 'BK-892').trim().toUpperCase(),
           targets: {
-            min: targetsRaw.min || { name: 'יעד 1 – כניסה להגרלה', points: 70, reward: 'כניסה להגרלה הגדולה' },
-            mid: targetsRaw.mid || { name: 'יעד 2 – פרס כספי', points: 100, reward: 'מלגת 300 ₪ במזומן' },
-            max: targetsRaw.max || { name: 'הפסגה – נסיעה ופרס ענק', points: 130, reward: 'מסע הפסגה ונסיעה VIP' }
+            min: targetsRaw.min || { name: 'יעד 1', points: 100, reward: 'חכו ותגלו' },
+            mid: targetsRaw.mid || { name: 'יעד 2', points: 200, reward: 'חכו ותגלו' },
+            max: targetsRaw.max || { name: 'הפסגה', points: 350, reward: 'נקודת סיום על הקצה' }
           },
           extraTargets: extraTargets,
           trailStops: trailStops,
           bonusConfig: base.bonus_config || {
             noPhoneBonus: 1,
             wakeupBonus: 3,
-            kitchenBonus: 3
+            kitchenBonus: 1
           },
           fullSederThreshold: Number(base.full_seder_threshold) || 10,
-          fullSederBonusPts: Number(base.full_seder_bonus_pts) || 1,
+          fullSederBonusPts: Number(base.full_seder_bonus_pts) || 2,
           recurringDuties: base.duties_roster?.recurring || base.duties_roster || {},
           dutiesConfig: base.duties_roster?.dutiesConfig || {
             duty1Name: 'תורן מעורר (בוקר)',
@@ -335,9 +335,9 @@
       if (!client || !cfg) return false;
       try {
         const targetsData = {
-          min: cfg.targets?.min || { name: 'יעד 1 – כניסה להגרלה', points: 70, reward: 'כניסה להגרלה הגדולה' },
-          mid: cfg.targets?.mid || { name: 'יעד 2 – פרס כספי', points: 100, reward: 'מלגת 300 ₪ במזומן' },
-          max: cfg.targets?.max || { name: 'הפסגה – נסיעה ופרס ענק', points: 130, reward: 'מסע הפסגה ונסיעה VIP' },
+          min: cfg.targets?.min || { name: 'יעד 1', points: 100, reward: 'חכו ותגלו' },
+          mid: cfg.targets?.mid || { name: 'יעד 2', points: 200, reward: 'חכו ותגלו' },
+          max: cfg.targets?.max || { name: 'הפסגה', points: 350, reward: 'נקודת סיום על הקצה' },
           extra: cfg.extraTargets || []
         };
 
@@ -495,13 +495,45 @@
     // ==========================================
     // 5. רישומי נוכחות (טבלת attendance_logs)
     // ==========================================
+    async hasStudentCheckedIn(studentId, slotTitle, dateStr) {
+      if (!client || !studentId) return false;
+      try {
+        const cleanDate = dateStr || new Date().toISOString().slice(0, 10);
+        const { data } = await client.from('attendance_logs')
+          .select('id')
+          .eq('user_id', studentId)
+          .eq('slot_date', cleanDate)
+          .eq('slot_title', slotTitle || '')
+          .eq('status', 'approved')
+          .limit(1);
+        return Array.isArray(data) && data.length > 0;
+      } catch (e) {
+        return false;
+      }
+    },
+
     async recordAttendance(studentId, studentName, slotTitle, points, isPresent, noPhone, dateStr) {
       if (!client) return false;
       try {
         const cleanDate = dateStr || new Date().toISOString().slice(0, 10);
         
-        // staus MUST BE 'approved' to satisfy attendance_logs_status_check
-        await client.from('attendance_logs').insert([{
+        // מניעת כפילויות מוחלטת: בדיקה אם כבר קיימת נוכחות מאושרת לאותו בחור, תאריך וסדר
+        if (isPresent && studentId && slotTitle) {
+          const { data: existing } = await client.from('attendance_logs')
+            .select('id')
+            .eq('user_id', studentId)
+            .eq('slot_date', cleanDate)
+            .eq('slot_title', slotTitle)
+            .eq('status', 'approved');
+
+          if (existing && existing.length > 0) {
+            console.warn('Db.recordAttendance: נחסם דיווח כפול עבור:', studentName, cleanDate, slotTitle);
+            return false;
+          }
+        }
+
+        // status MUST BE 'approved' to satisfy attendance_logs_status_check
+        const { error: insErr } = await client.from('attendance_logs').insert([{
           user_id: (studentId && /^[0-9a-f-]{36}$/i.test(studentId)) ? studentId : null,
           student_name: studentName || '',
           slot_title: slotTitle || '',
@@ -511,6 +543,11 @@
           status: 'approved',
           marked_at: new Date().toISOString()
         }]);
+
+        if (insErr) {
+          console.error('Db.recordAttendance insert error:', insErr);
+          return false;
+        }
 
         // עדכון ניקוד הבחור
         const delta = isPresent ? points : -points;

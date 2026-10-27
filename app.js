@@ -153,9 +153,12 @@
     },
 
     // ==========================================
-    // חישוב פוטנציאל נקודות מרבי במבצע
+    // חישוב פוטנציאל נקודות מרבי במבצע - אחיד בכל המערכת
+    // 1. כמה ניתן לצבור (פוטנציאל כללי של המבצע)
+    // 2. כמה בחור מסוים יכול לצבור (פוטנציאל אישי של הבחור)
+    // 3. כמה צבר (נצבר בפועל)
     // ==========================================
-    calculateCampaignPotential(cfg, scheduleSlots, duties, studentId) {
+    calculateCampaignPotential(cfg, scheduleSlots, duties, studentId, studentScore = 0) {
       const sDateStr = cfg?.startDate || '2026-10-25';
       const eDateStr = cfg?.endDate || '2027-02-08';
       const start = new Date(sDateStr);
@@ -163,6 +166,9 @@
 
       let totalSlotsCount = 0;
       let totalSlotsPoints = 0;
+      let remainingSlotsCount = 0;
+      let remainingSlotsPoints = 0;
+      const todayIso = new Date().toISOString().slice(0, 10);
       const slotsMap = scheduleSlots || {};
 
       const cur = new Date(start);
@@ -171,23 +177,29 @@
         const daySlots = slotsMap[iso] || (cur.getDay() === 6 ? [] : [
           { points: 1 }, { points: 1 }, { points: 1 }
         ]);
+        const isFutureOrToday = (iso >= todayIso);
         daySlots.forEach(s => {
+          const pts = (Number(s.points) || 1);
           totalSlotsCount++;
-          totalSlotsPoints += (Number(s.points) || 1);
+          totalSlotsPoints += pts;
+          if (isFutureOrToday) {
+            remainingSlotsCount++;
+            remainingSlotsPoints += pts;
+          }
         });
         cur.setDate(cur.getDate() + 1);
       }
 
-      // 1. Sedarim Points
+      // 1. נקודות סדרי לימוד (בסיס)
       const sedarimPoints = totalSlotsPoints;
 
-      // 2. Phone Free Bonus (1 point per slot)
+      // 2. בונוס הפקדת טלפון (1 נקודה לכל סדר)
       const noPhoneBonus = Number(cfg?.bonusConfig?.noPhoneBonus) || 1;
       const phoneFreePoints = totalSlotsCount * noPhoneBonus;
 
-      // 3. Duties Points
+      // 3. נקודות תורנויות (מעורר 3 נק', מטבח 1 נק')
       const wBonus = Number(cfg?.bonusConfig?.wakeupBonus) || 3;
-      const kBonus = Number(cfg?.bonusConfig?.kitchenBonus) || 3;
+      const kBonus = Number(cfg?.bonusConfig?.kitchenBonus) || 1;
       let dutiesPoints = 0;
       let assignedDutiesCount = 0;
 
@@ -204,13 +216,38 @@
         });
       }
 
-      // Ensure minimum standard quota is displayed if unassigned
-      const potentialDutyPts = Math.max(dutiesPoints, (wBonus + kBonus));
+      const standardDutyPts = (wBonus + kBonus); // 4 נק' סטנדרטיות
+      const potentialDutyPts = dutiesPoints > 0 ? dutiesPoints : standardDutyPts;
 
-      // 4. Full Seder & Group bonus (estimated active full seders)
-      const fullSederPts = (Number(cfg?.fullSederBonusPts) || 1) * 10;
+      // 4. בונוס סדר מלא ישיבתי (הערכת 10 סדרי מלא במבצע)
+      const fullSederPts = (Number(cfg?.fullSederBonusPts) || 2) * 10;
 
-      const totalPotential = sedarimPoints + phoneFreePoints + potentialDutyPts + fullSederPts;
+      // 1. כמה ניתן לצבור במבצע כולו (פוטנציאל מקסימלי כולל)
+      const campaignMax = sedarimPoints + phoneFreePoints + standardDutyPts + fullSederPts;
+
+      // 2. כמה בחור מסוים יכול לצבור (פוטנציאל אישי: מה שצבר + מה שנותר מעכשיו)
+      const score = Number(studentScore) || 0;
+      const remainingPotential = remainingSlotsPoints + (remainingSlotsCount * noPhoneBonus) + standardDutyPts;
+      const personalMax = Math.min(campaignMax, score + remainingPotential);
+
+      // יעדי המבצע המוגדרים
+      const targets = {
+        min: { name: cfg?.targets?.min?.name || 'יעד 1', points: Number(cfg?.targets?.min?.points) || 100, reward: cfg?.targets?.min?.reward || 'פרס כניסה' },
+        mid: { name: cfg?.targets?.mid?.name || 'יעד 2', points: Number(cfg?.targets?.mid?.points) || 200, reward: cfg?.targets?.mid?.reward || 'פרס ביניים' },
+        max: { name: cfg?.targets?.max?.name || 'הפסגה', points: Number(cfg?.targets?.max?.points) || 350, reward: cfg?.targets?.max?.reward || 'פרס הפסגה' }
+      };
+
+      // היעד הבא
+      let nextTarget = targets.min;
+      if (score >= targets.mid.points) {
+        nextTarget = targets.max;
+      } else if (score >= targets.min.points) {
+        nextTarget = targets.mid;
+      }
+      const ptsToNextTarget = Math.max(0, nextTarget.points - score);
+      const ptsToSummit = Math.max(0, targets.max.points - score);
+      const pctOfSummit = Math.min(100, Math.round((score / targets.max.points) * 100));
+      const pctOfCampaign = campaignMax > 0 ? Math.min(100, Math.round((score / campaignMax) * 100)) : 0;
 
       return {
         totalSlotsCount,
@@ -219,7 +256,16 @@
         dutiesPoints: potentialDutyPts,
         assignedDutiesCount,
         fullSederPts,
-        totalPotential
+        totalPotential: campaignMax, // לתאימות לאחור
+        campaignMax,                // 1. כמה ניתן לצבור בכל המבצע
+        personalMax,                // 2. כמה בחור מסוים יכול לצבור
+        score,                      // 3. כמה צבר בפועל
+        targets,
+        nextTarget,
+        ptsToNextTarget,
+        ptsToSummit,
+        pctOfSummit,
+        pctOfCampaign
       };
     },
 

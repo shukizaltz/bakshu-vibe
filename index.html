@@ -172,25 +172,35 @@
             <span class="text-2xl p-2 rounded-2xl bg-amber-400/20 text-amber-300 border border-amber-400/30">🎯</span>
             <div>
               <div class="flex items-center gap-2">
-                <h3 class="text-base sm:text-lg font-black text-white">פוטנציאל הנקודות המרבי שלך במבצע</h3>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">הדרך לפסגה</span>
+                <h3 class="text-base sm:text-lg font-black text-white">חישוב ניקוד ומימוש פוטנציאל במבצע</h3>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">מדד אחיד</span>
               </div>
-              <p class="text-xs text-slate-300">כמה נקודות תוכל לצבור אם תתמיד בכל הסדרים, תפקיד את הנייד ותבצע את התורנויות שלך!</p>
+              <p class="text-xs text-slate-300">שקיפות מלאה: כמה צברת, כמה תוכל לצבור אישית, וכמה ניתן לצבור במבצע כולו</p>
             </div>
           </div>
 
-          <div class="text-left bg-white/10 px-4 py-2 rounded-2xl border border-white/10 backdrop-blur-xs">
-            <span class="block text-[10px] text-slate-300 font-bold">פוטנציאל מלא:</span>
-            <span id="studentPotentialTotalPts" class="text-2xl sm:text-3xl font-black font-outfit text-amber-400">0</span>
-            <span class="text-[10px] text-amber-300 font-bold"> נקודות</span>
+          <!-- 3 Unified Metrics Badges -->
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="bg-amber-400/15 border border-amber-400/30 px-3.5 py-1.5 rounded-2xl text-center">
+              <span class="block text-[10px] text-amber-200 font-bold">1. צברת בפועל:</span>
+              <span id="studentCardScoreMini" class="text-base sm:text-lg font-black font-outfit text-amber-300">0 נק׳</span>
+            </div>
+            <div class="bg-emerald-500/15 border border-emerald-400/30 px-3.5 py-1.5 rounded-2xl text-center">
+              <span class="block text-[10px] text-emerald-200 font-bold">2. פוטנציאל אישי שלך:</span>
+              <span id="studentPersonalMaxBadge" class="text-base sm:text-lg font-black font-outfit text-emerald-300">עד 690 נק׳</span>
+            </div>
+            <div class="bg-white/10 border border-white/15 px-3.5 py-1.5 rounded-2xl text-center">
+              <span class="block text-[10px] text-slate-300 font-bold">3. ניתן לצבור במבצע:</span>
+              <span id="studentPotentialTotalPts" class="text-base sm:text-lg font-black font-outfit text-white">690 נק׳</span>
+            </div>
           </div>
         </div>
 
         <!-- Progress Towards Potential -->
         <div class="space-y-1.5 relative z-10">
           <div class="flex items-center justify-between text-xs font-bold">
-            <span class="text-slate-300">התקדמות אישית עד כה:</span>
-            <span id="studentPotentialProgressLabel" class="text-emerald-400 font-outfit">0 מתוך 0 (0%)</span>
+            <span class="text-slate-300">התקדמות אל עבר היעד:</span>
+            <span id="studentPotentialProgressLabel" class="text-emerald-400 font-outfit">0 מתוך 100 (0%)</span>
           </div>
           <div class="w-full h-3 rounded-full bg-white/10 overflow-hidden p-0.5 border border-white/15">
             <div id="studentPotentialProgressBar" class="h-full rounded-full bg-gradient-to-r from-amber-400 via-emerald-400 to-teal-300 transition-all duration-700" style="width: 0%"></div>
@@ -449,21 +459,21 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-center">
             <div class="p-3 rounded-2xl bg-white/5 border border-amber-400/30 text-xs hover:bg-white/10 transition cursor-pointer hover:scale-[1.02] transition-transform" onclick="openMilestoneDetailsModal('target', 'min')">
-              <div class="font-black text-amber-300 text-xs" id="giftTier1Title">🥉 יעד אישי 1 (ארד)</div>
-              <div class="font-mono font-black text-white text-base mt-1" id="giftTier1Pts">70 נק׳</div>
+              <div class="font-black text-amber-300 text-xs" id="giftTier1Title">🥉 יעד 1 (כניסה)</div>
+              <div class="font-mono font-black text-white text-base mt-1" id="giftTier1Pts">100 נק׳</div>
               <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier1Status">נצברו 0 נק׳</div>
             </div>
 
             <div class="p-3 rounded-2xl bg-white/5 border border-slate-300/30 text-xs hover:bg-white/10 transition cursor-pointer hover:scale-[1.02] transition-transform" onclick="openMilestoneDetailsModal('target', 'mid')">
-              <div class="font-black text-slate-200 text-xs" id="giftTier2Title">🥈 יעד אישי 2 (כסף)</div>
-              <div class="font-mono font-black text-white text-base mt-1" id="giftTier2Pts">100 נק׳</div>
-              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier2Status">עוד 100 נק׳</div>
+              <div class="font-black text-slate-200 text-xs" id="giftTier2Title">🥈 יעד 2 (ביניים)</div>
+              <div class="font-mono font-black text-white text-base mt-1" id="giftTier2Pts">200 נק׳</div>
+              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier2Status">עוד 200 נק׳</div>
             </div>
 
             <div class="p-3 rounded-2xl bg-white/5 border border-indigo-400/30 text-xs hover:bg-white/10 transition cursor-pointer hover:scale-[1.02] transition-transform" onclick="openMilestoneDetailsModal('target', 'max')">
-              <div class="font-black text-indigo-300 text-xs" id="giftTier3Title">🥇 יעד אישי 3 (זהב)</div>
-              <div class="font-mono font-black text-white text-base mt-1" id="giftTier3Pts">130 נק׳</div>
-              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier3Status">עוד 130 נק׳</div>
+              <div class="font-black text-indigo-300 text-xs" id="giftTier3Title">🥇 יעד 3 (הפסגה)</div>
+              <div class="font-mono font-black text-white text-base mt-1" id="giftTier3Pts">350 נק׳</div>
+              <div class="text-[10px] text-indigo-200 mt-0.5" id="giftTier3Status">עוד 350 נק׳</div>
             </div>
           </div>
         </div>
@@ -831,13 +841,14 @@
 
     async function reloadAllData(isBackground = false) {
       try {
-        const [stList, cfg, slots, duts, reqs, bLogs] = await Promise.all([
+        const [stList, cfg, slots, duts, reqs, bLogs, attMap] = await Promise.all([
           Db.getStudents(),
           Db.getConfig(),
           Db.getScheduleSlots(),
           Db.getCalendarDuties(),
           Db.getRequests(),
-          Db.getBonusLogs()
+          Db.getBonusLogs(),
+          Db.getSlotAttendanceMap()
         ]);
 
         state.students = stList || [];
@@ -846,6 +857,7 @@
         state.duties = duts || {};
         state.requests = reqs || [];
         state.bonusLogs = bLogs || [];
+        state.slotAttendanceMap = attMap || { byDateSlot: {}, phoneFree: {} };
 
         // If currently logged in, update student object with fresh score
         if (state.currentStudent) {
@@ -853,10 +865,12 @@
           if (fresh) {
             state.currentStudent = fresh;
           }
+          updateCheckedInSlotsToday();
         }
 
         populateStudentSelect();
         calculateActiveAndNextSeder();
+        updateActiveSederCard();
         renderDashboard();
         renderProgressGraph();
         renderLeaderboard();
@@ -866,6 +880,23 @@
       } catch (e) {
         console.error('reloadAllData error:', e);
       }
+    }
+
+    function updateCheckedInSlotsToday() {
+      if (!state.currentStudent) {
+        state.checkedInSlotsToday = [];
+        return;
+      }
+      const todayIso = (window.App && App.getTodayIso) ? App.getTodayIso() : new Date().toISOString().slice(0, 10);
+      const sid = String(state.currentStudent.id);
+      const todaySlots = state.slotAttendanceMap?.byDateSlot?.[todayIso] || {};
+      const checked = [];
+      for (const [slotKey, stArr] of Object.entries(todaySlots)) {
+        if (Array.isArray(stArr) && stArr.includes(sid)) {
+          checked.push(slotKey);
+        }
+      }
+      state.checkedInSlotsToday = checked;
     }
 
     function updateHebrewDateBadge() {
@@ -927,7 +958,9 @@
       if (cardPhone) cardPhone.textContent = st.phone ? `טלפון: ${st.phone}` : '';
 
       closeStudentLoginModal();
+      updateCheckedInSlotsToday();
       calculateActiveAndNextSeder();
+      updateActiveSederCard();
       renderDashboard();
       renderProgressGraph();
       renderTodayDuty();
@@ -1086,7 +1119,7 @@
         
         timeText.textContent = `${active.openTime} - ${active.lockTime}`;
         title.textContent = active.title;
-        subtitle.textContent = isChecked ? 'נוכחותך נרשמה בהצלחה לסדר זה 🎉' : 'כוון את המצלמה לקוד ה-QR בבית המדרש לסימון נוכחות';
+        subtitle.textContent = isChecked ? 'נוכחותך נרשמה בהצלחה לסדר זה 🎉' : 'הסדר פתוח כעת – לחץ לאישור נוכחות מיידי (לחיצה אחת בלבד)';
         ptsBadge.textContent = `${active.points || 1} נקודות`;
 
         if (isChecked) {
@@ -1096,7 +1129,7 @@
         } else {
           btn.disabled = false;
           btn.className = 'w-full py-4 rounded-2xl font-black text-base sm:text-lg transition shadow-xl flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white cursor-pointer pulsing-btn';
-          btnText.textContent = '📸 סרוק QR וסמן נוכחות';
+          btnText.textContent = '✅ לחץ כאן לאישור נוכחות';
         }
 
         countdown.textContent = `פתוח עד ${active.lockTime}`;
@@ -1139,9 +1172,9 @@
 
       if (fsBanner) {
         const threshold = state.config?.fullSederThreshold || 10;
-        const bonusPts = state.config?.fullSederBonusPts || 1;
+        const bonusPts = state.config?.fullSederBonusPts || 2;
         const currentActiveTitle = active?.title || (next?.title || '');
-        const todayIso = getTodayIso();
+        const todayIso = (window.App && App.getTodayIso) ? App.getTodayIso() : new Date().toISOString().slice(0, 10);
 
         const checkedCount = (state.students || []).filter(st => {
           const list = state.slotAttendanceMap?.byDateSlot?.[todayIso]?.[currentActiveTitle] || [];
@@ -1165,109 +1198,89 @@
       }
     }
 
-    function handleCheckInClick() {
+    // --- אישור נוכחות ישיר בלחיצה אחת (ביטול QR ומניעת כפילויות) ---
+    async function handleCheckInClick() {
       if (!state.activeSeder) {
         showToast('אין כרגע סדר פעיל פתוח', '🔒');
         return;
       }
-      openQrScannerModal();
-    }
-
-    // --- QR Scanner / Camera Logic ---
-    function openQrScannerModal() {
-      const modal = document.getElementById('qrScannerModal');
-      if (modal) modal.classList.remove('hidden');
-
-      const video = document.getElementById('qrVideoFeed');
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-          .then(stream => {
-            state.qrScannerStream = stream;
-            if (video) {
-              video.srcObject = stream;
-              video.play();
-            }
-          })
-          .catch(err => {
-            console.warn('Camera access denied or unavailable:', err);
-          });
-      }
-    }
-
-    function closeQrScannerModal() {
-      const modal = document.getElementById('qrScannerModal');
-      if (modal) modal.classList.add('hidden');
-
-      if (state.qrScannerStream) {
-        state.qrScannerStream.getTracks().forEach(track => track.stop());
-        state.qrScannerStream = null;
-      }
-    }
-
-    function handleManualQrSubmit() {
-      const input = document.getElementById('manualQrInput');
-      const val = (input?.value || '').trim();
-      verifyAndCompleteCheckIn(val);
-    }
-
-    function checkUrlQrCheckIn() {
-      const url = new URL(window.location.href);
-      const qrParam = url.searchParams.get('qr');
-      if (qrParam && state.currentStudent) {
-        setTimeout(() => {
-          verifyAndCompleteCheckIn(qrParam);
-        }, 1000);
-      }
-    }
-
-    async function verifyAndCompleteCheckIn(code) {
-      const expected = (state.config?.qrSecret || 'BK-892').trim().toUpperCase();
-      const entered = String(code || '').trim().toUpperCase();
-
-      if (entered && entered !== expected && entered !== '1234') {
-        showToast('קוד ה-QR שגוי, אנא סרוק שוב את המסך', '⚠️');
-        return;
-      }
 
       if (!state.currentStudent) {
-        showToast('יש להתחבר תחילה', '⚠️');
+        showToast('יש להתחבר תחילה כדי לאשר נוכחות', '⚠️');
         openStudentLoginModal();
         return;
       }
 
-      const active = state.activeSeder || { title: 'סדר לימוד', points: 1 };
+      const active = state.activeSeder;
+      const slotKey = active.id || active.title;
+
+      // בדיקה: האם כבר אישר נוכחות בסדר זה היום?
+      if (state.checkedInSlotsToday.includes(slotKey)) {
+        showToast('כבר אישרת נוכחות בסדר זה! אין אפשרות לסמן שוב.', '✓');
+        updateActiveSederCard();
+        return;
+      }
+
+      const btn = document.getElementById('sederCheckInBtn');
+      const btnText = document.getElementById('sederBtnText');
+      if (btn) {
+        btn.disabled = true;
+        btn.className = 'w-full py-4 rounded-2xl font-black text-base sm:text-lg transition shadow flex items-center justify-center gap-2 bg-slate-300 text-slate-700 cursor-wait';
+        if (btnText) btnText.textContent = '⏳ שומר אישור נוכחות...';
+      }
+
       const noPhoneChecked = document.getElementById('phoneFreeCheckbox')?.checked;
       const basePts = Number(active.points) || 1;
       const totalEarned = basePts + (noPhoneChecked ? 1 : 0);
 
-      closeQrScannerModal();
-
-      // Record in Supabase
-      const success = await Db.recordAttendance(
-        state.currentStudent.id,
-        state.currentStudent.full_name || state.currentStudent.name,
-        active.title,
-        totalEarned,
-        true,
-        noPhoneChecked
-      );
-
-      // Track slot checked today
-      state.checkedInSlotsToday.push(active.id || active.title);
-
-      // Trigger Confetti
       try {
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-      } catch(e) {}
+        const success = await Db.recordAttendance(
+          state.currentStudent.id,
+          state.currentStudent.full_name || state.currentStudent.name,
+          active.title,
+          totalEarned,
+          true,
+          noPhoneChecked
+        );
 
-      showToast(`נוכחותך נרשמה בהצלחה! צברת +${totalEarned} נקודות ⭐`, '🎉');
-      
-      // Update UI immediately
-      state.currentStudent.score = (Number(state.currentStudent.score) || 0) + totalEarned;
-      renderDashboard();
-      renderProgressGraph();
-      updateActiveSederCard();
+        if (success === false) {
+          showToast('נוכחותך לסדר זה כבר רשומה במערכת! ✓', 'ℹ️');
+          if (!state.checkedInSlotsToday.includes(slotKey)) {
+            state.checkedInSlotsToday.push(slotKey);
+          }
+          updateActiveSederCard();
+          return;
+        }
+
+        // רישום מקומי
+        state.checkedInSlotsToday.push(slotKey);
+
+        const todayIso = (window.App && App.getTodayIso) ? App.getTodayIso() : new Date().toISOString().slice(0, 10);
+        if (!state.slotAttendanceMap.byDateSlot[todayIso]) state.slotAttendanceMap.byDateSlot[todayIso] = {};
+        if (!state.slotAttendanceMap.byDateSlot[todayIso][active.title]) state.slotAttendanceMap.byDateSlot[todayIso][active.title] = [];
+        state.slotAttendanceMap.byDateSlot[todayIso][active.title].push(String(state.currentStudent.id));
+
+        // אפקט חגיגי
+        try { confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } }); } catch(e) {}
+
+        showToast(`נוכחותך נרשמה בהצלחה! צברת +${totalEarned} נקודות ⭐`, '🎉');
+
+        state.currentStudent.score = (Number(state.currentStudent.score) || 0) + totalEarned;
+        renderDashboard();
+        renderProgressGraph();
+        updateActiveSederCard();
+      } catch (err) {
+        console.error('CheckIn error:', err);
+        showToast('אירעה תקלה, אנא נסה שוב', '❌');
+        updateActiveSederCard();
+      }
     }
+
+    // פונקציות עזר ישנות לתאימות שקטה
+    function openQrScannerModal() { handleCheckInClick(); }
+    function closeQrScannerModal() {}
+    function handleManualQrSubmit() {}
+    function checkUrlQrCheckIn() {}
 
     // --- Dashboard & KPIs ---
     function renderDashboard() {
@@ -1286,28 +1299,52 @@
       const card = document.getElementById('studentPotentialPointsCard');
       if (!card) return;
 
-      const pot = (window.App && typeof App.calculateCampaignPotential === 'function')
-        ? App.calculateCampaignPotential(state.config, state.scheduleSlots, state.duties, st?.id)
-        : { totalPotential: 150, sedarimPoints: 70, phoneFreePoints: 70, dutiesPoints: 6, fullSederPts: 10 };
-
       const score = Number(st?.score) || 0;
-      const pct = pot.totalPotential > 0 ? Math.min(100, Math.round((score / pot.totalPotential) * 100)) : 0;
+      const pot = (window.App && typeof App.calculateCampaignPotential === 'function')
+        ? App.calculateCampaignPotential(state.config, state.scheduleSlots, state.duties, st?.id, score)
+        : { totalPotential: 690, campaignMax: 690, personalMax: 690, score, sedarimPoints: 351, phoneFreePoints: 315, dutiesPoints: 4, fullSederPts: 20, targets: { min: { points: 100, name: 'יעד 1' }, mid: { points: 200, name: 'יעד 2' }, max: { points: 350, name: 'הפסגה' } }, nextTarget: { points: 100, name: 'יעד 1' }, ptsToNextTarget: 100, ptsToSummit: 350 };
 
+      // 1. כמה צבר בפועל
+      const scoreMini = document.getElementById('studentCardScoreMini');
+      if (scoreMini) scoreMini.textContent = `${score} נק׳`;
+
+      // 2. כמה בחור מסוים יכול לצבור (פוטנציאל אישי מרבי)
+      const pMaxEl = document.getElementById('studentPersonalMaxBadge');
+      if (pMaxEl) pMaxEl.textContent = `עד ${pot.personalMax} נק׳`;
+
+      // 3. כמה ניתן לצבור במבצע כולו (תקרה מלאה)
       const totEl = document.getElementById('studentPotentialTotalPts');
+      if (totEl) totEl.textContent = `${pot.campaignMax} נק׳`;
+
+      // התקדמות אל עבר היעד הבא
       const progLbl = document.getElementById('studentPotentialProgressLabel');
       const progBar = document.getElementById('studentPotentialProgressBar');
+      const targetName = pot.nextTarget?.name || 'יעד 1';
+      const targetPts = pot.nextTarget?.points || 100;
+      const ptsRemaining = Math.max(0, targetPts - score);
+      const pctToNext = Math.min(100, Math.round((score / targetPts) * 100));
+
+      if (progLbl) {
+        if (score >= (pot.targets?.max?.points || 350)) {
+          progLbl.textContent = `👑 כבשת את הפסגה! (${score} נקודות)`;
+        } else {
+          progLbl.textContent = `${score} מתוך ${targetPts} נק׳ ל${targetName} (${pctToNext}%) • עוד ${ptsRemaining} נק׳`;
+        }
+      }
+      if (progBar) {
+        progBar.style.width = `${pctToNext}%`;
+      }
+
+      // 4 עמודי התווך של הפוטנציאל
       const sedEl = document.getElementById('studentPotSedarimPts');
       const phEl = document.getElementById('studentPotPhonePts');
       const dutEl = document.getElementById('studentPotDutiesPts');
       const bonEl = document.getElementById('studentPotBonusPts');
 
-      if (totEl) totEl.textContent = pot.totalPotential;
-      if (progLbl) progLbl.textContent = `${score} מתוך ${pot.totalPotential} נקודות נצברו (${pct}%)`;
-      if (progBar) progBar.style.width = `${pct}%`;
-      if (sedEl) sedEl.textContent = `+${pot.sedarimPoints} נק׳`;
-      if (phEl) phEl.textContent = `+${pot.phoneFreePoints} נק׳`;
-      if (dutEl) dutEl.textContent = `+${pot.dutiesPoints} נק׳`;
-      if (bonEl) bonEl.textContent = `+${pot.fullSederPts} נק׳`;
+      if (sedEl) sedEl.textContent = `${pot.sedarimPoints} נק׳`;
+      if (phEl) phEl.textContent = `${pot.phoneFreePoints} נק׳`;
+      if (dutEl) dutEl.textContent = `${pot.dutiesPoints} נק׳`;
+      if (bonEl) bonEl.textContent = `${pot.fullSederPts} נק׳`;
     }
 
     function renderStreakPills() {
@@ -1610,12 +1647,12 @@
       const currentScore = state.currentStudent ? (Number(state.currentStudent.score) || 0) : 0;
       
       const targets = state.config?.targets || {
-        min: { points: 70, name: 'יעד 1 – כניסה להגרלה', reward: 'כניסה להגרלת ספרים ושוברים' },
-        mid: { points: 100, name: 'יעד 2 – פרס כספי', reward: '300 ₪ במזומן מובטח' },
-        max: { points: 130, name: 'הפסגה – נסיעה ופרס ענק', reward: 'מסע הפסגה ונסיעה VIP' }
+        min: { points: 100, name: 'יעד 1', reward: 'חכו ותגלו' },
+        mid: { points: 200, name: 'יעד 2', reward: 'חכו ותגלו' },
+        max: { points: 350, name: 'הפסגה', reward: 'נקודת סיום על הקצה' }
       };
 
-      const summitTarget = Number(targets.max?.points) || 130;
+      const summitTarget = Number(targets.max?.points) || 350;
       const climbScore = (state.graphMode === 'personal' || state.graphMode === 'individual') ? currentScore : Math.max(avgScore, currentScore);
       const progressPct = Math.min(100, Math.round((climbScore / summitTarget) * 100));
 
@@ -1640,14 +1677,14 @@
 
       const mNextGift = document.getElementById('mountainNextGiftPts');
       if (mNextGift) {
-        if (currentScore >= (targets.max?.points || 130)) {
+        if (currentScore >= (targets.max?.points || 350)) {
           mNextGift.textContent = '👑 השגת את יעד הפסגה!';
-        } else if (currentScore >= (targets.mid?.points || 100)) {
-          mNextGift.textContent = `${targets.max?.name || 'הפסגה'} (עוד ${(targets.max?.points || 130) - currentScore} נק׳)`;
-        } else if (currentScore >= (targets.min?.points || 70)) {
-          mNextGift.textContent = `${targets.mid?.name || 'יעד 2'} (עוד ${(targets.mid?.points || 100) - currentScore} נק׳)`;
+        } else if (currentScore >= (targets.mid?.points || 200)) {
+          mNextGift.textContent = `${targets.max?.name || 'הפסגה'} (עוד ${(targets.max?.points || 350) - currentScore} נק׳)`;
+        } else if (currentScore >= (targets.min?.points || 100)) {
+          mNextGift.textContent = `${targets.mid?.name || 'יעד 2'} (עוד ${(targets.mid?.points || 200) - currentScore} נק׳)`;
         } else {
-          mNextGift.textContent = `${targets.min?.name || 'יעד 1'} (עוד ${(targets.min?.points || 70) - currentScore} נק׳)`;
+          mNextGift.textContent = `${targets.min?.name || 'יעד 1'} (עוד ${(targets.min?.points || 100) - currentScore} נק׳)`;
         }
       }
 
@@ -1655,30 +1692,30 @@
       const g1T = document.getElementById('giftTier1Title');
       const g1P = document.getElementById('giftTier1Pts');
       const g1S = document.getElementById('giftTier1Status');
-      if (g1T) g1T.textContent = targets.min?.name || '🥉 יעד 1 (ארד)';
-      if (g1P) g1P.textContent = `${targets.min?.points || 70} נק׳`;
+      if (g1T) g1T.textContent = targets.min?.name || '🥉 יעד 1 (כניסה)';
+      if (g1P) g1P.textContent = `${targets.min?.points || 100} נק׳`;
       if (g1S) {
-        const p = targets.min?.points || 70;
+        const p = targets.min?.points || 100;
         g1S.textContent = currentScore >= p ? 'היעד הושג! ✓ 🎉' : `נצברו ${currentScore}/${p} (${targets.min?.reward || ''})`;
       }
 
       const g2T = document.getElementById('giftTier2Title');
       const g2P = document.getElementById('giftTier2Pts');
       const g2S = document.getElementById('giftTier2Status');
-      if (g2T) g2T.textContent = targets.mid?.name || '🥈 יעד 2 (כסף)';
-      if (g2P) g2P.textContent = `${targets.mid?.points || 100} נק׳`;
+      if (g2T) g2T.textContent = targets.mid?.name || '🥈 יעד 2 (ביניים)';
+      if (g2P) g2P.textContent = `${targets.mid?.points || 200} נק׳`;
       if (g2S) {
-        const p = targets.mid?.points || 100;
+        const p = targets.mid?.points || 200;
         g2S.textContent = currentScore >= p ? 'היעד הושג! ✓ 🎉' : `עוד ${Math.max(0, p - currentScore)} נק׳ (${targets.mid?.reward || ''})`;
       }
 
       const g3T = document.getElementById('giftTier3Title');
       const g3P = document.getElementById('giftTier3Pts');
       const g3S = document.getElementById('giftTier3Status');
-      if (g3T) g3T.textContent = targets.max?.name || '🥇 יעד הפסגה';
-      if (g3P) g3P.textContent = `${targets.max?.points || 130} נק׳`;
+      if (g3T) g3T.textContent = targets.max?.name || '🥇 יעד 3 (הפסגה)';
+      if (g3P) g3P.textContent = `${targets.max?.points || 350} נק׳`;
       if (g3S) {
-        const p = targets.max?.points || 130;
+        const p = targets.max?.points || 350;
         g3S.textContent = currentScore >= p ? 'הפסגה נכבשה! 👑' : `עוד ${Math.max(0, p - currentScore)} נק׳ (${targets.max?.reward || ''})`;
       }
 
@@ -1691,12 +1728,12 @@
       if (!container) return;
 
       const targets = state.config?.targets || {
-        min: { points: 70, name: 'יעד 1 – כניסה להגרלה', reward: 'כניסה להגרלת ספרים ושוברים' },
-        mid: { points: 100, name: 'יעד 2 – פרס כספי', reward: '300 ₪ במזומן מובטח' },
-        max: { points: 130, name: 'הפסגה – נסיעה ופרס ענק', reward: 'מסע הפסגה ונסיעה VIP' }
+        min: { points: 100, name: 'יעד 1', reward: 'חכו ותגלו' },
+        mid: { points: 200, name: 'יעד 2', reward: 'חכו ותגלו' },
+        max: { points: 350, name: 'הפסגה', reward: 'נקודת סיום על הקצה' }
       };
 
-      const summit = Number(targets.max?.points) || 130;
+      const summit = Number(targets.max?.points) || 350;
 
       // MODE 1: INDIVIDUAL BARS (דירוג עמודות אישיות)
       if (state.graphMode === 'individual') {
