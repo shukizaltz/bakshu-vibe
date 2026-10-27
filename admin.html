@@ -14,8 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   
-  <!-- QRCode generator & Supabase CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
   <!-- Database layer & Shared App helpers -->
@@ -63,11 +62,6 @@
 
       <!-- Quick Action Buttons -->
       <div class="flex items-center gap-2">
-        <button onclick="openProjectorModal()" class="px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition flex items-center gap-1.5 shadow-md">
-          <span>📺</span>
-          <span>מקרן לבית המדרש</span>
-        </button>
-
         <button onclick="openShareModal()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm">
           <span>💬</span>
           <span>הזמנות ותזכורות WhatsApp</span>
@@ -605,41 +599,6 @@
       <button onclick="handleUnlockAdmin()" class="w-full mt-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
         כניסה למערכת 🚀
       </button>
-    </div>
-  </div>
-
-  <!-- ========================================================= -->
-  <!-- MODAL: BEIT MIDRASH QR PROJECTOR SCREEN                   -->
-  <!-- ========================================================= -->
-  <div id="projectorModal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 hidden">
-    <div class="bg-[#0A1138] border-2 border-indigo-500/40 rounded-3xl max-w-xl w-full p-6 sm:p-8 text-center text-white relative shadow-2xl">
-      <button onclick="closeProjectorModal()" class="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold">✕</button>
-
-      <div class="flex items-center justify-center gap-2 mb-2">
-        <span class="text-2xl">⚡</span>
-        <h3 class="text-xl sm:text-2xl font-black text-amber-400">קוד נוכחות קבוע לבית המדרש</h3>
-      </div>
-      <p class="text-xs text-slate-300 mb-5">כוון את מצלמת הטלפון או פתח את המערכת לסריקת קוד זה</p>
-
-      <!-- QR Canvas -->
-      <div class="w-64 h-64 sm:w-72 sm:h-72 bg-white rounded-3xl p-4 mx-auto shadow-2xl flex items-center justify-center">
-        <canvas id="projectorQrCanvas" class="w-full h-full"></canvas>
-      </div>
-
-      <!-- Secret Display -->
-      <div class="mt-5 p-3 rounded-2xl bg-white/5 border border-white/10 max-w-xs mx-auto">
-        <span class="text-[11px] text-slate-400 block font-bold">קוד גיבוי ידני להקלדה:</span>
-        <span id="projectorCodeDisplay" class="text-2xl font-black text-amber-400 font-mono tracking-widest">BK-892</span>
-      </div>
-
-      <div class="flex items-center justify-center gap-3 mt-6">
-        <button onclick="promptChangeQrSecret()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold transition">
-          🔄 החלף קוד סודי
-        </button>
-        <button onclick="window.print()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold transition">
-          🖨️ הדפס לתלייה בלוח מודעות
-        </button>
-      </div>
     </div>
   </div>
 
@@ -3014,47 +2973,9 @@ END:VEVENT
       App.showToast('הבקשה נדחתה', 'ℹ️');
     }
 
-    // =========================================================
-    // 6. QR PROJECTOR MODAL
-    // =========================================================
-    function openProjectorModal() {
-      const modal = document.getElementById('projectorModal');
-      const canvas = document.getElementById('projectorQrCanvas');
-      const codeDisplay = document.getElementById('projectorCodeDisplay');
-      if (modal) modal.classList.remove('hidden');
-
-      const secret = (adminState.config?.qrSecret || 'BK-892').trim().toUpperCase();
-      if (codeDisplay) codeDisplay.textContent = secret;
-
-      if (canvas && window.QRCode) {
-        const checkInUrl = `https://bakshu-vibe.vercel.app/?qr=${encodeURIComponent(secret)}`;
-        QRCode.toCanvas(canvas, checkInUrl, {
-          width: 280,
-          margin: 2,
-          color: { dark: '#0A1138', light: '#FFFFFF' }
-        });
-      }
-    }
-
-    function closeProjectorModal() {
-      document.getElementById('projectorModal')?.classList.add('hidden');
-    }
-
-    async function promptChangeQrSecret() {
-      const cur = (adminState.config?.qrSecret || 'BK-892').trim().toUpperCase();
-      const n = prompt('הזן קוד QR סודי חדש לבית המדרש:', cur);
-      if (n && n.trim()) {
-        const clean = n.trim().toUpperCase();
-        adminState.config.qrSecret = clean;
-        await Db.saveConfig(adminState.config);
-        openProjectorModal();
-        App.showToast('קוד ה-QR הוחלף בהצלחה ונשמר בשרת!', '🔄');
-      }
-    }
-
-    // =========================================================
+    // ==========================================
     // 7. BONUS MODAL
-    // =========================================================
+    // ==========================================
     function openGrantBonusModal() {
       document.getElementById('grantBonusModal')?.classList.remove('hidden');
     }

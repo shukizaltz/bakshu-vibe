@@ -641,38 +641,6 @@
   </div>
 
   <!-- ========================================================= -->
-  <!-- MODAL 2: CAMERA QR SCANNER MODAL                          -->
-  <!-- ========================================================= -->
-  <div id="qrScannerModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-center relative">
-      <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
-        <h4 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
-          <span>📸</span>
-          <span>סריקת ברקוד בית המדרש</span>
-        </h4>
-        <button onclick="closeQrScannerModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
-      </div>
-
-      <p class="text-xs text-slate-500 mb-3">כוון את מצלמת הטלפון אל מסך ההקרנה בבית המדרש</p>
-      
-      <!-- Video stream container -->
-      <div id="qrReaderContainer" class="w-full h-64 bg-slate-950 rounded-2xl overflow-hidden border border-slate-300 relative flex items-center justify-center">
-        <video id="qrVideoFeed" class="w-full h-full object-cover" playsinline autoplay muted></video>
-        <div class="absolute inset-8 border-2 border-dashed border-amber-400 rounded-2xl pointer-events-none animate-pulse"></div>
-      </div>
-
-      <!-- Fallback Code Input -->
-      <div class="mt-4 pt-3 border-t border-slate-100 text-right">
-        <label class="block text-[11px] font-bold text-slate-500 mb-1">או הקש את הקוד שמוצג על המסך:</label>
-        <div class="flex items-center gap-1.5">
-          <input type="text" id="manualQrInput" placeholder="למשל: BK-892" class="flex-1 p-2 rounded-xl border border-slate-300 text-xs font-mono font-bold text-center uppercase">
-          <button onclick="handleManualQrSubmit()" class="px-3 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs">אישור</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================= -->
   <!-- MODAL 3: FORGOT TO CHECK-IN REQUEST                       -->
   <!-- ========================================================= -->
   <div id="requestModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
