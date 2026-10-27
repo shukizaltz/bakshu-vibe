@@ -174,7 +174,7 @@
       const cur = new Date(start);
       while (cur <= end) {
         const iso = cur.toISOString().slice(0, 10);
-        const daySlots = slotsMap[iso] || (cur.getDay() === 6 ? [] : [
+        const daySlots = slotsMap[iso] || (cur.getDay() === 5 || cur.getDay() === 6 ? [] : [
           { points: 1 }, { points: 1 }, { points: 1 }
         ]);
         const isFutureOrToday = (iso >= todayIso);

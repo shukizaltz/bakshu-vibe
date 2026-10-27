@@ -1388,6 +1388,15 @@
     // 2. SCHEDULE & SLOTS
     // =========================================================
     function getSlotsForDate(isoDate) {
+      const dObj = new Date(isoDate + 'T12:00:00');
+      const dow = dObj.getDay();
+      if (dow === 5) return []; // יום שישי ללא סדרים
+      if (dow === 6) {
+        return [
+          { id: 'slot_shabbat_1', title: 'סדר שחרית (קודם התפילה)', openTime: '08:00', lockTime: '10:00', points: 2 },
+          { id: 'slot_shabbat_2', title: 'סדר שבת אחה״צ', openTime: '16:00', lockTime: '19:00', points: 2 }
+        ];
+      }
       return [
         { id: 'slot_1', title: 'סדר א׳ (עיון)', openTime: '09:00', lockTime: '13:00', points: 1 },
         { id: 'slot_2', title: 'סדר ב׳ (בקיאות)', openTime: '16:00', lockTime: '19:00', points: 1 },
@@ -1407,14 +1416,15 @@
       if (!grid) return;
 
       const todayIso = (window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10);
-      const start = new Date(adminState.config?.startDate || '2026-10-25');
-      const end = new Date(adminState.config?.endDate || '2027-02-08');
-      const cur = new Date(start);
+      const [sy, sm, sd] = (adminState.config?.startDate || '2026-10-25').split('-').map(Number);
+      const [ey, em, ed] = (adminState.config?.endDate || '2027-02-08').split('-').map(Number);
+      const cur = new Date(sy, sm - 1, sd, 12, 0, 0);
+      const end = new Date(ey, em - 1, ed, 12, 0, 0);
       const days = [];
 
       const dayNames = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
       while (cur <= end) {
-        const iso = cur.toISOString().slice(0, 10);
+        const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
         const dayOfWeek = cur.getDay();
         const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(iso) : null;
         const gregShort = cur.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
@@ -1442,7 +1452,8 @@
         const isSelected = d.iso === adminState.selectedDate;
         const isToday = d.iso === todayIso;
         const slots = adminState.scheduleSlots[d.iso] || [];
-        const hasEvent = adminState.duties[d.iso]?.specialEventTitle;
+        const trailStop = (adminState.config?.trailStops || []).find(s => s.isoDate === d.iso);
+        const hasEvent = adminState.duties[d.iso]?.specialEventTitle || (trailStop ? ('🎯 ' + trailStop.title) : null);
 
         let borderClass = 'border-slate-200';
         let bgClass = 'bg-white text-slate-800 hover:bg-slate-50';
@@ -1467,8 +1478,8 @@
             <span class="block text-[10px] font-bold ${isSelected ? 'text-indigo-200' : (isToday ? 'text-amber-800' : 'text-slate-400')}">${d.dayName}</span>
             <span class="block text-xs font-black truncate">${d.hebShort}</span>
             <span class="block text-[9px] font-mono ${isSelected ? 'text-indigo-200' : (isToday ? 'text-amber-700' : 'text-slate-400')}">${d.gregShort}</span>
-            <span class="block text-[9px] mt-0.5 font-bold ${isSelected ? 'text-amber-300' : (slots.length > 0 ? 'text-emerald-700' : 'text-slate-400')}">${slots.length} סדרים</span>
-            ${hasEvent ? `<span class="block text-[8px] truncate font-bold text-amber-600">🎉 ${hasEvent}</span>` : ''}
+            <span class="block text-[9px] mt-0.5 font-bold ${isSelected ? 'text-amber-300' : (slots.length > 0 ? 'text-emerald-700' : 'text-slate-400')}">${slots.length > 0 ? `${slots.length} סדרים` : 'ללא סדרים'}</span>
+            ${hasEvent ? `<span class="block text-[8px] truncate font-bold text-amber-600">${hasEvent}</span>` : ''}
           </button>
         `;
       }).join('');

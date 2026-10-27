@@ -544,27 +544,80 @@
     </section>
 
     <!-- ========================================================= -->
-    <!-- TAB 4: CALENDAR (לוח השנה המלא ו-Google Calendar)          -->
+    <!-- TAB 4: CALENDAR (לוח המבצע - סנכרון מלא עם לוח הניהול)    -->
     <!-- ========================================================= -->
     <section id="tab-calendar" class="space-y-4 hidden">
-      <div class="rounded-3xl p-5 sm:p-6 glass-card shadow-xl space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+      <div class="rounded-3xl p-5 sm:p-6 glass-card shadow-xl space-y-5">
+        
+        <!-- Calendar Header Toolbar -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100">
           <div>
-            <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-              <span>📅</span>
-              <span>לוח המבצע המלא</span>
-            </h3>
-            <p class="text-xs text-slate-500">כל תאריכי המבצע, הסדרים, התורנויות והשבתות</p>
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                <span>📅</span>
+                <span>לוח המבצע האינטראקטיבי</span>
+              </h3>
+              <button onclick="goToTodayStudentCalendar()" class="px-2.5 py-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition flex items-center gap-1 border border-indigo-200 cursor-pointer shadow-xs" title="קפוץ ליום הנוכחי בלוח">
+                <span>📍</span>
+                <span>היום</span>
+              </button>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">בחר יום בלוח לצפייה בסדרי הלימוד, שעות, תורנויות ואירועים</p>
           </div>
-          <button onclick="downloadStudentCalendarIcs()" class="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold text-xs transition flex items-center gap-1.5 shadow-sm">
-            <span>📥</span>
-            <span>הורד יומן לסנכרון מלא בטלפון (.ics)</span>
-          </button>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- View Mode Switcher -->
+            <div class="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200 text-xs font-bold">
+              <button id="btnStudentViewGrid" onclick="setStudentCalendarView('grid')" class="px-3 py-1 rounded-lg bg-white text-indigo-950 shadow-xs font-black transition cursor-pointer">
+                📅 לוח מלא
+              </button>
+              <button id="btnStudentViewWeeks" onclick="setStudentCalendarView('weeks')" class="px-3 py-1 rounded-lg text-slate-600 hover:text-slate-950 transition cursor-pointer">
+                📋 לפי שבועות
+              </button>
+            </div>
+
+            <!-- Download ICS -->
+            <button onclick="downloadStudentCalendarIcs()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="הורדת יומן מסונכרן מלא לטלפון">
+              <span>📥</span>
+              <span>יומן מלא (.ics)</span>
+            </button>
+
+            <!-- Total days badge -->
+            <span class="text-xs px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 font-mono font-bold" id="studentTotalDaysBadge">-- ימים</span>
+          </div>
         </div>
 
-        <div id="fullCalendarDaysList" class="space-y-3">
-          <!-- Populated by JS -->
+        <!-- 1. FULL INTERACTIVE GRID (Synchronized with Admin Interactive Calendar) -->
+        <div id="studentGridCalendarSection" class="space-y-3">
+          <!-- Weekday Headers Sunday to Saturday -->
+          <div class="grid grid-cols-7 gap-1 text-center font-black text-xs text-indigo-950 bg-indigo-50/70 p-2.5 rounded-2xl border border-indigo-100">
+            <div>ראשון (א׳)</div>
+            <div>שני (ב׳)</div>
+            <div>שלישי (ג׳)</div>
+            <div>רביעי (ד׳)</div>
+            <div>חמישי (ה׳)</div>
+            <div>שישי (ו׳)</div>
+            <div class="text-amber-900">שבת קודש</div>
+          </div>
+
+          <!-- Interactive Grid -->
+          <div id="studentInteractiveCalendarGrid" class="grid grid-cols-7 gap-1.5 max-h-80 sm:max-h-96 overflow-y-auto custom-scroll p-1">
+            <!-- Populated by JS -->
+          </div>
         </div>
+
+        <!-- 2. WEEKS BREAKDOWN VIEW (Alternative View) -->
+        <div id="studentWeeksCalendarSection" class="space-y-3 hidden">
+          <div id="fullCalendarDaysList" class="space-y-3">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- 3. SELECTED DAY DETAILED SCHEDULE CARD (Synchronized with Admin Schedule View) -->
+        <div id="studentSelectedDayCard" class="p-5 rounded-3xl bg-white border-2 border-indigo-200/90 shadow-sm space-y-4 transition">
+          <!-- Populated by renderStudentSelectedDayDetails() -->
+        </div>
+
       </div>
     </section>
 
@@ -782,7 +835,9 @@
       qrScannerStream: null,
       activeSeder: null,
       nextSeder: null,
-      checkedInSlotsToday: []
+      checkedInSlotsToday: [],
+      selectedCalendarDate: null,
+      calendarViewMode: 'grid'
     };
 
     // --- Bootstrapping on Load ---
@@ -1007,18 +1062,14 @@
 
     // --- Active Seder Calculation & Check-in Logic ---
     function getTodayIso() {
-      return new Date().toISOString().slice(0, 10);
+      return (window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10);
     }
 
     function getSlotsForDate(isoDate) {
-      if (state.scheduleSlots && state.scheduleSlots[isoDate]) {
+      if (state.scheduleSlots && Array.isArray(state.scheduleSlots[isoDate])) {
         return state.scheduleSlots[isoDate];
       }
-      return [
-        { id: 'slot_1', title: 'סדר א׳ (עיון)', openTime: '09:00', lockTime: '13:00', points: 1 },
-        { id: 'slot_2', title: 'סדר ב׳ (בקיאות)', openTime: '16:00', lockTime: '19:00', points: 1 },
-        { id: 'slot_3', title: 'סדר ג׳ (ערב)', openTime: '20:30', lockTime: '22:30', points: 1 }
-      ];
+      return [];
     }
 
     function calculateActiveAndNextSeder() {
@@ -1449,35 +1500,90 @@
     // Download Full ICS Calendar
     function downloadStudentCalendarIcs() {
       const st = state.currentStudent || { full_name: 'תלמיד הישיבה' };
-      const startStr = state.config?.startDate || '2026-10-25';
-      const endStr = state.config?.endDate || '2026-12-10';
+      const myId = st.id ? String(st.id) : null;
+      const days = (typeof getCampaignDaysList === 'function') ? getCampaignDaysList() : [];
 
-      const events = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'PRODID:-//Bakshu VIBE//Yeshiva Campaign//HE',
-        'CALSCALE:GREGORIAN',
-        'METHOD:PUBLISH',
-        'X-WR-CALNAME:מבצע בקשו VIBE - עד הפסגה',
-        'X-WR-TIMEZONE:Asia/Jerusalem',
-        'BEGIN:VEVENT',
-        'UID:bakshu_stop_1@yeshiva',
-        'SUMMARY:🎁 עצירה 1 במסע - ישיבת בקשו',
-        'DESCRIPTION:אירוע עצירה ראשונה במסע מבצע חורף תשפ״ז',
-        'DTSTART;VALUE=DATE:20261119',
-        'DTEND;VALUE=DATE:20261120',
-        'END:VEVENT',
-        'END:VCALENDAR'
-      ].join('\r\n');
+      const events = [];
 
-      const blob = new Blob([events], { type: 'text/calendar;charset=utf-8' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `מבצע_בקשו_יומן_${st.full_name || 'תלמיד'}.ics`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast('קובץ היומן ירד בהצלחה! פתח אותו לסנכרון בטלפון', '📅');
+      // 1. Journey Stops & Special Events
+      (state.config?.trailStops || []).forEach(stop => {
+        if (stop.isoDate) {
+          const cleanDate = stop.isoDate.replace(/-/g, '');
+          events.push([
+            'BEGIN:VEVENT',
+            `UID:bakshu_stop_${stop.id || Date.now()}@yeshiva`,
+            `SUMMARY:🎯 ${stop.title || 'עצירת מסע - מבצע בקשו'}`,
+            `DESCRIPTION:${stop.description || 'אירוע במסע עד הפסגה ישיבת בקשו'}`,
+            `DTSTART;VALUE=DATE:${cleanDate}`,
+            `DTEND;VALUE=DATE:${cleanDate}`,
+            'END:VEVENT'
+          ].join('\r\n'));
+        }
+      });
+
+      // 2. Daily Sedarim & Duties
+      days.forEach(d => {
+        const slots = state.scheduleSlots[d.iso] || [];
+        const duty = state.duties[d.iso];
+        const dateClean = d.iso.replace(/-/g, '');
+
+        if (duty?.specialEventTitle) {
+          events.push([
+            'BEGIN:VEVENT',
+            `UID:bakshu_event_${d.iso}@yeshiva`,
+            `SUMMARY:🎉 ${duty.specialEventTitle}`,
+            `DESCRIPTION:אירוע מיוחד במבצע חורף בישיבת בקשו`,
+            `DTSTART;VALUE=DATE:${dateClean}`,
+            `DTEND;VALUE=DATE:${dateClean}`,
+            'END:VEVENT'
+          ].join('\r\n'));
+        }
+
+        // Student personal duties
+        if (myId && duty?.wakeupStudentId && String(duty.wakeupStudentId) === myId) {
+          events.push([
+            'BEGIN:VEVENT',
+            `UID:bakshu_duty_wake_${d.iso}@yeshiva`,
+            `SUMMARY:⏰ תורנות מעורר בישיבה`,
+            `DESCRIPTION:הינך משובץ לתורנות מעורר בוקר בישיבת בקשו`,
+            `DTSTART:${dateClean}T063000`,
+            `DTEND:${dateClean}T073000`,
+            'END:VEVENT'
+          ].join('\r\n'));
+        }
+        if (myId && duty?.kitchenStudentId && String(duty.kitchenStudentId) === myId) {
+          events.push([
+            'BEGIN:VEVENT',
+            `UID:bakshu_duty_kitch_${d.iso}@yeshiva`,
+            `SUMMARY:🍽️ תורנות מטבח בישיבה`,
+            `DESCRIPTION:הינך משובץ לתורנות מטבח בישיבת בקשו`,
+            `DTSTART:${dateClean}T120000`,
+            `DTEND:${dateClean}T130000`,
+            'END:VEVENT'
+          ].join('\r\n'));
+        }
+
+        // Daily Sedarim
+        slots.forEach((sl, idx) => {
+          const openClean = (sl.openTime || '09:00').replace(':', '') + '00';
+          const lockClean = (sl.lockTime || '12:00').replace(':', '') + '00';
+          events.push([
+            'BEGIN:VEVENT',
+            `UID:bakshu_slot_${d.iso}_${idx}@yeshiva`,
+            `SUMMARY:📖 ${sl.title} (${sl.points || 1} נק׳)`,
+            `DESCRIPTION:סדר לימוד במבצע 'עד הפסגה' בישיבת בקשו`,
+            `DTSTART:${dateClean}T${openClean}`,
+            `DTEND:${dateClean}T${lockClean}`,
+            'END:VEVENT'
+          ].join('\r\n'));
+        });
+      });
+
+      const icsBody = events.join('\r\n');
+      if (window.App && App.downloadIcs) {
+        App.downloadIcs(`מבצע_בקשו_יומן_${st.full_name || 'תלמיד'}.ics`, icsBody);
+      }
+      showToast('יומן המבצע המלא סונכרן והורד בהצלחה!', '📅');
     }
 
     function renderTodayScheduleList() {
@@ -2108,34 +2214,304 @@
       }).join('');
     }
 
-    // --- Campaign Calendar (Arranged in Weeks Sunday to Saturday) ---
-    function renderCalendar() {
-      const container = document.getElementById('fullCalendarDaysList');
-      if (!container) return;
+    // --- Campaign Calendar (Synchronized with Admin Interactive Calendar) ---
+    function setStudentCalendarView(mode) {
+      state.calendarViewMode = mode;
+      const gridSec = document.getElementById('studentGridCalendarSection');
+      const weeksSec = document.getElementById('studentWeeksCalendarSection');
+      const btnGrid = document.getElementById('btnStudentViewGrid');
+      const btnWeeks = document.getElementById('btnStudentViewWeeks');
 
+      if (gridSec && weeksSec) {
+        if (mode === 'grid') {
+          gridSec.classList.remove('hidden');
+          weeksSec.classList.add('hidden');
+        } else {
+          gridSec.classList.add('hidden');
+          weeksSec.classList.remove('hidden');
+        }
+      }
+
+      if (btnGrid && btnWeeks) {
+        if (mode === 'grid') {
+          btnGrid.className = 'px-3 py-1 rounded-lg bg-white text-indigo-950 shadow-xs font-black transition cursor-pointer';
+          btnWeeks.className = 'px-3 py-1 rounded-lg text-slate-600 hover:text-slate-950 transition cursor-pointer';
+        } else {
+          btnWeeks.className = 'px-3 py-1 rounded-lg bg-white text-indigo-950 shadow-xs font-black transition cursor-pointer';
+          btnGrid.className = 'px-3 py-1 rounded-lg text-slate-600 hover:text-slate-950 transition cursor-pointer';
+        }
+      }
+    }
+
+    function onStudentCalendarDateSelected(isoDate) {
+      state.selectedCalendarDate = isoDate;
+      renderStudentInteractiveCalendarGrid();
+      renderStudentSelectedDayDetails();
+    }
+
+    function goToTodayStudentCalendar() {
+      const todayIso = getTodayIso();
+      onStudentCalendarDateSelected(todayIso);
+      setTimeout(() => {
+        const el = document.getElementById('studentCalDay_' + todayIso);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          el.classList.add('ring-4', 'ring-amber-400');
+          setTimeout(() => el.classList.remove('ring-4', 'ring-amber-400'), 1500);
+        }
+      }, 100);
+    }
+
+    function getCampaignDaysList() {
       const startStr = state.config?.startDate || '2026-10-25';
       const endStr = state.config?.endDate || '2027-02-08';
+      const [sy, sm, sd] = startStr.split('-').map(Number);
+      const [ey, em, ed] = endStr.split('-').map(Number);
 
       const days = [];
-      const cur = new Date(startStr);
-      const end = new Date(endStr);
+      const cur = new Date(sy, sm - 1, sd, 12, 0, 0);
+      const end = new Date(ey, em - 1, ed, 12, 0, 0);
 
-      const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+      const dayNames = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
+      const dayNamesFull = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
       while (cur <= end) {
-        const iso = cur.toISOString().slice(0, 10);
+        const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
         const dayIdx = cur.getDay();
         const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(iso) : null;
+        const gregShort = cur.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
+        
         days.push({
-          isoDate: iso,
+          iso: iso,
           dayOfWeek: dayIdx,
-          dayName: `יום ${dayNames[dayIdx]}`,
+          dayNameShort: dayNames[dayIdx],
+          dayNameFull: `יום ${dayNamesFull[dayIdx]}`,
           isShabbat: dayIdx === 6,
           hebShort: heb ? heb.shortHebrew : iso.slice(5),
           hebFull: heb ? heb.fullHebrewDate : '',
-          gregShort: cur.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' })
+          gregShort: gregShort
         });
         cur.setDate(cur.getDate() + 1);
       }
+      return days;
+    }
+
+    function renderStudentInteractiveCalendarGrid() {
+      const grid = document.getElementById('studentInteractiveCalendarGrid');
+      const badge = document.getElementById('studentTotalDaysBadge');
+      if (!grid) return;
+
+      const todayIso = getTodayIso();
+      if (!state.selectedCalendarDate) {
+        state.selectedCalendarDate = todayIso;
+      }
+
+      const days = getCampaignDaysList();
+      if (badge) badge.textContent = `${days.length} ימים במבצע`;
+
+      // Leading blanks so Sunday is always in Column 1
+      const leadingBlanks = days.length > 0 ? days[0].dayOfWeek : 0;
+      let blanksHtml = '';
+      for (let i = 0; i < leadingBlanks; i++) {
+        blanksHtml += '<div class="p-1.5 rounded-xl bg-slate-50/40 border border-dashed border-slate-200/50 opacity-40"></div>';
+      }
+
+      const daysHtml = days.map(d => {
+        const isSelected = d.iso === state.selectedCalendarDate;
+        const isToday = d.iso === todayIso;
+        const slots = state.scheduleSlots[d.iso] || [];
+        const duty = state.duties[d.iso];
+        const trailStop = (state.config?.trailStops || []).find(s => s.isoDate === d.iso);
+        const hasEvent = duty?.specialEventTitle || (trailStop ? ('🎯 ' + trailStop.title) : null);
+
+        let borderClass = 'border-slate-200';
+        let bgClass = 'bg-white text-slate-800 hover:bg-slate-50';
+
+        if (isSelected) {
+          bgClass = 'bg-indigo-600 text-white shadow-md scale-102 ring-2 ring-indigo-300';
+          borderClass = 'border-indigo-700';
+        } else if (isToday) {
+          bgClass = 'bg-amber-50/95 text-amber-950 hover:bg-amber-100 ring-2 ring-amber-400';
+          borderClass = 'border-amber-400';
+        } else if (d.isShabbat) {
+          bgClass = 'bg-amber-50/80 text-amber-950 hover:bg-amber-100';
+          borderClass = 'border-amber-300';
+        } else if (hasEvent) {
+          bgClass = 'bg-indigo-50/70 text-indigo-950 hover:bg-indigo-100';
+          borderClass = 'border-indigo-200';
+        }
+
+        return `
+          <button id="studentCalDay_${d.iso}" onclick="onStudentCalendarDateSelected('${d.iso}')" class="p-1.5 sm:p-2 rounded-xl text-center transition border ${bgClass} ${borderClass} cursor-pointer relative">
+            ${isToday ? `<span class="absolute -top-1.5 -right-1.5 px-1 py-0.2 rounded-full text-[8px] font-black ${isSelected ? 'bg-amber-400 text-slate-950' : 'bg-amber-500 text-white'} shadow-xs">היום</span>` : ''}
+            <span class="block text-[10px] font-bold ${isSelected ? 'text-indigo-200' : (isToday ? 'text-amber-800' : 'text-slate-400')}">${d.dayNameShort}</span>
+            <span class="block text-xs font-black truncate">${d.hebShort}</span>
+            <span class="block text-[9px] font-mono ${isSelected ? 'text-indigo-200' : (isToday ? 'text-amber-700' : 'text-slate-400')}">${d.gregShort}</span>
+            <span class="block text-[9px] mt-0.5 font-bold ${isSelected ? 'text-amber-300' : (slots.length > 0 ? 'text-emerald-700' : 'text-slate-400')}">${slots.length > 0 ? `${slots.length} סדרים` : 'ללא סדרים'}</span>
+            ${hasEvent ? `<span class="block text-[8px] truncate font-bold text-amber-600">${hasEvent}</span>` : ''}
+          </button>
+        `;
+      }).join('');
+
+      grid.innerHTML = blanksHtml + daysHtml;
+    }
+
+    function renderStudentSelectedDayDetails() {
+      const container = document.getElementById('studentSelectedDayCard');
+      if (!container) return;
+
+      const dateStr = state.selectedCalendarDate || getTodayIso();
+      const todayIso = getTodayIso();
+      const isToday = dateStr === todayIso;
+
+      const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(dateStr) : null;
+      const cur = new Date(dateStr + 'T12:00:00');
+      const gregFormatted = cur.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: 'numeric' });
+      
+      const slots = state.scheduleSlots[dateStr] || [];
+      const duty = state.duties[dateStr];
+      const trailStop = (state.config?.trailStops || []).find(s => s.isoDate === dateStr);
+      const eventTitle = duty?.specialEventTitle || (trailStop ? ('🎯 ' + trailStop.title + (trailStop.description ? ` (${trailStop.description})` : '')) : null);
+
+      // Find duty students
+      let wakeupStudentName = 'טרם שובץ תורן';
+      let kitchenStudentName = 'טרם שובץ תורן';
+      if (duty?.wakeupStudentId) {
+        const found = state.students.find(s => String(s.id) === String(duty.wakeupStudentId));
+        wakeupStudentName = found ? (found.full_name || found.name) : 'תורן מעורר';
+      }
+      if (duty?.kitchenStudentId) {
+        const found = state.students.find(s => String(s.id) === String(duty.kitchenStudentId));
+        kitchenStudentName = found ? (found.full_name || found.name) : 'תורן מטבח';
+      }
+
+      // Check if logged in student is duty
+      const myId = state.currentStudent ? String(state.currentStudent.id) : null;
+      const isMyWakeup = myId && duty?.wakeupStudentId && String(duty.wakeupStudentId) === myId;
+      const isMyKitchen = myId && duty?.kitchenStudentId && String(duty.kitchenStudentId) === myId;
+
+      // Google Calendar link for this day
+      const gcalUrl = (window.App && App.getGoogleCalendarUrl) ? App.getGoogleCalendarUrl({
+        title: `מבצע בקשו - ${heb ? heb.fullHebrewDate : dateStr}${eventTitle ? ` (${eventTitle})` : ''}`,
+        details: `סדרי לימוד בישיבת בקשו (${slots.length} סדרים).\n${eventTitle || ''}`,
+        startIso: dateStr,
+        isAllDay: true
+      }) : '#';
+
+      container.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-indigo-100">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-base font-black text-slate-900">${heb ? `${heb.dayName}, ${heb.fullHebrewDate}` : `תאריך: ${dateStr}`}</span>
+              <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">${gregFormatted}</span>
+              ${isToday ? '<span class="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-xs">היום הנוכחי</span>' : ''}
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">${slots.length > 0 ? `סה״כ ${slots.length} סדרים מוגדרים ליום זה` : 'אין סדרים פעילים ביום זה'}</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <a href="${gcalUrl}" target="_blank" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-xs transition flex items-center gap-1 cursor-pointer">
+              <span>📅</span>
+              <span>הוסף יום זה ל-Google Calendar</span>
+            </a>
+          </div>
+        </div>
+
+        ${eventTitle ? `
+          <div class="p-3 rounded-2xl bg-amber-50 border border-amber-300 text-amber-950 text-xs font-black flex items-center gap-2">
+            <span class="text-base">🎉</span>
+            <span>אירוע מיוחד / תחנת מסע: ${eventTitle}</span>
+          </div>
+        ` : ''}
+
+        <!-- Duties for this day -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div class="p-3 rounded-2xl ${isMyWakeup ? 'bg-indigo-50 border-2 border-indigo-400' : 'bg-slate-50 border border-slate-200'} flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">⏰</span>
+              <div>
+                <span class="block text-[10px] text-slate-500 font-bold">תורן מעורר (בוקר)</span>
+                <span class="font-black text-slate-900">${wakeupStudentName}</span>
+              </div>
+            </div>
+            ${isMyWakeup ? '<span class="px-2 py-0.5 rounded-full bg-indigo-600 text-white font-black text-[10px]">אתה משובץ! ⭐</span>' : ''}
+          </div>
+
+          <div class="p-3 rounded-2xl ${isMyKitchen ? 'bg-indigo-50 border-2 border-indigo-400' : 'bg-slate-50 border border-slate-200'} flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">🍽️</span>
+              <div>
+                <span class="block text-[10px] text-slate-500 font-bold">תורן מטבח (צהריים/ערב)</span>
+                <span class="font-black text-slate-900">${kitchenStudentName}</span>
+              </div>
+            </div>
+            ${isMyKitchen ? '<span class="px-2 py-0.5 rounded-full bg-indigo-600 text-white font-black text-[10px]">אתה משובץ! ⭐</span>' : ''}
+          </div>
+        </div>
+
+        <!-- Sedarim List -->
+        <div class="space-y-2 pt-1">
+          <span class="block text-xs font-black text-slate-800">סדרי הלימוד ביום זה:</span>
+          ${slots.length === 0 ? `
+            <div class="p-6 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400 font-bold">
+              אין סדרים מוגדרים ליום זה במבצע (יום שישי / מנוחה / ללא סדרים)
+            </div>
+          ` : `
+            <div class="space-y-2">
+              ${slots.map((sl, idx) => {
+                const isCurrentActive = isToday && state.activeSeder && (state.activeSeder.title === sl.title || state.activeSeder.id === sl.id);
+                const isStudentPresent = myId && (state.slotAttendanceMap?.byDateSlot?.[dateStr]?.[sl.title] || []).includes(myId);
+
+                return `
+                  <div class="p-3 rounded-2xl ${isCurrentActive ? 'bg-amber-50/80 border-2 border-amber-400 shadow-xs' : 'bg-slate-50 border border-slate-200'} flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-2.5">
+                      <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-900 font-black flex items-center justify-center text-[11px]">${idx + 1}</span>
+                      <div>
+                        <span class="font-black text-slate-900 text-sm">${sl.title}</span>
+                        <div class="flex items-center gap-2 mt-0.5 text-slate-500 font-bold">
+                          <span dir="ltr" class="font-mono text-xs">⏰ ${sl.openTime} - ${sl.lockTime}</span>
+                          <span>•</span>
+                          <span class="text-amber-700 font-black">⭐ ${sl.points || 1} נקודות</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                      ${isStudentPresent ? `
+                        <span class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-black text-xs flex items-center gap-1 shadow-xs">
+                          <span>✓</span>
+                          <span>נכחת בסדר זה (+${sl.points || 1} נק׳)</span>
+                        </span>
+                      ` : (isCurrentActive ? `
+                        <span class="px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 font-black text-xs animate-pulse flex items-center gap-1 shadow-xs">
+                          <span>⚡</span>
+                          <span>סדר פעיל כעת!</span>
+                        </span>
+                      ` : (isToday ? `
+                        <span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-bold text-[11px]">
+                          טרם סימנת
+                        </span>
+                      ` : `
+                        <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 font-bold text-[11px]">
+                          ${dateStr < todayIso ? 'לא סומן' : 'טרם התקיים'}
+                        </span>
+                      `))}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function renderStudentWeeksView() {
+      const container = document.getElementById('fullCalendarDaysList');
+      if (!container) return;
+
+      const days = getCampaignDaysList();
+      const todayIso = getTodayIso();
 
       // Group days into weeks (Sunday to Saturday)
       const weeks = [];
@@ -2152,13 +2528,11 @@
         weeks.push(currentWeek);
       }
 
-      const todayIso = getTodayIso();
-
       container.innerHTML = weeks.map((wk, wIdx) => {
         const firstDay = wk[0];
         const lastDay = wk[wk.length - 1];
         const weekHebLabel = `${firstDay.hebShort} – ${lastDay.hebShort}`;
-        const hasToday = wk.some(d => d.isoDate === todayIso);
+        const hasToday = wk.some(d => d.iso === todayIso);
 
         return `
           <div class="rounded-3xl ${hasToday ? 'bg-indigo-50/70 border-2 border-indigo-400/80 shadow-md' : 'bg-slate-50/70 border border-slate-200/90'} p-4 space-y-3">
@@ -2174,40 +2548,49 @@
             <!-- Days Grid Sunday to Saturday -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2">
               ${wk.map(d => {
-                const slots = getSlotsForDate(d.isoDate);
-                const duty = state.duties[d.isoDate];
-                const isToday = d.isoDate === todayIso;
+                const slots = state.scheduleSlots[d.iso] || [];
+                const duty = state.duties[d.iso];
+                const trailStop = (state.config?.trailStops || []).find(s => s.isoDate === d.iso);
+                const hasEvent = duty?.specialEventTitle || (trailStop ? ('🎯 ' + trailStop.title) : null);
+                const isToday = d.iso === todayIso;
+                const isSelected = d.iso === state.selectedCalendarDate;
 
                 return `
-                  <div class="p-3 rounded-2xl ${isToday ? 'bg-white border-2 border-indigo-500 shadow-sm' : (d.isShabbat ? 'bg-amber-50/80 border border-amber-300' : 'bg-white border border-slate-200')} flex flex-col justify-between gap-1.5 text-right">
+                  <button onclick="onStudentCalendarDateSelected('${d.iso}'); setStudentCalendarView('grid');" class="p-3 rounded-2xl text-right transition cursor-pointer ${isSelected ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-300' : (isToday ? 'bg-white border-2 border-indigo-500 shadow-sm' : (d.isShabbat ? 'bg-amber-50/80 border border-amber-300' : 'bg-white border border-slate-200 hover:border-indigo-300'))} flex flex-col justify-between gap-1.5">
                     <div>
                       <div class="flex items-center justify-between">
-                        <span class="text-xs font-black ${d.isShabbat ? 'text-amber-950 font-black' : 'text-slate-900'}">${d.dayName}</span>
-                        ${isToday ? '<span class="px-1.5 py-0.2 rounded-full bg-indigo-600 text-white font-bold text-[9px]">היום</span>' : ''}
+                        <span class="text-xs font-black ${isSelected ? 'text-white' : (d.isShabbat ? 'text-amber-950' : 'text-slate-900')}">${d.dayNameFull}</span>
+                        ${isToday ? `<span class="px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-amber-400 text-slate-950' : 'bg-indigo-600 text-white'} font-bold text-[9px]">היום</span>` : ''}
                       </div>
-                      <div class="text-[11px] font-bold text-slate-600 flex items-center justify-between mt-0.5">
-                        <span class="text-indigo-700">${d.hebShort}</span>
-                        <span class="text-slate-400 font-mono text-[10px]">${d.gregShort}</span>
+                      <div class="text-[11px] font-bold ${isSelected ? 'text-indigo-200' : 'text-slate-600'} flex items-center justify-between mt-0.5">
+                        <span class="${isSelected ? 'text-white' : 'text-indigo-700'}">${d.hebShort}</span>
+                        <span class="${isSelected ? 'text-indigo-200' : 'text-slate-400'} font-mono text-[10px]">${d.gregShort}</span>
                       </div>
                     </div>
 
-                    ${duty?.specialEventTitle ? `
-                      <div class="p-1 rounded-lg bg-amber-100/90 text-amber-950 text-[9px] font-black border border-amber-300/80 truncate">
-                        🎉 ${duty.specialEventTitle}
+                    ${hasEvent ? `
+                      <div class="p-1 rounded-lg ${isSelected ? 'bg-white/20 text-white border-white/30' : 'bg-amber-100/90 text-amber-950 border-amber-300/80'} text-[9px] font-black border truncate">
+                        ${hasEvent}
                       </div>
                     ` : ''}
 
-                    <div class="text-[10px] text-slate-500 pt-1 border-t border-slate-100 flex items-center justify-between">
-                      <span class="font-bold">${slots.length} סדרים</span>
+                    <div class="text-[10px] ${isSelected ? 'text-indigo-200 border-indigo-500' : 'text-slate-500 border-slate-100'} pt-1 border-t flex items-center justify-between">
+                      <span class="font-bold">${slots.length > 0 ? `${slots.length} סדרים` : 'ללא סדרים'}</span>
                       ${duty?.wakeupStudentId || duty?.kitchenStudentId ? '<span title="יש תורנים משובצים">🧹</span>' : ''}
                     </div>
-                  </div>
+                  </button>
                 `;
               }).join('')}
             </div>
           </div>
         `;
       }).join('');
+    }
+
+    function renderCalendar() {
+      renderStudentInteractiveCalendarGrid();
+      renderStudentSelectedDayDetails();
+      renderStudentWeeksView();
     }
 
     // --- Requests ---
