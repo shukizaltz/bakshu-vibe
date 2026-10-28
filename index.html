@@ -1095,9 +1095,6 @@
       if (state.scheduleSlots && Array.isArray(state.scheduleSlots[isoDate])) {
         return state.scheduleSlots[isoDate];
       }
-      if (window.Db && Db.getDefaultSlotsForIsoDate) {
-        return Db.getDefaultSlotsForIsoDate(isoDate);
-      }
       return [];
     }
 

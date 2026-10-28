@@ -1340,7 +1340,7 @@
 
       const todayIso = dateOverride || adminState.inspectedDate || adminState.selectedDate || ((window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10));
       adminState.inspectedDate = todayIso;
-      const todaySlots = Array.isArray(adminState.scheduleSlots[todayIso]) ? adminState.scheduleSlots[todayIso] : getSlotsForDate(todayIso);
+      const todaySlots = adminState.scheduleSlots[todayIso] || [];
       const hebInfo = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(todayIso) : null;
       const hebDateLabel = hebInfo ? `${hebInfo.dayName}, ${hebInfo.shortHebrew}` : todayIso;
 
@@ -1404,12 +1404,11 @@
             </div>
             
             <div class="space-y-1.5">
-              ${todaySlots.length === 0 ? '<p class="text-xs text-slate-400 py-3 text-center">אין סדרים מוגדרים לתאריך זה</p>' : todaySlots.map((slot) => {
+              ${todaySlots.length === 0 ? '<p class="text-xs text-slate-400 py-3 text-center">אין סדרים מוגדרים לתאריך זה</p>' : todaySlots.map((slot, sIdx) => {
                 const list = adminState.slotAttendanceMap?.byDateSlot?.[todayIso]?.[slot.title || slot.id] || [];
                 const pfList = adminState.slotAttendanceMap?.phoneFree?.[todayIso]?.[slot.title || slot.id] || [];
                 const isPresent = list.includes(String(st.id));
                 const isPf = pfList.includes(String(st.id));
-                const safeTitle = escapeAttr(slot.title);
 
                 return `
                   <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
@@ -1418,10 +1417,10 @@
                       <span class="text-[10px] text-slate-500 font-outfit mr-1">${slot.openTime} - ${slot.lockTime} • ${slot.points || 1} נק׳</span>
                     </div>
                     <div class="flex items-center gap-1.5">
-                      <button onclick="adminToggleStudentSlotAttendance('${todayIso}', '${safeTitle}', '${st.id}', ${!isPresent}, ${!isPresent ? isPf : false}, ${slot.points || 1})" class="px-3 py-1 rounded-lg font-black text-xs transition border cursor-pointer ${isPresent ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">
+                      <button type="button" onclick="adminToggleInspectorSlotAttendance('${todayIso}', ${sIdx}, '${st.id}', ${!isPresent}, ${!isPresent ? isPf : false})" class="px-3 py-1 rounded-lg font-black text-xs transition border cursor-pointer ${isPresent ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">
                         ${isPresent ? '✓ נכח' : 'סמן נוכחות'}
                       </button>
-                      <button onclick="adminToggleStudentSlotAttendance('${todayIso}', '${safeTitle}', '${st.id}', true, ${!isPf}, ${slot.points || 1})" class="px-2 py-1 rounded-lg font-black text-xs transition border cursor-pointer ${isPf ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}" title="בונוס ללא טלפון (מסמן אוטומטית גם נוכחות)">
+                      <button type="button" onclick="adminToggleInspectorSlotAttendance('${todayIso}', ${sIdx}, '${st.id}', true, ${!isPf})" class="px-2 py-1 rounded-lg font-black text-xs transition border cursor-pointer ${isPf ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}" title="בונוס ללא טלפון (מסמן אוטומטית גם נוכחות)">
                         📵 ${isPf ? 'ללא טלפון (+1)' : 'ללא טלפון'}
                       </button>
                     </div>
@@ -1518,6 +1517,13 @@
       }
     }
 
+    async function adminToggleInspectorSlotAttendance(dateStr, sIdx, studentId, isPresent, noPhone) {
+      const slots = adminState.scheduleSlots[dateStr] || [];
+      const slot = slots[sIdx];
+      if (!slot) return;
+      await adminToggleStudentSlotAttendance(dateStr, slot.title, studentId, isPresent, noPhone, slot.points || 1);
+    }
+
     async function adminToggleStudentSlotAttendance(dateStr, slotTitle, studentId, isPresent, noPhone, points) {
       const st = adminState.students.find(s => String(s.id) === String(studentId));
       await Db.toggleSlotStudentAttendance(dateStr, slotTitle, studentId, isPresent, noPhone, points, st?.full_name || st?.name);
@@ -1568,8 +1574,8 @@
     }
 
     function ensureCurrentDaySlots(isoDate) {
-      if (adminState.scheduleSlots[isoDate] === undefined) {
-        adminState.scheduleSlots[isoDate] = getSlotsForDate(isoDate);
+      if (!Array.isArray(adminState.scheduleSlots[isoDate])) {
+        adminState.scheduleSlots[isoDate] = [];
       }
     }
 
@@ -1614,7 +1620,7 @@
       const daysHtml = days.map(d => {
         const isSelected = d.iso === adminState.selectedDate;
         const isToday = d.iso === todayIso;
-        const slots = Array.isArray(adminState.scheduleSlots[d.iso]) ? adminState.scheduleSlots[d.iso] : getSlotsForDate(d.iso);
+        const slots = adminState.scheduleSlots[d.iso] || [];
         const trailStop = (adminState.config?.trailStops || []).find(s => s.isoDate === d.iso);
         const hasEvent = adminState.duties[d.iso]?.specialEventTitle || (trailStop ? ('🎯 ' + trailStop.title) : null);
 
@@ -1688,23 +1694,24 @@
       }
 
       ensureCurrentDaySlots(dateStr);
-      const slots = Array.isArray(adminState.scheduleSlots[dateStr]) ? adminState.scheduleSlots[dateStr] : getSlotsForDate(dateStr);
+      const slots = adminState.scheduleSlots[dateStr] || [];
 
       if (slots.length === 0) {
-        container.innerHTML = '<div class="text-xs text-slate-400 py-6 text-center">אין סדרים מוגדרים ליום זה. לחץ "+ הוסף סדר" או "🔄 אפס לתבנית".</div>';
+        container.innerHTML = '<div class="text-xs text-slate-400 py-6 text-center">אין סדרים מוגדרים ליום זה בשרת. לחץ "+ הוסף סדר" או "🔄 אפס לתבנית".</div>';
         return;
       }
 
       container.innerHTML = slots.map((sl, idx) => {
         const list = adminState.slotAttendanceMap?.byDateSlot?.[dateStr]?.[sl.title || sl.id] || [];
         const count = list.length;
+        const safeSlotTitleAttr = escapeAttr(sl.title || '');
 
         return `
           <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 transition hover:border-indigo-300">
             <div class="flex flex-wrap items-center justify-between gap-3">
               <div class="flex items-center gap-2">
                 <span class="font-black text-indigo-900 text-sm">#${idx + 1}</span>
-                <input type="text" value="${sl.title}" onchange="updateSlotTitle(${idx}, this.value)" class="p-2 rounded-xl border border-slate-300 text-xs font-bold w-40 sm:w-56 bg-white focus:ring-2 focus:ring-indigo-500">
+                <input type="text" value="${safeSlotTitleAttr}" onchange="updateSlotTitle(${idx}, this.value)" class="p-2 rounded-xl border border-slate-300 text-xs font-bold w-40 sm:w-56 bg-white focus:ring-2 focus:ring-indigo-500">
               </div>
 
               <div class="flex flex-wrap items-center gap-2">
@@ -1720,20 +1727,20 @@
                   <input type="number" value="${sl.points || 1}" onchange="updateSlotPoints(${idx}, this.value)" class="w-14 p-1.5 rounded-lg border border-slate-300 text-xs font-black text-center bg-white">
                 </div>
 
-                <button onclick="openEditSlotModal(${idx})" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer" title="פתח חלון עריכה מלא לסדר זה">
+                <button type="button" onclick="openEditSlotModal(${idx})" class="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition flex items-center gap-1 cursor-pointer" title="פתח חלון עריכה מלא לסדר זה">
                   <span>✏️</span>
                   <span>ערוך</span>
                 </button>
 
-                <button onclick="toggleSlotAttendanceList('slot_att_${idx}')" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-xs transition flex items-center gap-1 cursor-pointer">
+                <button type="button" onclick="toggleSlotAttendanceList('slot_att_${idx}')" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-xs transition flex items-center gap-1 cursor-pointer">
                   <span>👥</span>
                   <span>נוכחות (${count})</span>
                 </button>
 
-                <button onclick="removeSingleSlot(${idx})" class="p-1.5 text-rose-600 hover:text-rose-800 text-xs font-bold cursor-pointer" title="מחק סדר זה מיום זה בלבד">
+                <button type="button" onclick="removeSingleSlot(${idx})" class="p-1.5 text-rose-600 hover:text-rose-800 text-xs font-bold cursor-pointer" title="מחק סדר זה מיום זה בלבד">
                   🗑️ יום זה
                 </button>
-                <button onclick="removeSlotSeries('${sl.title}')" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold border border-rose-200 cursor-pointer" title="מחק סדרה זו מכל ימי המבצע!">
+                <button type="button" onclick="removeSlotSeriesByIdx(${idx})" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold border border-rose-200 cursor-pointer" title="מחק סדרה זו מכל ימי המבצע!">
                   מחק סדרה מכל הימים
                 </button>
               </div>
@@ -1742,7 +1749,7 @@
             <!-- Expandable Student Attendance Checklist for this specific slot -->
             <div id="slot_att_${idx}" class="hidden p-3 rounded-xl bg-white border border-slate-200 space-y-2">
               <div class="flex items-center justify-between text-xs pb-1 border-b border-slate-100">
-                <span class="font-black text-slate-800">רשימת בחורים שסימנו נוכחות בסדר זה (${sl.title}):</span>
+                <span class="font-black text-slate-800">רשימת בחורים שסימנו נוכחות בסדר זה (${safeSlotTitleAttr}):</span>
                 <span class="text-[10px] text-slate-400">סמן/בטל נוכחות בלחיצה</span>
               </div>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto custom-scroll text-xs">
@@ -1750,7 +1757,7 @@
                   const isPresent = list.includes(String(st.id));
                   return `
                     <label class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer border ${isPresent ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-100'}">
-                      <input type="checkbox" ${isPresent ? 'checked' : ''} onchange="adminToggleStudentSlotAttendance('${dateStr}', '${sl.title}', '${st.id}', this.checked, false, ${sl.points || 1})" class="w-3.5 h-3.5 rounded text-emerald-600">
+                      <input type="checkbox" ${isPresent ? 'checked' : ''} onchange="adminToggleStudentSlotAttendanceByIdx(${idx}, '${st.id}', this.checked)" class="w-3.5 h-3.5 rounded text-emerald-600">
                       <span class="truncate font-bold ${isPresent ? 'text-emerald-950 font-black' : 'text-slate-700'}">${st.full_name || st.name}</span>
                     </label>
                   `;
@@ -1849,19 +1856,19 @@
           }
           App.showToast(`סדר "${title}" עודכן ונשמר בהצלחה בשרת!`, '💾');
         } else {
-          const start = new Date(adminState.config?.startDate || '2026-10-25');
-          const end = new Date(adminState.config?.endDate || '2027-02-08');
-          const cur = new Date(start);
-          const selDay = new Date(d).getDay();
+          const [sy, sm, sd] = (adminState.config?.startDate || '2026-10-25').split('-').map(Number);
+          const [ey, em, ed] = (adminState.config?.endDate || '2027-02-08').split('-').map(Number);
+          const cur = new Date(sy, sm - 1, sd, 12, 0, 0);
+          const end = new Date(ey, em - 1, ed, 12, 0, 0);
+          const selDay = new Date(d + 'T12:00:00').getDay();
           const dateSlotsToSync = {};
           let affectedCount = 0;
 
-          // Helper to match slot by exact title, common prefix, or slot position
-          const isSlotMatch = (sl, sIdx) => {
+          // Helper to match slot by exact title or common prefix
+          const isSlotMatch = (sl) => {
             if (!sl) return false;
             const slT = (sl.title || '').trim();
             if (slT === oldTitle) return true;
-            if (sIdx === idx) return true;
             if (oldTitle.startsWith('סדר א') && slT.startsWith('סדר א')) return true;
             if (oldTitle.startsWith('סדר ב') && slT.startsWith('סדר ב')) return true;
             if (oldTitle.startsWith('סדר ג') && slT.startsWith('סדר ג')) return true;
@@ -1869,7 +1876,7 @@
           };
 
           while (cur <= end) {
-            const iso = cur.toISOString().slice(0, 10);
+            const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
             const dayOfWeek = cur.getDay();
             let match = false;
             if (scope === 'same_weekday' && dayOfWeek === selDay) match = true;
@@ -1879,8 +1886,8 @@
             if (match) {
               ensureCurrentDaySlots(iso);
               let updated = false;
-              (adminState.scheduleSlots[iso] || []).forEach((sl, sIdx) => {
-                if (isSlotMatch(sl, sIdx)) {
+              (adminState.scheduleSlots[iso] || []).forEach((sl) => {
+                if (isSlotMatch(sl)) {
                   sl.title = title;
                   sl.openTime = openTime;
                   sl.lockTime = lockTime;
@@ -1889,6 +1896,18 @@
                   updated = true;
                 }
               });
+              // אם הסדר לא קיים ביום היעד והמשתמש בחר להחיל על כל ימי השבוע/ימי החול, נוסיף אותו ליום היעד!
+              if (!updated && (scope === 'same_weekday' || scope === 'weekdays')) {
+                adminState.scheduleSlots[iso].push({
+                  id: `slot_${iso}_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`,
+                  title,
+                  openTime,
+                  lockTime,
+                  points,
+                  timeWindow: `${openTime} - ${lockTime}`
+                });
+                updated = true;
+              }
               if (updated) {
                 dateSlotsToSync[iso] = adminState.scheduleSlots[iso];
                 affectedCount++;
@@ -2007,6 +2026,20 @@
       }
     }
 
+    async function adminToggleStudentSlotAttendanceByIdx(idx, studentId, isPresent) {
+      const d = adminState.selectedDate;
+      const slot = adminState.scheduleSlots[d]?.[idx];
+      if (!slot) return;
+      await adminToggleStudentSlotAttendance(d, slot.title, studentId, isPresent, false, slot.points || 1);
+    }
+
+    async function removeSlotSeriesByIdx(idx) {
+      const d = adminState.selectedDate;
+      const slot = adminState.scheduleSlots[d]?.[idx];
+      if (!slot || !slot.title) return;
+      await removeSlotSeries(slot.title);
+    }
+
     async function removeSlotSeries(seriesTitle) {
       if (!confirm(`האם למחוק את כל סדרת "${seriesTitle}" מכל ימי המבצע בשרת?`)) return;
       adminState.isSyncing = true;
@@ -2048,15 +2081,16 @@
       const d = adminState.selectedDate;
       const current = adminState.scheduleSlots[d] || [];
 
-      const start = new Date(adminState.config?.startDate || '2026-10-25');
-      const end = new Date(adminState.config?.endDate || '2027-02-08');
-      const cur = new Date(start);
+      const [sy, sm, sd] = (adminState.config?.startDate || '2026-10-25').split('-').map(Number);
+      const [ey, em, ed] = (adminState.config?.endDate || '2027-02-08').split('-').map(Number);
+      const cur = new Date(sy, sm - 1, sd, 12, 0, 0);
+      const end = new Date(ey, em - 1, ed, 12, 0, 0);
       const dateSlotsToSync = {};
       let count = 0;
 
       while (cur <= end) {
         if (cur.getDay() >= 0 && cur.getDay() <= 4) { // Sun-Thu
-          const iso = cur.toISOString().slice(0, 10);
+          const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
           adminState.scheduleSlots[iso] = JSON.parse(JSON.stringify(current));
           dateSlotsToSync[iso] = adminState.scheduleSlots[iso];
           count++;
@@ -2080,15 +2114,16 @@
       const d = adminState.selectedDate;
       const current = adminState.scheduleSlots[d] || [];
 
-      const start = new Date(adminState.config?.startDate || '2026-10-25');
-      const end = new Date(adminState.config?.endDate || '2027-02-08');
-      const cur = new Date(start);
+      const [sy, sm, sd] = (adminState.config?.startDate || '2026-10-25').split('-').map(Number);
+      const [ey, em, ed] = (adminState.config?.endDate || '2027-02-08').split('-').map(Number);
+      const cur = new Date(sy, sm - 1, sd, 12, 0, 0);
+      const end = new Date(ey, em - 1, ed, 12, 0, 0);
       const dateSlotsToSync = {};
       let count = 0;
 
       while (cur <= end) {
         if (cur.getDay() === 6) { // Saturday
-          const iso = cur.toISOString().slice(0, 10);
+          const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
           adminState.scheduleSlots[iso] = JSON.parse(JSON.stringify(current));
           dateSlotsToSync[iso] = adminState.scheduleSlots[iso];
           count++;
@@ -2152,24 +2187,25 @@
       const d = adminState.selectedDate;
       const targetDays = [];
 
-      const start = new Date(adminState.config?.startDate || '2026-10-25');
-      const end = new Date(adminState.config?.endDate || '2027-02-08');
-      const cur = new Date(start);
+      const [sy, sm, sd] = (adminState.config?.startDate || '2026-10-25').split('-').map(Number);
+      const [ey, em, ed] = (adminState.config?.endDate || '2027-02-08').split('-').map(Number);
+      const cur = new Date(sy, sm - 1, sd, 12, 0, 0);
+      const end = new Date(ey, em - 1, ed, 12, 0, 0);
 
       if (scope === 'single') {
         targetDays.push(d);
       } else if (scope === 'same_weekday') {
-        const selDay = new Date(d).getDay();
+        const selDay = new Date(d + 'T12:00:00').getDay();
         while (cur <= end) {
           if (cur.getDay() === selDay) {
-            targetDays.push(cur.toISOString().slice(0, 10));
+            targetDays.push(`${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`);
           }
           cur.setDate(cur.getDate() + 1);
         }
       } else if (scope === 'weekdays') {
         while (cur <= end) {
           if (cur.getDay() >= 0 && cur.getDay() <= 4) { // Sun-Thu
-            targetDays.push(cur.toISOString().slice(0, 10));
+            targetDays.push(`${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`);
           }
           cur.setDate(cur.getDate() + 1);
         }
@@ -2768,7 +2804,7 @@
       while (cur <= end) {
         const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
         const dateClean = iso.replace(/-/g, '');
-        const slots = Array.isArray(adminState.scheduleSlots[iso]) ? adminState.scheduleSlots[iso] : getSlotsForDate(iso);
+        const slots = adminState.scheduleSlots[iso] || [];
         const duty = adminState.duties[iso];
 
         if (duty?.specialEventTitle) {
@@ -3358,7 +3394,7 @@
 
     async function approveRequest(id, studentId, studentName, slotTitle, dateStr) {
       const targetDate = dateStr || adminState.selectedDate || ((window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10));
-      const daySlots = Array.isArray(adminState.scheduleSlots[targetDate]) ? adminState.scheduleSlots[targetDate] : getSlotsForDate(targetDate);
+      const daySlots = adminState.scheduleSlots[targetDate] || [];
       const matchedSlot = daySlots.find(s => (s.title || '').trim() === (slotTitle || '').trim());
       const pts = Number(matchedSlot?.points) || 1;
 

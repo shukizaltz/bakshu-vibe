@@ -174,11 +174,7 @@
       const cur = new Date(start);
       while (cur <= end) {
         const iso = cur.toISOString().slice(0, 10);
-        const daySlots = Array.isArray(slotsMap[iso])
-          ? slotsMap[iso]
-          : (window.Db && Db.getDefaultSlotsForIsoDate ? Db.getDefaultSlotsForIsoDate(iso) : (cur.getDay() === 5 || cur.getDay() === 6 ? [] : [
-              { points: 1 }, { points: 1 }, { points: 1 }
-            ]));
+        const daySlots = Array.isArray(slotsMap[iso]) ? slotsMap[iso] : [];
         const isFutureOrToday = (iso >= todayIso);
         daySlots.forEach(s => {
           const pts = (Number(s.points) || 1);

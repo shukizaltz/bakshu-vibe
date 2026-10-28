@@ -12,25 +12,19 @@
     ? g.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
     : null;
 
-  // חילוץ אחיד של מטא-דאטה מרשומת נוכחות (תומך גם בעמודות מפורשות וגם ב-JSON בתוך reason)
+  // חילוץ אחיד של מטא-דאטה מרשומת נוכחות (מבוסס על העמודות המובנות של attendance_logs בשרת)
   function parseAttendanceRow(row) {
     if (!row) return null;
-    let meta = {};
-    if (row.reason && typeof row.reason === 'string' && row.reason.trim().startsWith('{')) {
-      try {
-        meta = JSON.parse(row.reason);
-      } catch (e) {}
-    }
-    const dateStr = row.slot_date || meta.date || (row.marked_at ? String(row.marked_at).slice(0, 10) : '');
-    const slotTitle = (row.slot_title || meta.title || '').trim();
-    const noPhone = row.no_phone !== undefined ? !!row.no_phone : (!!meta.noPhone || String(row.reason || '').includes('📵'));
-    const points = Number(row.points_earned ?? meta.points ?? (1 + (noPhone ? 1 : 0))) || 1;
-    const basePoints = Number(meta.basePoints ?? (noPhone ? Math.max(1, points - 1) : points)) || 1;
+    const dateStr = row.slot_date || (row.marked_at ? String(row.marked_at).slice(0, 10) : '');
+    const slotTitle = String(row.slot_title || '').trim();
+    const noPhone = !!row.no_phone;
+    const points = Number(row.points_earned ?? (1 + (noPhone ? 1 : 0))) || 1;
+    const basePoints = noPhone ? Math.max(1, points - 1) : points;
 
     return {
       id: row.id,
       userId: row.user_id ? String(row.user_id) : null,
-      studentName: row.student_name || meta.studentName || '',
+      studentName: row.student_name || '',
       slotDate: dateStr,
       slotTitle: slotTitle,
       points: points,
@@ -41,16 +35,15 @@
     };
   }
 
-  // תבנית סדרי ברירת מחדל ליום נתון
+  // תבנית סדרי ברירת מחדל ליום נתון (משמשת רק לאתחול ראשוני או ללחיצה מפורשת על "אפס לתבנית")
   function getDefaultSlotsForIsoDate(isoDate) {
     const dObj = new Date(isoDate + 'T12:00:00');
     const dow = dObj.getDay();
     if (dow === 5) return []; // יום שישי ללא סדרים כברירת מחדל
     if (dow === 6) {
       return [
-        { id: `slot_${isoDate}_1`, title: 'סדר ליל שבת קודש', openTime: '20:30', lockTime: '22:00', points: 2, timeWindow: '20:30 - 22:00' },
-        { id: `slot_${isoDate}_2`, title: 'סדר שבת בבוקר', openTime: '08:00', lockTime: '10:00', points: 2, timeWindow: '08:00 - 10:00' },
-        { id: `slot_${isoDate}_3`, title: 'סדר שבת אחה״צ (רעוא דרעווין)', openTime: '16:00', lockTime: '18:30', points: 2, timeWindow: '16:00 - 18:30' }
+        { id: `slot_${isoDate}_1`, title: 'סדר שחרית (קודם התפילה)', openTime: '08:00', lockTime: '10:00', points: 2, timeWindow: '08:00 - 10:00' },
+        { id: `slot_${isoDate}_2`, title: 'סדר שבת אחה״צ', openTime: '16:00', lockTime: '19:00', points: 2, timeWindow: '16:00 - 19:00' }
       ];
     }
     return [
@@ -201,7 +194,7 @@
     },
 
     // ==========================================
-    // 2. לוח זמנים וסדרים (טבלת schedule_slots)
+    // 2. לוח זמנים וסדרים (טבלת schedule_slots היא מקור האמת היחיד והבלעדי!)
     // ==========================================
     async getScheduleSlots() {
       if (!client) return {};
@@ -215,7 +208,6 @@
             if (!d) return;
             if (!grouped[d]) grouped[d] = [];
 
-            // בדיקה אם מדובר בסמן של "יום ריק מכוון"
             if (sl.title === '__EMPTY_DAY__') {
               return;
             }
@@ -273,23 +265,14 @@
     async syncDateSlots(dateStr, slotsList) {
       if (!client || !dateStr) return false;
       try {
-        // 1. מחיקת כל הסדרים הישנים לתאריך זה
+        // 1. מחיקת כל הסדרים הישנים לתאריך זה בשרת
         const { error: delErr } = await client.from('schedule_slots').delete().eq('slot_date', dateStr);
         if (delErr) {
           console.error('Db.syncDateSlots delete error:', delErr);
         }
 
-        // 2. אם הרשימה ריקה במכוון (יום ריק), נכניס סמן שקט כדי שהיום יישאר ריק אצל כולם ולא יחזור לברירת מחדל
+        // 2. אם הרשימה ריקה (נמחקו כל הסדרים ביום זה), לא מכניסים שום שורה - טבלת schedule_slots היא מקור האמת היחיד!
         if (!Array.isArray(slotsList) || slotsList.length === 0) {
-          await client.from('schedule_slots').insert([{
-            slot_date: dateStr,
-            title: '__EMPTY_DAY__',
-            time_window: '00:00 - 00:00',
-            open_time: `${dateStr}T00:00:00+02:00`,
-            lock_time: `${dateStr}T00:00:00+02:00`,
-            base_points: 0,
-            full_seder_achieved: false
-          }]);
           return true;
         }
 
@@ -339,17 +322,7 @@
         const allRows = [];
         dates.forEach(d => {
           const list = dateSlotsMap[d];
-          if (!Array.isArray(list) || list.length === 0) {
-            allRows.push({
-              slot_date: d,
-              title: '__EMPTY_DAY__',
-              time_window: '00:00 - 00:00',
-              open_time: `${d}T00:00:00+02:00`,
-              lock_time: `${d}T00:00:00+02:00`,
-              base_points: 0,
-              full_seder_achieved: false
-            });
-          } else {
+          if (Array.isArray(list) && list.length > 0) {
             list.forEach((s, idx) => {
               const openT = this._formatTime(s.openTime, '09:00');
               const lockT = this._formatTime(s.lockTime, '10:15');
@@ -769,38 +742,33 @@
 
         // אם כבר קיימת רשומה לאותו תאריך וסדר:
         const totalPoints = Number(points) || (1 + (noPhone ? 1 : 0));
-        const basePts = noPhone ? Math.max(1, totalPoints - 1) : totalPoints;
-        const reasonJson = JSON.stringify({
-          date: cleanDate,
-          title: cleanTitle,
-          points: totalPoints,
-          basePoints: basePts,
-          noPhone: !!noPhone
-        });
 
         if (matchingTodayRows.length > 0) {
           // בדיקה אם השינוי הוא רק במתג "ללא טלפון" או ניסיון סימון כפול
           const prevParsed = parseAttendanceRow(matchingTodayRows[0]);
           if (prevParsed.noPhone === !!noPhone && prevParsed.points === totalPoints) {
-            // כבר מסומן בדיוק עם אותם פרטים!
             return 'ALREADY_CHECKED_IN';
           }
-          // עדכון הרשומה הקיימת (למשל כשמנהל מדליק/מכבה "ללא טלפון")
+          // עדכון הרשומה הקיימת בעמודות המובנות של הטבלה
           const targetId = matchingTodayRows[0].id;
           const { error: updErr } = await client.from('attendance_logs').update({
-            reason: reasonJson,
+            points_earned: totalPoints,
+            no_phone: !!noPhone,
+            slot_date: cleanDate,
             status: 'approved'
           }).eq('id', targetId);
 
-          if (!updErr) {
-            await this.recalculateStudentScore(studentId);
-            return true;
+          if (updErr) {
+            console.error('Db.recordAttendance update error:', updErr);
+            return false;
           }
+          await this.recalculateStudentScore(studentId);
+          return true;
         }
 
-        // 2. הכנסת רשומה חדשה: ננסה תחילה עם כל העמודות, ואם השרת טרם הריץ ALTER TABLE נבצע הכנסה נקייה לעמודות הבסיס!
-        const markedAtIso = `${cleanDate}T12:00:00.000Z`;
-        const fullPayload = {
+        // 2. הכנסת רשומה חדשה ישירות לעמודות המובנות של טבלת attendance_logs בשרת
+        const markedAtIso = new Date().toISOString();
+        const payload = {
           user_id: studentId,
           student_name: studentName || '',
           slot_title: cleanTitle,
@@ -808,26 +776,13 @@
           points_earned: totalPoints,
           no_phone: !!noPhone,
           status: 'approved',
-          reason: reasonJson,
           marked_at: markedAtIso
         };
 
-        const { error: insErr1 } = await client.from('attendance_logs').insert([fullPayload]);
-        if (insErr1) {
-          // Fallback אוטומטי לעמודות המקוריות של הטבלה בשרת (ללא שגיאת 400!)
-          const safePayload = {
-            user_id: studentId,
-            student_name: studentName || '',
-            slot_title: cleanTitle,
-            status: 'approved',
-            reason: reasonJson,
-            marked_at: markedAtIso
-          };
-          const { error: insErr2 } = await client.from('attendance_logs').insert([safePayload]);
-          if (insErr2) {
-            console.error('Db.recordAttendance fallback insert error:', insErr2);
-            return false;
-          }
+        const { error: insErr } = await client.from('attendance_logs').insert([payload]);
+        if (insErr) {
+          console.error('Db.recordAttendance insert error:', insErr);
+          return false;
         }
 
         // 3. חישוב מחדש של ניקוד האמת של הבחור
