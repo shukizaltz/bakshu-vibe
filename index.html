@@ -83,6 +83,11 @@
           <span id="headerStudentPhone" class="text-[10px] text-slate-400 font-mono">--</span>
         </div>
 
+        <button onclick="downloadStudentCalendarIcs()" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 font-bold text-xs transition border border-amber-400/30 flex items-center gap-1 cursor-pointer" title="הורד לוח שנה מלא של המבצע והתורנויות שלך (.ics)">
+          <span>📅</span>
+          <span class="hidden md:inline">הורד יומן (.ics)</span>
+        </button>
+
         <button onclick="openChangePasswordModal()" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition border border-white/15 flex items-center gap-1" title="החלפת סיסמה אישית">
           <span>🔑</span>
           <span class="hidden md:inline">סיסמה</span>
@@ -291,10 +296,10 @@
         <!-- Phone-Free Toggle (+1 Bonus) -->
         <div class="flex items-center justify-between p-3 rounded-2xl bg-amber-50/80 border border-amber-200">
           <label class="flex items-center gap-2.5 cursor-pointer select-none">
-            <input type="checkbox" id="phoneFreeCheckbox" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer">
+            <input type="checkbox" id="phoneFreeCheckbox" onchange="handlePhoneFreeToggleChange(this.checked)" class="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer">
             <span class="text-xs font-black text-amber-950">למדתי סדר זה ללא טלפון נייד 📵</span>
           </label>
-          <span class="text-xs font-black px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-sm">+1 נק׳ בונוס</span>
+          <span id="phoneFreeBonusPill" class="text-xs font-black px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-sm">+1 נק׳ בונוס</span>
         </div>
 
         <!-- Group Full Seder Indicator -->
@@ -365,12 +370,17 @@
 
         <!-- Today's Schedule -->
         <div class="rounded-3xl p-5 glass-card shadow-lg space-y-3">
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between flex-wrap gap-2">
             <h4 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
               <span>⏰</span>
               <span>סדרי הלימוד להיום</span>
             </h4>
-            <span id="todaySlotsCountBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold">--</span>
+            <div class="flex items-center gap-1.5">
+              <button onclick="downloadStudentCalendarIcs()" class="text-[11px] px-2.5 py-0.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-black transition cursor-pointer flex items-center gap-1" title="הורד קובץ יומן מלא של כל סדרי המבצע והתורנויות שלך (.ics)">
+                <span>📥</span><span>הורד יומן (.ics)</span>
+              </button>
+              <span id="todaySlotsCountBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold">--</span>
+            </div>
           </div>
           <div id="todaySlotsListContainer" class="space-y-2 max-h-48 overflow-y-auto custom-scroll">
             <!-- Populated by JS -->
@@ -921,12 +931,12 @@
         state.checkedInSlotsToday = [];
         return;
       }
-      const todayIso = (window.App && App.getTodayIso) ? App.getTodayIso() : new Date().toISOString().slice(0, 10);
+      const todayIso = getTodayIso();
       const sid = String(state.currentStudent.id);
       const todaySlots = state.slotAttendanceMap?.byDateSlot?.[todayIso] || {};
       const checked = [];
       for (const [slotKey, stArr] of Object.entries(todaySlots)) {
-        if (Array.isArray(stArr) && stArr.includes(sid)) {
+        if (slotKey && Array.isArray(stArr) && stArr.includes(sid)) {
           checked.push(slotKey);
         }
       }
@@ -934,7 +944,7 @@
     }
 
     function updateHebrewDateBadge() {
-      const todayIso = new Date().toISOString().slice(0, 10);
+      const todayIso = getTodayIso();
       const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(todayIso) : null;
       const today = new Date();
       const dStr = today.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
@@ -1200,6 +1210,20 @@
 
       if (active) {
         const isChecked = state.checkedInSlotsToday.includes(active.title) || state.checkedInSlotsToday.includes(active.id);
+        const todayIso = getTodayIso();
+        const myId = state.currentStudent ? String(state.currentStudent.id) : '';
+        const isPhoneFreeSaved = !!(myId && state.slotAttendanceMap?.phoneFree?.[todayIso]?.[active.title]?.includes(myId));
+        const pfCheckbox = document.getElementById('phoneFreeCheckbox');
+        const pfPill = document.getElementById('phoneFreeBonusPill');
+        if (pfCheckbox && isChecked) {
+          pfCheckbox.checked = isPhoneFreeSaved;
+        }
+        if (pfPill) {
+          pfPill.textContent = (isChecked && isPhoneFreeSaved) ? '✓ ללא טלפון (+1 נק׳)' : '+1 נק׳ בונוס';
+          pfPill.className = (isChecked && isPhoneFreeSaved)
+            ? 'text-xs font-black px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-sm'
+            : 'text-xs font-black px-2 py-0.5 rounded-full bg-amber-500 text-white shadow-sm';
+        }
 
         dot.className = isChecked ? 'w-3 h-3 rounded-full bg-emerald-500' : 'w-3 h-3 rounded-full bg-emerald-500 animate-ping';
         badge.className = 'text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
@@ -1207,13 +1231,15 @@
         
         timeText.textContent = `${active.openTime} - ${active.lockTime}`;
         title.textContent = active.title;
-        subtitle.textContent = isChecked ? 'נוכחותך נרשמה בהצלחה לסדר זה 🎉' : 'הסדר פתוח כעת – לחץ לאישור נוכחות מיידי (לחיצה אחת בלבד)';
+        subtitle.textContent = isChecked
+          ? (isPhoneFreeSaved ? 'נוכחותך + בונוס ללא טלפון 📵 נרשמו בהצלחה לסדר זה 🎉' : 'נוכחותך נרשמה לסדר זה 🎉 (ניתן לסמן גם ״ללא טלפון״ מעל הכפתור)')
+          : 'הסדר פתוח כעת – לחץ לאישור נוכחות מיידי (לחיצה אחת בלבד)';
         ptsBadge.textContent = `${active.points || 1} נקודות`;
 
         if (isChecked) {
           btn.disabled = true;
           btn.className = 'w-full py-4 rounded-2xl font-black text-base sm:text-lg transition shadow-md flex items-center justify-center gap-2 bg-emerald-100 text-emerald-800 border border-emerald-300 cursor-not-allowed';
-          btnText.textContent = '✓ סימנת נוכחות בסדר זה';
+          btnText.textContent = isPhoneFreeSaved ? '✓ סימנת נוכחות + ללא טלפון 📵' : '✓ סימנת נוכחות בסדר זה';
         } else {
           btn.disabled = false;
           btn.className = 'w-full py-4 rounded-2xl font-black text-base sm:text-lg transition shadow-xl flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white cursor-pointer pulsing-btn';
@@ -1262,7 +1288,7 @@
         const threshold = state.config?.fullSederThreshold || 10;
         const bonusPts = state.config?.fullSederBonusPts || 2;
         const currentActiveTitle = active?.title || (next?.title || '');
-        const todayIso = (window.App && App.getTodayIso) ? App.getTodayIso() : new Date().toISOString().slice(0, 10);
+        const todayIso = getTodayIso();
 
         const checkedCount = (state.students || []).filter(st => {
           const list = state.slotAttendanceMap?.byDateSlot?.[todayIso]?.[currentActiveTitle] || [];
@@ -1283,6 +1309,45 @@
             : `התייצבות של לפחות ${threshold} בחורים בסדר (+${bonusPts} נק׳)`;
           if (fsCount) fsCount.className = 'px-2.5 py-1 rounded-xl bg-amber-200 text-amber-950 font-black text-xs font-mono';
         }
+      }
+    }
+
+    // --- עדכון "ללא טלפון" גם לאחר שסומנה נוכחות בסדר פתוח ---
+    async function handlePhoneFreeToggleChange(isCheckedNow) {
+      const active = state.activeSeder;
+      if (!active || !state.currentStudent) return;
+      const alreadyPresent = state.checkedInSlotsToday.includes(active.title) || state.checkedInSlotsToday.includes(active.id);
+      if (!alreadyPresent) return; // יישמר יחד עם הלחיצה על "אישור נוכחות"
+
+      const todayIso = getTodayIso();
+      const sid = String(state.currentStudent.id);
+      const basePts = Number(active.points) || 1;
+
+      if (!state.slotAttendanceMap.phoneFree) state.slotAttendanceMap.phoneFree = {};
+      if (!state.slotAttendanceMap.phoneFree[todayIso]) state.slotAttendanceMap.phoneFree[todayIso] = {};
+      if (!state.slotAttendanceMap.phoneFree[todayIso][active.title]) state.slotAttendanceMap.phoneFree[todayIso][active.title] = [];
+      let pfList = state.slotAttendanceMap.phoneFree[todayIso][active.title].map(String);
+      if (isCheckedNow) {
+        if (!pfList.includes(sid)) pfList.push(sid);
+      } else {
+        pfList = pfList.filter(x => x !== sid);
+      }
+      state.slotAttendanceMap.phoneFree[todayIso][active.title] = pfList;
+      updateActiveSederCard();
+      renderTodayScheduleList();
+
+      const ok = await Db.toggleSlotStudentAttendance(
+        todayIso,
+        active.title,
+        state.currentStudent.id,
+        true,
+        isCheckedNow,
+        basePts,
+        state.currentStudent.full_name || state.currentStudent.name
+      );
+      if (ok) {
+        showToast(isCheckedNow ? 'בונוס לימוד ללא טלפון (+1 נק׳) עודכן! 📵' : 'סימון ללא טלפון הוסר', '📵');
+        await reloadAllData(true);
       }
     }
 
@@ -1689,15 +1754,18 @@
         return;
       }
 
+      const myId = state.currentStudent ? String(state.currentStudent.id) : '';
       container.innerHTML = slots.map(sl => {
         const isCurrent = state.activeSeder && (state.activeSeder.id === sl.id || state.activeSeder.title === sl.title);
-        const isDone = state.checkedInSlotsToday.includes(sl.id || sl.title);
+        const isDone = state.checkedInSlotsToday.includes(sl.title) || state.checkedInSlotsToday.includes(sl.id);
+        const isPhoneFree = isDone && myId && (state.slotAttendanceMap?.phoneFree?.[todayIso]?.[sl.title] || []).includes(myId);
 
         return `
           <div class="flex items-center justify-between p-2.5 rounded-2xl ${isCurrent ? 'bg-indigo-50 border border-indigo-200' : 'bg-slate-50 border border-slate-100'} text-xs font-bold">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full ${isDone ? 'bg-emerald-500' : (isCurrent ? 'bg-amber-500 animate-ping' : 'bg-slate-300')}"></span>
               <span class="text-slate-900">${sl.title}</span>
+              ${isPhoneFree ? '<span class="px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black">📵 +1</span>' : ''}
             </div>
             <div class="flex items-center gap-2">
               <span class="font-outfit text-slate-500" dir="ltr">${sl.openTime} - ${sl.lockTime}</span>
@@ -2316,8 +2384,20 @@
         `;
       }
 
+      const todayIso = getTodayIso();
+      const todayMap = state.slotAttendanceMap?.byDateSlot?.[todayIso] || {};
+
       tbody.innerHTML = sorted.map((st, i) => {
         const isMe = state.currentStudent && String(state.currentStudent.id) === String(st.id);
+        const stIdStr = String(st.id);
+        let attendedTodayCount = 0;
+        for (const [slotTitle, stIds] of Object.entries(todayMap)) {
+          if (slotTitle && Array.isArray(stIds) && stIds.includes(stIdStr)) {
+            attendedTodayCount++;
+          }
+        }
+        const isPresentToday = attendedTodayCount > 0;
+
         return `
           <tr class="${isMe ? 'bg-indigo-50/80 font-black' : 'hover:bg-slate-50/60'}">
             <td class="py-2.5 px-2">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td>
@@ -2326,8 +2406,8 @@
               ${isMe ? '<span class="text-[10px] text-indigo-600 mr-1 font-bold">(אתה)</span>' : ''}
             </td>
             <td class="py-2.5 px-2 text-center">
-              <span class="px-2 py-0.5 rounded-full text-[10px] ${st.present_today ? 'bg-emerald-100 text-emerald-800 font-bold' : 'bg-slate-100 text-slate-500'}">
-                ${st.present_today ? 'נכח היום ✓' : 'טרם סימן'}
+              <span class="px-2 py-0.5 rounded-full text-[10px] ${isPresentToday ? 'bg-emerald-100 text-emerald-800 font-bold' : 'bg-slate-100 text-slate-500'}">
+                ${isPresentToday ? `נכח היום ✓ (${attendedTodayCount})` : 'טרם סימן היום'}
               </span>
             </td>
             <td class="py-2.5 px-2 text-left font-outfit text-amber-600 font-black text-sm">${st.score || 0}</td>

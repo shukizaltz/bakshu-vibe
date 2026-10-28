@@ -62,7 +62,12 @@
 
       <!-- Quick Action Buttons -->
       <div class="flex items-center gap-2">
-        <button onclick="openShareModal()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm">
+        <button onclick="exportGoogleCalendarIcs()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm border border-white/15 cursor-pointer" title="הורד יומן מבצע מלא (.ics) ל-Google Calendar / ליומן הטלפון">
+          <span>📅</span>
+          <span class="hidden sm:inline">הורד יומן (.ics)</span>
+        </button>
+
+        <button onclick="openShareModal()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm cursor-pointer">
           <span>💬</span>
           <span>הזמנות ותזכורות WhatsApp</span>
         </button>
@@ -128,6 +133,10 @@
           <div class="flex flex-wrap items-center gap-2">
             <input type="text" id="adminStudentSearchInput" oninput="handleStudentSearch()" placeholder="חיפוש לפי שם או טלפון..." class="p-2.5 rounded-xl border border-slate-300 text-xs font-bold w-48 sm:w-64 focus:ring-2 focus:ring-indigo-600 focus:outline-none">
             
+            <button onclick="handleRecalculateAllScores()" class="px-3 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-black text-xs transition flex items-center gap-1 cursor-pointer" title="חשב מחדש ניקוד אמת ונוכחות לכל הבחורים מול השרת">
+              <span>🔄</span>
+              <span>סנכרן ניקוד אמת</span>
+            </button>
             <button onclick="openBatchImportStudentsModal()" class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-black text-xs transition flex items-center gap-1 cursor-pointer" title="ייבוא רשימת בחורים בבת אחת">
               <span>📋</span>
               <span>ייבוא רשימה</span>
@@ -185,8 +194,8 @@
       
       <!-- Visual Campaign Calendar Grid -->
       <div class="p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-3">
-        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-          <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+          <div class="flex flex-wrap items-center gap-2">
             <h4 class="text-sm font-black text-slate-900 flex items-center gap-2">
               <span>🗓️</span>
               <span>לוח שנה אינטראקטיבי של המבצע (בחר יום לעריכת סדרים ונוכחות)</span>
@@ -196,7 +205,17 @@
               <span>היום</span>
             </button>
           </div>
-          <span class="text-xs text-slate-500" id="campaignTotalDaysBadge">-- ימים</span>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="addSelectedDayToAdminGoogleCalendar()" class="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition" title="הוסף את סדרי היום הנבחר ישירות ל-Google Calendar">
+              <span>📅</span>
+              <span>סנכרן יום זה ל-Google Calendar</span>
+            </button>
+            <button type="button" onclick="exportGoogleCalendarIcs()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-sm flex items-center gap-1.5 cursor-pointer transition" title="הורד קובץ יומן מלא (.ics) של כל סדרי המבצע, תחנות העצירה והתורנויות">
+              <span>📥</span>
+              <span>הורד יומן מבצע מלא (.ics)</span>
+            </button>
+            <span class="text-xs text-slate-500 font-bold" id="campaignTotalDaysBadge">-- ימים</span>
+          </div>
         </div>
         
         <!-- Weekday Headers Sunday to Saturday -->
@@ -518,6 +537,10 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
+            <button onclick="exportGoogleCalendarIcs()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow transition flex items-center gap-1.5 cursor-pointer" title="הורד קובץ יומן מלא (.ics) כולל כל שיבוצי התורנויות והסדרים">
+              <span>📥</span>
+              <span>הורד יומן תורנויות (.ics)</span>
+            </button>
             <button onclick="openDutySettingsModal()" class="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer" title="הגדרת שמות התורנויות ושעות תזכורת">
               <span>⏰</span>
               <span>שמות ושעות תזכורת</span>
@@ -1156,9 +1179,9 @@
     }
 
     // --- Data Loading ---
-    async function reloadAdminData(isBackground = false) {
-      if (adminState.isSyncing) return;
-      if (isBackground && isAnyAdminEditorModalOpen()) return;
+    async function reloadAdminData(isBackground = false, forceRender = false) {
+      if (adminState.isSyncing && !forceRender) return;
+      if (isBackground && !forceRender && isAnyAdminEditorModalOpen()) return;
       try {
         const [stList, cfg, slots, duts, reqs, bLogs, slotAtt] = await Promise.all([
           Db.getStudents(),
@@ -1174,35 +1197,40 @@
         adminState.duties = duts || {};
         adminState.requests = reqs || [];
         adminState.bonusLogs = bLogs || [];
-        adminState.slotAttendanceMap = slotAtt || { byDateSlot: {}, phoneFree: {} };
+        adminState.slotAttendanceMap = slotAtt || { byDateSlot: {}, phoneFree: {}, detailsByDateSlot: {} };
 
-        // Check if an input or textarea currently has focus (user is typing!)
-        const activeTag = document.activeElement?.tagName;
-        const isUserTyping = (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT');
+        // Check if user is actively typing in a text/number input (ignore checkboxes, radios, date pickers, buttons)
+        const activeEl = document.activeElement;
+        const activeTag = activeEl?.tagName;
+        const activeType = (activeEl?.type || '').toLowerCase();
+        const isUserTyping = !forceRender && (
+          activeTag === 'TEXTAREA' ||
+          (activeTag === 'INPUT' && !['checkbox', 'radio', 'date', 'button', 'submit'].includes(activeType))
+        );
 
         // Always update background tables that don't disrupt user
-        if (!isUserTyping || adminState.currentTab !== 'duties') {
+        if (forceRender || !isUserTyping || adminState.currentTab !== 'duties') {
           renderAdminDutiesTable();
           updateDutyRotationTrackerCards();
         }
         renderAdminRequests();
         populateBonusStudentSelect();
 
-        if (adminState.inspectedStudentId && !isUserTyping) {
+        if (adminState.inspectedStudentId && (forceRender || !isUserTyping)) {
           inspectStudentFromAdmin(adminState.inspectedStudentId, adminState.inspectedDate);
         }
 
         // Only update students table if user is not actively searching
-        if (!isUserTyping || adminState.currentTab !== 'students') {
+        if (forceRender || !isUserTyping || adminState.currentTab !== 'students') {
           renderAdminStudentsTable();
         }
 
-        // Only update calendar and schedule if not currently editing slots
-        if (!isUserTyping || adminState.currentTab !== 'schedule') {
+        // Only update calendar and schedule if not currently typing in slot inputs
+        if (forceRender || !isUserTyping || adminState.currentTab !== 'schedule') {
           adminState.scheduleSlots = slots || {};
           ensureCurrentDaySlots(adminState.selectedDate);
           renderAdminInteractiveCalendarGrid();
-          if (!isUserTyping) {
+          if (forceRender || !isUserTyping) {
             renderAdminSchedule();
           }
         }
@@ -1215,6 +1243,13 @@
       } catch (e) {
         console.error('reloadAdminData error:', e);
       }
+    }
+
+    async function handleRecalculateAllScores() {
+      App.showToast('מסנכרן ניקוד אמת ונוכחות לכל הבחורים מול השרת...', '🔄');
+      await Db.recalculateAllStudentsScores();
+      await reloadAdminData(true, true);
+      App.showToast('ניקוד האמת ונוכחות היום של כל הבחורים סונכרנו בהצלחה!', '✓');
     }
 
     // --- Tabs Switching ---
@@ -1244,6 +1279,9 @@
       const tbody = document.getElementById('adminStudentsTableBody');
       if (!tbody) return;
 
+      const todayIso = (window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10);
+      const todayAttMap = adminState.slotAttendanceMap?.byDateSlot?.[todayIso] || {};
+
       // Update Campaign Potential Summary Banner
       const generalPot = (window.App && App.calculateCampaignPotential) ? App.calculateCampaignPotential(adminState.config, adminState.scheduleSlots, adminState.duties, null, 0) : null;
       const bBadge = document.getElementById('campaignPotentialMaxBadge');
@@ -1272,6 +1310,10 @@
 
       tbody.innerHTML = list.map((st, i) => {
         const score = Number(st.score) || 0;
+        const sid = String(st.id);
+        const attendedTodayCount = Object.values(todayAttMap).filter(arr => Array.isArray(arr) && arr.includes(sid)).length;
+        const isPresentToday = attendedTodayCount > 0;
+
         const pot = (window.App && App.calculateCampaignPotential) 
           ? App.calculateCampaignPotential(adminState.config, adminState.scheduleSlots, adminState.duties, st.id, score) 
           : { campaignMax: 690, personalMax: 690, score, nextTarget: { name: 'יעד 1', points: 100 }, ptsToNextTarget: 100 };
@@ -1281,13 +1323,13 @@
             <td class="py-3 px-3 text-slate-400">${i + 1}</td>
             <td class="py-3 px-3">
               <span class="font-black text-slate-900 text-sm hover:text-indigo-600 transition">${st.full_name || st.name}</span>
-              <span class="block text-[10px] text-slate-400">לחץ לפירוט סדרים 🔍</span>
+              <span class="block text-[10px] text-slate-400">לחץ לפירוט וסימון סדרים 🔍</span>
             </td>
             <td class="py-3 px-3 font-mono text-slate-600" dir="ltr">${st.phone || '--'}</td>
             <td class="py-3 px-3 font-mono text-slate-600">${st.password || '1234'}</td>
             <td class="py-3 px-3 text-center" onclick="event.stopPropagation()">
-              <button onclick="toggleStudentPresenceDirectly('${st.id}', ${!st.present_today})" class="px-2.5 py-1 rounded-full text-[10px] font-black transition ${st.present_today ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}">
-                ${st.present_today ? 'נכח היום ✓' : 'סמן נוכח'}
+              <button onclick="inspectStudentFromAdmin('${st.id}', '${todayIso}')" class="px-2.5 py-1 rounded-full text-[10px] font-black transition cursor-pointer ${isPresentToday ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-700 border border-slate-200'}" title="לחץ לסימון או עריכת נוכחות בסדרי היום">
+                ${isPresentToday ? `נכח היום (${attendedTodayCount}) ✓` : 'סמן נוכחות בסדר'}
               </button>
             </td>
             <td class="py-3 px-3 text-left">
@@ -1300,10 +1342,10 @@
             </td>
             <td class="py-3 px-3 text-center" onclick="event.stopPropagation()">
               <div class="flex items-center justify-center gap-1.5">
-                <button onclick="openBonusForStudent('${st.id}')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs" title="הענק בונוס">
+                <button onclick="openBonusForStudent('${st.id}')" class="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs cursor-pointer" title="הענק בונוס">
                   ⭐
                 </button>
-                <button onclick="inspectStudentFromAdmin('${st.id}')" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs" title="פירוט נוכחות מלא">
+                <button onclick="inspectStudentFromAdmin('${st.id}')" class="px-2 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs cursor-pointer" title="פירוט נוכחות מלא">
                   פירוט
                 </button>
               </div>
@@ -1315,17 +1357,6 @@
 
     function handleStudentSearch() {
       renderAdminStudentsTable();
-    }
-
-    async function toggleStudentPresenceDirectly(studentId, isPresent) {
-      await Db.updateStudentScore(studentId, isPresent ? 1 : -1, isPresent);
-      const st = adminState.students.find(s => String(s.id) === String(studentId));
-      if (st) {
-        st.present_today = isPresent;
-        st.score = (Number(st.score) || 0) + (isPresent ? 1 : -1);
-      }
-      renderAdminStudentsTable();
-      App.showToast('סטטוס נוכחות עודכן', '✓');
     }
 
     // Detailed Student Modal Inspector
@@ -1340,7 +1371,29 @@
 
       const todayIso = dateOverride || adminState.inspectedDate || adminState.selectedDate || ((window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10));
       adminState.inspectedDate = todayIso;
-      const todaySlots = adminState.scheduleSlots[todayIso] || [];
+
+      // שילוב סדרי היום מהלו"ז + סדרים היסטוריים שבהם נרשמה נוכחות ביום זה (אם שונה שם הסדר)
+      const scheduledSlots = (adminState.scheduleSlots[todayIso] || []).map(s => ({ ...s }));
+      const dayAttBySlot = adminState.slotAttendanceMap?.byDateSlot?.[todayIso] || {};
+      const dayDetailsBySlot = adminState.slotAttendanceMap?.detailsByDateSlot?.[todayIso] || {};
+
+      Object.keys(dayAttBySlot).forEach(loggedTitle => {
+        if (loggedTitle && !scheduledSlots.some(s => (s.title || '').trim() === loggedTitle.trim())) {
+          const stDetail = dayDetailsBySlot[loggedTitle]?.[String(st.id)];
+          scheduledSlots.push({
+            id: `logged_${loggedTitle}`,
+            title: loggedTitle,
+            openTime: '--:--',
+            lockTime: '--:--',
+            points: stDetail?.basePoints || 1,
+            isHistoricalLogOnly: true
+          });
+        }
+      });
+
+      const todaySlots = scheduledSlots;
+      adminState._currentInspectorSlots = todaySlots;
+
       const hebInfo = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(todayIso) : null;
       const hebDateLabel = hebInfo ? `${hebInfo.dayName}, ${hebInfo.shortHebrew}` : todayIso;
 
@@ -1398,7 +1451,7 @@
             <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200">
               <div>
                 <h4 class="text-xs font-black text-indigo-950">נוכחות בסדרי לימוד (${hebDateLabel}):</h4>
-                <span class="text-[10px] text-indigo-700 font-bold">בחר תאריך כדי לצפות או לסמן נוכחות עבור כל יום במבצע</span>
+                <span class="text-[10px] text-indigo-700 font-bold">בחר תאריך כדי לצפות או לסמן נוכחות ובונוס ללא טלפון</span>
               </div>
               <input type="date" value="${todayIso}" onchange="inspectStudentFromAdmin('${st.id}', this.value)" class="p-1.5 rounded-xl border border-indigo-300 text-xs font-bold bg-white text-indigo-950 cursor-pointer">
             </div>
@@ -1411,17 +1464,17 @@
                 const isPf = pfList.includes(String(st.id));
 
                 return `
-                  <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                  <div class="flex items-center justify-between p-2.5 rounded-xl ${isPresent ? 'bg-emerald-50/60 border-emerald-300' : 'bg-slate-50 border-slate-200'} border text-xs transition">
                     <div>
                       <span class="font-black text-slate-900">${slot.title}</span>
-                      <span class="text-[10px] text-slate-500 font-outfit mr-1">${slot.openTime} - ${slot.lockTime} • ${slot.points || 1} נק׳</span>
+                      <span class="text-[10px] text-slate-500 font-outfit mr-1">${slot.openTime} - ${slot.lockTime} • ${slot.points || 1} נק׳${isPf ? ' (+1 ללא טלפון)' : ''}</span>
                     </div>
                     <div class="flex items-center gap-1.5">
-                      <button type="button" onclick="adminToggleInspectorSlotAttendance('${todayIso}', ${sIdx}, '${st.id}', ${!isPresent}, ${!isPresent ? isPf : false})" class="px-3 py-1 rounded-lg font-black text-xs transition border cursor-pointer ${isPresent ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">
+                      <button type="button" onclick="adminToggleInspectorSlotAttendance('${todayIso}', ${sIdx}, '${st.id}', ${!isPresent}, ${!isPresent ? isPf : false})" class="px-3 py-1.5 rounded-lg font-black text-xs transition border cursor-pointer ${isPresent ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">
                         ${isPresent ? '✓ נכח' : 'סמן נוכחות'}
                       </button>
-                      <button type="button" onclick="adminToggleInspectorSlotAttendance('${todayIso}', ${sIdx}, '${st.id}', true, ${!isPf})" class="px-2 py-1 rounded-lg font-black text-xs transition border cursor-pointer ${isPf ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}" title="בונוס ללא טלפון (מסמן אוטומטית גם נוכחות)">
-                        📵 ${isPf ? 'ללא טלפון (+1)' : 'ללא טלפון'}
+                      <button type="button" onclick="adminToggleInspectorSlotAttendance('${todayIso}', ${sIdx}, '${st.id}', true, ${!isPf})" class="px-2.5 py-1.5 rounded-lg font-black text-xs transition border cursor-pointer ${isPf ? 'bg-amber-500 text-white border-amber-500 shadow-xs' : 'bg-white text-slate-600 border-slate-300 hover:bg-amber-50'}" title="בונוס ללא טלפון (מסמן אוטומטית גם נוכחות)">
+                        📵 ${isPf ? 'ללא טלפון (+1) ✓' : 'ללא טלפון (+1)'}
                       </button>
                     </div>
                   </div>
@@ -1510,15 +1563,38 @@
       const ok = await Db.deleteStudent(studentId);
       if (ok) {
         closeAdminStudentBreakdownModal();
-        await reloadAdminData(true);
+        await reloadAdminData(true, true);
         App.showToast(`הבחור ${st.full_name || st.name} נמחק מהמערכת`, '🗑️');
       } else {
         App.showToast('שגיאה במחיקת הבחור', '⚠️');
       }
     }
 
+    function _applyOptimisticAttendance(dateStr, slotTitle, studentId, isPresent, noPhone) {
+      const sid = String(studentId);
+      if (!adminState.slotAttendanceMap.byDateSlot[dateStr]) adminState.slotAttendanceMap.byDateSlot[dateStr] = {};
+      if (!adminState.slotAttendanceMap.byDateSlot[dateStr][slotTitle]) adminState.slotAttendanceMap.byDateSlot[dateStr][slotTitle] = [];
+      if (!adminState.slotAttendanceMap.phoneFree[dateStr]) adminState.slotAttendanceMap.phoneFree[dateStr] = {};
+      if (!adminState.slotAttendanceMap.phoneFree[dateStr][slotTitle]) adminState.slotAttendanceMap.phoneFree[dateStr][slotTitle] = [];
+
+      const attArr = adminState.slotAttendanceMap.byDateSlot[dateStr][slotTitle];
+      const pfArr = adminState.slotAttendanceMap.phoneFree[dateStr][slotTitle];
+
+      if (isPresent) {
+        if (!attArr.includes(sid)) attArr.push(sid);
+        if (noPhone) {
+          if (!pfArr.includes(sid)) pfArr.push(sid);
+        } else {
+          adminState.slotAttendanceMap.phoneFree[dateStr][slotTitle] = pfArr.filter(x => x !== sid);
+        }
+      } else {
+        adminState.slotAttendanceMap.byDateSlot[dateStr][slotTitle] = attArr.filter(x => x !== sid);
+        adminState.slotAttendanceMap.phoneFree[dateStr][slotTitle] = pfArr.filter(x => x !== sid);
+      }
+    }
+
     async function adminToggleInspectorSlotAttendance(dateStr, sIdx, studentId, isPresent, noPhone) {
-      const slots = adminState.scheduleSlots[dateStr] || [];
+      const slots = adminState._currentInspectorSlots || adminState.scheduleSlots[dateStr] || [];
       const slot = slots[sIdx];
       if (!slot) return;
       await adminToggleStudentSlotAttendance(dateStr, slot.title, studentId, isPresent, noPhone, slot.points || 1);
@@ -1526,15 +1602,24 @@
 
     async function adminToggleStudentSlotAttendance(dateStr, slotTitle, studentId, isPresent, noPhone, points) {
       const st = adminState.students.find(s => String(s.id) === String(studentId));
+      // 1. עדכון מיידי של התצוגה (Optimistic UI) כדי למנוע התנגשות בלחיצה כפולה על "נכח" + "ללא טלפון"
+      _applyOptimisticAttendance(dateStr, slotTitle, studentId, isPresent, noPhone);
+      if (adminState.inspectedStudentId) {
+        inspectStudentFromAdmin(adminState.inspectedStudentId, adminState.inspectedDate);
+      }
+      renderAdminSchedule();
+      renderAdminStudentsTable();
+
+      // 2. שמירה בשרת וחישוב ניקוד אמת מלא
       await Db.toggleSlotStudentAttendance(dateStr, slotTitle, studentId, isPresent, noPhone, points, st?.full_name || st?.name);
-      await reloadAdminData(true);
-      App.showToast('נוכחות עודכנה בהצלחה בשרת!', '✓');
+      await reloadAdminData(true, true);
+      App.showToast(isPresent ? (noPhone ? 'נוכחות + בונוס ללא טלפון עודכנו בשרת! 📵✓' : 'נוכחות עודכנה בהצלחה בשרת! ✓') : 'סימון הנוכחות בוטל בשרת', '✓');
     }
 
     async function deleteBonusLog(logId, studentId, points) {
       if (!confirm('האם לבטל בונוס זה ולנכות את הנקודות?')) return;
       await Db.deleteBonusLog(logId, studentId, points);
-      await reloadAdminData(true);
+      await reloadAdminData(true, true);
       App.showToast('הבונוס בוטל בהצלחה', '🗑️');
     }
 
@@ -1682,6 +1767,12 @@
       const hBadge = document.getElementById('adminSelectedDateHebrew');
       if (!container) return;
 
+      // זכור אילו רשימות נוכחות היו פתוחות לפני הרינדור מחדש
+      const openAttIds = new Set();
+      container.querySelectorAll('[id^="slot_att_"]').forEach(el => {
+        if (!el.classList.contains('hidden')) openAttIds.add(el.id);
+      });
+
       const dateStr = adminState.selectedDate;
       const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(dateStr) : null;
       if (title) title.textContent = heb ? `${heb.dayName}, ${heb.fullHebrewDate}` : `עריכת יום: ${dateStr}`;
@@ -1703,8 +1794,10 @@
 
       container.innerHTML = slots.map((sl, idx) => {
         const list = adminState.slotAttendanceMap?.byDateSlot?.[dateStr]?.[sl.title || sl.id] || [];
+        const pfList = adminState.slotAttendanceMap?.phoneFree?.[dateStr]?.[sl.title || sl.id] || [];
         const count = list.length;
         const safeSlotTitleAttr = escapeAttr(sl.title || '');
+        const isAttOpen = openAttIds.has(`slot_att_${idx}`);
 
         return `
           <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 transition hover:border-indigo-300">
@@ -1746,20 +1839,29 @@
               </div>
             </div>
 
-            <!-- Expandable Student Attendance Checklist for this specific slot -->
-            <div id="slot_att_${idx}" class="hidden p-3 rounded-xl bg-white border border-slate-200 space-y-2">
+            <!-- Expandable Student Attendance & Phone-Free Checklist for this specific slot -->
+            <div id="slot_att_${idx}" class="${isAttOpen ? '' : 'hidden '}p-3 rounded-xl bg-white border border-slate-200 space-y-2">
               <div class="flex items-center justify-between text-xs pb-1 border-b border-slate-100">
-                <span class="font-black text-slate-800">רשימת בחורים שסימנו נוכחות בסדר זה (${safeSlotTitleAttr}):</span>
-                <span class="text-[10px] text-slate-400">סמן/בטל נוכחות בלחיצה</span>
+                <span class="font-black text-slate-800">סימון נוכחות ובונוס ללא טלפון בסדר זה (${safeSlotTitleAttr}):</span>
+                <span class="text-[10px] text-slate-400">סמן נוכחות (✓) או ללא טלפון (📵 +1 נק׳)</span>
               </div>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-48 overflow-y-auto custom-scroll text-xs">
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-60 overflow-y-auto custom-scroll text-xs">
                 ${adminState.students.map(st => {
-                  const isPresent = list.includes(String(st.id));
+                  const sid = String(st.id);
+                  const isPresent = list.includes(sid);
+                  const isPf = pfList.includes(sid);
                   return `
-                    <label class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-slate-50 cursor-pointer border ${isPresent ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-100'}">
-                      <input type="checkbox" ${isPresent ? 'checked' : ''} onchange="adminToggleStudentSlotAttendanceByIdx(${idx}, '${st.id}', this.checked)" class="w-3.5 h-3.5 rounded text-emerald-600">
+                    <div class="flex items-center justify-between gap-1.5 p-2 rounded-xl border ${isPresent ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200 bg-slate-50/40'}">
                       <span class="truncate font-bold ${isPresent ? 'text-emerald-950 font-black' : 'text-slate-700'}">${st.full_name || st.name}</span>
-                    </label>
+                      <div class="flex items-center gap-1 shrink-0">
+                        <button type="button" onclick="adminToggleStudentSlotAttendanceByIdx(${idx}, '${st.id}', ${!isPresent}, ${!isPresent ? isPf : false})" class="px-2 py-1 rounded-lg font-black text-[11px] transition border cursor-pointer ${isPresent ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'}">
+                          ${isPresent ? '✓ נכח' : 'סמן'}
+                        </button>
+                        <button type="button" onclick="adminToggleStudentSlotAttendanceByIdx(${idx}, '${st.id}', true, ${!isPf})" class="px-2 py-1 rounded-lg font-black text-[11px] transition border cursor-pointer ${isPf ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-300 hover:bg-amber-50'}" title="למד ללא טלפון (+1 נק׳)">
+                          📵${isPf ? ' ✓' : ''}
+                        </button>
+                      </div>
+                    </div>
                   `;
                 }).join('')}
               </div>
@@ -1854,6 +1956,9 @@
           if (!ok) {
             throw new Error('שגיאה בשמירת הסדר במסד הנתונים');
           }
+          if (oldTitle && oldTitle !== title) {
+            await Db.renameSlotAttendanceTitle(d, oldTitle, title, false);
+          }
           App.showToast(`סדר "${title}" עודכן ונשמר בהצלחה בשרת!`, '💾');
         } else {
           const [sy, sm, sd] = (adminState.config?.startDate || '2026-10-25').split('-').map(Number);
@@ -1920,12 +2025,14 @@
           if (!ok) {
             throw new Error('שגיאה בסנכרון סדרה לשרת');
           }
+          if (oldTitle && oldTitle !== title) {
+            await Db.renameSlotAttendanceTitle(null, oldTitle, title, true);
+          }
           App.showToast(`סדר "${title}" עודכן ונשמר בהצלחה ב-${affectedCount} ימים במבצע!`, '🔄');
         }
 
         closeEditSlotModal();
-        renderAdminSchedule();
-        renderAdminInteractiveCalendarGrid();
+        await reloadAdminData(true, true);
       } catch (err) {
         console.error('handleSaveEditedSlotModal error:', err);
         App.showToast(`שגיאה בעדכון הסדר: ${err.message || 'אנא נסה שוב'}`, '⚠️');
@@ -1970,10 +2077,17 @@
       const d = adminState.selectedDate;
       ensureCurrentDaySlots(d);
       if (adminState.scheduleSlots[d]?.[idx]) {
-        adminState.scheduleSlots[d][idx].title = (val || '').trim();
+        const oldTitle = (adminState.scheduleSlots[d][idx].title || '').trim();
+        const newTitle = (val || '').trim();
+        if (!newTitle) return;
+        adminState.scheduleSlots[d][idx].title = newTitle;
         adminState.isSyncing = true;
         try {
           await Db.syncDateSlots(d, adminState.scheduleSlots[d]);
+          if (oldTitle && oldTitle !== newTitle) {
+            await Db.renameSlotAttendanceTitle(d, oldTitle, newTitle, false);
+          }
+          await reloadAdminData(true, true);
           App.showToast('כותרת הסדר עודכנה בשרת', '✓');
         } finally {
           adminState.isSyncing = false;
@@ -2026,11 +2140,11 @@
       }
     }
 
-    async function adminToggleStudentSlotAttendanceByIdx(idx, studentId, isPresent) {
+    async function adminToggleStudentSlotAttendanceByIdx(idx, studentId, isPresent, noPhone = false) {
       const d = adminState.selectedDate;
       const slot = adminState.scheduleSlots[d]?.[idx];
       if (!slot) return;
-      await adminToggleStudentSlotAttendance(d, slot.title, studentId, isPresent, false, slot.points || 1);
+      await adminToggleStudentSlotAttendance(d, slot.title, studentId, isPresent, !!noPhone, slot.points || 1);
     }
 
     async function removeSlotSeriesByIdx(idx) {
@@ -2779,8 +2893,61 @@
       }
     }
 
+    function addSelectedDayToAdminGoogleCalendar() {
+      const iso = adminState.selectedDate || App.getTodayIsraelDate();
+      const slots = getAdminSlotsForDate(iso) || [];
+      const duty = adminState.duties[iso];
+      const dCfg = getAdminDutyConfig();
+      const wName = duty?.wakeupStudentId ? getStudentNameById(duty.wakeupStudentId) : 'טרם שובץ';
+      const kName = duty?.kitchenStudentId ? getStudentNameById(duty.kitchenStudentId) : 'טרם שובץ';
+
+      const slotLines = slots.map(sl => `• ${sl.openTime}-${sl.lockTime}: ${sl.title} (${sl.points || 1} נק׳)`).join('\n');
+      const details = [
+        duty?.specialEventTitle ? `🎉 אירוע מיוחד: ${duty.specialEventTitle}` : '',
+        `🌅 ${dCfg.duty1Name}: ${wName}`,
+        `🍽️ ${dCfg.duty2Name}: ${kName}`,
+        '',
+        '⏰ סדרי היום:',
+        slotLines || 'אין סדרים מוגדרים'
+      ].filter(Boolean).join('\n');
+
+      const url = App.getGoogleCalendarUrl({
+        title: duty?.specialEventTitle
+          ? `ישיבת בקשו: ${duty.specialEventTitle} + סדרי היום`
+          : `סדרי לימוד ותורנויות - ישיבת בקשו (${iso})`,
+        details,
+        startIso: iso,
+        isAllDay: true
+      });
+      window.open(url, '_blank');
+    }
+
+    function openAdminDutyGoogleCal(isoDate, type) {
+      const duty = adminState.duties[isoDate];
+      const dCfg = getAdminDutyConfig();
+      const isWake = type === 'wakeup';
+      const stId = isWake ? duty?.wakeupStudentId : duty?.kitchenStudentId;
+      const stName = stId ? getStudentNameById(stId) : 'טרם שובץ';
+      const roleTitle = isWake ? dCfg.duty1Name : dCfg.duty2Name;
+      const hourStr = (isWake ? dCfg.duty1Hour : dCfg.duty2Hour) || (isWake ? '06:30' : '12:00');
+      const [hh, mm] = hourStr.split(':').map(Number);
+      const endHh = String(Math.min(23, (hh || 6) + 1)).padStart(2, '0');
+      const endMm = String(mm || 0).padStart(2, '0');
+
+      const url = App.getGoogleCalendarUrl({
+        title: `🧹 ${roleTitle}: ${stName} | ישיבת בקשו`,
+        details: `תורנות ${roleTitle} בישיבת בקשו בתאריך ${isoDate}.\nתורן משובץ: ${stName}`,
+        startIso: `${isoDate}T${hourStr}:00`,
+        endIso: `${isoDate}T${endHh}:${endMm}:00`,
+        isAllDay: false
+      });
+      window.open(url, '_blank');
+    }
+
     function exportGoogleCalendarIcs() {
       const events = [];
+      const dCfg = getAdminDutyConfig();
+
       (adminState.config?.trailStops || []).forEach((stop, idx) => {
         if (stop.isoDate) {
           const cleanDate = stop.isoDate.replace(/-/g, '');
@@ -2804,7 +2971,7 @@
       while (cur <= end) {
         const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
         const dateClean = iso.replace(/-/g, '');
-        const slots = adminState.scheduleSlots[iso] || [];
+        const slots = getAdminSlotsForDate(iso) || [];
         const duty = adminState.duties[iso];
 
         if (duty?.specialEventTitle) {
@@ -2814,6 +2981,34 @@
             `SUMMARY:🎉 ${duty.specialEventTitle}`,
             `DTSTART;VALUE=DATE:${dateClean}`,
             `DTEND;VALUE=DATE:${dateClean}`,
+            'END:VEVENT'
+          ].join('\r\n'));
+        }
+
+        if (duty?.wakeupStudentId) {
+          const wName = getStudentNameById(duty.wakeupStudentId);
+          const wClean = (dCfg.duty1Hour || '06:30').replace(':', '') + '00';
+          events.push([
+            'BEGIN:VEVENT',
+            `UID:admin_wake_${dateClean}@bakshu`,
+            `SUMMARY:🌅 ${dCfg.duty1Name}: ${wName}`,
+            `DESCRIPTION:תורנות מעורר בישיבת בקשו - ${wName}`,
+            `DTSTART:${dateClean}T${wClean}`,
+            `DTEND:${dateClean}T073000`,
+            'END:VEVENT'
+          ].join('\r\n'));
+        }
+
+        if (duty?.kitchenStudentId) {
+          const kName = getStudentNameById(duty.kitchenStudentId);
+          const kClean = (dCfg.duty2Hour || '12:00').replace(':', '') + '00';
+          events.push([
+            'BEGIN:VEVENT',
+            `UID:admin_kitch_${dateClean}@bakshu`,
+            `SUMMARY:🍽️ ${dCfg.duty2Name}: ${kName}`,
+            `DESCRIPTION:תורנות מטבח בישיבת בקשו - ${kName}`,
+            `DTSTART:${dateClean}T${kClean}`,
+            `DTEND:${dateClean}T130000`,
             'END:VEVENT'
           ].join('\r\n'));
         }
@@ -2835,7 +3030,7 @@
       }
 
       App.downloadIcs('לוח_מבצע_בקשו_מלא.ics', events.join('\r\n'));
-      App.showToast('קובץ היומן המלא של המבצע ירד בהצלחה!', '📅');
+      App.showToast('קובץ היומן המלא של המבצע (סדרים + תורנויות + עצירות) ירד בהצלחה!', '📅');
     }
 
     // =========================================================
@@ -2902,14 +3097,20 @@
               <input type="checkbox" ${item.kitchenDone ? 'checked' : ''} onchange="onDutyToggleDone('${d}', 'kitchen_done', this.checked)" class="w-4 h-4 rounded text-emerald-600 cursor-pointer">
             </td>
 
-            <!-- Direct WhatsApp Reminder Buttons -->
+            <!-- Direct WhatsApp & Google Calendar Buttons -->
             <td class="py-3 px-3 text-center">
-              <div class="flex items-center justify-center gap-1">
+              <div class="flex items-center justify-center gap-1 flex-wrap">
                 <button type="button" onclick="sendDirectDutyWhatsApp('${d}', 'wakeup')" class="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[10px] transition cursor-pointer" title="שלח תזכורת WhatsApp לתורן ${dCfg.duty1Name}">
                   💬 ${dCfg.duty1Name.slice(0, 5)}..
                 </button>
+                <button type="button" onclick="openAdminDutyGoogleCal('${d}', 'wakeup')" class="px-1.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[10px] transition cursor-pointer" title="הוסף תורנות ${dCfg.duty1Name} ל-Google Calendar">
+                  📅
+                </button>
                 <button type="button" onclick="sendDirectDutyWhatsApp('${d}', 'kitchen')" class="px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-[10px] transition cursor-pointer" title="שלח תזכורת WhatsApp לתורן ${dCfg.duty2Name}">
                   💬 ${dCfg.duty2Name.slice(0, 5)}..
+                </button>
+                <button type="button" onclick="openAdminDutyGoogleCal('${d}', 'kitchen')" class="px-1.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold text-[10px] transition cursor-pointer" title="הוסף תורנות ${dCfg.duty2Name} ל-Google Calendar">
+                  📅
                 </button>
               </div>
             </td>

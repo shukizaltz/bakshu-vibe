@@ -700,17 +700,32 @@
         if (error || !Array.isArray(data)) return [];
         return data
           .map(parseAttendanceRow)
-          .filter(r => r && r.userId && r.slotDate && r.status === 'approved');
+          .filter(r => r && r.userId && r.slotDate && r.slotTitle && r.status === 'approved');
       } catch (e) {
         console.error('Db.getAllParsedAttendanceLogs error:', e);
         return [];
       }
     },
 
+    async renameSlotAttendanceTitle(dateStr, oldTitle, newTitle, isSeries = false) {
+      if (!client || !oldTitle || !newTitle || oldTitle === newTitle) return true;
+      try {
+        let q = client.from('attendance_logs').update({ slot_title: String(newTitle).trim() }).eq('slot_title', String(oldTitle).trim());
+        if (!isSeries && dateStr) {
+          q = q.eq('slot_date', dateStr);
+        }
+        await q;
+        return true;
+      } catch (e) {
+        console.error('Db.renameSlotAttendanceTitle error:', e);
+        return false;
+      }
+    },
+
     async hasStudentCheckedIn(studentId, slotTitle, dateStr) {
       if (!client || !studentId) return false;
       try {
-        const cleanDate = dateStr || new Date().toISOString().slice(0, 10);
+        const cleanDate = dateStr || ((g.App && g.App.getTodayIsraelDate) ? g.App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10));
         const cleanTitle = (slotTitle || '').trim();
         const { data } = await client
           .from('attendance_logs')
@@ -729,10 +744,10 @@
     async recordAttendance(studentId, studentName, slotTitle, points, isPresent, noPhone, dateStr) {
       if (!client || !studentId) return false;
       try {
-        const cleanDate = dateStr || new Date().toISOString().slice(0, 10);
+        const cleanDate = dateStr || ((g.App && g.App.getTodayIsraelDate) ? g.App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10));
         const cleanTitle = String(slotTitle || '').trim();
         const isValidUuid = /^[0-9a-f-]{36}$/i.test(String(studentId));
-        if (!isValidUuid) return false;
+        if (!isValidUuid || !cleanTitle) return false;
 
         // 1. בדיקת רשומות קיימות של הבחור עבור אותו סדר
         const { data: existingRows } = await client
@@ -760,6 +775,12 @@
         const totalPoints = Number(points) || (1 + (noPhone ? 1 : 0));
 
         if (matchingTodayRows.length > 0) {
+          // ניקוי כפילויות אם קיימות מאותו יום וסדר
+          if (matchingTodayRows.length > 1) {
+            const dupIds = matchingTodayRows.slice(1).map(r => r.id);
+            await client.from('attendance_logs').delete().in('id', dupIds);
+          }
+
           // בדיקה אם השינוי הוא רק במתג "ללא טלפון" או ניסיון סימון כפול
           const prevParsed = parseAttendanceRow(matchingTodayRows[0]);
           if (prevParsed.noPhone === !!noPhone && prevParsed.points === totalPoints) {
@@ -811,23 +832,32 @@
     },
 
     async getSlotAttendanceMap() {
-      if (!client) return { byDateSlot: {}, phoneFree: {} };
+      if (!client) return { byDateSlot: {}, phoneFree: {}, detailsByDateSlot: {} };
       try {
         const byDateSlot = {};
         const phoneFree = {};
+        const detailsByDateSlot = {};
 
         const parsedLogs = await this.getAllParsedAttendanceLogs();
         parsedLogs.forEach(l => {
           const d = l.slotDate;
-          const key = l.slotTitle || 'general';
+          const key = l.slotTitle;
           const sid = l.userId;
-          if (!d || !sid) return;
+          if (!d || !sid || !key) return;
 
           if (!byDateSlot[d]) byDateSlot[d] = {};
           if (!byDateSlot[d][key]) byDateSlot[d][key] = [];
           if (!byDateSlot[d][key].includes(sid)) {
             byDateSlot[d][key].push(sid);
           }
+
+          if (!detailsByDateSlot[d]) detailsByDateSlot[d] = {};
+          if (!detailsByDateSlot[d][key]) detailsByDateSlot[d][key] = {};
+          detailsByDateSlot[d][key][sid] = {
+            points: l.points,
+            basePoints: l.basePoints,
+            noPhone: !!l.noPhone
+          };
 
           if (l.noPhone) {
             if (!phoneFree[d]) phoneFree[d] = {};
@@ -838,17 +868,17 @@
           }
         });
 
-        return { byDateSlot, phoneFree };
+        return { byDateSlot, phoneFree, detailsByDateSlot };
       } catch (e) {
         console.error('Db.getSlotAttendanceMap error:', e);
-        return { byDateSlot: {}, phoneFree: {} };
+        return { byDateSlot: {}, phoneFree: {}, detailsByDateSlot: {} };
       }
     },
 
     async toggleSlotStudentAttendance(dateStr, slotTitle, studentId, isPresent, noPhone, basePoints, studentName) {
       if (!client || !studentId) return false;
       try {
-        const cleanDate = dateStr || new Date().toISOString().slice(0, 10);
+        const cleanDate = dateStr || ((g.App && g.App.getTodayIsraelDate) ? g.App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10));
         const cleanTitle = String(slotTitle || '').trim();
         const bPts = Number(basePoints) || 1;
         const totalPts = bPts + (noPhone ? 1 : 0);
@@ -879,6 +909,24 @@
         }
       } catch (e) {
         console.error('Db.toggleSlotStudentAttendance error:', e);
+        return false;
+      }
+    },
+
+    async recalculateAllStudentsScores() {
+      if (!client) return false;
+      try {
+        // ניקוי רשומות נוכחות פגומות ללא שם סדר
+        await client.from('attendance_logs').delete().eq('slot_title', '');
+        const students = await this.getStudents();
+        for (const st of students) {
+          if (st && st.id) {
+            await this.recalculateStudentScore(st.id);
+          }
+        }
+        return true;
+      } catch (e) {
+        console.error('Db.recalculateAllStudentsScores error:', e);
         return false;
       }
     },
