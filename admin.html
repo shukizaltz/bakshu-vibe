@@ -154,10 +154,10 @@
             <span class="text-xl p-2 rounded-xl bg-indigo-600 text-white shadow-xs">🎯</span>
             <div>
               <div class="flex items-center gap-2">
-                <h4 class="font-black text-slate-900 text-xs sm:text-sm">פוטנציאל צבירה מרבי לתלמיד מצטיין:</h4>
+                <h4 class="font-black text-slate-900 text-xs sm:text-sm">פוטנציאל צבירה מרבי מסדרי המבצע:</h4>
                 <span class="text-xs px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black shadow-xs" id="campaignPotentialMaxBadge">טוען...</span>
               </div>
-              <p class="text-[11px] text-slate-500">חישוב מלא של כל הסדרים, הפקדת טלפון (+1), תורנויות וסדר מלא במבצע</p>
+              <p class="text-[11px] text-slate-500">חישוב נטו של סדרי הלימוד בלוח המבצע בלבד (ללא בונוסים וללא תורנויות)</p>
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2 text-[10px] font-bold" id="campaignPotentialBreakdownBadges">
@@ -1282,17 +1282,15 @@
       const todayIso = (window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10);
       const todayAttMap = adminState.slotAttendanceMap?.byDateSlot?.[todayIso] || {};
 
-      // Update Campaign Potential Summary Banner
+      // Update Campaign Potential Summary Banner (Sedarim Only)
       const generalPot = (window.App && App.calculateCampaignPotential) ? App.calculateCampaignPotential(adminState.config, adminState.scheduleSlots, adminState.duties, null, 0) : null;
       const bBadge = document.getElementById('campaignPotentialMaxBadge');
       const bBadges = document.getElementById('campaignPotentialBreakdownBadges');
-      if (bBadge && generalPot) bBadge.textContent = `${generalPot.campaignMax} נקודות במבצע`;
+      if (bBadge && generalPot) bBadge.textContent = `${generalPot.campaignMax} נקודות סדרים במבצע`;
       if (bBadges && generalPot) {
         bBadges.innerHTML = `
-          <span class="px-2 py-0.5 rounded-lg bg-indigo-100 text-indigo-900 border border-indigo-200">📖 סדרים: ${generalPot.sedarimPoints}</span>
-          <span class="px-2 py-0.5 rounded-lg bg-amber-100 text-amber-900 border border-amber-200">📵 ללא טלפון: ${generalPot.phoneFreePoints}</span>
-          <span class="px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-900 border border-emerald-200">🧹 תורנויות: ${generalPot.dutiesPoints}</span>
-          <span class="px-2 py-0.5 rounded-lg bg-purple-100 text-purple-900 border border-purple-200">👑 סדר מלא: ${generalPot.fullSederPts}</span>
+          <span class="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-900 border border-indigo-200">📖 סה״כ סדרים במבצע: ${generalPot.totalSlotsCount || 0} סדרים (${generalPot.sedarimPoints} נק׳)</span>
+          <span class="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-900 border border-emerald-200">⏳ סדרים שנותרו מהיום: ${generalPot.remainingSlotsCount || 0} סדרים (${generalPot.remainingSlotsPoints ?? generalPot.sedarimPoints} נק׳)</span>
         `;
       }
 
@@ -1438,11 +1436,10 @@
               <span>נותר לפסגה: <b class="text-indigo-700">${stPot.ptsToSummit} נק׳</b></span>
             </div>
 
-            <div class="grid grid-cols-4 gap-1.5 text-[10px] text-center pt-1 font-bold">
-              <div class="p-1 rounded-lg bg-white border border-slate-200">סדרים: ${stPot.sedarimPoints}</div>
-              <div class="p-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200">ללא נייד: ${stPot.phoneFreePoints}</div>
-              <div class="p-1 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200">תורנויות: ${stPot.dutiesPoints}</div>
-              <div class="p-1 rounded-lg bg-purple-50 text-purple-900 border border-purple-200">בונוסים: ${stPot.fullSederPts}</div>
+            <div class="grid grid-cols-3 gap-1.5 text-[10px] text-center pt-1 font-bold">
+              <div class="p-1.5 rounded-lg bg-white border border-slate-200">📖 סה״כ סדרים במבצע: ${stPot.sedarimPoints} נק׳</div>
+              <div class="p-1.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200">⏳ סדרים שנותרו: ${stPot.remainingSlotsPoints ?? stPot.sedarimPoints} נק׳</div>
+              <div class="p-1.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200">⭐ נצבר עד כה: ${stScore} נק׳</div>
             </div>
           </div>
 

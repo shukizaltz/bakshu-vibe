@@ -177,10 +177,10 @@
             <span class="text-2xl p-2 rounded-2xl bg-amber-400/20 text-amber-300 border border-amber-400/30">🎯</span>
             <div>
               <div class="flex items-center gap-2">
-                <h3 class="text-base sm:text-lg font-black text-white">חישוב ניקוד ומימוש פוטנציאל במבצע</h3>
-                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">מדד אחיד</span>
+                <h3 class="text-base sm:text-lg font-black text-white">חישוב ניקוד ופוטנציאל סדרים במבצע</h3>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold">סדרים בלבד</span>
               </div>
-              <p class="text-xs text-slate-300">שקיפות מלאה: כמה צברת, כמה תוכל לצבור אישית, וכמה ניתן לצבור במבצע כולו</p>
+              <p class="text-xs text-slate-300">חישוב נטו לפי סדרי הלימוד בלוח המבצע (ללא בונוסים ותורנויות)</p>
             </div>
           </div>
 
@@ -192,11 +192,11 @@
             </div>
             <div class="bg-emerald-500/15 border border-emerald-400/30 px-3.5 py-1.5 rounded-2xl text-center">
               <span class="block text-[10px] text-emerald-200 font-bold">2. פוטנציאל אישי שלך:</span>
-              <span id="studentPersonalMaxBadge" class="text-base sm:text-lg font-black font-outfit text-emerald-300">עד 690 נק׳</span>
+              <span id="studentPersonalMaxBadge" class="text-base sm:text-lg font-black font-outfit text-emerald-300">עד 351 נק׳</span>
             </div>
             <div class="bg-white/10 border border-white/15 px-3.5 py-1.5 rounded-2xl text-center">
-              <span class="block text-[10px] text-slate-300 font-bold">3. ניתן לצבור במבצע:</span>
-              <span id="studentPotentialTotalPts" class="text-base sm:text-lg font-black font-outfit text-white">690 נק׳</span>
+              <span class="block text-[10px] text-slate-300 font-bold">3. סה״כ סדרים במבצע:</span>
+              <span id="studentPotentialTotalPts" class="text-base sm:text-lg font-black font-outfit text-white">351 נק׳</span>
             </div>
           </div>
         </div>
@@ -212,34 +212,27 @@
           </div>
         </div>
 
-        <!-- 4 Breakdown Pillars -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1 relative z-10 text-xs">
-          <!-- Sedarim -->
+        <!-- Sedarim Potential Breakdown Pillars -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 relative z-10 text-xs">
+          <!-- Total Sedarim in Campaign -->
           <div class="p-3 rounded-2xl bg-white/5 border border-white/10 space-y-1">
-            <span class="text-slate-400 block text-[11px] font-bold">📖 סדרי לימוד:</span>
-            <span id="studentPotSedarimPts" class="font-black text-white text-base font-outfit block">0</span>
-            <span class="text-[10px] text-indigo-300 font-medium block">סך הסדרים במבצע</span>
+            <span class="text-slate-300 block text-[11px] font-bold">📖 סה״כ סדרים במבצע:</span>
+            <span id="studentPotSedarimPts" class="font-black text-white text-base font-outfit block">0 נק׳</span>
+            <span id="studentPotTotalCountSub" class="text-[10px] text-indigo-300 font-medium block">כל סדרי הלימוד בלוח (ללא בונוסים)</span>
           </div>
 
-          <!-- Phone Free -->
-          <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/20 space-y-1">
-            <span class="text-amber-200 block text-[11px] font-bold">📵 ללא טלפון:</span>
-            <span id="studentPotPhonePts" class="font-black text-amber-300 text-base font-outfit block">0</span>
-            <span class="text-[10px] text-amber-200/80 font-medium block">+1 נק׳ בונוס לכל סדר!</span>
-          </div>
-
-          <!-- Duties -->
+          <!-- Remaining Sedarim -->
           <div class="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-400/20 space-y-1">
-            <span class="text-emerald-200 block text-[11px] font-bold">🧹 תורנויות:</span>
-            <span id="studentPotDutiesPts" class="font-black text-emerald-300 text-base font-outfit block">0</span>
-            <span class="text-[10px] text-emerald-200/80 font-medium block">מעורר / מטבח (+3 נק׳)</span>
+            <span class="text-emerald-200 block text-[11px] font-bold">⏳ סדרים שנותרו מהיום:</span>
+            <span id="studentPotRemainingPts" class="font-black text-emerald-300 text-base font-outfit block">0 נק׳</span>
+            <span id="studentPotRemainingCountSub" class="text-[10px] text-emerald-200/80 font-medium block">נקודות סדרים שניתן עוד לצבור</span>
           </div>
 
-          <!-- Full Seder -->
-          <div class="p-3 rounded-2xl bg-indigo-500/10 border border-indigo-400/20 space-y-1">
-            <span class="text-indigo-200 block text-[11px] font-bold">👑 סדר מלא:</span>
-            <span id="studentPotBonusPts" class="font-black text-indigo-300 text-base font-outfit block">0</span>
-            <span class="text-[10px] text-indigo-200/80 font-medium block">בונוסי התייצבות ישיבתית</span>
+          <!-- Next Target Distance -->
+          <div class="p-3 rounded-2xl bg-amber-500/10 border border-amber-400/20 space-y-1">
+            <span class="text-amber-200 block text-[11px] font-bold">🏔️ מרחק ליעד הבא:</span>
+            <span id="studentPotNextTargetPts" class="font-black text-amber-300 text-base font-outfit block">0 נק׳</span>
+            <span id="studentPotNextTargetSub" class="text-[10px] text-amber-200/80 font-medium block">עד היעד הקרוב</span>
           </div>
         </div>
       </div>
@@ -1461,17 +1454,17 @@
       const score = Number(st?.score) || 0;
       const pot = (window.App && typeof App.calculateCampaignPotential === 'function')
         ? App.calculateCampaignPotential(state.config, state.scheduleSlots, state.duties, st?.id, score)
-        : { totalPotential: 690, campaignMax: 690, personalMax: 690, score, sedarimPoints: 351, phoneFreePoints: 315, dutiesPoints: 4, fullSederPts: 20, targets: { min: { points: 100, name: 'יעד 1' }, mid: { points: 200, name: 'יעד 2' }, max: { points: 350, name: 'הפסגה' } }, nextTarget: { points: 100, name: 'יעד 1' }, ptsToNextTarget: 100, ptsToSummit: 350 };
+        : { totalPotential: 351, campaignMax: 351, personalMax: 351, score, totalSlotsCount: 315, remainingSlotsCount: 300, remainingSlotsPoints: 340, sedarimPoints: 351, phoneFreePoints: 0, dutiesPoints: 0, fullSederPts: 0, targets: { min: { points: 100, name: 'יעד 1' }, mid: { points: 200, name: 'יעד 2' }, max: { points: 350, name: 'הפסגה' } }, nextTarget: { points: 100, name: 'יעד 1' }, ptsToNextTarget: 100, ptsToSummit: 350 };
 
       // 1. כמה צבר בפועל
       const scoreMini = document.getElementById('studentCardScoreMini');
       if (scoreMini) scoreMini.textContent = `${score} נק׳`;
 
-      // 2. כמה בחור מסוים יכול לצבור (פוטנציאל אישי מרבי)
+      // 2. כמה בחור מסוים יכול לצבור (פוטנציאל אישי מרבי - סדרים בלבד)
       const pMaxEl = document.getElementById('studentPersonalMaxBadge');
       if (pMaxEl) pMaxEl.textContent = `עד ${pot.personalMax} נק׳`;
 
-      // 3. כמה ניתן לצבור במבצע כולו (תקרה מלאה)
+      // 3. כמה ניתן לצבור במבצע כולו (סך נקודות הסדרים במבצע)
       const totEl = document.getElementById('studentPotentialTotalPts');
       if (totEl) totEl.textContent = `${pot.campaignMax} נק׳`;
 
@@ -1494,16 +1487,20 @@
         progBar.style.width = `${pctToNext}%`;
       }
 
-      // 4 עמודי התווך של הפוטנציאל
+      // פירוט פוטנציאל סדרים (ללא בונוסים ותורנויות)
       const sedEl = document.getElementById('studentPotSedarimPts');
-      const phEl = document.getElementById('studentPotPhonePts');
-      const dutEl = document.getElementById('studentPotDutiesPts');
-      const bonEl = document.getElementById('studentPotBonusPts');
+      const sedSub = document.getElementById('studentPotTotalCountSub');
+      const remEl = document.getElementById('studentPotRemainingPts');
+      const remSub = document.getElementById('studentPotRemainingCountSub');
+      const nxtEl = document.getElementById('studentPotNextTargetPts');
+      const nxtSub = document.getElementById('studentPotNextTargetSub');
 
       if (sedEl) sedEl.textContent = `${pot.sedarimPoints} נק׳`;
-      if (phEl) phEl.textContent = `${pot.phoneFreePoints} נק׳`;
-      if (dutEl) dutEl.textContent = `${pot.dutiesPoints} נק׳`;
-      if (bonEl) bonEl.textContent = `${pot.fullSederPts} נק׳`;
+      if (sedSub) sedSub.textContent = `${pot.totalSlotsCount || 0} סדרים בלוח המבצע (ללא בונוסים)`;
+      if (remEl) remEl.textContent = `${pot.remainingSlotsPoints ?? pot.sedarimPoints} נק׳`;
+      if (remSub) remSub.textContent = `ב-${pot.remainingSlotsCount ?? 0} סדרים שנותרו מהיום והלאה`;
+      if (nxtEl) nxtEl.textContent = ptsRemaining > 0 ? `עוד ${ptsRemaining} נק׳` : 'היעד הושג! ✓';
+      if (nxtSub) nxtSub.textContent = `ליעד: ${targetName} (${targetPts} נק׳)`;
     }
 
     function renderStreakPills() {
