@@ -494,6 +494,19 @@
     // ==========================================
     // 4. תורנויות מעורר ומטבח (campaign_calendar)
     // ==========================================
+    _getHebrewDateStr(isoDate) {
+      try {
+        if (g.App && Array.isArray(g.App.CAMPAIGN_DAYS)) {
+          const found = g.App.CAMPAIGN_DAYS.find(d => d.isoDate === isoDate);
+          if (found && found.hebrewDate) return found.hebrewDate;
+        }
+        const dObj = new Date(isoDate + 'T12:00:00');
+        return new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' }).format(dObj) || isoDate;
+      } catch (e) {
+        return isoDate;
+      }
+    },
+
     async getCalendarDuties() {
       if (!client) return {};
       try {
@@ -552,6 +565,7 @@
           day_of_week: dayIdx,
           day_name_he: dayNames[dayIdx],
           day_name: `יום ${dayNames[dayIdx]}`,
+          hebrew_date: this._getHebrewDateStr(isoDate),
           wakeup_student_id: wakeupId || null,
           kitchen_student_id: kitchenId || null,
           wakeup_done: !!wakeupDone,
@@ -585,6 +599,7 @@
           day_of_week: existing?.day_of_week ?? dayIdx,
           day_name_he: existing?.day_name_he || dayNames[dayIdx],
           day_name: existing?.day_name || `יום ${dayNames[dayIdx]}`,
+          hebrew_date: existing?.hebrew_date || this._getHebrewDateStr(isoDate),
           wakeup_student_id: existing?.wakeup_student_id || null,
           kitchen_student_id: existing?.kitchen_student_id || null,
           wakeup_done: !!existing?.wakeup_done,
@@ -620,6 +635,7 @@
             day_of_week: dayIdx,
             day_name_he: dayNames[dayIdx],
             day_name: `יום ${dayNames[dayIdx]}`,
+            hebrew_date: item.hebrewDate || this._getHebrewDateStr(item.isoDate),
             wakeup_student_id: item.wakeupStudentId || null,
             kitchen_student_id: item.kitchenStudentId || null,
             wakeup_done: !!item.wakeupDone,
