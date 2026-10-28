@@ -62,9 +62,9 @@
 
       <!-- Quick Action Buttons -->
       <div class="flex items-center gap-2">
-        <button onclick="exportGoogleCalendarIcs()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm border border-white/15 cursor-pointer" title="הורד יומן מבצע מלא (.ics) ל-Google Calendar / ליומן הטלפון">
+        <button onclick="exportGoogleCalendarIcs()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm border border-white/15 cursor-pointer" title="חבר יומן Google מתעדכן אוטומטית לראש הישיבה (כולל סדרים, תורנויות ותזכורות)">
           <span>📅</span>
-          <span class="hidden sm:inline">הורד יומן (.ics)</span>
+          <span class="hidden sm:inline">יומן Google (מתעדכן)</span>
         </button>
 
         <button onclick="openShareModal()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-sm cursor-pointer">
@@ -210,9 +210,9 @@
               <span>📅</span>
               <span>סנכרן יום זה ל-Google Calendar</span>
             </button>
-            <button type="button" onclick="exportGoogleCalendarIcs()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-sm flex items-center gap-1.5 cursor-pointer transition" title="הורד קובץ יומן מלא (.ics) של כל סדרי המבצע, תחנות העצירה והתורנויות">
-              <span>📥</span>
-              <span>הורד יומן מבצע מלא (.ics)</span>
+            <button type="button" onclick="exportGoogleCalendarIcs()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-sm flex items-center gap-1.5 cursor-pointer transition" title="חבר ליומן Google מתעדכן דינאמית עם תזכורות לכל סדרי המבצע והתורנויות">
+              <span>📅</span>
+              <span>חבר ליומן Google (מתעדכן)</span>
             </button>
             <span class="text-xs text-slate-500 font-bold" id="campaignTotalDaysBadge">-- ימים</span>
           </div>
@@ -512,7 +512,7 @@
         <div class="pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
           <button type="button" onclick="exportGoogleCalendarIcs()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 cursor-pointer">
             <span>📅</span>
-            <span>ייצא יומן Google Calendar (.ics)</span>
+            <span>חבר ליומן Google (מתעדכן דינאמית)</span>
           </button>
           <button type="button" onclick="saveAllAdminConfig()" class="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-lg transition flex items-center gap-2 cursor-pointer">
             <span>💾</span>
@@ -537,9 +537,9 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <button onclick="exportGoogleCalendarIcs()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow transition flex items-center gap-1.5 cursor-pointer" title="הורד קובץ יומן מלא (.ics) כולל כל שיבוצי התורנויות והסדרים">
-              <span>📥</span>
-              <span>הורד יומן תורנויות (.ics)</span>
+            <button onclick="exportGoogleCalendarIcs()" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow transition flex items-center gap-1.5 cursor-pointer" title="חבר את כל שיבוצי התורנויות והסדרים ליומן Google מתעדכן עם תזכורות">
+              <span>📅</span>
+              <span>חבר יומן תורנויות ל-Google (מתעדכן)</span>
             </button>
             <button onclick="openDutySettingsModal()" class="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer" title="הגדרת שמות התורנויות ושעות תזכורת">
               <span>⏰</span>
@@ -2942,92 +2942,20 @@
     }
 
     function exportGoogleCalendarIcs() {
-      const events = [];
-      const dCfg = getAdminDutyConfig();
-
-      (adminState.config?.trailStops || []).forEach((stop, idx) => {
-        if (stop.isoDate) {
-          const cleanDate = stop.isoDate.replace(/-/g, '');
-          events.push([
-            'BEGIN:VEVENT',
-            `UID:stop_${idx}_${cleanDate}@bakshu`,
-            `SUMMARY:🎯 ${stop.title || 'עצירה במסע - ישיבת בקשו'}`,
-            `DESCRIPTION:${stop.description || 'אירוע במסע עד הפסגה'}`,
-            `DTSTART;VALUE=DATE:${cleanDate}`,
-            `DTEND;VALUE=DATE:${cleanDate}`,
-            'END:VEVENT'
-          ].join('\r\n'));
-        }
-      });
-
-      const [sy, sm, sd] = (adminState.config?.startDate || '2026-10-25').split('-').map(Number);
-      const [ey, em, ed] = (adminState.config?.endDate || '2027-02-08').split('-').map(Number);
-      const cur = new Date(sy, sm - 1, sd, 12, 0, 0);
-      const end = new Date(ey, em - 1, ed, 12, 0, 0);
-
-      while (cur <= end) {
-        const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
-        const dateClean = iso.replace(/-/g, '');
-        const slots = getAdminSlotsForDate(iso) || [];
-        const duty = adminState.duties[iso];
-
-        if (duty?.specialEventTitle) {
-          events.push([
-            'BEGIN:VEVENT',
-            `UID:admin_ev_${dateClean}@bakshu`,
-            `SUMMARY:🎉 ${duty.specialEventTitle}`,
-            `DTSTART;VALUE=DATE:${dateClean}`,
-            `DTEND;VALUE=DATE:${dateClean}`,
-            'END:VEVENT'
-          ].join('\r\n'));
-        }
-
-        if (duty?.wakeupStudentId) {
-          const wName = getStudentNameById(duty.wakeupStudentId);
-          const wClean = (dCfg.duty1Hour || '06:30').replace(':', '') + '00';
-          events.push([
-            'BEGIN:VEVENT',
-            `UID:admin_wake_${dateClean}@bakshu`,
-            `SUMMARY:🌅 ${dCfg.duty1Name}: ${wName}`,
-            `DESCRIPTION:תורנות מעורר בישיבת בקשו - ${wName}`,
-            `DTSTART:${dateClean}T${wClean}`,
-            `DTEND:${dateClean}T073000`,
-            'END:VEVENT'
-          ].join('\r\n'));
-        }
-
-        if (duty?.kitchenStudentId) {
-          const kName = getStudentNameById(duty.kitchenStudentId);
-          const kClean = (dCfg.duty2Hour || '12:00').replace(':', '') + '00';
-          events.push([
-            'BEGIN:VEVENT',
-            `UID:admin_kitch_${dateClean}@bakshu`,
-            `SUMMARY:🍽️ ${dCfg.duty2Name}: ${kName}`,
-            `DESCRIPTION:תורנות מטבח בישיבת בקשו - ${kName}`,
-            `DTSTART:${dateClean}T${kClean}`,
-            `DTEND:${dateClean}T130000`,
-            'END:VEVENT'
-          ].join('\r\n'));
-        }
-
-        slots.forEach((sl, sIdx) => {
-          const openClean = (sl.openTime || '09:00').replace(':', '') + '00';
-          const lockClean = (sl.lockTime || '12:00').replace(':', '') + '00';
-          events.push([
-            'BEGIN:VEVENT',
-            `UID:admin_slot_${dateClean}_${sIdx}@bakshu`,
-            `SUMMARY:📖 ${sl.title} (${sl.points || 1} נק׳)`,
-            `DTSTART:${dateClean}T${openClean}`,
-            `DTEND:${dateClean}T${lockClean}`,
-            'END:VEVENT'
-          ].join('\r\n'));
+      if (window.App && typeof App.openDynamicGoogleCalendarModal === 'function') {
+        App.openDynamicGoogleCalendarModal({
+          role: 'admin',
+          studentId: '',
+          studentName: 'ראש הישיבה',
+          config: adminState.config,
+          scheduleSlots: adminState.scheduleSlots,
+          duties: adminState.duties,
+          students: adminState.students
         });
-
-        cur.setDate(cur.getDate() + 1);
+        return;
       }
-
-      App.downloadIcs('לוח_מבצע_בקשו_מלא.ics', events.join('\r\n'));
-      App.showToast('קובץ היומן המלא של המבצע (סדרים + תורנויות + עצירות) ירד בהצלחה!', '📅');
+      const urls = App.getDynamicCalendarUrls({ role: 'admin' });
+      window.open(urls.googleSubscribeUrl, '_blank');
     }
 
     // =========================================================

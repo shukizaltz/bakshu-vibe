@@ -83,9 +83,9 @@
           <span id="headerStudentPhone" class="text-[10px] text-slate-400 font-mono">--</span>
         </div>
 
-        <button onclick="downloadStudentCalendarIcs()" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 font-bold text-xs transition border border-amber-400/30 flex items-center gap-1 cursor-pointer" title="הורד לוח שנה מלא של המבצע והתורנויות שלך (.ics)">
+        <button onclick="downloadStudentCalendarIcs()" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 font-bold text-xs transition border border-amber-400/30 flex items-center gap-1 cursor-pointer" title="חבר את סדרי הלימוד והתורנויות שלך ליומן Google מתעדכן עם תזכורות">
           <span>📅</span>
-          <span class="hidden md:inline">הורד יומן (.ics)</span>
+          <span class="hidden md:inline">יומן Google (מתעדכן)</span>
         </button>
 
         <button onclick="openChangePasswordModal()" class="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition border border-white/15 flex items-center gap-1" title="החלפת סיסמה אישית">
@@ -369,8 +369,8 @@
               <span>סדרי הלימוד להיום</span>
             </h4>
             <div class="flex items-center gap-1.5">
-              <button onclick="downloadStudentCalendarIcs()" class="text-[11px] px-2.5 py-0.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-black transition cursor-pointer flex items-center gap-1" title="הורד קובץ יומן מלא של כל סדרי המבצע והתורנויות שלך (.ics)">
-                <span>📥</span><span>הורד יומן (.ics)</span>
+              <button onclick="downloadStudentCalendarIcs()" class="text-[11px] px-2.5 py-0.5 rounded-full bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-black transition cursor-pointer flex items-center gap-1" title="חבר ליומן Google מתעדכן עם תזכורות לסדרים ולתורנויות שלך">
+                <span>📅</span><span>חבר ליומן Google</span>
               </button>
               <span id="todaySlotsCountBadge" class="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold">--</span>
             </div>
@@ -585,10 +585,10 @@
               </button>
             </div>
 
-            <!-- Download ICS -->
-            <button onclick="downloadStudentCalendarIcs()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="הורדת יומן מסונכרן מלא לטלפון">
-              <span>📥</span>
-              <span>יומן מלא (.ics)</span>
+            <!-- Connect Dynamic Google Calendar -->
+            <button onclick="downloadStudentCalendarIcs()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-sm cursor-pointer" title="חיבור ליומן Google מתעדכן אוטומטית עם תזכורות">
+              <span>📅</span>
+              <span>חבר ליומן Google (מתעדכן)</span>
             </button>
 
             <!-- Total days badge -->
@@ -1648,93 +1648,23 @@
       window.open(url, '_blank');
     }
 
-    // Download Full ICS Calendar
+    // Open Dynamic Google Calendar Sync Modal (with reminders on sedarim & duties)
     function downloadStudentCalendarIcs() {
       const st = state.currentStudent || { full_name: 'תלמיד הישיבה' };
-      const myId = st.id ? String(st.id) : null;
-      const days = (typeof getCampaignDaysList === 'function') ? getCampaignDaysList() : [];
-
-      const events = [];
-
-      // 1. Journey Stops & Special Events
-      (state.config?.trailStops || []).forEach(stop => {
-        if (stop.isoDate) {
-          const cleanDate = stop.isoDate.replace(/-/g, '');
-          events.push([
-            'BEGIN:VEVENT',
-            `UID:bakshu_stop_${stop.id || Date.now()}@yeshiva`,
-            `SUMMARY:🎯 ${stop.title || 'עצירת מסע - מבצע בקשו'}`,
-            `DESCRIPTION:${stop.description || 'אירוע במסע עד הפסגה ישיבת בקשו'}`,
-            `DTSTART;VALUE=DATE:${cleanDate}`,
-            `DTEND;VALUE=DATE:${cleanDate}`,
-            'END:VEVENT'
-          ].join('\r\n'));
-        }
-      });
-
-      // 2. Daily Sedarim & Duties
-      days.forEach(d => {
-        const slots = getSlotsForDate(d.iso);
-        const duty = state.duties[d.iso];
-        const dateClean = d.iso.replace(/-/g, '');
-
-        if (duty?.specialEventTitle) {
-          events.push([
-            'BEGIN:VEVENT',
-            `UID:bakshu_event_${d.iso}@yeshiva`,
-            `SUMMARY:🎉 ${duty.specialEventTitle}`,
-            `DESCRIPTION:אירוע מיוחד במבצע חורף בישיבת בקשו`,
-            `DTSTART;VALUE=DATE:${dateClean}`,
-            `DTEND;VALUE=DATE:${dateClean}`,
-            'END:VEVENT'
-          ].join('\r\n'));
-        }
-
-        // Student personal duties
-        if (myId && duty?.wakeupStudentId && String(duty.wakeupStudentId) === myId) {
-          events.push([
-            'BEGIN:VEVENT',
-            `UID:bakshu_duty_wake_${d.iso}@yeshiva`,
-            `SUMMARY:⏰ תורנות מעורר בישיבה`,
-            `DESCRIPTION:הינך משובץ לתורנות מעורר בוקר בישיבת בקשו`,
-            `DTSTART:${dateClean}T063000`,
-            `DTEND:${dateClean}T073000`,
-            'END:VEVENT'
-          ].join('\r\n'));
-        }
-        if (myId && duty?.kitchenStudentId && String(duty.kitchenStudentId) === myId) {
-          events.push([
-            'BEGIN:VEVENT',
-            `UID:bakshu_duty_kitch_${d.iso}@yeshiva`,
-            `SUMMARY:🍽️ תורנות מטבח בישיבה`,
-            `DESCRIPTION:הינך משובץ לתורנות מטבח בישיבת בקשו`,
-            `DTSTART:${dateClean}T120000`,
-            `DTEND:${dateClean}T130000`,
-            'END:VEVENT'
-          ].join('\r\n'));
-        }
-
-        // Daily Sedarim
-        slots.forEach((sl, idx) => {
-          const openClean = (sl.openTime || '09:00').replace(':', '') + '00';
-          const lockClean = (sl.lockTime || '12:00').replace(':', '') + '00';
-          events.push([
-            'BEGIN:VEVENT',
-            `UID:bakshu_slot_${d.iso}_${idx}@yeshiva`,
-            `SUMMARY:📖 ${sl.title} (${sl.points || 1} נק׳)`,
-            `DESCRIPTION:סדר לימוד במבצע 'עד הפסגה' בישיבת בקשו`,
-            `DTSTART:${dateClean}T${openClean}`,
-            `DTEND:${dateClean}T${lockClean}`,
-            'END:VEVENT'
-          ].join('\r\n'));
+      if (window.App && typeof App.openDynamicGoogleCalendarModal === 'function') {
+        App.openDynamicGoogleCalendarModal({
+          role: 'student',
+          studentId: st.id || '',
+          studentName: st.full_name || st.name || 'בחור',
+          config: state.config,
+          scheduleSlots: state.scheduleSlots,
+          duties: state.duties,
+          students: state.students
         });
-      });
-
-      const icsBody = events.join('\r\n');
-      if (window.App && App.downloadIcs) {
-        App.downloadIcs(`מבצע_בקשו_יומן_${st.full_name || 'תלמיד'}.ics`, icsBody);
+        return;
       }
-      showToast('יומן המבצע המלא סונכרן והורד בהצלחה!', '📅');
+      const urls = App.getDynamicCalendarUrls({ role: 'student', studentId: st.id || '' });
+      window.open(urls.googleSubscribeUrl, '_blank');
     }
 
     function renderTodayScheduleList() {
