@@ -125,10 +125,14 @@
             <p class="text-xs text-slate-500">לחץ על שורת בחור כדי לפתוח פירוט מלא של כל סדרי המבצע שלו ולסמן נוכחות!</p>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <input type="text" id="adminStudentSearchInput" oninput="handleStudentSearch()" placeholder="חיפוש לפי שם או טלפון..." class="p-2.5 rounded-xl border border-slate-300 text-xs font-bold w-48 sm:w-64 focus:ring-2 focus:ring-indigo-600 focus:outline-none">
             
-            <button onclick="openAddStudentModal()" class="px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow transition flex items-center gap-1">
+            <button onclick="openBatchImportStudentsModal()" class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-black text-xs transition flex items-center gap-1 cursor-pointer" title="ייבוא רשימת בחורים בבת אחת">
+              <span>📋</span>
+              <span>ייבוא רשימה</span>
+            </button>
+            <button onclick="openAddStudentModal()" class="px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow transition flex items-center gap-1 cursor-pointer">
               <span>➕</span>
               <span>הוסף בחור</span>
             </button>
@@ -234,10 +238,13 @@
             <button onclick="applyCurrentDayToShabbats()" class="px-3 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs transition" title="החל את סדרי יום זה על כל השבתות במבצע">
               🕯️ החל על שבתות
             </button>
-            <button onclick="clearCurrentDaySlots()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition" title="רוקן סדרים מיום זה">
+            <button onclick="clearCurrentDaySlots()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition cursor-pointer" title="רוקן סדרים מיום זה">
               🗑️ יום ריק
             </button>
-            <button onclick="openAddSlotModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow transition flex items-center gap-1">
+            <button onclick="resetCurrentDayToTemplate()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-bold text-xs transition cursor-pointer" title="שחזר סדרי ברירת מחדל ליום זה">
+              🔄 אפס לתבנית
+            </button>
+            <button onclick="openAddSlotModal()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow transition flex items-center gap-1 cursor-pointer">
               <span>➕</span>
               <span>הוסף סדר ליום זה</span>
             </button>
@@ -413,19 +420,44 @@
 
         <!-- 3. Bonus Rules Config -->
         <div class="space-y-3 pt-3 border-t border-slate-200">
-          <h4 class="text-sm font-black text-slate-900">הגדרות חוקי בונוס</h4>
+          <h4 class="text-sm font-black text-slate-900">הגדרות חוקי בונוס והתמדה</h4>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
               <label class="block font-bold text-slate-700 mb-1">בונוס ללא טלפון נייד:</label>
-              <input type="number" id="cfgNoPhoneBonusInput" value="1" class="w-full p-2 rounded-xl border border-slate-300 font-black text-center">
+              <input type="number" id="cfgNoPhoneBonusInput" value="1" class="w-full p-2 rounded-xl border border-slate-300 font-black text-center bg-white">
             </div>
             <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
               <label class="block font-bold text-slate-700 mb-1">בונוס השכמת בוקר (מעורר):</label>
-              <input type="number" id="cfgWakeupBonusInput" value="3" class="w-full p-2 rounded-xl border border-slate-300 font-black text-center">
+              <input type="number" id="cfgWakeupBonusInput" value="3" class="w-full p-2 rounded-xl border border-slate-300 font-black text-center bg-white">
             </div>
             <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200">
               <label class="block font-bold text-slate-700 mb-1">בונוס תורנות מטבח:</label>
-              <input type="number" id="cfgKitchenBonusInput" value="3" class="w-full p-2 rounded-xl border border-slate-300 font-black text-center">
+              <input type="number" id="cfgKitchenBonusInput" value="3" class="w-full p-2 rounded-xl border border-slate-300 font-black text-center bg-white">
+            </div>
+          </div>
+
+          <!-- Persistence Bonus (X out of Y sedarim) -->
+          <div class="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="font-black text-emerald-950 flex items-center gap-1.5">
+                <span>🔥</span>
+                <span>בונוס התמדה (X מתוך Y סדרים):</span>
+              </span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-bold text-[10px]">חישוב אוטומטי</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">כמות סדרים נדרשת (X):</label>
+                <input type="number" id="cfgXyRequiredInput" value="8" min="1" max="50" class="w-full p-2 rounded-xl border border-emerald-300 font-black text-center bg-white">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">מתוך חלון סדרים של (Y):</label>
+                <input type="number" id="cfgXyWindowInput" value="10" min="1" max="50" class="w-full p-2 rounded-xl border border-emerald-300 font-black text-center bg-white">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">נקודות בונוס לכל מחזור:</label>
+                <input type="number" id="cfgXyBonusPtsInput" value="2" min="0" max="20" class="w-full p-2 rounded-xl border border-emerald-300 font-black text-center bg-white">
+              </div>
             </div>
           </div>
         </div>
@@ -799,10 +831,54 @@
           <input type="text" id="newStudentPhone" placeholder="050-0000000" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold" dir="ltr">
         </div>
 
-        <button onclick="handleSaveNewStudent()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
+        <button onclick="handleSaveNewStudent()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md cursor-pointer">
           הוסף בחור ושמור בענן
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL: BATCH IMPORT STUDENTS                              -->
+  <!-- ========================================================= -->
+  <div id="batchImportStudentsModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl border border-slate-200 text-right relative space-y-3">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <div>
+          <h4 class="text-sm font-black text-slate-900">📋 ייבוא רשימת בחורים בבת אחת</h4>
+          <p class="text-[11px] text-slate-500">הדבק רשימה של שמות וטלפונים (שורה לכל בחור)</p>
+        </div>
+        <button onclick="closeBatchImportStudentsModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
+      </div>
+
+      <div class="p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 text-[11px] text-indigo-900">
+        <b>פורמט מומלץ לכל שורה:</b> <code>שם מלא - 050-0000000</code> או <code>שם מלא, 0500000000</code> (אפשר גם שם בלבד).
+      </div>
+
+      <textarea id="batchStudentsTextarea" rows="7" placeholder="ישראל ישראלי - 052-1234567&#10;משה כהן - 054-7654321&#10;דוד לוי" class="w-full p-3 rounded-2xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-indigo-600 focus:outline-none"></textarea>
+
+      <button id="btnBatchImportSave" onclick="handleSaveBatchStudents()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md cursor-pointer">
+        ייבא ושמור את כל הבחורים בענן 🚀
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- MODAL: CHANGE ADMIN PASSWORD                              -->
+  <!-- ========================================================= -->
+  <div id="changeAdminPassModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-right relative space-y-3">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+        <h4 class="text-sm font-black text-slate-900">🔑 שינוי סיסמת ראש הישיבה</h4>
+        <button onclick="closeChangeAdminPasswordModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">סיסמת ניהול חדשה (לפחות 4 תווים):</label>
+        <input type="password" id="newAdminPassModalInput" placeholder="הזן סיסמה חדשה..." class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold text-center font-mono tracking-widest">
+      </div>
+      <button onclick="handleSaveAdminPassword()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md cursor-pointer">
+        שמור סיסמת ניהול חדשה
+      </button>
     </div>
   </div>
 
@@ -993,9 +1069,10 @@
     };
 
     window.addEventListener('DOMContentLoaded', async () => {
-      // Check session
-      const savedAuth = sessionStorage.getItem('bakshu_admin_logged');
+      // Check persistent localStorage session (with fallback to sessionStorage for smooth migration)
+      const savedAuth = localStorage.getItem('bakshu_admin_logged') || sessionStorage.getItem('bakshu_admin_logged');
       if (savedAuth === 'true') {
+        localStorage.setItem('bakshu_admin_logged', 'true');
         unlockAdminView();
       }
 
@@ -1018,6 +1095,7 @@
         return;
       }
 
+      localStorage.setItem('bakshu_admin_logged', 'true');
       sessionStorage.setItem('bakshu_admin_logged', 'true');
       unlockAdminView();
       App.showToast('ברוך הבא לפורטל הניהול של ראש הישיבה', '👑');
@@ -1030,6 +1108,7 @@
     }
 
     function handleAdminLogout() {
+      localStorage.removeItem('bakshu_admin_logged');
       sessionStorage.removeItem('bakshu_admin_logged');
       adminState.isLoggedIn = false;
       const modal = document.getElementById('adminPasswordModal');
@@ -1037,17 +1116,49 @@
     }
 
     function openChangeAdminPasswordModal() {
-      const p = prompt('הזן סיסמת ניהול חדשה עבור ראש הישיבה:');
-      if (p && p.trim().length >= 4) {
-        adminState.config.adminPassword = p.trim();
-        Db.saveConfig(adminState.config);
-        App.showToast('סיסמת ראש הישיבה עודכנה בהצלחה!', '🔑');
+      const inp = document.getElementById('newAdminPassModalInput');
+      if (inp) inp.value = adminState.config?.adminPassword || '1234';
+      document.getElementById('changeAdminPassModal')?.classList.remove('hidden');
+    }
+
+    function closeChangeAdminPasswordModal() {
+      document.getElementById('changeAdminPassModal')?.classList.add('hidden');
+    }
+
+    async function handleSaveAdminPassword() {
+      const p = (document.getElementById('newAdminPassModalInput')?.value || '').trim();
+      if (!p || p.length < 4) {
+        App.showToast('הסיסמה חייבת להכיל לפחות 4 תווים', '⚠️');
+        return;
       }
+      if (!adminState.config) adminState.config = {};
+      adminState.config.adminPassword = p;
+      await Db.saveConfig(adminState.config);
+      closeChangeAdminPasswordModal();
+      App.showToast('סיסמת ראש הישיבה עודכנה ונשמרה בענן בהצלחה!', '🔑');
+    }
+
+    function isAnyAdminEditorModalOpen() {
+      const modalIds = [
+        'editSlotModal',
+        'addSlotModal',
+        'dutySettingsModal',
+        'permanentDutyModal',
+        'addStudentModal',
+        'batchImportStudentsModal',
+        'changeAdminPassModal',
+        'grantBonusModal'
+      ];
+      return modalIds.some(id => {
+        const el = document.getElementById(id);
+        return el && !el.classList.contains('hidden');
+      });
     }
 
     // --- Data Loading ---
     async function reloadAdminData(isBackground = false) {
       if (adminState.isSyncing) return;
+      if (isBackground && isAnyAdminEditorModalOpen()) return;
       try {
         const [stList, cfg, slots, duts, reqs, bLogs, slotAtt] = await Promise.all([
           Db.getStudents(),
@@ -1070,13 +1181,15 @@
         const isUserTyping = (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT');
 
         // Always update background tables that don't disrupt user
-        renderAdminDutiesTable();
-        updateDutyRotationTrackerCards();
+        if (!isUserTyping || adminState.currentTab !== 'duties') {
+          renderAdminDutiesTable();
+          updateDutyRotationTrackerCards();
+        }
         renderAdminRequests();
         populateBonusStudentSelect();
 
-        if (adminState.inspectedStudentId) {
-          inspectStudentFromAdmin(adminState.inspectedStudentId);
+        if (adminState.inspectedStudentId && !isUserTyping) {
+          inspectStudentFromAdmin(adminState.inspectedStudentId, adminState.inspectedDate);
         }
 
         // Only update students table if user is not actively searching
@@ -1216,7 +1329,7 @@
     }
 
     // Detailed Student Modal Inspector
-    function inspectStudentFromAdmin(studentId) {
+    function inspectStudentFromAdmin(studentId, dateOverride = null) {
       const st = adminState.students.find(s => String(s.id) === String(studentId));
       if (!st) return;
       adminState.inspectedStudentId = st.id;
@@ -1225,8 +1338,11 @@
       const content = document.getElementById('adminStudentBreakdownModalContent');
       if (!modal || !content) return;
 
-      const todayIso = adminState.selectedDate || new Date().toISOString().slice(0, 10);
-      const todaySlots = adminState.scheduleSlots[todayIso] || getSlotsForDate(todayIso);
+      const todayIso = dateOverride || adminState.inspectedDate || adminState.selectedDate || ((window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10));
+      adminState.inspectedDate = todayIso;
+      const todaySlots = Array.isArray(adminState.scheduleSlots[todayIso]) ? adminState.scheduleSlots[todayIso] : getSlotsForDate(todayIso);
+      const hebInfo = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(todayIso) : null;
+      const hebDateLabel = hebInfo ? `${hebInfo.dayName}, ${hebInfo.shortHebrew}` : todayIso;
 
       const stBonuses = adminState.bonusLogs.filter(b => String(b.user_id) === String(st.id));
       const stScore = Number(st.score) || 0;
@@ -1239,14 +1355,14 @@
 
       content.innerHTML = `
         <div class="space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200 pl-8">
             <div>
               <h3 class="text-lg font-black text-slate-900">${st.full_name || st.name}</h3>
               <p class="text-xs text-slate-500 font-mono" dir="ltr">${st.phone || 'אין טלפון'} • סיסמה אישית: ${st.password || '1234'}</p>
             </div>
             <div class="text-left">
               <span class="block text-2xl font-black text-amber-600 font-outfit">${stScore} נק׳</span>
-              <span class="text-[10px] text-slate-400 font-bold">1. נצבר בפועל</span>
+              <span class="text-[10px] text-slate-400 font-bold">1. נצבר בפועל (רצף: ${st.persistence_count || 0}/10)</span>
             </div>
           </div>
 
@@ -1266,7 +1382,7 @@
 
             <div class="flex flex-wrap items-center justify-between text-[11px] text-slate-600 font-medium">
               <span>התקדמות ליעד: <b class="text-emerald-700">${stScore}/${stNextPts} נק׳ ל${stPot.nextTarget?.name || 'יעד הבא'} (${stPctToNext}%)</b></span>
-              <span>נותר לפסגה: <b class="text-indigo-700">${stPot.ptsToSummit} נק׳</b> (יעד 350)</span>
+              <span>נותר לפסגה: <b class="text-indigo-700">${stPot.ptsToSummit} נק׳</b></span>
             </div>
 
             <div class="grid grid-cols-4 gap-1.5 text-[10px] text-center pt-1 font-bold">
@@ -1275,26 +1391,25 @@
               <div class="p-1 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200">תורנויות: ${stPot.dutiesPoints}</div>
               <div class="p-1 rounded-lg bg-purple-50 text-purple-900 border border-purple-200">בונוסים: ${stPot.fullSederPts}</div>
             </div>
-            
-            <div class="text-[10px] text-slate-500 pt-0.5 border-t border-indigo-100 flex items-center justify-between">
-              <span>סך הכל ניתן לצבור בכל המבצע: <b>${stPot.campaignMax} נקודות</b></span>
-              <span>יעדי המבצע: 100 / 200 / 350</span>
-            </div>
           </div>
 
-          <!-- Sedarim Attendance Check-in for Selected Day -->
+          <!-- Sedarim Attendance Check-in for Selected Day (with Date Picker!) -->
           <div class="space-y-2">
-            <h4 class="text-xs font-black text-slate-900 flex items-center justify-between">
-              <span>סדרי לימוד ליום הנבחר (${todayIso}):</span>
-              <span class="text-[11px] text-indigo-600 font-bold">סמן נוכחות בלחיצה</span>
-            </h4>
+            <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-200">
+              <div>
+                <h4 class="text-xs font-black text-indigo-950">נוכחות בסדרי לימוד (${hebDateLabel}):</h4>
+                <span class="text-[10px] text-indigo-700 font-bold">בחר תאריך כדי לצפות או לסמן נוכחות עבור כל יום במבצע</span>
+              </div>
+              <input type="date" value="${todayIso}" onchange="inspectStudentFromAdmin('${st.id}', this.value)" class="p-1.5 rounded-xl border border-indigo-300 text-xs font-bold bg-white text-indigo-950 cursor-pointer">
+            </div>
             
             <div class="space-y-1.5">
-              ${todaySlots.map((slot) => {
+              ${todaySlots.length === 0 ? '<p class="text-xs text-slate-400 py-3 text-center">אין סדרים מוגדרים לתאריך זה</p>' : todaySlots.map((slot) => {
                 const list = adminState.slotAttendanceMap?.byDateSlot?.[todayIso]?.[slot.title || slot.id] || [];
                 const pfList = adminState.slotAttendanceMap?.phoneFree?.[todayIso]?.[slot.title || slot.id] || [];
                 const isPresent = list.includes(String(st.id));
                 const isPf = pfList.includes(String(st.id));
+                const safeTitle = escapeAttr(slot.title);
 
                 return `
                   <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs">
@@ -1303,10 +1418,10 @@
                       <span class="text-[10px] text-slate-500 font-outfit mr-1">${slot.openTime} - ${slot.lockTime} • ${slot.points || 1} נק׳</span>
                     </div>
                     <div class="flex items-center gap-1.5">
-                      <button onclick="adminToggleStudentSlotAttendance('${todayIso}', '${slot.title}', '${st.id}', ${!isPresent}, ${isPf}, ${slot.points || 1})" class="px-3 py-1 rounded-lg font-black text-xs transition border ${isPresent ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">
+                      <button onclick="adminToggleStudentSlotAttendance('${todayIso}', '${safeTitle}', '${st.id}', ${!isPresent}, ${!isPresent ? isPf : false}, ${slot.points || 1})" class="px-3 py-1 rounded-lg font-black text-xs transition border cursor-pointer ${isPresent ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'}">
                         ${isPresent ? '✓ נכח' : 'סמן נוכחות'}
                       </button>
-                      <button onclick="adminToggleStudentSlotAttendance('${todayIso}', '${slot.title}', '${st.id}', ${isPresent}, ${!isPf}, ${slot.points || 1})" class="px-2 py-1 rounded-lg font-black text-xs transition border ${isPf ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}" title="בונוס ללא טלפון">
+                      <button onclick="adminToggleStudentSlotAttendance('${todayIso}', '${safeTitle}', '${st.id}', true, ${!isPf}, ${slot.points || 1})" class="px-2 py-1 rounded-lg font-black text-xs transition border cursor-pointer ${isPf ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'}" title="בונוס ללא טלפון (מסמן אוטומטית גם נוכחות)">
                         📵 ${isPf ? 'ללא טלפון (+1)' : 'ללא טלפון'}
                       </button>
                     </div>
@@ -1329,7 +1444,7 @@
                     </div>
                     <div class="flex items-center gap-1.5">
                       <span class="font-black text-amber-700 font-outfit">+${b.points} נק׳</span>
-                      <button onclick="deleteBonusLog('${b.id}', '${st.id}', ${b.points})" class="text-rose-600 hover:text-rose-800 font-bold text-xs" title="מחק בונוס זה">✕</button>
+                      <button onclick="deleteBonusLog('${b.id}', '${st.id}', ${b.points})" class="text-rose-600 hover:text-rose-800 font-bold text-xs cursor-pointer" title="מחק בונוס זה">✕</button>
                     </div>
                   </div>
                 `).join('')}
@@ -1338,12 +1453,18 @@
           </div>
 
           <!-- Quick Actions -->
-          <div class="flex items-center gap-2 pt-3 border-t border-slate-200">
-            <button onclick="openBonusForStudent('${st.id}')" class="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm">
-              ⭐ הענק בונוס מיוחד לבחור זה
+          <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-200">
+            <button onclick="openBonusForStudent('${st.id}')" class="flex-1 min-w-[160px] py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs transition shadow-sm cursor-pointer">
+              ⭐ הענק בונוס מיוחד
             </button>
-            <button onclick="changeStudentPasswordPrompt('${st.id}')" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition border border-slate-200">
-              🔑 שנה סיסמה
+            <button onclick="editStudentDetailsPrompt('${st.id}')" class="px-3 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-bold text-xs transition border border-indigo-200 cursor-pointer">
+              ✏️ ערוך פרטים
+            </button>
+            <button onclick="changeStudentPasswordPrompt('${st.id}')" class="px-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition border border-slate-200 cursor-pointer">
+              🔑 סיסמה
+            </button>
+            <button onclick="deleteStudentConfirm('${st.id}')" class="px-3 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition border border-rose-200 cursor-pointer" title="מחק בחור מהמערכת">
+              🗑️ מחק
             </button>
           </div>
         </div>
@@ -1356,6 +1477,45 @@
       const modal = document.getElementById('adminStudentBreakdownModal');
       if (modal) modal.classList.add('hidden');
       adminState.inspectedStudentId = null;
+      adminState.inspectedDate = null;
+    }
+
+    async function editStudentDetailsPrompt(studentId) {
+      const st = adminState.students.find(s => String(s.id) === String(studentId));
+      if (!st) return;
+      const newName = prompt('שם מלא של הבחור:', st.full_name || st.name || '');
+      if (newName === null) return;
+      const newPhone = prompt('מספר טלפון של הבחור:', st.phone || '');
+      if (newPhone === null) return;
+
+      const cleanName = newName.trim() || (st.full_name || st.name);
+      const cleanPhone = newPhone.trim();
+      const ok = await Db.updateStudentDetails(studentId, cleanName, cleanPhone);
+      if (ok) {
+        st.full_name = cleanName;
+        st.name = cleanName;
+        st.phone = cleanPhone;
+        renderAdminStudentsTable();
+        inspectStudentFromAdmin(studentId, adminState.inspectedDate);
+        App.showToast('פרטי הבחור עודכנו בהצלחה!', '✓');
+      } else {
+        App.showToast('שגיאה בעדכון פרטי הבחור', '⚠️');
+      }
+    }
+
+    async function deleteStudentConfirm(studentId) {
+      const st = adminState.students.find(s => String(s.id) === String(studentId));
+      if (!st) return;
+      if (!confirm(`האם אתה בטוח שברצונך למחוק את הבחור "${st.full_name || st.name}" מהמערכת?`)) return;
+
+      const ok = await Db.deleteStudent(studentId);
+      if (ok) {
+        closeAdminStudentBreakdownModal();
+        await reloadAdminData(true);
+        App.showToast(`הבחור ${st.full_name || st.name} נמחק מהמערכת`, '🗑️');
+      } else {
+        App.showToast('שגיאה במחיקת הבחור', '⚠️');
+      }
     }
 
     async function adminToggleStudentSlotAttendance(dateStr, slotTitle, studentId, isPresent, noPhone, points) {
@@ -1388,6 +1548,9 @@
     // 2. SCHEDULE & SLOTS
     // =========================================================
     function getSlotsForDate(isoDate) {
+      if (window.Db && Db.getDefaultSlotsForIsoDate) {
+        return Db.getDefaultSlotsForIsoDate(isoDate);
+      }
       const dObj = new Date(isoDate + 'T12:00:00');
       const dow = dObj.getDay();
       if (dow === 5) return []; // יום שישי ללא סדרים
@@ -1405,7 +1568,7 @@
     }
 
     function ensureCurrentDaySlots(isoDate) {
-      if (!adminState.scheduleSlots[isoDate]) {
+      if (adminState.scheduleSlots[isoDate] === undefined) {
         adminState.scheduleSlots[isoDate] = getSlotsForDate(isoDate);
       }
     }
@@ -1451,7 +1614,7 @@
       const daysHtml = days.map(d => {
         const isSelected = d.iso === adminState.selectedDate;
         const isToday = d.iso === todayIso;
-        const slots = adminState.scheduleSlots[d.iso] || [];
+        const slots = Array.isArray(adminState.scheduleSlots[d.iso]) ? adminState.scheduleSlots[d.iso] : getSlotsForDate(d.iso);
         const trailStop = (adminState.config?.trailStops || []).find(s => s.isoDate === d.iso);
         const hasEvent = adminState.duties[d.iso]?.specialEventTitle || (trailStop ? ('🎯 ' + trailStop.title) : null);
 
@@ -1525,10 +1688,10 @@
       }
 
       ensureCurrentDaySlots(dateStr);
-      const slots = adminState.scheduleSlots[dateStr] || getSlotsForDate(dateStr);
+      const slots = Array.isArray(adminState.scheduleSlots[dateStr]) ? adminState.scheduleSlots[dateStr] : getSlotsForDate(dateStr);
 
       if (slots.length === 0) {
-        container.innerHTML = '<div class="text-xs text-slate-400 py-6 text-center">אין סדרים מוגדרים ליום זה. לחץ "+ הוסף סדר" להוספה.</div>';
+        container.innerHTML = '<div class="text-xs text-slate-400 py-6 text-center">אין סדרים מוגדרים ליום זה. לחץ "+ הוסף סדר" או "🔄 אפס לתבנית".</div>';
         return;
       }
 
@@ -1849,8 +2012,30 @@
       adminState.isSyncing = true;
       try {
         await Db.deleteSlotSeries(seriesTitle);
+        const cleanTitle = (seriesTitle || '').trim();
+        for (const k of Object.keys(adminState.scheduleSlots)) {
+          if (Array.isArray(adminState.scheduleSlots[k])) {
+            adminState.scheduleSlots[k] = adminState.scheduleSlots[k].filter(s => (s.title || '').trim() !== cleanTitle);
+          }
+        }
         await reloadAdminData(true);
         App.showToast(`סדרת "${seriesTitle}" נמחקה בהצלחה מכל הימים בשרת!`, '🗑️');
+      } finally {
+        adminState.isSyncing = false;
+        renderAdminSchedule();
+        renderAdminInteractiveCalendarGrid();
+      }
+    }
+
+    async function resetCurrentDayToTemplate() {
+      const d = adminState.selectedDate;
+      if (!confirm(`האם לשחזר את סדרי ברירת המחדל לתאריך ${d}?`)) return;
+      const defaults = getSlotsForDate(d);
+      adminState.scheduleSlots[d] = defaults;
+      adminState.isSyncing = true;
+      try {
+        await Db.syncDateSlots(d, defaults);
+        App.showToast('סדרי ברירת המחדל שוחזרו ונשמרו בשרת!', '🔄');
       } finally {
         adminState.isSyncing = false;
         renderAdminSchedule();
@@ -2132,15 +2317,21 @@
       renderExtraTargetsEditor();
       renderJourneyStopsEditor();
 
-      // Bonus rules & Full Seder
+      // Bonus rules & Full Seder & Persistence
       const npInp = document.getElementById('cfgNoPhoneBonusInput');
       const wkInp = document.getElementById('cfgWakeupBonusInput');
       const ktInp = document.getElementById('cfgKitchenBonusInput');
+      const xyReqInp = document.getElementById('cfgXyRequiredInput');
+      const xyWinInp = document.getElementById('cfgXyWindowInput');
+      const xyPtsInp = document.getElementById('cfgXyBonusPtsInput');
       const ftInp = document.getElementById('cfgFullSederThreshold');
       const fbInp = document.getElementById('cfgFullSederBonusPts');
-      if (npInp) npInp.value = cfg.bonusConfig?.noPhoneBonus || 1;
-      if (wkInp) wkInp.value = cfg.bonusConfig?.wakeupBonus || 3;
-      if (ktInp) ktInp.value = cfg.bonusConfig?.kitchenBonus || 3;
+      if (npInp) npInp.value = cfg.bonusConfig?.noPhoneBonus ?? 1;
+      if (wkInp) wkInp.value = cfg.bonusConfig?.wakeupBonus ?? 3;
+      if (ktInp) ktInp.value = cfg.bonusConfig?.kitchenBonus ?? 3;
+      if (xyReqInp) xyReqInp.value = cfg.bonusConfig?.xyRequiredCount ?? 8;
+      if (xyWinInp) xyWinInp.value = cfg.bonusConfig?.xyWindowSize ?? 10;
+      if (xyPtsInp) xyPtsInp.value = cfg.bonusConfig?.xyBonusPts ?? 2;
       if (ftInp) ftInp.value = cfg.fullSederThreshold || 10;
       if (fbInp) fbInp.value = cfg.fullSederBonusPts || 1;
     }
@@ -2529,11 +2720,14 @@
         };
       });
 
-      // 4. Bonus Rules & Full Seder
+      // 4. Bonus Rules & Full Seder & Persistence
       adminState.config.bonusConfig = {
-        noPhoneBonus: Number(document.getElementById('cfgNoPhoneBonusInput')?.value) || 1,
-        wakeupBonus: Number(document.getElementById('cfgWakeupBonusInput')?.value) || 3,
-        kitchenBonus: Number(document.getElementById('cfgKitchenBonusInput')?.value) || 3
+        noPhoneBonus: Number(document.getElementById('cfgNoPhoneBonusInput')?.value ?? 1),
+        wakeupBonus: Number(document.getElementById('cfgWakeupBonusInput')?.value ?? 3),
+        kitchenBonus: Number(document.getElementById('cfgKitchenBonusInput')?.value ?? 3),
+        xyRequiredCount: Number(document.getElementById('cfgXyRequiredInput')?.value ?? 8),
+        xyWindowSize: Number(document.getElementById('cfgXyWindowInput')?.value ?? 10),
+        xyBonusPts: Number(document.getElementById('cfgXyBonusPtsInput')?.value ?? 2)
       };
       adminState.config.fullSederThreshold = Number(document.getElementById('cfgFullSederThreshold')?.value) || 10;
       adminState.config.fullSederBonusPts = Number(document.getElementById('cfgFullSederBonusPts')?.value) || 1;
@@ -2550,15 +2744,62 @@
     }
 
     function exportGoogleCalendarIcs() {
-      App.downloadIcs('לוח_מבצע_בקשו.ics', `
-BEGIN:VEVENT
-UID:stop1@bakshu
-SUMMARY:🎁 עצירה 1 במסע - ישיבת בקשו
-DTSTART;VALUE=DATE:20261119
-DTEND;VALUE=DATE:20261120
-END:VEVENT
-      `);
-      App.showToast('קובץ היומן ירד בהצלחה', '📅');
+      const events = [];
+      (adminState.config?.trailStops || []).forEach((stop, idx) => {
+        if (stop.isoDate) {
+          const cleanDate = stop.isoDate.replace(/-/g, '');
+          events.push([
+            'BEGIN:VEVENT',
+            `UID:stop_${idx}_${cleanDate}@bakshu`,
+            `SUMMARY:🎯 ${stop.title || 'עצירה במסע - ישיבת בקשו'}`,
+            `DESCRIPTION:${stop.description || 'אירוע במסע עד הפסגה'}`,
+            `DTSTART;VALUE=DATE:${cleanDate}`,
+            `DTEND;VALUE=DATE:${cleanDate}`,
+            'END:VEVENT'
+          ].join('\r\n'));
+        }
+      });
+
+      const [sy, sm, sd] = (adminState.config?.startDate || '2026-10-25').split('-').map(Number);
+      const [ey, em, ed] = (adminState.config?.endDate || '2027-02-08').split('-').map(Number);
+      const cur = new Date(sy, sm - 1, sd, 12, 0, 0);
+      const end = new Date(ey, em - 1, ed, 12, 0, 0);
+
+      while (cur <= end) {
+        const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
+        const dateClean = iso.replace(/-/g, '');
+        const slots = Array.isArray(adminState.scheduleSlots[iso]) ? adminState.scheduleSlots[iso] : getSlotsForDate(iso);
+        const duty = adminState.duties[iso];
+
+        if (duty?.specialEventTitle) {
+          events.push([
+            'BEGIN:VEVENT',
+            `UID:admin_ev_${dateClean}@bakshu`,
+            `SUMMARY:🎉 ${duty.specialEventTitle}`,
+            `DTSTART;VALUE=DATE:${dateClean}`,
+            `DTEND;VALUE=DATE:${dateClean}`,
+            'END:VEVENT'
+          ].join('\r\n'));
+        }
+
+        slots.forEach((sl, sIdx) => {
+          const openClean = (sl.openTime || '09:00').replace(':', '') + '00';
+          const lockClean = (sl.lockTime || '12:00').replace(':', '') + '00';
+          events.push([
+            'BEGIN:VEVENT',
+            `UID:admin_slot_${dateClean}_${sIdx}@bakshu`,
+            `SUMMARY:📖 ${sl.title} (${sl.points || 1} נק׳)`,
+            `DTSTART:${dateClean}T${openClean}`,
+            `DTEND:${dateClean}T${lockClean}`,
+            'END:VEVENT'
+          ].join('\r\n'));
+        });
+
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      App.downloadIcs('לוח_מבצע_בקשו_מלא.ics', events.join('\r\n'));
+      App.showToast('קובץ היומן המלא של המבצע ירד בהצלחה!', '📅');
     }
 
     // =========================================================
@@ -2785,6 +3026,135 @@ END:VEVENT
       App.showToast(`פותח WhatsApp לתזכורת עבור ${st.full_name || st.name}...`, '💬');
     }
 
+    // --- Interactive Duty Handlers (Student Change, Toggle Done, Add Date, Delete Date, Fair Lottery) ---
+    async function onDutyStudentChanged(isoDate, field, studentId) {
+      adminState.isSyncing = true;
+      try {
+        await Db.updateDutyField(isoDate, field, studentId || null);
+        if (!adminState.duties[isoDate]) {
+          const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(isoDate) : null;
+          adminState.duties[isoDate] = { dayName: heb ? `${heb.dayName}, ${heb.shortHebrew}` : isoDate };
+        }
+        if (field === 'wakeup_student_id') adminState.duties[isoDate].wakeupStudentId = studentId || null;
+        if (field === 'kitchen_student_id') adminState.duties[isoDate].kitchenStudentId = studentId || null;
+        updateDutyRotationTrackerCards();
+        App.showToast('שיבוץ התורן עודכן בשרת!', '✓');
+      } finally {
+        adminState.isSyncing = false;
+      }
+    }
+
+    async function onDutyToggleDone(isoDate, field, isDone) {
+      adminState.isSyncing = true;
+      try {
+        const duty = adminState.duties[isoDate] || {};
+        const stId = field === 'wakeup_done' ? duty.wakeupStudentId : duty.kitchenStudentId;
+        await Db.toggleDutyDone(isoDate, field, isDone);
+        if (!adminState.duties[isoDate]) adminState.duties[isoDate] = {};
+        if (field === 'wakeup_done') adminState.duties[isoDate].wakeupDone = isDone;
+        if (field === 'kitchen_done') adminState.duties[isoDate].kitchenDone = isDone;
+
+        if (stId) {
+          await Db.recalculateStudentScore(stId);
+        }
+        await reloadAdminData(true);
+        App.showToast(isDone ? 'תורנות סומנה כבוצעה והניקוד עודכן!' : 'סימון ביצוע התורנות בוטל', '🌟');
+      } finally {
+        adminState.isSyncing = false;
+      }
+    }
+
+    async function addNewDutyPrompt() {
+      const defaultDate = adminState.selectedDate || ((window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10));
+      const d = prompt('הזן תאריך להוספת תורנות (YYYY-MM-DD):', defaultDate);
+      if (!d || !/^\d{4}-\d{2}-\d{2}$/.test(d.trim())) return;
+      const iso = d.trim();
+      const existing = adminState.duties[iso] || {};
+      await Db.saveDuty(iso, existing.wakeupStudentId || null, existing.kitchenStudentId || null, !!existing.wakeupDone, !!existing.kitchenDone);
+      await reloadAdminData(true);
+      App.showToast(`תאריך ${iso} נוסף ללוח התורנויות`, '📅');
+    }
+
+    async function deleteDutyDateConfirm(isoDate) {
+      if (!confirm(`האם למחוק את שיבוץ התורנות של תאריך ${isoDate}?`)) return;
+      const duty = adminState.duties[isoDate];
+      await Db.deleteDutyDate(isoDate);
+      delete adminState.duties[isoDate];
+      if (duty?.wakeupStudentId) await Db.recalculateStudentScore(duty.wakeupStudentId);
+      if (duty?.kitchenStudentId) await Db.recalculateStudentScore(duty.kitchenStudentId);
+      renderAdminDutiesTable();
+      updateDutyRotationTrackerCards();
+      App.showToast('תאריך התורנות נמחק', '🗑️');
+    }
+
+    async function runFairDutiesLottery() {
+      if (!adminState.students || adminState.students.length === 0) {
+        App.showToast('אין בחורים רשומים במערכת להגרלה', '⚠️');
+        return;
+      }
+      if (!confirm('האם להריץ הגרלה שוויונית אוטומטית לכל ימי המבצע הפנויים (א׳-ה׳)?')) return;
+
+      const [sy, sm, sd] = (adminState.config?.startDate || '2026-10-25').split('-').map(Number);
+      const [ey, em, ed] = (adminState.config?.endDate || '2027-02-08').split('-').map(Number);
+      const cur = new Date(sy, sm - 1, sd, 12, 0, 0);
+      const end = new Date(ey, em - 1, ed, 12, 0, 0);
+
+      // Track how many times each student has been assigned so far
+      const counts = {};
+      adminState.students.forEach(s => { counts[String(s.id)] = 0; });
+      Object.values(adminState.duties || {}).forEach(d => {
+        if (d.wakeupStudentId && counts[String(d.wakeupStudentId)] !== undefined) counts[String(d.wakeupStudentId)]++;
+        if (d.kitchenStudentId && counts[String(d.kitchenStudentId)] !== undefined) counts[String(d.kitchenStudentId)]++;
+      });
+
+      const pickNextFairStudent = (excludeId = null) => {
+        const candidates = adminState.students.filter(s => String(s.id) !== String(excludeId));
+        if (candidates.length === 0) return adminState.students[0]?.id || null;
+        // Sort by lowest count, with random tie-breaker
+        const shuffled = [...candidates].sort(() => Math.random() - 0.5);
+        shuffled.sort((a, b) => (counts[String(a.id)] || 0) - (counts[String(b.id)] || 0));
+        const chosen = shuffled[0];
+        if (chosen) counts[String(chosen.id)] = (counts[String(chosen.id)] || 0) + 1;
+        return chosen ? chosen.id : null;
+      };
+
+      const bulkMap = {};
+      let assignedDays = 0;
+
+      while (cur <= end) {
+        const dow = cur.getDay();
+        if (dow >= 0 && dow <= 4) { // Sun-Thu
+          const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
+          const existing = adminState.duties[iso] || {};
+          const wId = existing.wakeupStudentId || pickNextFairStudent(existing.kitchenStudentId);
+          const kId = existing.kitchenStudentId || pickNextFairStudent(wId);
+          const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(iso) : null;
+
+          bulkMap[iso] = {
+            dayName: existing.dayName || (heb ? `${heb.dayName}, ${heb.shortHebrew}` : iso),
+            wakeupStudentId: wId,
+            kitchenStudentId: kId,
+            wakeupDone: !!existing.wakeupDone,
+            kitchenDone: !!existing.kitchenDone,
+            specialEventTitle: existing.specialEventTitle || ''
+          };
+          adminState.duties[iso] = bulkMap[iso];
+          assignedDays++;
+        }
+        cur.setDate(cur.getDate() + 1);
+      }
+
+      adminState.isSyncing = true;
+      try {
+        await Db.saveBulkDuties(bulkMap);
+        renderAdminDutiesTable();
+        updateDutyRotationTrackerCards();
+        App.showToast(`הגרלה שוויונית הושלמה ונשמרה ל-${assignedDays} ימים במבצע! 🎲`, '✓');
+      } finally {
+        adminState.isSyncing = false;
+      }
+    }
+
     // Modal: Duty Names & Reminder Hours Management
     function openDutySettingsModal() {
       const cfg = getAdminDutyConfig();
@@ -2898,13 +3268,15 @@ END:VEVENT
       await Db.saveRecurringDuties(rec);
 
       // Apply to all dates of the campaign in campaign_calendar
-      const start = new Date(adminState.config?.startDate || '2026-10-25');
-      const end = new Date(adminState.config?.endDate || '2026-12-10');
-      const cur = new Date(start);
+      const [sy, sm, sd] = (adminState.config?.startDate || '2026-10-25').split('-').map(Number);
+      const [ey, em, ed] = (adminState.config?.endDate || '2027-02-08').split('-').map(Number);
+      const cur = new Date(sy, sm - 1, sd, 12, 0, 0);
+      const end = new Date(ey, em - 1, ed, 12, 0, 0);
+      const bulkMap = {};
 
       let appliedCount = 0;
       while (cur <= end) {
-        const iso = cur.toISOString().slice(0, 10);
+        const iso = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
         const dayIdx = cur.getDay();
         const rule = rec[dayIdx];
 
@@ -2912,11 +3284,23 @@ END:VEVENT
           const existing = adminState.duties[iso] || {};
           const wId = rule.wakeupStudentId || existing.wakeupStudentId;
           const kId = rule.kitchenStudentId || existing.kitchenStudentId;
+          const heb = (window.App && App.getHebrewDateDetails) ? App.getHebrewDateDetails(iso) : null;
 
-          await Db.saveDuty(iso, wId, kId, existing.wakeupDone, existing.kitchenDone);
+          bulkMap[iso] = {
+            dayName: existing.dayName || (heb ? `${heb.dayName}, ${heb.shortHebrew}` : iso),
+            wakeupStudentId: wId,
+            kitchenStudentId: kId,
+            wakeupDone: !!existing.wakeupDone,
+            kitchenDone: !!existing.kitchenDone,
+            specialEventTitle: existing.specialEventTitle || ''
+          };
           appliedCount++;
         }
         cur.setDate(cur.getDate() + 1);
+      }
+
+      if (appliedCount > 0) {
+        await Db.saveBulkDuties(bulkMap);
       }
 
       await reloadAdminData(true);
@@ -2959,10 +3343,10 @@ END:VEVENT
             <p class="text-xs text-slate-600 font-medium">סיבה: "${r.reason || 'אין פירוט'}"</p>
             ${isPending ? `
               <div class="flex items-center gap-2 pt-2 border-t border-amber-200">
-                <button onclick="approveRequest('${r.id}', '${r.student_id}', '${r.student_name}', '${r.slot_title}')" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-sm">
-                  אשר והוסף נקודה ✓
+                <button onclick="approveRequest('${r.id}', '${r.student_id}', '${escapeAttr(r.student_name || '')}', '${escapeAttr(r.slot_title || '')}', '${r.date_str || ''}')" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs transition shadow-sm cursor-pointer">
+                  אשר והוסף נקודות ✓
                 </button>
-                <button onclick="rejectRequest('${r.id}')" class="px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition border border-rose-200">
+                <button onclick="rejectRequest('${r.id}')" class="px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition border border-rose-200 cursor-pointer">
                   דחה בקשה
                 </button>
               </div>
@@ -2972,10 +3356,15 @@ END:VEVENT
       }).join('');
     }
 
-    async function approveRequest(id, studentId, studentName, slotTitle) {
-      await Db.updateRequestStatus(id, 'approved', studentId, studentName, slotTitle, 1);
+    async function approveRequest(id, studentId, studentName, slotTitle, dateStr) {
+      const targetDate = dateStr || adminState.selectedDate || ((window.App && App.getTodayIsraelDate) ? App.getTodayIsraelDate() : new Date().toISOString().slice(0, 10));
+      const daySlots = Array.isArray(adminState.scheduleSlots[targetDate]) ? adminState.scheduleSlots[targetDate] : getSlotsForDate(targetDate);
+      const matchedSlot = daySlots.find(s => (s.title || '').trim() === (slotTitle || '').trim());
+      const pts = Number(matchedSlot?.points) || 1;
+
+      await Db.updateRequestStatus(id, 'approved', studentId, studentName, slotTitle, pts, targetDate);
       await reloadAdminData(true);
-      App.showToast('הבקשה אושרה והנקודה נוספה לתלמיד!', '✓');
+      App.showToast(`הבקשה אושרה ו-+${pts} נקודות נוספו לתלמיד בתאריך ${targetDate}!`, '✓');
     }
 
     async function rejectRequest(id) {
@@ -3055,6 +3444,54 @@ END:VEVENT
       closeAddStudentModal();
       await reloadAdminData(true);
       App.showToast(`הבחור ${name} נוסף בהצלחה!`, '✓');
+    }
+
+    function openBatchImportStudentsModal() {
+      document.getElementById('batchImportStudentsModal')?.classList.remove('hidden');
+    }
+    function closeBatchImportStudentsModal() {
+      document.getElementById('batchImportStudentsModal')?.classList.add('hidden');
+    }
+
+    async function handleSaveBatchStudents() {
+      const raw = (document.getElementById('batchStudentsTextarea')?.value || '').trim();
+      if (!raw) {
+        App.showToast('נא להדביק רשימת בחורים', '⚠️');
+        return;
+      }
+      const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      const list = lines.map(line => {
+        const parts = line.split(/[-–—,;\t]+/).map(p => p.trim()).filter(Boolean);
+        let fullName = parts[0] || '';
+        let phone = parts[1] || '';
+        // If phone is embedded in the single string, extract digits
+        if (!phone) {
+          const phoneMatch = line.match(/(05\d[-\s]?\d{7})/);
+          if (phoneMatch) {
+            phone = phoneMatch[1];
+            fullName = line.replace(phoneMatch[0], '').replace(/[-–—,:]/g, '').trim();
+          }
+        }
+        return { fullName, phone };
+      }).filter(item => item.fullName);
+
+      if (list.length === 0) {
+        App.showToast('לא זוהו שמות תקינים ברשימה', '⚠️');
+        return;
+      }
+
+      const btn = document.getElementById('btnBatchImportSave');
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ מייבא בחורים לענן...'; }
+      try {
+        await Db.addStudentsBatch(list);
+        closeBatchImportStudentsModal();
+        const ta = document.getElementById('batchStudentsTextarea');
+        if (ta) ta.value = '';
+        await reloadAdminData(true);
+        App.showToast(`${list.length} בחורים יובאו ונשמרו בהצלחה בענן!`, '🎉');
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'ייבא ושמור את כל הבחורים בענן 🚀'; }
+      }
     }
 
     // =========================================================

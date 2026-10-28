@@ -273,6 +273,12 @@
           <span id="activeSederTimeText" class="text-xs font-bold text-slate-500 font-outfit" dir="ltr">--:-- - --:--</span>
         </div>
 
+        <!-- Parallel Sedarim Switcher (Shown automatically when 2+ sedarim are open simultaneously) -->
+        <div id="parallelSedarimSwitcher" class="hidden p-2.5 rounded-2xl bg-indigo-50/90 border border-indigo-200 space-y-1.5">
+          <span class="block text-[11px] font-black text-indigo-950 text-center">🔀 פתוחים כעת מספר סדרים במקביל – בחר סדר לסימון נוכחות:</span>
+          <div id="parallelSedarimButtons" class="flex flex-wrap items-center justify-center gap-2"></div>
+        </div>
+
         <div class="text-center py-2 space-y-1">
           <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 font-black text-xs">
             <span>✨</span>
@@ -672,9 +678,14 @@
       <div class="space-y-3 text-right">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">בחר שם מהרשימה:</label>
-          <select id="loginStudentSelect" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 bg-white focus:ring-2 focus:ring-indigo-600 focus:outline-none">
+          <select id="loginStudentSelect" onchange="if(this.value) document.getElementById('loginPhoneInput').value=''" class="w-full text-xs font-bold p-3 rounded-2xl border border-slate-300 bg-white focus:ring-2 focus:ring-indigo-600 focus:outline-none">
             <option value="">טוען בחורים...</option>
           </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">או הקש מספר טלפון אישי:</label>
+          <input type="tel" id="loginPhoneInput" placeholder="050-0000000" dir="ltr" class="w-full text-center text-xs font-bold p-2.5 rounded-2xl border border-slate-300 focus:ring-2 focus:ring-indigo-600 font-mono" oninput="if(this.value) document.getElementById('loginStudentSelect').value=''">
         </div>
 
         <div>
@@ -705,13 +716,15 @@
 
       <div class="space-y-3">
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">סדר / זמן הלימוד:</label>
-          <input type="text" id="reqSlotTitleInput" placeholder="למשל: סדר א׳ / סדר ערב" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold">
+          <label class="block text-xs font-bold text-slate-700 mb-1">תאריך הסדר:</label>
+          <input type="date" id="reqDateInput" onchange="populateRequestModalSlots()" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold bg-white">
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">תאריך:</label>
-          <input type="date" id="reqDateInput" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold">
+          <label class="block text-xs font-bold text-slate-700 mb-1">בחר סדר לימוד:</label>
+          <select id="reqSlotTitleInput" class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold bg-white">
+            <option value="סדר א׳ (עיון)">סדר א׳ (עיון)</option>
+          </select>
         </div>
 
         <div>
@@ -719,7 +732,7 @@
           <textarea id="reqReasonInput" rows="3" placeholder="הסבר בקצרה מדוע לא סימנת בזמן..." class="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-bold"></textarea>
         </div>
 
-        <button onclick="handleSubmitRequest()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md">
+        <button onclick="handleSubmitRequest()" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs transition shadow-md cursor-pointer">
           שלח בקשה לאישור
         </button>
       </div>
@@ -832,8 +845,9 @@
       requests: [],
       bonusLogs: [],
       graphMode: 'collective',
-      qrScannerStream: null,
       activeSeder: null,
+      openSedarim: [],
+      selectedParallelSlotTitle: null,
       nextSeder: null,
       checkedInSlotsToday: [],
       selectedCalendarDate: null,
@@ -846,9 +860,6 @@
       updateHebrewDateBadge();
       checkUrlParamsLogin();
       checkLocalSavedStudent();
-
-      // Check URL for direct QR check-in
-      checkUrlQrCheckIn();
 
       // Refresh timer every 30 seconds for active seder updates
       setInterval(() => {
@@ -1017,17 +1028,31 @@
 
     function handleConfirmLogin() {
       const sel = document.getElementById('loginStudentSelect');
-      const pass = (document.getElementById('loginPasswordInput').value || '').trim();
+      const phoneInp = (document.getElementById('loginPhoneInput')?.value || '').trim();
+      const pass = (document.getElementById('loginPasswordInput')?.value || '').trim();
       const err = document.getElementById('loginErrorMsg');
 
-      const stId = sel.value;
-      if (!stId) {
-        if (err) { err.textContent = 'אנא בחר שם מהרשימה'; err.classList.remove('hidden'); }
-        return;
+      let st = null;
+      const stId = sel?.value;
+      if (stId) {
+        st = state.students.find(s => String(s.id) === String(stId));
+      } else if (phoneInp) {
+        const cleanPhone = phoneInp.replace(/[^0-9]/g, '');
+        if (cleanPhone.length >= 7) {
+          st = state.students.find(s => {
+            const sp = (s.phone || '').replace(/[^0-9]/g, '');
+            return sp && (sp === cleanPhone || sp.endsWith(cleanPhone.slice(-8)));
+          });
+        }
       }
 
-      const st = state.students.find(s => String(s.id) === String(stId));
-      if (!st) return;
+      if (!st) {
+        if (err) {
+          err.textContent = phoneInp ? 'מספר הטלפון לא נמצא ברשימת הבחורים' : 'אנא בחר את שמך מהרשימה או הקש מספר טלפון';
+          err.classList.remove('hidden');
+        }
+        return;
+      }
 
       const validPass = st.password || '1234';
       if (pass !== validPass && pass !== '1234' && pass !== '9999') {
@@ -1035,6 +1060,7 @@
         return;
       }
 
+      if (err) err.classList.add('hidden');
       setStudentSession(st);
       showToast(`שלום ${st.full_name || st.name}! ברוך הבא למבצע`, '🎉');
     }
@@ -1069,7 +1095,17 @@
       if (state.scheduleSlots && Array.isArray(state.scheduleSlots[isoDate])) {
         return state.scheduleSlots[isoDate];
       }
+      if (window.Db && Db.getDefaultSlotsForIsoDate) {
+        return Db.getDefaultSlotsForIsoDate(isoDate);
+      }
       return [];
+    }
+
+    function selectParallelSeder(slotTitle) {
+      state.selectedParallelSlotTitle = slotTitle;
+      calculateActiveAndNextSeder();
+      updateActiveSederCard();
+      renderTodayScheduleList();
     }
 
     function calculateActiveAndNextSeder() {
@@ -1090,12 +1126,25 @@
         return nowMinutes >= openM && nowMinutes <= lockM;
       });
 
+      state.openSedarim = currentlyOpen;
+
       if (currentlyOpen.length === 1) {
         active = currentlyOpen[0];
+        state.selectedParallelSlotTitle = active.title;
       } else if (currentlyOpen.length > 1) {
-        // If two sedarim overlap, pick the one the student hasn't checked in yet!
-        const unchecked = currentlyOpen.find(s => !state.checkedInSlotsToday.includes(s.id || s.title));
-        active = unchecked || currentlyOpen[0];
+        const manualPick = state.selectedParallelSlotTitle
+          ? currentlyOpen.find(s => s.title === state.selectedParallelSlotTitle)
+          : null;
+        if (manualPick) {
+          active = manualPick;
+        } else {
+          // Prioritize the one the student hasn't checked into yet
+          const unchecked = currentlyOpen.find(s => !state.checkedInSlotsToday.includes(s.title) && !state.checkedInSlotsToday.includes(s.id));
+          active = unchecked || currentlyOpen[0];
+          state.selectedParallelSlotTitle = active.title;
+        }
+      } else {
+        state.selectedParallelSlotTitle = null;
       }
 
       // Find next upcoming seder
@@ -1123,14 +1172,37 @@
       const btn = document.getElementById('sederCheckInBtn');
       const btnText = document.getElementById('sederBtnText');
       const countdown = document.getElementById('nextSederCountdown');
+      const switcherBox = document.getElementById('parallelSedarimSwitcher');
+      const switcherBtns = document.getElementById('parallelSedarimButtons');
 
       if (!dot || !btn) return;
 
       const active = state.activeSeder;
       const next = state.nextSeder;
+      const openList = state.openSedarim || [];
+
+      if (switcherBox && switcherBtns) {
+        if (openList.length > 1) {
+          switcherBox.classList.remove('hidden');
+          switcherBtns.innerHTML = openList.map(sl => {
+            const isSel = active && sl.title === active.title;
+            const isDone = state.checkedInSlotsToday.includes(sl.title) || state.checkedInSlotsToday.includes(sl.id);
+            const safeTitle = (sl.title || '').replace(/'/g, "\\'");
+            return `
+              <button type="button" onclick="selectParallelSeder('${safeTitle}')" class="px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 border ${isSel ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm' : 'bg-white text-slate-700 border-indigo-200 hover:bg-indigo-100'}">
+                <span>${isDone ? '✓' : '📖'}</span>
+                <span>${sl.title}</span>
+                <span class="text-[10px] opacity-80">(${sl.points || 1} נק׳)</span>
+              </button>
+            `;
+          }).join('');
+        } else {
+          switcherBox.classList.add('hidden');
+        }
+      }
 
       if (active) {
-        const isChecked = state.checkedInSlotsToday.includes(active.id || active.title);
+        const isChecked = state.checkedInSlotsToday.includes(active.title) || state.checkedInSlotsToday.includes(active.id);
 
         dot.className = isChecked ? 'w-3 h-3 rounded-full bg-emerald-500' : 'w-3 h-3 rounded-full bg-emerald-500 animate-ping';
         badge.className = 'text-xs font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
@@ -1217,7 +1289,7 @@
       }
     }
 
-    // --- אישור נוכחות ישיר בלחיצה אחת (ביטול QR ומניעת כפילויות) ---
+    // --- אישור נוכחות ישיר בלחיצה אחת (מניעת כפילויות מלאה) ---
     async function handleCheckInClick() {
       if (!state.activeSeder) {
         showToast('אין כרגע סדר פעיל פתוח', '🔒');
@@ -1231,10 +1303,10 @@
       }
 
       const active = state.activeSeder;
-      const slotKey = active.id || active.title;
+      const slotKey = active.title || active.id;
 
       // בדיקה: האם כבר אישר נוכחות בסדר זה היום?
-      if (state.checkedInSlotsToday.includes(slotKey)) {
+      if (state.checkedInSlotsToday.includes(active.title) || state.checkedInSlotsToday.includes(active.id)) {
         showToast('כבר אישרת נוכחות בסדר זה! אין אפשרות לסמן שוב.', '✓');
         updateActiveSederCard();
         return;
@@ -1245,61 +1317,67 @@
       if (btn) {
         btn.disabled = true;
         btn.className = 'w-full py-4 rounded-2xl font-black text-base sm:text-lg transition shadow flex items-center justify-center gap-2 bg-slate-300 text-slate-700 cursor-wait';
-        if (btnText) btnText.textContent = '⏳ שומר אישור נוכחות...';
+        if (btnText) btnText.textContent = '⏳ שומר אישור נוכחות בענן...';
       }
 
-      const noPhoneChecked = document.getElementById('phoneFreeCheckbox')?.checked;
+      const noPhoneChecked = !!document.getElementById('phoneFreeCheckbox')?.checked;
       const basePts = Number(active.points) || 1;
-      const totalEarned = basePts + (noPhoneChecked ? 1 : 0);
+      const noPhoneBonus = Number(state.config?.bonusConfig?.noPhoneBonus) || 1;
+      const totalEarned = basePts + (noPhoneChecked ? noPhoneBonus : 0);
+      const todayIso = getTodayIso();
 
       try {
-        const success = await Db.recordAttendance(
+        const res = await Db.recordAttendance(
           state.currentStudent.id,
           state.currentStudent.full_name || state.currentStudent.name,
           active.title,
           totalEarned,
           true,
-          noPhoneChecked
+          noPhoneChecked,
+          todayIso
         );
 
-        if (success === false) {
+        if (res === 'ALREADY_CHECKED_IN') {
           showToast('נוכחותך לסדר זה כבר רשומה במערכת! ✓', 'ℹ️');
           if (!state.checkedInSlotsToday.includes(slotKey)) {
             state.checkedInSlotsToday.push(slotKey);
           }
+          calculateActiveAndNextSeder();
           updateActiveSederCard();
           return;
         }
 
-        // רישום מקומי
-        state.checkedInSlotsToday.push(slotKey);
+        if (res === false) {
+          showToast('שגיאת תקשורת בשמירת הנוכחות. אנא נסה שנית.', '⚠️');
+          updateActiveSederCard();
+          return;
+        }
 
-        const todayIso = (window.App && App.getTodayIso) ? App.getTodayIso() : new Date().toISOString().slice(0, 10);
+        // רישום מקומי מיידי
+        if (!state.checkedInSlotsToday.includes(slotKey)) {
+          state.checkedInSlotsToday.push(slotKey);
+        }
+
         if (!state.slotAttendanceMap.byDateSlot[todayIso]) state.slotAttendanceMap.byDateSlot[todayIso] = {};
         if (!state.slotAttendanceMap.byDateSlot[todayIso][active.title]) state.slotAttendanceMap.byDateSlot[todayIso][active.title] = [];
-        state.slotAttendanceMap.byDateSlot[todayIso][active.title].push(String(state.currentStudent.id));
+        if (!state.slotAttendanceMap.byDateSlot[todayIso][active.title].includes(String(state.currentStudent.id))) {
+          state.slotAttendanceMap.byDateSlot[todayIso][active.title].push(String(state.currentStudent.id));
+        }
 
         // אפקט חגיגי
         try { confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } }); } catch(e) {}
 
-        showToast(`נוכחותך נרשמה בהצלחה! צברת +${totalEarned} נקודות ⭐`, '🎉');
+        showToast(`נוכחותך ב"${active.title}" נרשמה! צברת +${totalEarned} נקודות ⭐`, '🎉');
 
-        state.currentStudent.score = (Number(state.currentStudent.score) || 0) + totalEarned;
-        renderDashboard();
-        renderProgressGraph();
-        updateActiveSederCard();
+        // אם יש סדר מקביל נוסף שפתוח כעת וטרם סומן, עבור אליו אוטומטית
+        state.selectedParallelSlotTitle = null;
+        await reloadAllData(true);
       } catch (err) {
         console.error('CheckIn error:', err);
-        showToast('אירעה תקלה, אנא נסה שוב', '❌');
+        showToast('אירעה תקלה בשמירת הנוכחות, אנא נסה שוב', '❌');
         updateActiveSederCard();
       }
     }
-
-    // פונקציות עזר ישנות לתאימות שקטה
-    function openQrScannerModal() { handleCheckInClick(); }
-    function closeQrScannerModal() {}
-    function handleManualQrSubmit() {}
-    function checkUrlQrCheckIn() {}
 
     // --- Dashboard & KPIs ---
     function renderDashboard() {
@@ -1401,17 +1479,22 @@
 
       const isWaker = String(duty.wakeupStudentId) === String(st.id);
       const isKitchen = String(duty.kitchenStudentId) === String(st.id);
+      const wBonus = Number(state.config?.bonusConfig?.wakeupBonus ?? 3);
+      const kBonus = Number(state.config?.bonusConfig?.kitchenBonus ?? 3);
+      const actionBtn = document.getElementById('studentDutyActionBtn');
 
       if (isWaker) {
         title.textContent = '⏰ תורנות השכמת בוקר (מעורר לתפילה)';
-        reminder.textContent = duty.wakeupDone ? 'התורנות סומנה כבוצעה! (+3 נק׳) ✓' : 'זכור לעורר את כל הבחורים בזמן לתפילת שחרית';
+        reminder.textContent = duty.wakeupDone ? `התורנות סומנה כבוצעה! (+${wBonus} נק׳) ✓` : 'זכור לעורר את כל הבחורים בזמן לתפילת שחרית';
         if (actions) actions.classList.remove('hidden');
-        if (btnText) btnText.textContent = duty.wakeupDone ? '✓ תורנות בוצעה' : 'סמן ביצוע תורנות (+3 נק׳)';
+        if (btnText) btnText.textContent = duty.wakeupDone ? '✓ תורנות בוצעה' : `סמן ביצוע תורנות (+${wBonus} נק׳)`;
+        if (actionBtn) actionBtn.disabled = !!duty.wakeupDone;
       } else if (isKitchen) {
         title.textContent = '🍽️ תורנות חדר אוכל ומטבח';
-        reminder.textContent = duty.kitchenDone ? 'התורנות סומנה כבוצעה! (+3 נק׳) ✓' : 'סיוע בסדר וניקיון הארוחות בישיבה';
+        reminder.textContent = duty.kitchenDone ? `התורנות סומנה כבוצעה! (+${kBonus} נק׳) ✓` : 'סיוע בסדר וניקיון הארוחות בישיבה';
         if (actions) actions.classList.remove('hidden');
-        if (btnText) btnText.textContent = duty.kitchenDone ? '✓ תורנות בוצעה' : 'סמן ביצוע תורנות (+3 נק׳)';
+        if (btnText) btnText.textContent = duty.kitchenDone ? '✓ תורנות בוצעה' : `סמן ביצוע תורנות (+${kBonus} נק׳)`;
+        if (actionBtn) actionBtn.disabled = !!duty.kitchenDone;
       } else {
         title.textContent = 'אין לך תורנות רשומה להיום 🎉';
         reminder.textContent = 'שיבוץ התורנויות מתעדכן ע״י ראש הישיבה';
@@ -1443,21 +1526,30 @@
 
       const isWaker = String(duty.wakeupStudentId) === String(st.id);
       const isKitchen = String(duty.kitchenStudentId) === String(st.id);
-      const field = isWaker ? 'wakeup_done' : (isKitchen ? 'kitchen_done' : null);
+      if (isWaker && duty.wakeupDone) {
+        showToast('כבר סימנת ביצוע לתורנות זו היום ✓', 'ℹ️');
+        return;
+      }
+      if (isKitchen && duty.kitchenDone) {
+        showToast('כבר סימנת ביצוע לתורנות זו היום ✓', 'ℹ️');
+        return;
+      }
 
+      const field = isWaker ? 'wakeup_done' : (isKitchen ? 'kitchen_done' : null);
       if (!field) return;
+
+      const bonusPts = isWaker
+        ? Number(state.config?.bonusConfig?.wakeupBonus ?? 3)
+        : Number(state.config?.bonusConfig?.kitchenBonus ?? 3);
 
       const res = await Db.toggleDutyDone(todayIso, field, true);
       if (res) {
         if (isWaker) duty.wakeupDone = true;
         if (isKitchen) duty.kitchenDone = true;
 
-        await Db.updateStudentScore(st.id, 3);
-        st.score = (Number(st.score) || 0) + 3;
-
-        renderTodayDuty();
-        renderDashboard();
-        showToast('תורנות סומנה בהצלחה! צברת +3 נקודות', '🌟');
+        await Db.recalculateStudentScore(st.id);
+        await reloadAllData(true);
+        showToast(`תורנות סומנה בהצלחה! צברת +${bonusPts} נקודות`, '🌟');
       }
     }
 
@@ -1523,7 +1615,7 @@
 
       // 2. Daily Sedarim & Duties
       days.forEach(d => {
-        const slots = state.scheduleSlots[d.iso] || [];
+        const slots = getSlotsForDate(d.iso);
         const duty = state.duties[d.iso];
         const dateClean = d.iso.replace(/-/g, '');
 
@@ -1621,7 +1713,21 @@
       }).join('');
     }
 
-    // --- Shabbat Batch Reporting Logic ---
+    // --- Shabbat Batch Reporting Logic (Synced with Saturday Calendar Slots) ---
+    function getRelevantShabbatIso() {
+      const now = new Date();
+      const day = now.getDay();
+      if (day === 6) {
+        return getTodayIso();
+      }
+      if (day === 0) {
+        const yest = new Date(now);
+        yest.setDate(yest.getDate() - 1);
+        return `${yest.getFullYear()}-${String(yest.getMonth() + 1).padStart(2, '0')}-${String(yest.getDate()).padStart(2, '0')}`;
+      }
+      return null;
+    }
+
     function checkShabbatBatchWindow() {
       const now = new Date();
       const day = now.getDay(); // 0 is Sunday, 6 is Saturday
@@ -1630,71 +1736,90 @@
       // Active on Motzei Shabbat (Saturday night after 18:00) through Sunday morning 10:00 AM
       const isOpen = (day === 6 && hour >= 18) || (day === 0 && hour < 10);
       const card = document.getElementById('studentShabbatBatchCard');
-      if (card) {
-        card.classList.toggle('hidden', !isOpen);
+      if (!card) return;
+
+      if (!isOpen) {
+        card.classList.add('hidden');
+        return;
       }
 
+      const shabbatIso = getRelevantShabbatIso();
+      const shabbatSlots = shabbatIso ? getSlotsForDate(shabbatIso) : [];
+      if (shabbatSlots.length === 0) {
+        card.classList.add('hidden');
+        return;
+      }
+
+      const stId = state.currentStudent ? String(state.currentStudent.id) : null;
+      const attOnShabbat = (shabbatIso && state.slotAttendanceMap?.byDateSlot?.[shabbatIso]) || {};
+
+      // Check if student already reported all Shabbat slots
+      const allReported = stId && shabbatSlots.every(sl => (attOnShabbat[sl.title] || []).includes(stId));
+      card.classList.toggle('hidden', !!allReported);
+
       const list = document.getElementById('shabbatSedarimChecklist');
-      if (list && isOpen) {
-        list.innerHTML = `
-          <label class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold cursor-pointer">
-            <span class="flex items-center gap-2">
-              <input type="checkbox" id="shabbatSlot1" class="w-4 h-4 rounded text-indigo-600">
-              <span>סדר ליל שבת קודש</span>
-            </span>
-            <span class="text-indigo-600 font-black">+2 נק׳</span>
-          </label>
-          <label class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold cursor-pointer">
-            <span class="flex items-center gap-2">
-              <input type="checkbox" id="shabbatSlot2" class="w-4 h-4 rounded text-indigo-600">
-              <span>סדר שבת בבוקר (לפני/אחרי התפילה)</span>
-            </span>
-            <span class="text-indigo-600 font-black">+2 נק׳</span>
-          </label>
-          <label class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold cursor-pointer">
-            <span class="flex items-center gap-2">
-              <input type="checkbox" id="shabbatSlot3" class="w-4 h-4 rounded text-indigo-600">
-              <span>סדר רעוא דרעווין / מוצאי שבת</span>
-            </span>
-            <span class="text-indigo-600 font-black">+2 נק׳</span>
-          </label>
-        `;
+      if (list && !allReported) {
+        list.innerHTML = shabbatSlots.map((sl, idx) => {
+          const alreadyDone = stId && (attOnShabbat[sl.title] || []).includes(stId);
+          return `
+            <label class="flex items-center justify-between p-2.5 rounded-xl bg-white border ${alreadyDone ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-200'} text-xs font-bold cursor-pointer">
+              <span class="flex items-center gap-2">
+                <input type="checkbox" class="shabbat-slot-cb w-4 h-4 rounded text-indigo-600" data-slot-idx="${idx}" ${alreadyDone ? 'checked disabled' : ''}>
+                <span>${sl.title} <span class="text-[10px] text-slate-400 font-mono">(${sl.openTime}-${sl.lockTime})</span></span>
+              </span>
+              <span class="${alreadyDone ? 'text-emerald-700' : 'text-indigo-600'} font-black">${alreadyDone ? 'דווח ✓' : `+${sl.points || 2} נק׳`}</span>
+            </label>
+          `;
+        }).join('');
       }
     }
 
     async function submitShabbatReport() {
-      const s1 = document.getElementById('shabbatSlot1')?.checked;
-      const s2 = document.getElementById('shabbatSlot2')?.checked;
-      const s3 = document.getElementById('shabbatSlot3')?.checked;
-
-      let count = 0;
-      if (s1) count++;
-      if (s2) count++;
-      if (s3) count++;
-
-      if (count === 0) {
-        showToast('נא לסמן לפחות סדר שבת אחד', '⚠️');
+      if (!state.currentStudent) {
+        showToast('יש להתחבר תחילה כדי לדווח על סדרי שבת', '⚠️');
+        openStudentLoginModal();
         return;
       }
 
-      const pts = count * 2;
-      if (state.currentStudent) {
-        await Db.recordAttendance(
+      const shabbatIso = getRelevantShabbatIso();
+      if (!shabbatIso) return;
+      const shabbatSlots = getSlotsForDate(shabbatIso);
+      const checkboxes = document.querySelectorAll('.shabbat-slot-cb:not(:disabled)');
+
+      const selectedSlots = [];
+      checkboxes.forEach(cb => {
+        if (cb.checked) {
+          const idx = Number(cb.getAttribute('data-slot-idx'));
+          if (shabbatSlots[idx]) selectedSlots.push(shabbatSlots[idx]);
+        }
+      });
+
+      if (selectedSlots.length === 0) {
+        showToast('נא לסמן לפחות סדר שבת אחד שטרם דווח', '⚠️');
+        return;
+      }
+
+      let earnedPts = 0;
+      const noPhoneBonus = Number(state.config?.bonusConfig?.noPhoneBonus) || 1;
+
+      for (const sl of selectedSlots) {
+        const slPts = (Number(sl.points) || 2) + noPhoneBonus;
+        const res = await Db.recordAttendance(
           state.currentStudent.id,
           state.currentStudent.full_name || state.currentStudent.name,
-          `דיווח שבת קודש (${count} סדרים)`,
-          pts,
+          sl.title,
+          slPts,
           true,
-          true
+          true,
+          shabbatIso
         );
-        state.currentStudent.score = (Number(state.currentStudent.score) || 0) + pts;
-        renderDashboard();
-        renderProgressGraph();
-        showToast(`דיווח סדרי השבת נשמר בהצלחה! צברת +${pts} נקודות שבת ⭐`, '🕯️');
-        
-        const card = document.getElementById('studentShabbatBatchCard');
-        if (card) card.classList.add('hidden');
+        if (res === true) {
+          earnedPts += slPts;
+        }
       }
+
+      await reloadAllData(true);
+      showToast(`דיווח סדרי השבת נשמר בהצלחה! צברת +${earnedPts} נקודות שבת ⭐`, '🕯️');
     }
 
     // --- Mountain Graph & Scenic SVG Milestones ---
@@ -2319,7 +2444,7 @@
       const daysHtml = days.map(d => {
         const isSelected = d.iso === state.selectedCalendarDate;
         const isToday = d.iso === todayIso;
-        const slots = state.scheduleSlots[d.iso] || [];
+        const slots = getSlotsForDate(d.iso);
         const duty = state.duties[d.iso];
         const trailStop = (state.config?.trailStops || []).find(s => s.isoDate === d.iso);
         const hasEvent = duty?.specialEventTitle || (trailStop ? ('🎯 ' + trailStop.title) : null);
@@ -2368,7 +2493,7 @@
       const cur = new Date(dateStr + 'T12:00:00');
       const gregFormatted = cur.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', year: 'numeric' });
       
-      const slots = state.scheduleSlots[dateStr] || [];
+      const slots = getSlotsForDate(dateStr);
       const duty = state.duties[dateStr];
       const trailStop = (state.config?.trailStops || []).find(s => s.isoDate === dateStr);
       const eventTitle = duty?.specialEventTitle || (trailStop ? ('🎯 ' + trailStop.title + (trailStop.description ? ` (${trailStop.description})` : '')) : null);
@@ -2548,7 +2673,7 @@
             <!-- Days Grid Sunday to Saturday -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2">
               ${wk.map(d => {
-                const slots = state.scheduleSlots[d.iso] || [];
+                const slots = getSlotsForDate(d.iso);
                 const duty = state.duties[d.iso];
                 const trailStop = (state.config?.trailStops || []).find(s => s.isoDate === d.iso);
                 const hasEvent = duty?.specialEventTitle || (trailStop ? ('🎯 ' + trailStop.title) : null);
@@ -2624,10 +2749,27 @@
       }).join('');
     }
 
+    function populateRequestModalSlots() {
+      const dateStr = document.getElementById('reqDateInput')?.value || getTodayIso();
+      const sel = document.getElementById('reqSlotTitleInput');
+      if (!sel) return;
+      const slots = getSlotsForDate(dateStr);
+      if (slots.length === 0) {
+        sel.innerHTML = `
+          <option value="סדר א׳ (עיון)">סדר א׳ (עיון)</option>
+          <option value="סדר ב׳ (בקיאות)">סדר ב׳ (בקיאות)</option>
+          <option value="סדר ג׳ (ערב)">סדר ג׳ (ערב)</option>
+        `;
+      } else {
+        sel.innerHTML = slots.map(sl => `<option value="${sl.title}">${sl.title} (${sl.openTime} - ${sl.lockTime})</option>`).join('');
+      }
+    }
+
     function openRequestModal() {
       const modal = document.getElementById('requestModal');
       const dateInp = document.getElementById('reqDateInput');
       if (dateInp) dateInp.value = getTodayIso();
+      populateRequestModalSlots();
       if (modal) modal.classList.remove('hidden');
     }
 

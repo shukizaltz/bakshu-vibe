@@ -174,9 +174,11 @@
       const cur = new Date(start);
       while (cur <= end) {
         const iso = cur.toISOString().slice(0, 10);
-        const daySlots = slotsMap[iso] || (cur.getDay() === 5 || cur.getDay() === 6 ? [] : [
-          { points: 1 }, { points: 1 }, { points: 1 }
-        ]);
+        const daySlots = Array.isArray(slotsMap[iso])
+          ? slotsMap[iso]
+          : (window.Db && Db.getDefaultSlotsForIsoDate ? Db.getDefaultSlotsForIsoDate(iso) : (cur.getDay() === 5 || cur.getDay() === 6 ? [] : [
+              { points: 1 }, { points: 1 }, { points: 1 }
+            ]));
         const isFutureOrToday = (iso >= todayIso);
         daySlots.forEach(s => {
           const pts = (Number(s.points) || 1);
@@ -197,9 +199,9 @@
       const noPhoneBonus = Number(cfg?.bonusConfig?.noPhoneBonus) || 1;
       const phoneFreePoints = totalSlotsCount * noPhoneBonus;
 
-      // 3. נקודות תורנויות (מעורר 3 נק', מטבח 1 נק')
-      const wBonus = Number(cfg?.bonusConfig?.wakeupBonus) || 3;
-      const kBonus = Number(cfg?.bonusConfig?.kitchenBonus) || 1;
+      // 3. נקודות תורנויות (מעורר 3 נק', מטבח 3 נק')
+      const wBonus = Number(cfg?.bonusConfig?.wakeupBonus ?? 3);
+      const kBonus = Number(cfg?.bonusConfig?.kitchenBonus ?? 3);
       let dutiesPoints = 0;
       let assignedDutiesCount = 0;
 
